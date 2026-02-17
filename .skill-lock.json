@@ -1,0 +1,79 @@
+{
+  "version": 3,
+  "skills": {
+    "swiftui-expert-skill": {
+      "source": "avdlee/swiftui-agent-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/avdlee/swiftui-agent-skill.git",
+      "skillPath": "swiftui-expert-skill/SKILL.md",
+      "skillFolderHash": "8b2cfeec89f80befd36d685ec636fdcd633a30c3",
+      "installedAt": "2026-02-14T03:30:46.608Z",
+      "updatedAt": "2026-02-14T03:30:46.608Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
+      "installedAt": "2026-02-14T03:30:54.474Z",
+      "updatedAt": "2026-02-17T20:43:00.039Z"
+    },
+    "coding-tutor": {
+      "source": "everyinc/compound-engineering-plugin",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/everyinc/compound-engineering-plugin.git",
+      "skillPath": "plugins/coding-tutor/skills/coding-tutor/SKILL.md",
+      "skillFolderHash": "46e68409a0f6a7c023e756cfa81e954b1f4ca7c7",
+      "installedAt": "2026-02-14T03:33:13.401Z",
+      "updatedAt": "2026-02-14T03:33:13.401Z"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "skillFolderHash": "986c64ad9b8e196a4a737c01872c2eda790daba1",
+      "installedAt": "2026-02-17T06:42:06.050Z",
+      "updatedAt": "2026-02-17T06:42:06.050Z"
+    },
+    "remembering-conversations": {
+      "source": "obra/episodic-memory",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/episodic-memory.git",
+      "skillPath": "skills/remembering-conversations/SKILL.md",
+      "skillFolderHash": "c39796fe24cf728f7c26687a68aecf1f611144f8",
+      "installedAt": "2026-02-17T20:39:13.913Z",
+      "updatedAt": "2026-02-17T20:39:13.913Z"
+    },
+    "performance": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/addyosmani/web-quality-skills.git",
+      "skillPath": "skills/performance/SKILL.md",
+      "skillFolderHash": "3ae01d0bb58bdc2c94de4694e2f782204ffba083",
+      "installedAt": "2026-02-17T20:41:46.081Z",
+      "updatedAt": "2026-02-17T20:41:46.081Z"
+    },
+    "browser-use": {
+      "source": "browser-use/browser-use",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/browser-use/browser-use.git",
+      "skillPath": "skills/browser-use/SKILL.md",
+      "skillFolderHash": "976ce9de2a9a634bdfb130abc664924cb21829ac",
+      "installedAt": "2026-02-17T20:43:34.195Z",
+      "updatedAt": "2026-02-17T20:43:34.195Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "codex",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode"
+  ]
+}

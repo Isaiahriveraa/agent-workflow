@@ -1,0 +1,98 @@
+{
+  "version": "1.0.0",
+  "description": "Centralized AI tool configuration hub — single source of truth for skills, agents, commands, prompts, hooks, and GSD across all AI coding tools.",
+  "hub": "~/.agents",
+  "managed_content": {
+    "skills": "~/.agents/skills",
+    "agents": "~/.agents/agents",
+    "commands": "~/.agents/commands",
+    "hooks": "~/.agents/hooks",
+    "prompts": "~/.agents/prompts",
+    "get-shit-done": "~/.agents/get-shit-done"
+  },
+  "symlinks": [
+    {
+      "source": "~/.claude/skills",
+      "target": "~/.agents/skills",
+      "tier": 1,
+      "tool": "claude-code",
+      "type": "directory"
+    },
+    {
+      "source": "~/.claude/agents",
+      "target": "~/.agents/agents",
+      "tier": 1,
+      "tool": "claude-code",
+      "type": "directory"
+    },
+    {
+      "source": "~/.claude/commands",
+      "target": "~/.agents/commands",
+      "tier": 1,
+      "tool": "claude-code",
+      "type": "directory"
+    },
+    {
+      "source": "~/.claude/hooks",
+      "target": "~/.agents/hooks",
+      "tier": 1,
+      "tool": "claude-code",
+      "type": "directory"
+    },
+    {
+      "source": "~/.claude/get-shit-done",
+      "target": "~/.agents/get-shit-done",
+      "tier": 1,
+      "tool": "claude-code",
+      "type": "directory"
+    },
+    {
+      "source": "~/.claude/CLAUDE.md",
+      "target": "~/.agents/prompts/system.md",
+      "tier": 1,
+      "tool": "claude-code",
+      "type": "file"
+    },
+    {
+      "source": "~/.codex/AGENTS.md",
+      "target": "~/.agents/prompts/system.md",
+      "tier": 1,
+      "tool": "codex-cli",
+      "type": "file"
+    },
+    {
+      "source": "~/.config/opencode/commands",
+      "target": "~/.agents/commands",
+      "tier": 1,
+      "tool": "opencode",
+      "type": "directory"
+    },
+    {
+      "source": "~/.gemini/antigravity/skills",
+      "target": "~/.agents/skills",
+      "tier": 1,
+      "tool": "antigravity",
+      "type": "directory"
+    },
+    {
+      "source": "~/.openclaw/workspace/skills",
+      "target": "~/.agents/skills",
+      "tier": 1,
+      "tool": "openclaw",
+      "type": "directory"
+    }
+  ],
+  "not_managed": [
+    "~/.claude/settings.json",
+    "~/.codex/config.toml",
+    "~/.openclaw/openclaw.json",
+    "~/.openclaw/workspace/SOUL.md",
+    "~/.openclaw/workspace/IDENTITY.md",
+    "~/.openclaw/workspace/USER.md",
+    "~/.codex/skills/.system/"
+  ],
+  "auto_discovery": {
+    "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
+    "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed"
+  }
+}
