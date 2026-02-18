@@ -7,7 +7,7 @@ description: |
   Triggered manually or from a Heartbeat check.
 metadata:
   author: koda
-  version: "1.4"
+  version: "1.5"
   requires:
     env:
       - GITHUB_TOKEN    # personal access token with repo scope; set in openclaw.json env block
@@ -83,6 +83,57 @@ print("Preflight passed — safe to proceed.")
 EOF
 ```
 
+```python
+python <<'EOF'
+import json, os
+
+config_path = os.path.expanduser("~/.openclaw/openclaw.json")
+with open(config_path) as f:
+    oc_config = json.load(f)
+
+mc = oc_config.get("model_config", {})
+CONTEXT_WINDOW_TOKENS = mc.get("context_window_tokens", 196608)
+HANDOFF_THRESHOLD_PCT = mc.get("handoff_threshold_pct", 0.60)
+CONTEXT_OVERHEAD_TOKENS = 2000
+HANDOFF_THRESHOLD_TOKENS = int(CONTEXT_WINDOW_TOKENS * HANDOFF_THRESHOLD_PCT)
+CONTEXT_LIMIT_CHARS = (HANDOFF_THRESHOLD_TOKENS - CONTEXT_OVERHEAD_TOKENS) * 4
+
+print(f"Model: {mc.get('name', 'unknown')}")
+print(f"Context window: {CONTEXT_WINDOW_TOKENS} tokens")
+print(f"Handoff threshold: {HANDOFF_THRESHOLD_TOKENS} tokens ({int(HANDOFF_THRESHOLD_PCT*100)}%)")
+print(f"Char limit before handoff: {CONTEXT_LIMIT_CHARS:,} chars")
+EOF
+```
+
+**Context Tracker — carry these values through the entire run:**
+- `CONTEXT_CHARS = 0` — running total of characters of all file content read
+- `CONTEXT_LIMIT_CHARS` — from the script above
+
+Every time you read a file's content in Phase A or C, add `len(file_content)` to `CONTEXT_CHARS`.
+After each major phase, estimate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
+If `estimated_tokens >= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol before the next phase.
+
+---
+
+### Step 0.5 — Skill Discovery
+
+Before proceeding, scan the available skills directory at `~/.agents/skills/` and identify which skills are relevant to this run. Read their descriptions. The following skills are known to be useful for PR proposer tasks:
+
+| Skill | When to use |
+|---|---|
+| `code-analysis` | Phase A (Research) — use to analyze codebase structure and identify patterns before reading individual files |
+| `pre-code-checklist` | Phase B (Plan) — run before writing the plan to validate you have enough context |
+| `remembering-conversations` | Phase B (Plan) — use if the entry description is vague; search past conversations for context about this repo or task |
+| `code-review` | Phase D (Self-review, Step 7.5) — use to review the proposed change against SOLID/DRY standards before opening the PR |
+| `pr-workflow` | Phase B (Plan) — use if the change touches multiple files to ensure the PR is scoped correctly |
+
+**Required actions at each phase:**
+- Phase A: Invoke `code-analysis` skill to structure codebase exploration before reading individual files
+- Phase B: Invoke `pre-code-checklist` skill before writing the plan; invoke `remembering-conversations` if the description is vague or references past work
+- Phase D (Step 7.5): Invoke `code-review` skill on the proposed diff before marking the checklist complete
+
+Scan `~/.agents/skills/` at runtime in case new skills have been added. Any skill whose description mentions the current task domain (GitHub, code changes, PRs, TypeScript/Python depending on the repo language) should be considered.
+
 ---
 
 ### Step 1 — Identify the Notion Database
@@ -157,6 +208,16 @@ for page in pages:
     if repo.startswith('https://github.com/'):
         parts = repo.replace('https://github.com/', '').strip('/').split('/')
         repo = '/'.join(parts[:2]) if len(parts) >= 2 else ''
+    # Extract Description — READ-ONLY, never written back
+    description_prop = props.get('Description', {})
+    description = ''.join(
+        p.get('plain_text', '')
+        for p in description_prop.get('rich_text', [])
+    ).strip()
+
+    if description:
+        print(f"  description={description!r}")
+
     # Guard: skip entries with empty Repo field
     if not repo:
         print(f"SKIP page_id={page['id']} : Repo field is empty")
@@ -164,6 +225,12 @@ for page in pages:
     print(f"page_id={page['id']}  title={title!r}  repo={repo!r}")
 EOF
 ```
+
+**Forward per entry: `page_id`, `title`, `repo`, `description`**
+
+If `description` is non-empty, treat it as additional task context in Phase B. Quote it explicitly in the plan under "Additional context from Notion Description".
+
+**Never write to `Description`. It is read-only.**
 
 Process entries one at a time. Do not start the next entry until the current one is fully complete or explicitly abandoned. page_size is 10 — if you have more than 10 "Not started" entries, only the 10 oldest are returned per run.
 
@@ -315,6 +382,11 @@ For vague fix descriptions: read `README.md` first, then narrow down by director
 
 **Do not proceed to Phase B until you understand what the codebase does and how the relevant code is structured.**
 
+**Context Check — Phase A boundary**
+Evaluate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
+If `>= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol. Do not start Phase B.
+If below threshold: proceed to Step 5.
+
 ---
 
 ### Step 5 — Plan the Change
@@ -328,10 +400,16 @@ Before writing anything, explicitly reason through each of the following. This r
 3. **At least one alternative approach.** What else could solve this? Why is the chosen approach better?
 4. **Edge cases.** What inputs or states could break this change? How is each handled?
 5. **Scope check.** Is the description specific enough to make a safe, scoped change?
+6. **Additional context from Notion Description.** If `description` is non-empty, quote it here and state explicitly how it changed or confirmed the approach. If it conflicts with the entry title, flag the conflict in the PR body.
 
 If the description is too vague to produce a safe diff, still create the branch and PR — but put your question in the PR body rather than making a speculative change. A PR with no code change but a clear question is better than a wrong change.
 
 **Do not proceed to Step 6 until the plan is written and each item above is answered.**
+
+**Context Check — Phase B boundary**
+Evaluate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
+If `>= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol. Do not create the branch.
+If below threshold: proceed to Step 6.
 
 ---
 
@@ -487,6 +565,11 @@ EOF
 
 For a PR with no code change (vague description), skip this step — the branch stays empty. The PR body will contain the question.
 
+**Context Check — Phase C boundary**
+Evaluate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
+If `>= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol. Record in the handoff that the branch and commits exist so the resume path skips Steps 6 and 7.
+If below threshold: proceed to Step 7.5.
+
 ---
 
 ### Step 7.5 — Self-Review (Phase D)
@@ -625,21 +708,39 @@ EOF
 
 ### Step 9 — Update the Notion Entry
 
-Mark the entry "PR Opened" and record the PR URL. Use the page_id from Step 2.
+Mark the entry "PR Opened", record the PR URL, and write a Feedback summary. Use the page_id from Step 2.
 
-The URL property below assumes a field named "PR URL" of type `url`. Adjust property names to match your actual database schema.
-
-```bash
+```python
 python <<'EOF'
 import urllib.request, os, json
 
 PAGE_ID = "REPLACE"
 PR_URL = "REPLACE"  # use PR_URL from Step 8
 
+WHAT_WAS_DONE = "REPLACE"           # factual summary of files changed and what changed
+WHY_THIS_APPROACH = "REPLACE"       # rationale; mention alternatives considered
+EDGE_CASES_FOUND = "REPLACE"        # edge cases found and how each is handled; "None identified" only if genuinely true
+QUESTIONS_OR_BLOCKERS = "REPLACE"   # open questions or blockers; "None" if clear
+PHASES_COMPLETED = "REPLACE"        # e.g. "A (research), B (plan), C (implement), D (self-review)"
+
+feedback_text = (
+    f"Phases: {PHASES_COMPLETED}. "
+    f"Done: {WHAT_WAS_DONE} "
+    f"Approach: {WHY_THIS_APPROACH} "
+    f"Edge cases: {EDGE_CASES_FOUND} "
+    f"Questions: {QUESTIONS_OR_BLOCKERS}"
+)
+
+def to_rich_text(text):
+    """Chunk into 2000-char objects (Notion API limit per text object)."""
+    chunks = [text[i:i+2000] for i in range(0, len(text), 2000)]
+    return [{"text": {"content": chunk}} for chunk in chunks]
+
 data = json.dumps({
     "properties": {
         "Status": {"select": {"name": "PR Opened"}},
-        "PR URL": {"url": PR_URL}
+        "PR URL": {"url": PR_URL},
+        "Feedback": {"rich_text": to_rich_text(feedback_text)}
     }
 }).encode()
 
@@ -653,16 +754,17 @@ req.add_header('Notion-Version', '2022-06-28')
 
 try:
     result = json.load(urllib.request.urlopen(req, timeout=30))
-    print(f"Notion entry updated: {result['id']}")
+    print(f"Notion updated: {result['id']}")
+    print(f"  Status: PR Opened | PR URL: {PR_URL}")
+    print(f"  Feedback written ({len(feedback_text)} chars)")
 except urllib.error.HTTPError as e:
-    # The PR already exists — this is best-effort. Do not undo the PR.
     print(f"WARNING: Notion update failed ({e.code}): {e.read().decode()}")
-    print(f"Manual recovery needed:")
-    print(f"  Notion page_id: {PAGE_ID}")
-    print(f"  PR URL: {PR_URL}")
-    print(f"  Set Status → 'PR Opened' and paste the PR URL manually.")
+    print(f"Manual recovery: page_id={PAGE_ID} | PR URL={PR_URL}")
+    print(f"Feedback content: {feedback_text}")
 EOF
 ```
+
+**What to write in Feedback:** factual summary of what changed and in which files, rationale for the chosen approach (mention alternatives), edge cases found, any open questions or blockers, which phases completed. Do not duplicate the PR body verbatim — Feedback is Notion-level context for you, not GitHub documentation. **Never write to `Description`.**
 
 ---
 
@@ -684,6 +786,7 @@ EOF
 | Head equals base | Stop before branch creation; do not attempt to create the branch |
 | Fix description is too vague | Create branch, open PR with clarifying question in body, mark Notion "PR Opened" |
 | Multiple databases match search | List them all, ask user to confirm which one to use |
+| Context >= threshold after a phase | Write handoff, add resume task to HEARTBEAT.md, stop |
 
 ---
 
@@ -691,12 +794,19 @@ EOF
 
 The target database is **OpenClaw** (`database_id: 2ffcd9598000412f8b21e8d6fa4533c7`).
 
-| Field | Type | Notes |
-|-------|------|-------|
-| Name | title | The fix description |
-| Repo | text (rich_text) | e.g. `isaiahrivera/my-project` or full GitHub URL |
-| Status | select | Options: Ready, In Progress, PR Opened, Done, Error |
-| Description | text (rich_text) | Optional extended description of the fix |
+| Field | Type | Permission |
+|-------|------|------------|
+| Name | title | Read |
+| Repo | text (rich_text) | Read |
+| Status | select | Write |
+| Description | text (rich_text) | **Read-only. Never write.** |
+| Feedback | text (rich_text) | Write |
+| PR URL | url | Write |
+
+**Field permissions summary:**
+- Read: Name, Repo, Description
+- Write: Status, Feedback, PR URL
+- Never write: Description
 
 Status values Koda processes: **Ready** only. Skips: In Progress, PR Opened, Done, Error.
 
@@ -728,6 +838,8 @@ After each run, confirm:
 - [ ] No PR was merged
 - [ ] No orphaned branches exist (check repo's branch list if any step failed)
 - [ ] If any files were skipped (binary/large), they are listed in the PR body
+- [ ] `Description` field unchanged after run — it is read-only
+- [ ] `Feedback` field populated with: what was done, approach rationale, edge cases, questions
 
 ---
 
@@ -738,3 +850,110 @@ After each run, confirm:
 - Handle multi-repo changes atomically
 - Push to the remote (uses direct GitHub API; no `gh` CLI required)
 - Run tests before proposing
+
+---
+
+## Handoff Protocol
+
+Execute this protocol whenever a context check fires (`estimated_tokens >= HANDOFF_THRESHOLD_TOKENS`). Do not skip steps or proceed to the next phase after triggering this protocol.
+
+### Writing a Handoff
+
+1. **Filename:** `{YYYY-MM-DD_HH-MM-SS}_pr-proposer-handoff.md` (UTC timestamp)
+2. **Path:** `/Users/isaiahrivera/.openclaw/thoughts/shared/handoffs/general/`
+3. **File structure:**
+
+```
+---
+date: {ISO-8601}
+researcher: koda
+topic: "PR Proposer Handoff — {entry title}"
+tags: [pr-proposer, handoff, {owner}, {repo}]
+status: in_progress
+type: handoff
+---
+
+# Handoff: PR Proposer — {entry title}
+
+## Task Summary
+Goal: {entry title}
+Notion page_id: {page_id}
+Repo: {owner/repo}
+Phase just completed: Phase {A/B/C}
+Resume from: Phase {next phase}
+
+## Critical References
+- Notion page_id: {page_id}
+- Target repo: {owner/repo}
+- Branch: {ACTIVE_BRANCH or "not yet created"}
+- Default branch: {default_branch}
+
+## Research Findings (Phase A)
+{Full written output from Phase A. Leave empty if not yet completed.}
+
+### File SHAs
+{path/to/file: sha={sha} size={bytes} — one line per file read}
+
+## Plan (Phase B)
+{Full written plan. Leave empty if not yet completed.}
+
+## Implementation Status (Phase C)
+Files committed: {path — committed to {branch}}
+Files pending: {path — not yet committed}
+
+## Learnings
+{Anything unusual not captured above.}
+
+## Action Items
+- [ ] Resume from Phase {X}
+
+## Resume Instructions
+1. Use the github-pr-proposer skill — resume from handoff at {full path}
+2. Skip phases already completed
+3. Use SHAs from "File SHAs" — only re-read if SHA is missing
+4. Use ACTIVE_BRANCH from above — do not create a new branch
+5. Reset CONTEXT_CHARS = 0 (fresh context window)
+6. Pick up from Phase {next phase}
+```
+
+4. **Write a resume task to HEARTBEAT.md:**
+
+```python
+python <<'EOF'
+import os, datetime
+
+heartbeat_path = os.path.expanduser("~/.openclaw/workspace/HEARTBEAT.md")
+handoff_path = "REPLACE_WITH_FULL_HANDOFF_PATH"
+
+resume_task = (
+    f"\n## PR Proposer Resume (added {datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')})\n"
+    f"A PR proposer run was paused due to context limits. Resume it:\n"
+    f"- Use the github-pr-proposer skill — resume from handoff at {handoff_path}\n"
+    f"- Once resumed and completed, remove this section from HEARTBEAT.md\n"
+)
+
+with open(heartbeat_path, 'a') as f:
+    f.write(resume_task)
+
+print(f"Resume task added to HEARTBEAT.md")
+print(f"Next heartbeat will auto-resume the run.")
+EOF
+```
+
+5. Print: `HANDOFF WRITTEN. Next heartbeat will resume from: {handoff_path}`
+6. **Stop. Do not proceed to the next phase.**
+
+### Resuming from a Handoff
+
+When invoked with "resume from handoff at [path]":
+
+1. Read the handoff file
+2. Extract: `page_id`, `repo`, `owner`, `default_branch`, `ACTIVE_BRANCH`, all file SHAs, plan, phase just completed
+3. Determine next phase from "Resume from"
+4. Skip all completed phases
+5. Use SHAs from handoff; only re-read a file if SHA is absent
+6. Use `ACTIVE_BRANCH`; never create a new branch if one exists in the handoff
+7. Reset `CONTEXT_CHARS = 0`
+8. Remove the resume task from `HEARTBEAT.md` once the run completes successfully
+
+**Guard:** If `ACTIVE_BRANCH` is in handoff but Phase C shows no commits, verify branch still exists: `GET /repos/{owner}/{repo}/git/ref/heads/{branch}`. If 404, create a fresh branch with the same slug.
