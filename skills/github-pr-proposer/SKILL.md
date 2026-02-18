@@ -7,12 +7,11 @@ description: |
   Triggered manually or from a Heartbeat check.
 metadata:
   author: koda
-  version: "1.3"
+  version: "1.4"
   requires:
     env:
-      - MATON_API_KEY
-      - NOTION_API_KEY
       - GITHUB_TOKEN    # personal access token with repo scope; set in openclaw.json env block
+      - NOTION_API_KEY
 ---
 
 # GitHub PR Proposer
@@ -59,8 +58,9 @@ Check the GitHub rate limit before any write operation. If `remaining < 100`, pr
 python <<'EOF'
 import urllib.request, os, json, datetime
 
-req = urllib.request.Request('https://gateway.maton.ai/github/rate_limit')
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req = urllib.request.Request('https://api.github.com/rate_limit')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
@@ -177,8 +177,9 @@ Parse `owner/repo` from the Notion entry's Repo field. If only a bare repo name 
 python <<'EOF'
 import urllib.request, os, json
 
-req = urllib.request.Request('https://gateway.maton.ai/github/user')
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req = urllib.request.Request('https://api.github.com/user')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 user = json.load(urllib.request.urlopen(req))
@@ -196,9 +197,10 @@ OWNER = "REPLACE"
 REPO = "REPLACE"
 
 req = urllib.request.Request(
-    f'https://gateway.maton.ai/github/repos/{OWNER}/{REPO}'
+    f'https://api.github.com/repos/{OWNER}/{REPO}'
 )
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
@@ -231,9 +233,10 @@ REPO = "REPLACE"
 PATH = ""  # root; set to a subdirectory path if needed
 
 req = urllib.request.Request(
-    f'https://gateway.maton.ai/github/repos/{OWNER}/{REPO}/contents/{PATH}'
+    f'https://api.github.com/repos/{OWNER}/{REPO}/contents/{PATH}'
 )
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 contents = json.load(urllib.request.urlopen(req))
@@ -255,9 +258,10 @@ REPO = "REPLACE"
 FILE_PATH = "REPLACE"  # e.g. "src/utils.py"
 
 req = urllib.request.Request(
-    f'https://gateway.maton.ai/github/repos/{OWNER}/{REPO}/contents/{FILE_PATH}'
+    f'https://api.github.com/repos/{OWNER}/{REPO}/contents/{FILE_PATH}'
 )
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 file_data = json.load(urllib.request.urlopen(req, timeout=30))
@@ -352,9 +356,10 @@ if BRANCH_NAME == DEFAULT_BRANCH:
 
 # Get current HEAD SHA
 req = urllib.request.Request(
-    f'https://gateway.maton.ai/github/repos/{OWNER}/{REPO}/git/ref/heads/{DEFAULT_BRANCH}'
+    f'https://api.github.com/repos/{OWNER}/{REPO}/git/ref/heads/{DEFAULT_BRANCH}'
 )
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 ref_data = json.load(urllib.request.urlopen(req, timeout=30))
@@ -367,10 +372,11 @@ def create_branch(name, sha):
         "sha": sha
     }).encode()
     req2 = urllib.request.Request(
-        f'https://gateway.maton.ai/github/repos/{OWNER}/{REPO}/git/refs',
+        f'https://api.github.com/repos/{OWNER}/{REPO}/git/refs',
         data=data, method='POST'
     )
-    req2.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+    req2.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+    req2.add_header('Accept', 'application/vnd.github+json')
     req2.add_header('Content-Type', 'application/json')
     req2.add_header('X-GitHub-Api-Version', '2022-11-28')
     return urllib.request.urlopen(req2, timeout=30)
@@ -432,10 +438,11 @@ def delete_branch(owner, repo, branch):
     """Best-effort branch cleanup. Does not raise on failure."""
     try:
         req = urllib.request.Request(
-            f'https://gateway.maton.ai/github/repos/{owner}/{repo}/git/refs/heads/{branch}',
+            f'https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}',
             method='DELETE'
         )
-        req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+        req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+        req.add_header('Accept', 'application/vnd.github+json')
         req.add_header('X-GitHub-Api-Version', '2022-11-28')
         urllib.request.urlopen(req, timeout=30)
         print(f"Orphaned branch deleted: {branch}")
@@ -454,10 +461,11 @@ data = json.dumps({
 }).encode()
 
 req = urllib.request.Request(
-    f'https://gateway.maton.ai/github/repos/{OWNER}/{REPO}/contents/{FILE_PATH}',
+    f'https://api.github.com/repos/{OWNER}/{REPO}/contents/{FILE_PATH}',
     data=data, method='PUT'
 )
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('Content-Type', 'application/json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
@@ -529,10 +537,11 @@ def delete_branch(owner, repo, branch):
     """Best-effort branch cleanup. Does not raise on failure."""
     try:
         req = urllib.request.Request(
-            f'https://gateway.maton.ai/github/repos/{owner}/{repo}/git/refs/heads/{branch}',
+            f'https://api.github.com/repos/{owner}/{repo}/git/refs/heads/{branch}',
             method='DELETE'
         )
-        req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+        req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+        req.add_header('Accept', 'application/vnd.github+json')
         req.add_header('X-GitHub-Api-Version', '2022-11-28')
         urllib.request.urlopen(req, timeout=30)
         print(f"Orphaned branch deleted: {branch}")
@@ -591,10 +600,11 @@ data = json.dumps({
 }).encode()
 
 req = urllib.request.Request(
-    f'https://gateway.maton.ai/github/repos/{OWNER}/{REPO}/pulls',
+    f'https://api.github.com/repos/{OWNER}/{REPO}/pulls',
     data=data, method='POST'
 )
-req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
+req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('Content-Type', 'application/json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
@@ -726,5 +736,5 @@ After each run, confirm:
 - Auto-merge PRs
 - Integrate with CI/CD
 - Handle multi-repo changes atomically
-- Push to the remote (Maton handles auth; no `gh` CLI required)
+- Push to the remote (uses direct GitHub API; no `gh` CLI required)
 - Run tests before proposing
