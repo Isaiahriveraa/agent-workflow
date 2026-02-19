@@ -64,6 +64,7 @@ req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
+    print("calling GitHub API...")
     data = json.load(urllib.request.urlopen(req, timeout=15))
 except Exception as e:
     print(f"STOP: Could not check GitHub rate limit — {e}")
@@ -155,9 +156,61 @@ Proceed directly to Step 2 using `DATABASE_ID = "2ffcd9598000412f8b21e8d6fa4533c
 
 ---
 
-### Step 2 — Query for Ready Entries
+### Step 2 — Query for In-Progress and Ready Entries
 
-Fetch entries with status "Ready" (skip "PR Opened", "Done", "In Progress", "Error").
+**First, check for any entries already "In Progress"** — these are runs that were started but interrupted. Resume them before picking up new "Ready" entries.
+
+```bash
+python3 <<'EOF'
+import urllib.request, os, json
+
+DATABASE_ID = "2ffcd9598000412f8b21e8d6fa4533c7"
+
+data = json.dumps({
+    "filter": {
+        "property": "Status",
+        "select": {"equals": "In Progress"}
+    },
+    "sorts": [{"property": "Created", "direction": "ascending"}],
+    "page_size": 10
+}).encode()
+
+req = urllib.request.Request(
+    f'https://api.notion.com/v1/databases/{DATABASE_ID}/query',
+    data=data, method='POST'
+)
+req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
+req.add_header('Content-Type', 'application/json')
+req.add_header('Notion-Version', '2022-06-28')
+
+print("calling Notion API...")
+results = json.load(urllib.request.urlopen(req, timeout=15))
+pages = results.get('results', [])
+
+print(f"Found {len(pages)} entries with status 'In Progress'")
+
+for page in pages:
+    props = page.get('properties', {})
+    title_prop = props.get('Name') or props.get('Title') or {}
+    title = ''.join(p.get('plain_text', '') for p in title_prop.get('title', []))
+    repo_prop = props.get('Repo', {})
+    repo = ''.join(p.get('plain_text', '') for p in repo_prop.get('rich_text', [])).strip()
+    branch_prop = props.get('Branch', {})
+    branch = ''.join(p.get('plain_text', '') for p in branch_prop.get('rich_text', [])).strip()
+    print(f"RESUME page_id={page['id']} title={title!r} branch={branch!r} repo={repo!r}")
+EOF
+```
+
+**Resume decision for each "In Progress" entry:**
+- **Branch exists + no open PR** → the run was interrupted after branch creation but before PR creation. Resume from Step 7 (create commits and open PR).
+- **Branch exists + PR is open** → the run was interrupted after PR creation but before Notion update. Resume from Step 9 (update Notion with PR URL and feedback).
+- **No branch recorded (Branch field empty)** → the run was interrupted before any GitHub write. Reset Notion status to "Ready" and reprocess from the beginning.
+
+Process all "In Progress" entries before moving on to "Ready" entries.
+
+---
+
+**Then, fetch entries with status "Ready"** (skip "PR Opened", "Done", "In Progress", "Error").
 
 ```bash
 python3 <<'EOF'
@@ -182,6 +235,7 @@ req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Notion-Version', '2022-06-28')
 
+print("calling Notion API...")
 results = json.load(urllib.request.urlopen(req, timeout=15))
 pages = results.get('results', [])
 
@@ -215,8 +269,7 @@ for page in pages:
         for p in description_prop.get('rich_text', [])
     ).strip()
 
-    if description:
-        print(f"  description={description!r}")
+    print(f"description={description!r}")  # empty string if not set
 
     # Guard: skip entries with empty Repo field
     if not repo:
@@ -231,6 +284,43 @@ EOF
 If `description` is non-empty, treat it as additional task context in Phase B. Quote it explicitly in the plan under "Additional context from Notion Description".
 
 **Never write to `Description`. It is read-only.**
+
+**Immediately after selecting an entry to process**, lock it as "In Progress" and record the branch name you will use. This prevents another run from picking up the same entry concurrently.
+
+```bash
+python3 <<'EOF'
+import urllib.request, os, json
+
+PAGE_ID = "REPLACE"   # page_id from above
+BRANCH_NAME = "REPLACE"  # the branch name you will create in Step 6
+
+def to_rich_text(s):
+    return [{"text": {"content": s}}]
+
+data = json.dumps({
+    "properties": {
+        "Status": {"select": {"name": "In Progress"}},
+        "Branch": {"rich_text": to_rich_text(BRANCH_NAME)}
+    }
+}).encode()
+
+req = urllib.request.Request(
+    f'https://api.notion.com/v1/pages/{PAGE_ID}',
+    data=data, method='PATCH'
+)
+req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
+req.add_header('Content-Type', 'application/json')
+req.add_header('Notion-Version', '2022-06-28')
+
+try:
+    print("calling Notion API...")
+    result = json.load(urllib.request.urlopen(req, timeout=15))
+    print(f"Locked as In Progress: {result['id']}  branch={BRANCH_NAME}")
+except urllib.error.HTTPError as e:
+    print(f"WARNING: Could not lock entry ({e.code}): {e.read().decode()}")
+    print("Proceeding anyway — duplicate run risk is low.")
+EOF
+```
 
 Process entries one at a time. Do not start the next entry until the current one is fully complete or explicitly abandoned. page_size is 10 — if you have more than 10 "Not started" entries, only the 10 oldest are returned per run.
 
@@ -249,6 +339,7 @@ req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
 req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
+print("calling GitHub API...")
 user = json.load(urllib.request.urlopen(req))
 print(f"github_username={user['login']}")
 EOF
@@ -271,6 +362,7 @@ req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
+    print("calling GitHub API...")
     repo = json.load(urllib.request.urlopen(req))
     print(f"default_branch={repo['default_branch']}  private={repo['private']}")
 except urllib.error.HTTPError as e:
@@ -306,6 +398,7 @@ req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
 req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
+print("calling GitHub API...")
 contents = json.load(urllib.request.urlopen(req))
 for item in contents:
     print(f"{item['type']:6}  {item['name']}")
@@ -331,6 +424,7 @@ req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
 req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
+print("calling GitHub API...")
 file_data = json.load(urllib.request.urlopen(req, timeout=15))
 
 # Guard: not a regular file (directory, submodule, symlink)
@@ -440,6 +534,7 @@ req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
 req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
+print("calling GitHub API...")
 ref_data = json.load(urllib.request.urlopen(req, timeout=15))
 head_sha = ref_data['object']['sha']
 print(f"BRANCH_NAME={BRANCH_NAME}")
@@ -471,6 +566,7 @@ def create_branch(name, sha):
     req.add_header('Accept', 'application/vnd.github+json')
     req.add_header('Content-Type', 'application/json')
     req.add_header('X-GitHub-Api-Version', '2022-11-28')
+    print("calling GitHub API...")
     return urllib.request.urlopen(req, timeout=15)
 
 ACTIVE_BRANCH = BRANCH_NAME
@@ -562,6 +658,7 @@ req.add_header('Content-Type', 'application/json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
+    print("calling GitHub API...")
     result = json.load(urllib.request.urlopen(req, timeout=15))
     print(f"committed: {result['commit']['sha']}")
 except urllib.error.HTTPError as e:
@@ -686,7 +783,7 @@ Notion task: {NOTION_PAGE_URL}{skipped_section}
 
 ---
 
-> Proposed by Koda. Review the diff before merging. Koda never merges PRs.
+> Opened via OpenClaw. Review the diff before merging — never auto-merged.
 """
 
 data = json.dumps({
@@ -706,6 +803,7 @@ req.add_header('Content-Type', 'application/json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
+    print("calling GitHub API...")
     pr = json.load(urllib.request.urlopen(req, timeout=15))
     pr_url = pr['html_url']
     print(f"PR OPENED: {pr_url}")
@@ -767,6 +865,7 @@ req.add_header('Content-Type', 'application/json')
 req.add_header('Notion-Version', '2022-06-28')
 
 try:
+    print("calling Notion API...")
     result = json.load(urllib.request.urlopen(req, timeout=15))
     print(f"Notion updated: {result['id']}")
     print(f"  Status: PR Opened | PR URL: {PR_URL}")
@@ -816,13 +915,14 @@ The target database is **OpenClaw** (`database_id: 2ffcd9598000412f8b21e8d6fa453
 | Description | text (rich_text) | **Read-only. Never write.** |
 | Feedback | text (rich_text) | Write |
 | PR URL | url | Write |
+| Branch | rich_text | Write |
 
 **Field permissions summary:**
 - Read: Name, Repo, Description
-- Write: Status, Feedback, PR URL
+- Write: Status, Feedback, PR URL, Branch
 - Never write: Description
 
-Status values Koda processes: **Ready** only. Skips: In Progress, PR Opened, Done, Error.
+Status values used: **Ready** (picked up for processing), **In Progress** (run started, lock held), **PR Opened** (complete), **Done** (manually closed), **Error** (unrecoverable failure). The skill sets Ready → In Progress at run start, then In Progress → PR Opened at run end.
 
 ---
 
