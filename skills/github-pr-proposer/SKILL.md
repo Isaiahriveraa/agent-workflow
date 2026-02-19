@@ -7,7 +7,7 @@ description: |
   Triggered manually or from a Heartbeat check.
 metadata:
   author: koda
-  version: "1.5"
+  version: "2.0"
   requires:
     env:
       - GITHUB_TOKEN    # personal access token with repo scope; set in openclaw.json env block
@@ -33,6 +33,18 @@ All operations use the **GitHub REST API and Notion API directly via Python `url
 - Never use the Bash tool to navigate to or inspect a local copy of the repo
 - "Reading the codebase" means calling `GET /repos/{owner}/{repo}/contents/{path}` — not opening a file on disk
 - The only local filesystem writes are handoff documents (`~/.openclaw/thoughts/`)
+
+## Phase Structure: Research → Plan → Implement
+
+Every run follows three phases in strict order. **Implementation never starts without a written plan. A plan is never written without completed research.**
+
+| Phase | Output | Gate to next phase |
+|---|---|---|
+| **R — Research** (Step 4) | Language Context Block + file inventory | Plan document written |
+| **P — Plan** (Step 4.5) | `PLAN.md` written to thoughts dir | Plan document exists on disk |
+| **I — Implement** (Steps 6–7) | Code committed to branch | Plan document referenced in PR |
+
+If you find yourself writing code before a `PLAN.md` exists for this entry — stop. Go back to Phase P.
 
 ## Safety Constraints
 
@@ -415,6 +427,36 @@ for item in contents:
 EOF
 ```
 
+#### Phase A — Step 1b: Build System and Language Detection
+
+After the root listing, read config files in priority order to identify the language and build system. Stop at the first match:
+
+1. `package.json` → Node/TypeScript/JavaScript
+2. `tsconfig.json` → TypeScript (if package.json has typescript dep)
+3. `Cargo.toml` → Rust
+4. `pyproject.toml` / `setup.py` → Python
+5. `build.gradle` / `build.gradle.kts` → Kotlin/JVM
+6. `Package.swift` → Swift
+7. `pom.xml` → Java/Maven
+8. `go.mod` → Go
+
+Extract and explicitly print a **Language Context Block**:
+
+```
+LANGUAGE CONTEXT BLOCK
+======================
+Primary language: [e.g., TypeScript 5.2 / Swift 5.9 / Python 3.11]
+Build command: [exact command or "not detected"]
+Test command: [exact command or "not detected"]
+Type checking: [strict / lenient / none / not detected]
+Key constraints:
+  - [e.g., "TypeScript strict mode: null checks enforced"]
+  - [e.g., "Swift iOS 16 minimum: async/await available"]
+======================
+```
+
+Do not proceed to "Check for test directories" until this block is written.
+
 2. Check for test directories (`tests/`, `__tests__/`, `spec/`, files matching `*.test.*` or `*.spec.*`). Note whether TDD is expected.
 
 3. Read files directly relevant to the task (follow imports if needed). Content is Base64-encoded:
@@ -469,6 +511,8 @@ EOF
 
 **Save the `sha` for every file you plan to modify.** The GitHub API requires it when writing.
 
+**Docs directory check:** While reading the root listing, note whether a `docs/` directory exists in the root. Save as `HAS_DOCS_DIR = True/False`. This is used in Step 8.6.
+
 If a file was SKIPped, note it in the PR body under a "Skipped Files" section. Do not attempt to commit it.
 
 4. Note the following from what you read:
@@ -489,7 +533,87 @@ For vague fix descriptions: read `README.md` first, then narrow down by director
 **Context Check — Phase A boundary**
 Evaluate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
 If `>= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol. Do not start Phase B.
-If below threshold: proceed to Step 5.
+If below threshold: proceed to Step 4.5.
+
+---
+
+### Step 4.5 — Write the Plan Document (Phase P)
+
+Before writing any code or reasoning about a diff, write a plan document to disk. This document is the single source of truth for what you intend to do and why. It is what a developer reads to understand the proposed change without reading the PR diff.
+
+**Filename:** `{YYYY-MM-DD_HH-MM-SS}_{slug}-plan.md` (UTC timestamp, same slug as the branch)
+**Path:** `~/.openclaw/thoughts/shared/plans/{owner}-{repo}/`
+
+Create the directory if it does not exist.
+
+**Required structure:**
+
+~~~markdown
+---
+date: {ISO-8601}
+entry: "{notion entry title}"
+page_id: {page_id}
+repo: {owner/repo}
+branch: {BRANCH_NAME — to be created in Step 6}
+status: planning
+---
+
+# Plan: {notion entry title}
+
+## What I Found (Research Summary)
+
+### Repository
+- Language: {from Language Context Block}
+- Build command: {from Language Context Block}
+- Test command: {from Language Context Block}
+- Type checking: {from Language Context Block}
+
+### Files Relevant to This Task
+{For each file read in Phase A: path, what it does, why it's relevant}
+
+### Current Behavior
+{What the code currently does — specific, not generic}
+
+### Root Cause
+{Why the current behavior is wrong or incomplete}
+
+## What I Will Change
+
+### Files to Modify
+{Each file: path + what changes and why}
+
+### Exact Diff (line by line)
+{Unified diff format. `-` for removed lines, `+` for added lines. Not prose — actual lines.}
+
+### Why This Approach
+{Why this approach over alternatives. Name at least one alternative and why it was rejected.}
+
+## What Could Break
+
+{At least two specific, concrete failure modes and how each is handled. Not "runtime errors" — specific scenarios.}
+
+## Edge Cases
+
+{Inputs or states that could produce unexpected results. "None" only if genuinely none.}
+
+## Test Plan
+
+{If repo has tests: which test file will be added/modified, what cases will be covered.}
+{If no tests: state why no tests are being added.}
+
+## Out of Scope
+
+{Anything intentionally not changed and why.}
+~~~
+
+**After writing this file:**
+1. Print: `PLAN WRITTEN: {full path}`
+2. Save the path as `PLAN_PATH` — you will reference it in Step 8 (PR body) and Step 9 (Notion feedback)
+3. If context threshold check fires here: write a handoff that includes `PLAN_PATH`. The plan document already exists, so the resume path skips Phase P and starts at Phase I.
+
+**Do not proceed to Step 5 until `PLAN_PATH` is confirmed written to disk.**
+
+Note: Step 5 (Phase B) still runs — it is now the in-context reasoning pass that validates the plan document. The plan document is the output; Step 5 is the quality gate on that output.
 
 ---
 
@@ -505,6 +629,27 @@ Before writing anything, explicitly reason through each of the following. This r
 4. **Edge cases.** What inputs or states could break this change? How is each handled?
 5. **Scope check.** Is the description specific enough to make a safe, scoped change?
 6. **Additional context from Notion Description.** If `description` is non-empty, quote it here and state explicitly how it changed or confirmed the approach. If it conflicts with the entry title, flag the conflict in the PR body.
+
+7. **Compilability check against Language Context Block.** Copy the Language Context Block here. For each line of the diff that adds or modifies code, confirm:
+   - Null/optional types are handled per the type system (strict null checks, optional chaining, etc.)
+   - All new functions have required annotations (return types, parameter types)
+   - All new syntax is available in the stated language version
+   If you cannot confirm all of these, revise the diff before proceeding.
+
+8. **Import and symbol verification.** For every new symbol in the diff (function calls, class references, type names, constants), state its source:
+   - "defined in this file at line X"
+   - "imported from [module]"
+   - "defined in [file path] — I read that file in Phase A and confirmed it exports this symbol"
+   If you cannot state the source, read the file that should define it before proceeding.
+
+9. **Structural completeness check.** Count and state the delimiter balance in the diff:
+   - Braces `{` / `}`: [N open, N close]
+   - Parens `(` / `)`: [N open, N close]
+   - Brackets `[` / `]`: [N open, N close]
+   - Python only: every `def`/`class`/`if`/`for`/`while` has a properly indented block
+   If counts don't match, fix the diff before proceeding.
+
+10. **Test structure alignment.** State the test file naming pattern, framework, and assertion style observed in Phase A. Name the specific existing test file being modeled. Confirm the new test code copies the structure — same imports, same nesting, same assertion style — not invented patterns.
 
 If the description is too vague to produce a safe diff, still create the branch and PR — but put your question in the PR body rather than making a speculative change. A PR with no code change but a clear question is better than a wrong change.
 
@@ -615,7 +760,30 @@ If branch creation returns 409, the script retries with a `{YYYYMMDD_HHMMSS}` su
 
 #### Phase C — Implement
 
-If the repo has a test directory (identified in Phase A), write tests first before modifying the implementation. Follow the naming conventions and patterns observed in Phase A research.
+**Phase I Gate:** Before writing any file content, confirm `PLAN_PATH` is set and the file exists. If `PLAN_PATH` is not set or the file does not exist on disk, stop. Return to Step 4.5 and write the plan first. Do not skip this gate.
+
+**Step C.1 — Read one existing test file in full.**
+Pick the test file closest to the file being changed (e.g., if changing `src/auth/tokenValidator.ts`, look for `src/auth/tokenValidator.test.ts`). Read it using the Phase A file-reading script.
+
+Extract and record:
+- Import style (e.g., `import { describe, it, expect } from 'vitest'`)
+- Test block structure (describe/it nesting, naming conventions)
+- Assertion style (`expect(x).toBe(y)` vs `assert x == y` vs `XCTAssertEqual`)
+- Mocking/fixture pattern
+- Setup/teardown pattern
+
+If repo has NO test directory: skip C.1–C.3 and proceed directly to C.4.
+
+**Step C.2 — Write test content by copying the structure of the file you just read.**
+Do not invent structure. Same imports (adjusted for the module being tested), same nesting, same assertion style. State: "I am modeling this test after [path/to/existing/test/file]."
+
+**Step C.3 — Run Step 7.3 validation on the test file content before committing it.**
+
+**Step C.4 — Commit test file first, then implementation file.**
+- Test commit: `test: add tests for [module name]`
+- Impl commit: `fix: [what was fixed]`
+
+If repo has NO test directory: write implementation only. Do not create test infrastructure — out of scope.
 
 Write the modified file to the new branch. Content must be Base64-encoded. The `sha` is from Step 4.
 
@@ -686,6 +854,68 @@ EOF
 
 For a PR with no code change (vague description), skip this step — the branch stays empty. The PR body will contain the question.
 
+---
+
+### Step 7.3 — Pre-Commit Syntax Validation
+
+Run this BEFORE the PUT request — validate `NEW_CONTENT` before it is committed. Run for each file being committed.
+
+```python
+python3 <<'EOF'
+import sys, re
+
+LANGUAGE = "REPLACE"      # python | typescript | swift | kotlin | rust | go | java | other
+FILE_PATH = "REPLACE"
+NEW_CONTENT = """REPLACE"""  # same content as Step 7 PUT
+
+def validate(language, content):
+    errors, warnings = [], []
+
+    if language == "python":
+        import ast
+        try:
+            ast.parse(content)
+        except SyntaxError as e:
+            errors.append(f"SyntaxError at line {e.lineno}: {e.msg}")
+        return errors, warnings
+
+    brace_langs = {"typescript","swift","kotlin","rust","go","java","javascript","c","cpp"}
+    if language in brace_langs:
+        ob, cb = content.count('{'), content.count('}')
+        op, cp = content.count('('), content.count(')')
+        obr, cbr = content.count('['), content.count(']')
+        if ob != cb: warnings.append(f"Brace imbalance: {ob} '{{' vs {cb} '}}'")
+        if op != cp: warnings.append(f"Paren imbalance: {op} '(' vs {cp} ')'")
+        if obr != cbr: warnings.append(f"Bracket imbalance: {obr} '[' vs {cbr} ']'")
+        stripped = content.rstrip()
+        if stripped and not stripped.endswith(('}', ';', ')', ']')):
+            warnings.append(f"File ends with {stripped[-1]!r} — possible truncation")
+        if language == "typescript":
+            anys = re.findall(r':\s*any\b', content)
+            if anys: warnings.append(f"{len(anys)} usage(s) of ': any' — verify intentional")
+    else:
+        warnings.append(f"No validation for language '{language}' — skipping")
+
+    return errors, warnings
+
+errors, warnings = validate(LANGUAGE, NEW_CONTENT)
+for w in warnings: print(f"WARNING: {w}")
+if errors:
+    print("BLOCK: Fix errors before committing.")
+    for e in errors: print(f"  ERROR: {e}")
+    sys.exit(1)
+else:
+    print(f"PASS: {FILE_PATH}")
+EOF
+```
+
+**Decision rules:**
+- `BLOCK` → stop. Fix content and re-run. If unfixable, open a question PR with empty branch instead.
+- `WARNING` → reason through each warning explicitly. If not a false positive, fix before committing.
+- `PASS` → proceed to PUT.
+
+---
+
 **Context Check — Phase C boundary**
 Evaluate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
 If `>= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol. Record in the handoff that the branch and commits exist so the resume path skips Steps 6 and 7.
@@ -695,17 +925,26 @@ If below threshold: proceed to Step 7.5.
 
 ### Step 7.5 — Self-Review (Phase D)
 
-Before opening the PR, verify every item in this checklist. If any item fails, fix it before proceeding to Step 8.
+Before opening the PR, write out all four declarations with specific content. "Yes" or a checkbox is not acceptable — each declaration requires actual detail.
 
-- [ ] Change does exactly what the task asked — nothing more, nothing less
-- [ ] No security issues (injections, exposed secrets, unvalidated input at boundaries)
-- [ ] Input is validated at the boundary if applicable
-- [ ] Error handling is explicit — no silent failures
-- [ ] Implementation follows the patterns found in Phase A research
-- [ ] Tests added or updated if the repo has a test structure
-- [ ] No hardcoded secrets or environment-specific values
+**Declaration 1 — Language and syntax rules:**
+"This code is written in [language + version]. The syntax rules I applied are: [list 3-5 specific rules, e.g., 'TypeScript strict mode: return types required on all functions', 'Python 3.11: match statements available']."
 
-**Do not proceed to Step 8 until all items pass.**
+**Declaration 2 — Symbol provenance:**
+"Every symbol I use in the diff is accounted for:" then list each new symbol and its source: defined at line X / imported from 'module' / confirmed in [file path] which I read in Phase A.
+
+If any symbol's source is unknown → stop. Read the file. Do not commit until all symbols are accounted for.
+
+**Declaration 3 — What could go wrong:**
+"The things that could break this change are:" then list at least two specific, concrete failure modes. NOT "the code could fail at runtime." Example: "if `user.profile` is null, line 47 throws because I access `.name` without a null check — handled by [X]."
+
+**Declaration 4 — Diff correctness attestation:**
+- Syntax validation result from Step 7.3: [PASS / PASS WITH WARNINGS: {describe each} / BLOCK — fixed: {what}]
+- Brace/paren/bracket balance: [confirmed counts or "N/A for Python"]
+- "The full file has [Z] lines. The content is complete — not truncated."
+- "After this commit, the file will [describe intended runtime behavior in one sentence]."
+
+**Do not proceed to Step 8 until all four declarations contain specific content.**
 
 ---
 
@@ -722,6 +961,8 @@ DEFAULT_BRANCH = "main"
 NOTION_PAGE_ID = "REPLACE"
 NOTION_PAGE_URL = f"https://notion.so/{NOTION_PAGE_ID.replace('-', '')}"
 SKIPPED_FILES = []  # populate with any file paths skipped in Step 4
+PLAN_PATH = "REPLACE"  # full path from Step 4.5
+PLAN_LINK = f"Plan document: `{PLAN_PATH}`"
 
 FIX_TITLE = "REPLACE with the Notion entry title"
 
@@ -779,6 +1020,12 @@ body = f"""## What this PR does
 
 {UNCHANGED_SCOPE}
 
+## Plan
+
+{PLAN_LINK}
+
+The plan document contains the full research findings, rationale, and diff reasoning. Read it for context on why this change was made.
+
 ## Self-review checklist
 
 - [x] Change is scoped to the task only
@@ -828,6 +1075,117 @@ EOF
 
 ---
 
+### Step 8.5 — Poll CI Status
+
+After the PR is created, extract `pr['head']['sha']` from the Step 8 response and poll check-runs for up to 3 minutes (6 polls × 30 seconds):
+
+```python
+python3 <<'EOF'
+import urllib.request, os, json, time
+
+OWNER = "REPLACE"
+REPO = "REPLACE"
+HEAD_SHA = "REPLACE"  # pr['head']['sha'] from Step 8 response
+
+def get_check_runs(owner, repo, sha):
+    req = urllib.request.Request(
+        f'https://api.github.com/repos/{owner}/{repo}/commits/{sha}/check-runs'
+    )
+    req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+    req.add_header('Accept', 'application/vnd.github+json')
+    req.add_header('X-GitHub-Api-Version', '2022-11-28')
+    return json.load(urllib.request.urlopen(req, timeout=15))
+
+CI_STATUS = "no-ci-detected"
+CI_DETAILS = "No check-runs found within 3 minutes."
+
+for attempt in range(6):
+    try:
+        data = get_check_runs(OWNER, REPO, HEAD_SHA)
+        runs = data.get('check_runs', [])
+        if not runs:
+            print(f"Poll {attempt+1}/6: no check-runs yet. Waiting 30s...")
+            time.sleep(30)
+            continue
+        # Summarize
+        statuses = [r['status'] for r in runs]
+        conclusions = [r['conclusion'] for r in runs if r['conclusion']]
+        all_done = all(s == 'completed' for s in statuses)
+        if all_done:
+            failed = [r for r in runs if r['conclusion'] not in ('success', 'neutral', 'skipped', None)]
+            if failed:
+                CI_STATUS = "failed"
+                CI_DETAILS = "; ".join(f"{r['name']}: {r['conclusion']}" for r in failed)
+            else:
+                CI_STATUS = "passed"
+                CI_DETAILS = f"All {len(runs)} check(s) passed."
+            break
+        else:
+            print(f"Poll {attempt+1}/6: {len(runs)} runs, not all complete. Waiting 30s...")
+            time.sleep(30)
+    except Exception as e:
+        CI_STATUS = "check-error"
+        CI_DETAILS = str(e)
+        break
+else:
+    CI_STATUS = "timeout"
+    CI_DETAILS = f"Checks still running after 3 minutes. Check GitHub for status."
+
+print(f"CI_STATUS={CI_STATUS}")
+print(f"CI_DETAILS={CI_DETAILS}")
+EOF
+```
+
+Carry `CI_STATUS` and `CI_DETAILS` into Step 9 Notion feedback.
+
+---
+
+### Step 8.6 — Write Docs Summary (conditional)
+
+**Only execute this step if `HAS_DOCS_DIR = True` (set in Phase A).**
+
+If `docs/` does not exist in the repo root, skip this step entirely. Do not create a `docs/` directory — adding one to a repo that has none is out of scope.
+
+If `docs/` exists, write a stripped-down change summary to the branch using the same PUT `/contents` endpoint from Step 7:
+
+- **Path:** `docs/koda/{slug}.md` (same slug as the branch)
+- **Branch:** `ACTIVE_BRANCH`
+- **Commit message:** `docs: add change summary for {slug}`
+
+**Content template:**
+
+```markdown
+# Change Summary: {notion entry title}
+
+*Generated by Koda — {ISO-8601 date}*
+
+## What Changed
+
+{2-3 sentences: which files changed and what was modified}
+
+## Why
+
+{Why this approach was chosen over alternatives}
+
+## Edge Cases
+
+{Concrete failure modes handled, or "None identified"}
+
+## Out of Scope
+
+{What was intentionally not changed and why}
+
+## References
+
+- PR: {PR_URL}
+- Notion: {NOTION_PAGE_URL}
+- Plan document: `{PLAN_PATH}`
+```
+
+This file requires no SHA (it is new). Use `FILE_SHA = ""` and omit the `sha` field from the PUT body when creating a new file.
+
+---
+
 ### Step 9 — Update the Notion Entry
 
 Mark the entry "PR Opened", record the PR URL, and write a Feedback summary. Use the page_id from Step 2.
@@ -838,6 +1196,9 @@ import urllib.request, os, json
 
 PAGE_ID = "REPLACE"
 PR_URL = "REPLACE"  # use PR_URL from Step 8
+PLAN_PATH = "REPLACE"  # full path from Step 4.5
+CI_STATUS = "REPLACE"  # from Step 8.5: passed | failed | no-ci-detected | timeout | check-error
+CI_DETAILS = "REPLACE"  # from Step 8.5
 
 WHAT_WAS_DONE = "REPLACE"           # factual summary of files changed and what changed
 WHY_THIS_APPROACH = "REPLACE"       # rationale; mention alternatives considered
@@ -850,7 +1211,9 @@ feedback_text = (
     f"Done: {WHAT_WAS_DONE} "
     f"Approach: {WHY_THIS_APPROACH} "
     f"Edge cases: {EDGE_CASES_FOUND} "
-    f"Questions: {QUESTIONS_OR_BLOCKERS}"
+    f"Questions: {QUESTIONS_OR_BLOCKERS} "
+    f"Plan: {PLAN_PATH} "
+    f"CI: {CI_STATUS}. Details: {CI_DETAILS}"
 )
 
 def to_rich_text(text):
