@@ -55,7 +55,7 @@ These are non-negotiable and must be followed on every run:
 Check the GitHub rate limit before any write operation. If `remaining < 100`, print the reset time and stop.
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json, datetime
 
 req = urllib.request.Request('https://api.github.com/rate_limit')
@@ -64,7 +64,7 @@ req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
-    data = json.load(urllib.request.urlopen(req, timeout=30))
+    data = json.load(urllib.request.urlopen(req, timeout=15))
 except Exception as e:
     print(f"STOP: Could not check GitHub rate limit — {e}")
     raise SystemExit(1)
@@ -84,7 +84,7 @@ EOF
 ```
 
 ```python
-python <<'EOF'
+python3 <<'EOF'
 import json, os
 
 config_path = os.path.expanduser("~/.openclaw/openclaw.json")
@@ -160,7 +160,7 @@ Proceed directly to Step 2 using `DATABASE_ID = "2ffcd9598000412f8b21e8d6fa4533c
 Fetch entries with status "Ready" (skip "PR Opened", "Done", "In Progress", "Error").
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json
 
 DATABASE_ID = "2ffcd9598000412f8b21e8d6fa4533c7"
@@ -182,7 +182,7 @@ req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Notion-Version', '2022-06-28')
 
-results = json.load(urllib.request.urlopen(req, timeout=30))
+results = json.load(urllib.request.urlopen(req, timeout=15))
 pages = results.get('results', [])
 
 print(f"Found {len(pages)} entries with status 'Ready'")
@@ -241,7 +241,7 @@ Process entries one at a time. Do not start the next entry until the current one
 Parse `owner/repo` from the Notion entry's Repo field. If only a bare repo name is present (no `/`), fetch the authenticated GitHub username and prepend it.
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json
 
 req = urllib.request.Request('https://api.github.com/user')
@@ -257,7 +257,7 @@ EOF
 Compose the full `owner/repo`. Then verify it exists and is accessible:
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json
 
 OWNER = "REPLACE"
@@ -292,7 +292,7 @@ This step has four required phases. Do not proceed to Step 5 until all four phas
 1. Read the repository root listing to understand the project structure.
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json
 
 OWNER = "REPLACE"
@@ -317,7 +317,7 @@ EOF
 3. Read files directly relevant to the task (follow imports if needed). Content is Base64-encoded:
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json, base64
 
 OWNER = "REPLACE"
@@ -331,7 +331,7 @@ req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
 req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
-file_data = json.load(urllib.request.urlopen(req, timeout=30))
+file_data = json.load(urllib.request.urlopen(req, timeout=15))
 
 # Guard: not a regular file (directory, submodule, symlink)
 if file_data.get('type') != 'file':
@@ -418,8 +418,8 @@ If below threshold: proceed to Step 6.
 Get the SHA of the default branch's HEAD, then create a new branch off it.
 
 ```bash
-python <<'EOF'
-import urllib.request, os, json, datetime
+python3 <<'EOF'
+import urllib.request, os, json
 
 OWNER = "REPLACE"
 REPO = "REPLACE"
@@ -440,28 +440,42 @@ req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
 req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
-ref_data = json.load(urllib.request.urlopen(req, timeout=30))
+ref_data = json.load(urllib.request.urlopen(req, timeout=15))
 head_sha = ref_data['object']['sha']
+print(f"BRANCH_NAME={BRANCH_NAME}")
 print(f"head_sha={head_sha}")
+EOF
+```
+
+**Save `BRANCH_NAME` and `head_sha` from the output above, then run:**
+
+```bash
+python3 <<'EOF'
+import urllib.request, os, json, datetime
+
+OWNER = "REPLACE"
+REPO = "REPLACE"
+BRANCH_NAME = "REPLACE"  # koda/fix/{slug} from block above
+HEAD_SHA = "REPLACE"     # head_sha from block above
 
 def create_branch(name, sha):
     data = json.dumps({
         "ref": f"refs/heads/{name}",
         "sha": sha
     }).encode()
-    req2 = urllib.request.Request(
+    req = urllib.request.Request(
         f'https://api.github.com/repos/{OWNER}/{REPO}/git/refs',
         data=data, method='POST'
     )
-    req2.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
-    req2.add_header('Accept', 'application/vnd.github+json')
-    req2.add_header('Content-Type', 'application/json')
-    req2.add_header('X-GitHub-Api-Version', '2022-11-28')
-    return urllib.request.urlopen(req2, timeout=30)
+    req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
+    req.add_header('Accept', 'application/vnd.github+json')
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('X-GitHub-Api-Version', '2022-11-28')
+    return urllib.request.urlopen(req, timeout=15)
 
 ACTIVE_BRANCH = BRANCH_NAME
 try:
-    result = json.load(create_branch(ACTIVE_BRANCH, head_sha))
+    result = json.load(create_branch(ACTIVE_BRANCH, HEAD_SHA))
     print(f"branch created: {result['ref']}")
 except urllib.error.HTTPError as e:
     if e.code == 409:
@@ -470,7 +484,7 @@ except urllib.error.HTTPError as e:
         ACTIVE_BRANCH = f"{BRANCH_NAME}-{ts}"
         print(f"Branch exists (409). Retrying with suffix: {ACTIVE_BRANCH}")
         try:
-            result = json.load(create_branch(ACTIVE_BRANCH, head_sha))
+            result = json.load(create_branch(ACTIVE_BRANCH, HEAD_SHA))
             print(f"branch created: {result['ref']}")
         except urllib.error.HTTPError as e2:
             if e2.code == 409:
@@ -500,7 +514,7 @@ If the repo has a test directory (identified in Phase A), write tests first befo
 Write the modified file to the new branch. Content must be Base64-encoded. The `sha` is from Step 4.
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json, base64
 
 OWNER = "REPLACE"
@@ -522,7 +536,7 @@ def delete_branch(owner, repo, branch):
         req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
         req.add_header('Accept', 'application/vnd.github+json')
         req.add_header('X-GitHub-Api-Version', '2022-11-28')
-        urllib.request.urlopen(req, timeout=30)
+        urllib.request.urlopen(req, timeout=15)
         print(f"Orphaned branch deleted: {branch}")
     except Exception as cleanup_err:
         print(f"WARNING: Could not delete branch {branch} — clean up manually.")
@@ -548,7 +562,7 @@ req.add_header('Content-Type', 'application/json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
-    result = json.load(urllib.request.urlopen(req, timeout=30))
+    result = json.load(urllib.request.urlopen(req, timeout=15))
     print(f"committed: {result['commit']['sha']}")
 except urllib.error.HTTPError as e:
     if e.code == 409:
@@ -591,7 +605,7 @@ Before opening the PR, verify every item in this checklist. If any item fails, f
 ### Step 8 — Open the Pull Request
 
 ```bash
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json
 
 OWNER = "REPLACE"
@@ -626,7 +640,7 @@ def delete_branch(owner, repo, branch):
         req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
         req.add_header('Accept', 'application/vnd.github+json')
         req.add_header('X-GitHub-Api-Version', '2022-11-28')
-        urllib.request.urlopen(req, timeout=30)
+        urllib.request.urlopen(req, timeout=15)
         print(f"Orphaned branch deleted: {branch}")
     except Exception as cleanup_err:
         print(f"WARNING: Could not delete branch {branch} — clean up manually.")
@@ -692,7 +706,7 @@ req.add_header('Content-Type', 'application/json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
-    pr = json.load(urllib.request.urlopen(req, timeout=30))
+    pr = json.load(urllib.request.urlopen(req, timeout=15))
     pr_url = pr['html_url']
     print(f"PR OPENED: {pr_url}")
     print(f"PR_URL={pr_url}")
@@ -711,7 +725,7 @@ EOF
 Mark the entry "PR Opened", record the PR URL, and write a Feedback summary. Use the page_id from Step 2.
 
 ```python
-python <<'EOF'
+python3 <<'EOF'
 import urllib.request, os, json
 
 PAGE_ID = "REPLACE"
@@ -753,7 +767,7 @@ req.add_header('Content-Type', 'application/json')
 req.add_header('Notion-Version', '2022-06-28')
 
 try:
-    result = json.load(urllib.request.urlopen(req, timeout=30))
+    result = json.load(urllib.request.urlopen(req, timeout=15))
     print(f"Notion updated: {result['id']}")
     print(f"  Status: PR Opened | PR URL: {PR_URL}")
     print(f"  Feedback written ({len(feedback_text)} chars)")
@@ -919,7 +933,7 @@ Files pending: {path — not yet committed}
 4. **Write a resume task to HEARTBEAT.md:**
 
 ```python
-python <<'EOF'
+python3 <<'EOF'
 import os, datetime
 
 heartbeat_path = os.path.expanduser("~/.openclaw/workspace/HEARTBEAT.md")
