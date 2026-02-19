@@ -24,6 +24,16 @@ Reads fix entries from a Notion database, reads the target GitHub codebase via t
 - From a Heartbeat: periodic autonomous sweep of the fix database
 - Any time you want Koda to translate a Notion fix entry into a reviewable PR
 
+## Execution Model
+
+All operations use the **GitHub REST API and Notion API directly via Python `urllib`**. There is no local git clone, no `gh` CLI, no filesystem access to the target repository.
+
+- Never run `git clone`, `git checkout`, or any git CLI command on the target repo
+- Never search the local filesystem for a directory matching the repo name
+- Never use the Bash tool to navigate to or inspect a local copy of the repo
+- "Reading the codebase" means calling `GET /repos/{owner}/{repo}/contents/{path}` — not opening a file on disk
+- The only local filesystem writes are handoff documents (`~/.openclaw/thoughts/`)
+
 ## Safety Constraints
 
 These are non-negotiable and must be followed on every run:
