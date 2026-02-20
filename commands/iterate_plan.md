@@ -1,6 +1,5 @@
 ---
 description: Surgically adjust an existing plan when scope or approach needs to change
-model: opus
 ---
 
 # Iterate Plan

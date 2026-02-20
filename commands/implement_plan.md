@@ -1,6 +1,5 @@
 ---
 description: Execute an implementation plan phase by phase with verification checkpoints
-model: opus
 ---
 
 # Implement Plan
