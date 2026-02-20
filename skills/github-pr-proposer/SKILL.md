@@ -38,11 +38,12 @@ All operations use the **GitHub REST API and Notion API directly via Python `url
 
 Every run follows three phases in strict order. **Implementation never starts without a written plan. A plan is never written without completed research.**
 
-| Phase | Output | Gate to next phase |
-|---|---|---|
-| **R — Research** (Step 4) | Language Context Block + file inventory | Plan document written |
-| **P — Plan** (Step 4.5) | `PLAN.md` written to thoughts dir | Plan document exists on disk |
-| **I — Implement** (Steps 6–7) | Code committed to branch | Plan document referenced in PR |
+| Phase | Session | Output | What stops the session |
+|---|---|---|---|
+| **R — Research** (Steps 3–4) | Session 1 | `RESEARCH.md` written to thoughts dir | Notion = "Research Complete", session stops |
+| **P — Plan** (Step 4.5) | Session 2 | `PLAN.md` written to thoughts dir | Notion = "Planning Complete", session stops |
+| **I — Implement** (Steps 6–7) | Session 3 | Code committed to branch | Context < 60%, syntax validated |
+| **PR — Open PR** (Steps 8–9) | Session 3 | PR created + Notion updated | Notion = "PR Opened" |
 
 If you find yourself writing code before a `PLAN.md` exists for this entry — stop. Go back to Phase P.
 
@@ -178,61 +179,9 @@ Proceed directly to Step 2 using `DATABASE_ID = "2ffcd9598000412f8b21e8d6fa4533c
 
 ---
 
-### Step 2 — Query for In-Progress and Ready Entries
+### Step 2 — Query Entries and Route by Status
 
-**First, check for any entries already "In Progress"** — these are runs that were started but interrupted. Resume them before picking up new "Ready" entries.
-
-```bash
-python3 <<'EOF'
-import urllib.request, os, json
-
-DATABASE_ID = "2ffcd9598000412f8b21e8d6fa4533c7"
-
-data = json.dumps({
-    "filter": {
-        "property": "Status",
-        "select": {"equals": "In Progress"}
-    },
-    "sorts": [{"property": "Created", "direction": "ascending"}],
-    "page_size": 10
-}).encode()
-
-req = urllib.request.Request(
-    f'https://api.notion.com/v1/databases/{DATABASE_ID}/query',
-    data=data, method='POST'
-)
-req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
-req.add_header('Content-Type', 'application/json')
-req.add_header('Notion-Version', '2022-06-28')
-
-print("calling Notion API...")
-results = json.load(urllib.request.urlopen(req, timeout=15))
-pages = results.get('results', [])
-
-print(f"Found {len(pages)} entries with status 'In Progress'")
-
-for page in pages:
-    props = page.get('properties', {})
-    title_prop = props.get('Name') or props.get('Title') or {}
-    title = ''.join(p.get('plain_text', '') for p in title_prop.get('title', []))
-    repo_prop = props.get('Repo', {})
-    repo = ''.join(p.get('plain_text', '') for p in repo_prop.get('rich_text', [])).strip()
-    branch_prop = props.get('Branch', {})
-    branch = ''.join(p.get('plain_text', '') for p in branch_prop.get('rich_text', [])).strip()
-    print(f"RESUME page_id={page['id']} title={title!r} branch={branch!r} repo={repo!r}")
-EOF
-```
-
-**Resume decision for each "In Progress" entry:**
-- **Branch exists + no open PR** → the run was interrupted after branch creation but before PR creation. Resume from Step 7 (create commits and open PR).
-- **Branch exists + PR is open** → the run was interrupted after PR creation but before Notion update. Resume from Step 9 (update Notion with PR URL and feedback).
-- **No branch recorded (Branch field empty)** → the run was interrupted before any GitHub write. Reset Notion status to "Ready" and reprocess from the beginning.
-
-Process all "In Progress" entries before moving on to "Ready" entries.
-
----
-
-**Then, fetch entries with status "Ready"** (skip "PR Opened", "Done", "In Progress", "Error").
+Query the Notion database for all actionable entries. Process them in priority order — check top-to-bottom and handle the first match.
 
 ```bash
 python3 <<'EOF'
@@ -240,89 +189,123 @@ import urllib.request, os, json
 
 DATABASE_ID = "2ffcd9598000412f8b21e8d6fa4533c7"
 
-data = json.dumps({
-    "filter": {
-        "property": "Status",
-        "select": {"equals": "Ready"}
-    },
-    "sorts": [{"property": "Created", "direction": "ascending"}],
-    "page_size": 10
-}).encode()
+ACTIONABLE_STATUSES = [
+    "Coding",
+    "Planning Complete",
+    "Planning",
+    "Research Complete",
+    "Researching",
+    "In Progress",
+    "Ready",
+]
 
-req = urllib.request.Request(
-    f'https://api.notion.com/v1/databases/{DATABASE_ID}/query',
-    data=data, method='POST'
-)
-req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
-req.add_header('Content-Type', 'application/json')
-req.add_header('Notion-Version', '2022-06-28')
+all_pages = []
+for status in ACTIONABLE_STATUSES:
+    data = json.dumps({
+        "filter": {
+            "property": "Status",
+            "select": {"equals": status}
+        },
+        "sorts": [{"property": "Created", "direction": "ascending"}],
+        "page_size": 10
+    }).encode()
 
-print("calling Notion API...")
-results = json.load(urllib.request.urlopen(req, timeout=15))
-pages = results.get('results', [])
+    req = urllib.request.Request(
+        f'https://api.notion.com/v1/databases/{DATABASE_ID}/query',
+        data=data, method='POST'
+    )
+    req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('Notion-Version', '2022-06-28')
 
-print(f"Found {len(pages)} entries with status 'Ready'")
+    results = json.load(urllib.request.urlopen(req, timeout=15))
+    pages = results.get('results', [])
+    for page in pages:
+        props = page.get('properties', {})
+        title_prop = props.get('Name') or props.get('Title') or {}
+        title = ''.join(p.get('plain_text', '') for p in title_prop.get('title', []))
+        status_val = props.get('Status', {}).get('select', {}) or {}
+        status_name = status_val.get('name', 'Unknown')
+        repo_prop = props.get('Repo', {})
+        repo = ''
+        if 'rich_text' in repo_prop:
+            repo = ''.join(p.get('plain_text', '') for p in repo_prop['rich_text']).strip()
+        elif 'select' in repo_prop and repo_prop['select']:
+            repo = repo_prop['select']['name'].strip()
+        if repo.startswith('https://github.com/'):
+            parts = repo.replace('https://github.com/', '').strip('/').split('/')
+            repo = '/'.join(parts[:2]) if len(parts) >= 2 else ''
+        branch_prop = props.get('Branch', {})
+        branch = ''.join(p.get('plain_text', '') for p in branch_prop.get('rich_text', [])).strip()
+        description_prop = props.get('Description', {})
+        description = ''.join(
+            p.get('plain_text', '') for p in description_prop.get('rich_text', [])
+        ).strip()
+        all_pages.append({
+            'page_id': page['id'],
+            'title': title,
+            'status': status_name,
+            'repo': repo,
+            'branch': branch,
+            'description': description,
+        })
+        print(f"FOUND status={status_name!r} page_id={page['id']} title={title!r} repo={repo!r} branch={branch!r}")
 
-if not pages:
+if not all_pages:
     print("Nothing to do.")
     raise SystemExit(0)
 
-for page in pages:
-    props = page.get('properties', {})
-    # Extract title (the fix description)
-    title_prop = props.get('Name') or props.get('Title') or {}
-    title_parts = title_prop.get('title', [])
-    title = ''.join(p.get('plain_text', '') for p in title_parts)
-    # Extract and normalize repo field
-    repo_prop = props.get('Repo', {})
-    repo = ''
-    if 'rich_text' in repo_prop:
-        repo = ''.join(p.get('plain_text', '') for p in repo_prop['rich_text']).strip()
-    elif 'select' in repo_prop and repo_prop['select']:
-        repo = repo_prop['select']['name'].strip()
-    # Normalize full GitHub URLs to owner/repo
-    if repo.startswith('https://github.com/'):
-        parts = repo.replace('https://github.com/', '').strip('/').split('/')
-        repo = '/'.join(parts[:2]) if len(parts) >= 2 else ''
-    # Extract Description — READ-ONLY, never written back
-    description_prop = props.get('Description', {})
-    description = ''.join(
-        p.get('plain_text', '')
-        for p in description_prop.get('rich_text', [])
-    ).strip()
-
-    print(f"description={description!r}")  # empty string if not set
-
-    # Guard: skip entries with empty Repo field
-    if not repo:
-        print(f"SKIP page_id={page['id']} : Repo field is empty")
-        continue
-    print(f"page_id={page['id']}  title={title!r}  repo={repo!r}")
+print(f"Total actionable entries: {len(all_pages)}")
 EOF
 ```
 
-**Forward per entry: `page_id`, `title`, `repo`, `description`**
+**Priority order for routing (check top-to-bottom, handle first match):**
 
-If `description` is non-empty, treat it as additional task context in Phase B. Quote it explicitly in the plan under "Additional context from Notion Description".
+1. **`Coding`** — Session 3 interrupted mid-implementation
+   - Branch exists on GitHub + no open PR → resume from Step 7
+   - Branch exists + PR open → resume from Step 9 (update Notion)
+   - Branch does not exist → re-create branch from PLAN.md branch field, resume from Step 7
 
-**Never write to `Description`. It is read-only.**
+2. **`Planning Complete`** — Session 3 starting fresh
+   - Find PLAN.md on disk → proceed to Step 2.6 (validate plan), then Step 2.7 (lock as "Coding")
 
-**Immediately after selecting an entry to process**, lock it as "In Progress" and record the branch name you will use. This prevents another run from picking up the same entry concurrently.
+3. **`Planning`** — Session 2 interrupted
+   - If PLAN.md exists on disk → treat as "Planning Complete", proceed to Step 2.6
+   - If PLAN.md missing → reset Notion to "Research Complete", stop
+
+4. **`Research Complete`** — Session 2 starting fresh
+   - Find RESEARCH.md on disk → proceed to Step 2.5
+
+5. **`Researching`** — Session 1 interrupted (treat as "Ready")
+   - Reset Notion to "Ready", re-research from beginning
+
+6. **`In Progress`** — legacy entries; use existing resume logic
+   - Branch exists + no open PR → resume from Step 7
+   - Branch exists + PR open → resume from Step 9
+   - No branch → reset to "Ready", reprocess from beginning
+
+7. **`Ready`** — Session 1 starting fresh
+   - Lock as "Researching" (not "In Progress"), proceed to Step 3
+
+**For `Ready` entries:** Compute the branch slug now, lock Notion as "Researching", and record the slug in the Branch field. Do not create the branch on GitHub yet — that happens in Session 3 (Step 6).
+
+**For `Research Complete` / `Planning Complete` / `Coding` entries:** The branch slug is already in the Branch field from when the entry was first locked. Extract it from there.
 
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
 
-PAGE_ID = "REPLACE"   # page_id from above
-BRANCH_NAME = "REPLACE"  # the branch name you will create in Step 6
+PAGE_ID = "REPLACE"       # page_id from above
+BRANCH_SLUG = "REPLACE"   # koda/fix/{slug} — computed from title (max 50 chars, lowercase, hyphens)
+SESSION_STATUS = "REPLACE"  # "Researching" for Ready entries
 
 def to_rich_text(s):
     return [{"text": {"content": s}}]
 
 data = json.dumps({
     "properties": {
-        "Status": {"select": {"name": "In Progress"}},
-        "Branch": {"rich_text": to_rich_text(BRANCH_NAME)}
+        "Status": {"select": {"name": SESSION_STATUS}},
+        "Branch": {"rich_text": to_rich_text(BRANCH_SLUG)}
     }
 }).encode()
 
@@ -337,14 +320,203 @@ req.add_header('Notion-Version', '2022-06-28')
 try:
     print("calling Notion API...")
     result = json.load(urllib.request.urlopen(req, timeout=15))
-    print(f"Locked as In Progress: {result['id']}  branch={BRANCH_NAME}")
+    print(f"Locked as {SESSION_STATUS}: {result['id']}  branch_slug={BRANCH_SLUG}")
 except urllib.error.HTTPError as e:
     print(f"WARNING: Could not lock entry ({e.code}): {e.read().decode()}")
     print("Proceeding anyway — duplicate run risk is low.")
 EOF
 ```
 
-Process entries one at a time. Do not start the next entry until the current one is fully complete or explicitly abandoned. page_size is 10 — if you have more than 10 "Not started" entries, only the 10 oldest are returned per run.
+**Forward per entry: `page_id`, `title`, `repo`, `description`, `branch_slug` (suffix after `koda/fix/`)**
+
+If `description` is non-empty, treat it as additional task context in Phase B. Quote it explicitly in the plan under "Additional context from Notion Description".
+
+**Never write to `Description`. It is read-only.**
+
+Process entries one at a time. Do not start the next entry until the current one is fully complete or explicitly abandoned. page_size is 10 — if you have more than 10 actionable entries, only the 10 oldest per status are returned per run.
+
+---
+
+### Step 2.5 — Locate RESEARCH.md (Research Complete entries only)
+
+```python
+python3 <<'EOF'
+import os, glob
+
+OWNER_REPO = "REPLACE"     # e.g. "isaiahrivera-myrepo" (slash → hyphen, lowercase)
+BRANCH_SLUG = "REPLACE"    # suffix after "koda/fix/" from the Branch field
+
+research_dir = os.path.expanduser(
+    f"~/.openclaw/thoughts/shared/research/{OWNER_REPO}"
+)
+pattern = os.path.join(research_dir, f"*_{BRANCH_SLUG}-research.md")
+matches = sorted(glob.glob(pattern))
+
+if not matches:
+    print(f"RESEARCH_NOT_FOUND: {pattern}")
+    raise SystemExit(1)
+
+research_path = matches[-1]  # most recent if multiple
+print(f"RESEARCH_FOUND: {research_path}")
+EOF
+```
+
+Read the RESEARCH.md in full. Load all data: Language Context Block, file SHAs, current behavior, root cause, conventions, test infrastructure, suggested approach. This document is the **sole input for Step 4.5** — no GitHub API calls are made in Session 2.
+
+**Session Opening Protocol for Session 2:**
+1. Read RESEARCH.md in full
+2. Estimate opening token cost: `len(research_content) / 4` — if above 20% of context window, log a warning (document should be condensed on future runs)
+3. Confirm RESEARCH.md has all required sections: Language Context Block, Files to Act On (with SHAs), Current Behavior, Conventions. If any section is missing: reset Notion to "Ready", log which section is missing, stop.
+
+If RESEARCH.md not found: reset Notion to "Ready", log anomaly, stop.
+
+Lock Notion as "Planning" before proceeding to Step 4.5:
+
+```python
+python3 <<'EOF'
+import urllib.request, os, json
+
+PAGE_ID = "REPLACE"
+
+data = json.dumps({
+    "properties": {
+        "Status": {"select": {"name": "Planning"}}
+    }
+}).encode()
+
+req = urllib.request.Request(
+    f'https://api.notion.com/v1/pages/{PAGE_ID}',
+    data=data, method='PATCH'
+)
+req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
+req.add_header('Content-Type', 'application/json')
+req.add_header('Notion-Version', '2022-06-28')
+
+print("calling Notion API...")
+result = json.load(urllib.request.urlopen(req, timeout=15))
+print(f"Locked as Planning: {result['id']}")
+EOF
+```
+
+---
+
+### Step 2.6 — Locate and Validate PLAN.md (Planning Complete entries only)
+
+```python
+python3 <<'EOF'
+import os, glob
+
+OWNER_REPO = "REPLACE"     # e.g. "isaiahrivera-myrepo" (slash → hyphen, lowercase)
+BRANCH_SLUG = "REPLACE"    # suffix after "koda/fix/" from the Branch field
+
+plans_dir = os.path.expanduser(
+    f"~/.openclaw/thoughts/shared/plans/{OWNER_REPO}"
+)
+pattern = os.path.join(plans_dir, f"*_{BRANCH_SLUG}-plan.md")
+matches = sorted(glob.glob(pattern))
+
+if not matches:
+    print(f"PLAN_NOT_FOUND: {pattern}")
+    raise SystemExit(1)
+
+plan_path = matches[-1]  # most recent if multiple
+print(f"PLAN_FOUND: {plan_path}")
+
+# Read and validate frontmatter
+with open(plan_path) as f:
+    content = f.read()
+
+import re
+
+status_match = re.search(r'^status:\s*(\S+)', content, re.MULTILINE)
+page_id_match = re.search(r'^page_id:\s*(\S+)', content, re.MULTILINE)
+completed_match = re.search(r'^plan_session_completed_at:\s*(.+)', content, re.MULTILINE)
+
+plan_status = status_match.group(1) if status_match else None
+plan_page_id = page_id_match.group(1) if page_id_match else None
+plan_completed_at = completed_match.group(1).strip() if completed_match else None
+
+print(f"plan_status={plan_status}")
+print(f"plan_page_id={plan_page_id}")
+print(f"plan_completed_at={plan_completed_at}")
+
+# Check for actual diff content (lines starting with - or + that aren't frontmatter)
+body = content.split('---', 2)[-1] if content.count('---') >= 2 else content
+has_diff_lines = bool(re.search(r'^[+-][^-+]', body, re.MULTILINE))
+print(f"has_diff_lines={has_diff_lines}")
+EOF
+```
+
+**Validation rules:**
+- `plan_status == "planning"` (Session 2 crashed after Notion write but before file update): reset Notion to "Research Complete", stop
+- `plan_status == "planning_complete"` and `plan_session_completed_at` is non-null: proceed
+- `plan_page_id` does not match the Notion `page_id` from Step 2: stop, log both IDs, do not implement
+- `has_diff_lines == False` (diff is all prose, no actual `+`/`-` lines): reset Notion to "Ready", delete PLAN.md and RESEARCH.md for this entry, stop
+
+**Session Opening Protocol for Session 3:**
+1. Read PLAN.md in full
+2. Estimate opening token cost: `len(plan_content) / 4` — if above 20% of context window, log warning
+3. Confirm PLAN.md has an actual diff (lines starting with `-` and `+`) before proceeding — if missing, reset to "Ready"
+
+If PLAN.md not found: reset Notion to "Ready", log anomaly, stop.
+
+---
+
+### Step 2.7 — Acquire Implementation Lock (Planning Complete entries only)
+
+```python
+python3 <<'EOF'
+import urllib.request, os, json, re, datetime
+
+PAGE_ID = "REPLACE"
+PLAN_PATH = "REPLACE"  # full path from Step 2.6
+
+# PATCH Notion: Status = "Coding"
+data = json.dumps({
+    "properties": {
+        "Status": {"select": {"name": "Coding"}}
+    }
+}).encode()
+
+req = urllib.request.Request(
+    f'https://api.notion.com/v1/pages/{PAGE_ID}',
+    data=data, method='PATCH'
+)
+req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
+req.add_header('Content-Type', 'application/json')
+req.add_header('Notion-Version', '2022-06-28')
+
+print("calling Notion API...")
+result = json.load(urllib.request.urlopen(req, timeout=15))
+print(f"Locked as Coding: {result['id']}")
+
+# Update PLAN.md frontmatter
+with open(PLAN_PATH) as f:
+    content = f.read()
+
+now = datetime.datetime.utcnow().isoformat() + 'Z'
+content = re.sub(r'^status: planning_complete$', 'status: implementing', content, flags=re.MULTILINE)
+content = re.sub(r'^implementation_session_started_at: ~$', f'implementation_session_started_at: {now}', content, flags=re.MULTILINE)
+
+with open(PLAN_PATH, 'w') as f:
+    f.write(content)
+
+print(f"PLAN.md updated: status=implementing, implementation_session_started_at={now}")
+EOF
+```
+
+**Context Budget Check (before Step 6)**
+
+Before creating the GitHub branch, estimate current context usage:
+`estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
+PLAN.md and RESEARCH.md reads count toward CONTEXT_CHARS.
+
+If `estimated_tokens >= HANDOFF_THRESHOLD_TOKENS` (60% of context window):
+- The plan is too large to implement safely in one session
+- Reset Notion to "Ready" — Session 1 should research with narrower scope
+- Log the reason and stop
+
+If below threshold: proceed to Step 3.
 
 ---
 
@@ -397,7 +569,9 @@ If the repo is inaccessible (404, 403), update the Notion entry status to "Error
 
 ---
 
-### Step 4 — Research the Codebase (Read-Only)
+### Step 4 — Research the Codebase (Read-Only) — Session 1 Only
+
+**SESSION GUARD:** If triggered by a "Research Complete", "Planning Complete", or "Coding" entry — skip Step 4 entirely. Research was already written to RESEARCH.md. Proceed to the appropriate session start point (Step 2.5, 2.6, or resume logic).
 
 This step has four required phases. Do not proceed to Step 5 until all four phases are complete.
 
@@ -533,11 +707,110 @@ For vague fix descriptions: read `README.md` first, then narrow down by director
 **Context Check — Phase A boundary**
 Evaluate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
 If `>= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol. Do not start Phase B.
-If below threshold: proceed to Step 4.5.
+If below threshold: proceed to Session 1 Stop below.
 
 ---
 
-### Step 4.5 — Write the Plan Document (Phase P)
+**SESSION 1 STOP — RESEARCH COMPLETE**
+
+1. Write RESEARCH.md to `~/.openclaw/thoughts/shared/research/{owner}-{repo}/{timestamp}_{slug}-research.md`
+
+   Use `{timestamp}` = UTC datetime as `YYYY-MM-DD_HH-MM-SS` and `{slug}` = the branch slug (suffix after `koda/fix/`). `{owner}-{repo}` uses a hyphen (not slash).
+
+   **Required structure:**
+
+   ~~~markdown
+   ---
+   date: {ISO-8601}
+   entry: "{notion entry title}"
+   page_id: {page_id}
+   repo: {owner/repo}
+   branch_slug: {slug}
+   session: research
+   status: complete
+   session_completed_at: {ISO-8601}
+   ---
+
+   # Research: {notion entry title}
+
+   ## Language Context Block
+   Primary language: [version]
+   Build command: [exact command]
+   Test command: [exact command]
+   Type checking: [strict/lenient/none]
+   Key constraints:
+     - [constraint 1]
+     - [constraint 2]
+
+   ## Files to Act On
+   {For each file relevant to the fix:}
+   - path: {file path}
+     sha: {sha from GitHub API}
+     what: {1-sentence description of what it does}
+     why: {1-sentence description of why it's relevant to the fix}
+
+   ## Current Behavior (Root Cause)
+   {3-5 sentences max: what the code does now, what's wrong, why}
+
+   ## Conventions to Follow
+   - {naming convention}
+   - {error handling pattern}
+   - {import style}
+   - {up to 5 items}
+
+   ## Test Infrastructure
+   {Test directory path, framework name, assertion style — 2-3 lines}
+
+   ## Explicitly Out of Scope
+   - {what NOT to change — 2-3 items}
+
+   ## Suggested Approach (for Session 2)
+   {1-2 sentences: what Session 2 should plan. Not code — direction only.}
+   ~~~
+
+   **Target size:** Under ~2,000 tokens. Raw file contents are NOT included — only distilled findings. If findings are longer, summarize further. Session 2's context must have headroom.
+
+   Create the directory if it does not exist.
+
+2. PATCH Notion: Status = "Research Complete"
+
+   ```python
+   python3 <<'EOF'
+   import urllib.request, os, json
+
+   PAGE_ID = "REPLACE"
+
+   data = json.dumps({
+       "properties": {
+           "Status": {"select": {"name": "Research Complete"}}
+       }
+   }).encode()
+
+   req = urllib.request.Request(
+       f'https://api.notion.com/v1/pages/{PAGE_ID}',
+       data=data, method='PATCH'
+   )
+   req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
+   req.add_header('Content-Type', 'application/json')
+   req.add_header('Notion-Version', '2022-06-28')
+
+   print("calling Notion API...")
+   result = json.load(urllib.request.urlopen(req, timeout=15))
+   print(f"Status set to Research Complete: {result['id']}")
+   EOF
+   ```
+
+3. Print: `RESEARCH SESSION COMPLETE. Slug: {slug}. Research: {RESEARCH_PATH}. Stopping.`
+
+4. **STOP. Do not proceed to Step 4.5. Do not plan. Do not create a branch. Session 1 is done.**
+
+---
+
+### Step 4.5 — Write the Plan Document (Phase P) — Session 2 Only
+
+**SESSION GUARD:** If triggered by a "Planning Complete" or "Coding" entry — skip Step 4.5 entirely. PLAN.md already exists. Proceed to Step 2.6.
+
+**Session 2 Opening:** Read `RESEARCH_PATH` from disk. This is your only source of truth. Do not make any GitHub API calls. The file SHAs, language context, and current behavior are all in RESEARCH.md. If you need to re-read a specific file to write an accurate diff, fetch it using the SHA from RESEARCH.md via `GET /repos/{owner}/{repo}/contents/{path}` — do not re-browse the repo.
 
 Before writing any code or reasoning about a diff, write a plan document to disk. This document is the single source of truth for what you intend to do and why. It is what a developer reads to understand the proposed change without reading the PR diff.
 
@@ -554,8 +827,13 @@ date: {ISO-8601}
 entry: "{notion entry title}"
 page_id: {page_id}
 repo: {owner/repo}
-branch: {BRANCH_NAME — to be created in Step 6}
-status: planning
+branch: {BRANCH_NAME — koda/fix/{slug}}
+research_path: {full path to RESEARCH.md}
+session: planning
+status: planning_complete
+plan_session_completed_at: {ISO-8601}
+implementation_session_started_at: ~
+implementation_session_completed_at: ~
 ---
 
 # Plan: {notion entry title}
@@ -611,13 +889,55 @@ status: planning
 2. Save the path as `PLAN_PATH` — you will reference it in Step 8 (PR body) and Step 9 (Notion feedback)
 3. If context threshold check fires here: write a handoff that includes `PLAN_PATH`. The plan document already exists, so the resume path skips Phase P and starts at Phase I.
 
-**Do not proceed to Step 5 until `PLAN_PATH` is confirmed written to disk.**
-
-Note: Step 5 (Phase B) still runs — it is now the in-context reasoning pass that validates the plan document. The plan document is the output; Step 5 is the quality gate on that output.
+**Do not proceed to Session 2 Stop until `PLAN_PATH` is confirmed written to disk.**
 
 ---
 
-### Step 5 — Plan the Change
+**SESSION 2 STOP — PLANNING COMPLETE**
+
+1. Update PLAN.md frontmatter: `status` → `planning_complete`, `plan_session_completed_at` → now (ISO-8601 UTC)
+
+2. PATCH Notion: Status = "Planning Complete"
+
+   ```python
+   python3 <<'EOF'
+   import urllib.request, os, json
+
+   PAGE_ID = "REPLACE"
+
+   data = json.dumps({
+       "properties": {
+           "Status": {"select": {"name": "Planning Complete"}}
+       }
+   }).encode()
+
+   req = urllib.request.Request(
+       f'https://api.notion.com/v1/pages/{PAGE_ID}',
+       data=data, method='PATCH'
+   )
+   req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
+   req.add_header('Content-Type', 'application/json')
+   req.add_header('Notion-Version', '2022-06-28')
+
+   print("calling Notion API...")
+   result = json.load(urllib.request.urlopen(req, timeout=15))
+   print(f"Status set to Planning Complete: {result['id']}")
+   EOF
+   ```
+
+3. Print: `PLANNING SESSION COMPLETE. Branch: {BRANCH_NAME}. Plan: {PLAN_PATH}. Stopping.`
+
+4. **STOP. Do not proceed to Step 5. Do not create a branch. Do not write code. Session 2 is done.**
+
+---
+
+Note: Step 5 (Phase B) still runs in Session 3 — it is the in-context reasoning pass that validates the plan document before any GitHub write. The plan document is the output of Session 2; Step 5 is Session 3's quality gate on that output.
+
+---
+
+### Step 5 — Plan the Change (Session 3 Entry Point)
+
+**Session 3 entry point.** When triggered by a "Planning Complete" or "Coding" entry, this step reads the existing PLAN.md from disk (located via Step 2.6) and validates it against the Phase B checklist before any GitHub write. This is not re-planning — do not call GitHub API to re-read files. If the plan is missing required sections or lacks an actual diff (code lines starting with `-`/`+`, not prose): **reset Notion to "Ready"** so Session 1 re-researches from scratch. Delete any partial PLAN.md or RESEARCH.md for this entry.
 
 #### Phase B — Plan
 
@@ -1252,6 +1572,29 @@ EOF
 
 **What to write in Feedback:** factual summary of what changed and in which files, rationale for the chosen approach (mention alternatives), edge cases found, any open questions or blockers, which phases completed. Do not duplicate the PR body verbatim — Feedback is Notion-level context for you, not GitHub documentation. **Never write to `Description`.**
 
+**After PATCH Notion to "PR Opened", finalize PLAN.md frontmatter:**
+
+```python
+python3 <<'EOF'
+import re, datetime
+
+PLAN_PATH = "REPLACE"  # full path from Step 2.6 / Step 4.5
+
+with open(PLAN_PATH) as f:
+    content = f.read()
+
+now = datetime.datetime.utcnow().isoformat() + 'Z'
+content = re.sub(r'^status: implementing$', 'status: done', content, flags=re.MULTILINE)
+content = re.sub(r'^implementation_session_completed_at: ~$',
+                 f'implementation_session_completed_at: {now}', content, flags=re.MULTILINE)
+
+with open(PLAN_PATH, 'w') as f:
+    f.write(content)
+
+print(f"PLAN.md finalized: status=done, implementation_session_completed_at={now}")
+EOF
+```
+
 ---
 
 ## Error Handling
@@ -1273,6 +1616,13 @@ EOF
 | Fix description is too vague | Create branch, open PR with clarifying question in body, mark Notion "PR Opened" |
 | Multiple databases match search | List them all, ask user to confirm which one to use |
 | Context >= threshold after a phase | Write handoff, add resume task to HEARTBEAT.md, stop |
+| "Research Complete" but RESEARCH.md not found | Reset to "Ready", log anomaly, stop |
+| "Planning Complete" but PLAN.md not found | Reset to "Ready", log anomaly, stop |
+| PLAN.md has no actual diff (prose only) | Reset to "Ready", delete PLAN.md and RESEARCH.md for this entry, stop |
+| PLAN.md page_id doesn't match Notion page_id | Stop, log both IDs, do not implement |
+| "Coding" but branch doesn't exist on GitHub | Re-create branch from PLAN.md branch field, resume from Step 7 |
+| Context >= 60% at Session 3 start | Reset to "Ready", log reason (plan too large), stop |
+| RESEARCH.md frontmatter status = "complete" but session = "research" still set in PLAN.md | Treat as Planning Complete, proceed normally |
 
 ---
 
@@ -1295,7 +1645,13 @@ The target database is **OpenClaw** (`database_id: 2ffcd9598000412f8b21e8d6fa453
 - Write: Status, Feedback, PR URL, Branch
 - Never write: Description
 
-Status values used: **Ready** (picked up for processing), **In Progress** (run started, lock held), **PR Opened** (complete), **Done** (manually closed), **Error** (unrecoverable failure). The skill sets Ready → In Progress at run start, then In Progress → PR Opened at run end.
+Status values: **Ready** | **Researching** | **Research Complete** | **Planning** | **Planning Complete** | **Coding** | **PR Opened** | **Done** | **Error**
+
+Transition sequence: `Ready → Researching → Research Complete → Planning → Planning Complete → Coding → PR Opened`
+
+Legacy `In Progress` entries: handled by existing resume logic until they complete naturally. New entries never use "In Progress".
+
+**Note:** These select options must exist in the Notion database. Add `Researching`, `Research Complete`, `Planning`, `Planning Complete`, and `Coding` manually via the Notion UI if not already present.
 
 ---
 
@@ -1327,6 +1683,12 @@ After each run, confirm:
 - [ ] If any files were skipped (binary/large), they are listed in the PR body
 - [ ] `Description` field unchanged after run — it is read-only
 - [ ] `Feedback` field populated with: what was done, approach rationale, edge cases, questions
+- [ ] Session 1 stopped after writing RESEARCH.md — did NOT write PLAN.md or create a branch
+- [ ] Session 2 read RESEARCH.md and made no GitHub API calls — used SHAs from research file
+- [ ] Session 2 stopped after writing PLAN.md — did NOT create a branch
+- [ ] Session 3 context was below 60% threshold before creating the branch
+- [ ] Session 3 validated plan before any GitHub write — did NOT re-research
+- [ ] Notion status sequence: Ready → Researching → Research Complete → Planning → Planning Complete → Coding → PR Opened
 
 ---
 
