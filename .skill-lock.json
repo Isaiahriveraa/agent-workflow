@@ -81,6 +81,87 @@
       "skillFolderHash": "079b06a135401704ea94ab74c7c9d86c92ba259f",
       "installedAt": "2026-02-18T07:33:14.603Z",
       "updatedAt": "2026-02-18T07:33:14.603Z"
+    },
+    "webapp-testing": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/webapp-testing/SKILL.md",
+      "skillFolderHash": "74cb751576f9e9af2aedff47e67861ef26db2dc4",
+      "installedAt": "2026-02-20T02:10:11.698Z",
+      "updatedAt": "2026-02-20T02:10:11.698Z"
+    },
+    "code-review-excellence": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/developer-essentials/skills/code-review-excellence/SKILL.md",
+      "skillFolderHash": "62630a2a65d22a351aa15b76fbf277557e58cf63",
+      "installedAt": "2026-02-20T02:10:12.329Z",
+      "updatedAt": "2026-02-20T02:10:12.329Z"
+    },
+    "e2e-testing-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/developer-essentials/skills/e2e-testing-patterns/SKILL.md",
+      "skillFolderHash": "50d7d0ebab41d72a7dbc6cb2cf2331cacc392eff",
+      "installedAt": "2026-02-20T02:10:13.083Z",
+      "updatedAt": "2026-02-20T02:10:13.083Z"
+    },
+    "javascript-testing-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/javascript-typescript/skills/javascript-testing-patterns/SKILL.md",
+      "skillFolderHash": "7af532a2c0f786c5b536989cff4a2812e483dce3",
+      "installedAt": "2026-02-20T02:10:14.349Z",
+      "updatedAt": "2026-02-20T02:10:14.349Z"
+    },
+    "python-testing-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/python-development/skills/python-testing-patterns/SKILL.md",
+      "skillFolderHash": "79ea3b35b9b8bb7dd47b566fd085ec45f8a6efe2",
+      "installedAt": "2026-02-20T02:10:14.853Z",
+      "updatedAt": "2026-02-20T02:10:14.853Z"
+    },
+    "next-best-practices": {
+      "source": "vercel-labs/next-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/next-skills.git",
+      "skillPath": "skills/next-best-practices/SKILL.md",
+      "skillFolderHash": "ad17eb27952b39a6ab0061bd50e8a2213b63a3ec",
+      "installedAt": "2026-02-20T02:10:15.648Z",
+      "updatedAt": "2026-02-20T02:10:15.648Z"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/supabase/agent-skills.git",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "skillFolderHash": "95fe6d29daaf88aa9bc3b505ca4defe19ceabf92",
+      "installedAt": "2026-02-20T02:10:16.533Z",
+      "updatedAt": "2026-02-20T02:10:16.533Z"
+    },
+    "better-auth-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/better-auth/skills.git",
+      "skillPath": "better-auth/best-practices/SKILL.md",
+      "skillFolderHash": "83bdaa60f65da278dc513a64127f4e4db759cd20",
+      "installedAt": "2026-02-20T02:10:16.830Z",
+      "updatedAt": "2026-02-20T02:10:16.830Z"
+    },
+    "requesting-code-review": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/requesting-code-review/SKILL.md",
+      "skillFolderHash": "dbe9c65c5af4fa294ec9d60c1732d806e664530c",
+      "installedAt": "2026-02-20T02:10:18.251Z",
+      "updatedAt": "2026-02-20T02:10:18.251Z"
     }
   },
   "dismissed": {
