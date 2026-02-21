@@ -36,14 +36,16 @@ All operations use the **GitHub REST API and Notion API directly via Python `url
 
 ## Phase Structure: Research → Plan → Implement
 
-Every run follows three phases in strict order. **Implementation never starts without a written plan. A plan is never written without completed research.**
+Every run follows three phases in strict order within a **single invocation**. **Implementation never starts without a written plan. A plan is never written without completed research.**
 
-| Phase | Session | Output | What stops the session |
-|---|---|---|---|
-| **R — Research** (Steps 3–4) | Session 1 | `RESEARCH.md` written to thoughts dir | Notion = "Research Complete", session stops |
-| **P — Plan** (Step 4.5) | Session 2 | `PLAN.md` written to thoughts dir | Notion = "Planning Complete", session stops |
-| **I — Implement** (Steps 6–7) | Session 3 | Code committed to branch | Context < 60%, syntax validated |
-| **PR — Open PR** (Steps 8–9) | Session 3 | PR created + Notion updated | Notion = "PR Opened" |
+| Phase | Output | Notion status after phase |
+|---|---|---|
+| **R — Research** (Steps 3–4) | `RESEARCH.md` written to thoughts dir | "Research Complete" — continue immediately |
+| **P — Plan** (Step 4.5) | `PLAN.md` written to thoughts dir | "Planning Complete" — continue immediately |
+| **I — Implement** (Steps 6–7) | Code committed to branch | — |
+| **PR — Open PR** (Steps 8–9) | PR created + Notion updated | "PR Opened" — done |
+
+Notion status is a **progress checkpoint**, not a session barrier. After writing each durable output (RESEARCH.md, PLAN.md) and patching Notion, **continue immediately to the next phase in the same invocation**. If Raycast kills the session mid-run, the Notion status reflects where the run was; re-triggering resumes from the correct phase.
 
 If you find yourself writing code before a `PLAN.md` exists for this entry — stop. Go back to Phase P.
 
@@ -88,7 +90,7 @@ req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
     print("calling GitHub API...")
-    data = json.load(urllib.request.urlopen(req, timeout=15))
+    data = json.load(urllib.request.urlopen(req, timeout=60))
 except Exception as e:
     print(f"STOP: Could not check GitHub rate limit — {e}")
     raise SystemExit(1)
@@ -218,7 +220,7 @@ for status in ACTIONABLE_STATUSES:
     req.add_header('Content-Type', 'application/json')
     req.add_header('Notion-Version', '2022-06-28')
 
-    results = json.load(urllib.request.urlopen(req, timeout=15))
+    results = json.load(urllib.request.urlopen(req, timeout=60))
     pages = results.get('results', [])
     for page in pages:
         props = page.get('properties', {})
@@ -241,6 +243,10 @@ for status in ACTIONABLE_STATUSES:
         description = ''.join(
             p.get('plain_text', '') for p in description_prop.get('rich_text', [])
         ).strip()
+        base_branch_prop = props.get('Base Branch', {})
+        base_branch = ''.join(
+            p.get('plain_text', '') for p in base_branch_prop.get('rich_text', [])
+        ).strip() or 'main'
         all_pages.append({
             'page_id': page['id'],
             'title': title,
@@ -248,8 +254,9 @@ for status in ACTIONABLE_STATUSES:
             'repo': repo,
             'branch': branch,
             'description': description,
+            'base_branch': base_branch,
         })
-        print(f"FOUND status={status_name!r} page_id={page['id']} title={title!r} repo={repo!r} branch={branch!r}")
+        print(f"FOUND status={status_name!r} page_id={page['id']} title={title!r} repo={repo!r} branch={branch!r} base_branch={base_branch!r}")
 
 if not all_pages:
     print("Nothing to do.")
@@ -261,30 +268,31 @@ EOF
 
 **Priority order for routing (check top-to-bottom, handle first match):**
 
-1. **`Coding`** — Session 3 interrupted mid-implementation
+1. **`Coding`** — interrupted mid-implementation
    - Branch exists on GitHub + no open PR → resume from Step 7
    - Branch exists + PR open → resume from Step 9 (update Notion)
    - Branch does not exist → re-create branch from PLAN.md branch field, resume from Step 7
 
-2. **`Planning Complete`** — Session 3 starting fresh
+2. **`Planning Complete`** — interrupted after PLAN.md written, before implementation started
    - Find PLAN.md on disk → proceed to Step 2.6 (validate plan), then Step 2.7 (lock as "Coding")
 
-3. **`Planning`** — Session 2 interrupted
+3. **`Planning`** — interrupted during planning phase
    - If PLAN.md exists on disk → treat as "Planning Complete", proceed to Step 2.6
    - If PLAN.md missing → reset Notion to "Research Complete", stop
 
-4. **`Research Complete`** — Session 2 starting fresh
+4. **`Research Complete`** — interrupted after RESEARCH.md written, before planning started
    - Find RESEARCH.md on disk → proceed to Step 2.5
 
-5. **`Researching`** — Session 1 interrupted (treat as "Ready")
-   - Reset Notion to "Ready", re-research from beginning
+5. **`Researching`** — interrupted during research phase
+   - If RESEARCH.md exists on disk for this entry's slug → treat as "Research Complete", proceed to Step 2.5. (Session was killed after file write but before Notion PATCH.)
+   - If no RESEARCH.md → reset Notion to "Ready", re-research from beginning
 
 6. **`In Progress`** — legacy entries; use existing resume logic
    - Branch exists + no open PR → resume from Step 7
    - Branch exists + PR open → resume from Step 9
    - No branch → reset to "Ready", reprocess from beginning
 
-7. **`Ready`** — Session 1 starting fresh
+7. **`Ready`** — fresh entry, full run
    - Lock as "Researching" (not "In Progress"), proceed to Step 3
 
 **For `Ready` entries:** Compute the branch slug now, lock Notion as "Researching", and record the slug in the Branch field. Do not create the branch on GitHub yet — that happens in Session 3 (Step 6).
@@ -317,17 +325,19 @@ req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Notion-Version', '2022-06-28')
 
+import sys
 try:
     print("calling Notion API...")
-    result = json.load(urllib.request.urlopen(req, timeout=15))
+    result = json.load(urllib.request.urlopen(req, timeout=60))
     print(f"Locked as {SESSION_STATUS}: {result['id']}  branch_slug={BRANCH_SLUG}")
+    sys.stdout.flush()
 except urllib.error.HTTPError as e:
     print(f"WARNING: Could not lock entry ({e.code}): {e.read().decode()}")
     print("Proceeding anyway — duplicate run risk is low.")
 EOF
 ```
 
-**Forward per entry: `page_id`, `title`, `repo`, `description`, `branch_slug` (suffix after `koda/fix/`)**
+**Forward per entry: `page_id`, `title`, `repo`, `description`, `branch_slug` (suffix after `koda/fix/`), `base_branch`**
 
 If `description` is non-empty, treat it as additional task context in Phase B. Quote it explicitly in the plan under "Additional context from Notion Description".
 
@@ -363,7 +373,7 @@ EOF
 
 Read the RESEARCH.md in full. Load all data: Language Context Block, file SHAs, current behavior, root cause, conventions, test infrastructure, suggested approach. This document is the **sole input for Step 4.5** — no GitHub API calls are made in Session 2.
 
-**Session Opening Protocol for Session 2:**
+**Protocol when reading RESEARCH.md (whether just written above or found on disk):**
 1. Read RESEARCH.md in full
 2. Estimate opening token cost: `len(research_content) / 4` — if above 20% of context window, log a warning (document should be condensed on future runs)
 3. Confirm RESEARCH.md has all required sections: Language Context Block, Files to Act On (with SHAs), Current Behavior, Conventions. If any section is missing: reset Notion to "Ready", log which section is missing, stop.
@@ -392,9 +402,11 @@ req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Notion-Version', '2022-06-28')
 
+import sys
 print("calling Notion API...")
-result = json.load(urllib.request.urlopen(req, timeout=15))
+result = json.load(urllib.request.urlopen(req, timeout=60))
 print(f"Locked as Planning: {result['id']}")
+sys.stdout.flush()
 EOF
 ```
 
@@ -486,9 +498,11 @@ req.add_header('Authorization', f'Bearer {os.environ["NOTION_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Notion-Version', '2022-06-28')
 
+import sys
 print("calling Notion API...")
-result = json.load(urllib.request.urlopen(req, timeout=15))
+result = json.load(urllib.request.urlopen(req, timeout=60))
 print(f"Locked as Coding: {result['id']}")
+sys.stdout.flush()
 
 # Update PLAN.md frontmatter
 with open(PLAN_PATH) as f:
@@ -569,9 +583,9 @@ If the repo is inaccessible (404, 403), update the Notion entry status to "Error
 
 ---
 
-### Step 4 — Research the Codebase (Read-Only) — Session 1 Only
+### Step 4 — Research the Codebase (Read-Only)
 
-**SESSION GUARD:** If triggered by a "Research Complete", "Planning Complete", or "Coding" entry — skip Step 4 entirely. Research was already written to RESEARCH.md. Proceed to the appropriate session start point (Step 2.5, 2.6, or resume logic).
+**Routing guard:** If entry status was "Research Complete", "Planning Complete", or "Coding" — skip Step 4 entirely. Research was already written to RESEARCH.md. The Step 2 routing already directed you to Step 2.5, 2.6, or resume logic.
 
 This step has four required phases. Do not proceed to Step 5 until all four phases are complete.
 
@@ -651,7 +665,7 @@ req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 print("calling GitHub API...")
-file_data = json.load(urllib.request.urlopen(req, timeout=15))
+file_data = json.load(urllib.request.urlopen(req, timeout=60))
 
 # Guard: not a regular file (directory, submodule, symlink)
 if file_data.get('type') != 'file':
@@ -707,11 +721,11 @@ For vague fix descriptions: read `README.md` first, then narrow down by director
 **Context Check — Phase A boundary**
 Evaluate: `estimated_tokens = (CONTEXT_CHARS / 4) + 2000`
 If `>= HANDOFF_THRESHOLD_TOKENS`: execute the Handoff Protocol. Do not start Phase B.
-If below threshold: proceed to Session 1 Stop below.
+If below threshold: proceed to writing RESEARCH.md below.
 
 ---
 
-**SESSION 1 STOP — RESEARCH COMPLETE**
+**RESEARCH COMPLETE — write checkpoint, then continue**
 
 1. Write RESEARCH.md to `~/.openclaw/thoughts/shared/research/{owner}-{repo}/{timestamp}_{slug}-research.md`
 
@@ -794,23 +808,25 @@ If below threshold: proceed to Session 1 Stop below.
    req.add_header('Content-Type', 'application/json')
    req.add_header('Notion-Version', '2022-06-28')
 
+   import sys
    print("calling Notion API...")
-   result = json.load(urllib.request.urlopen(req, timeout=15))
+   result = json.load(urllib.request.urlopen(req, timeout=60))
    print(f"Status set to Research Complete: {result['id']}")
+   sys.stdout.flush()
    EOF
    ```
 
-3. Print: `RESEARCH SESSION COMPLETE. Slug: {slug}. Research: {RESEARCH_PATH}. Stopping.`
+3. Print: `RESEARCH CHECKPOINT WRITTEN. Slug: {slug}. Research: {RESEARCH_PATH}. Continuing to Step 4.5.`
 
-4. **STOP. Do not proceed to Step 4.5. Do not plan. Do not create a branch. Session 1 is done.**
+4. **Continue immediately to Step 4.5 in the same invocation. Do not stop.** The Notion status is a progress checkpoint — if Raycast kills this session, re-triggering will resume from the Planning phase using the RESEARCH.md just written.
 
 ---
 
-### Step 4.5 — Write the Plan Document (Phase P) — Session 2 Only
+### Step 4.5 — Write the Plan Document (Phase P)
 
-**SESSION GUARD:** If triggered by a "Planning Complete" or "Coding" entry — skip Step 4.5 entirely. PLAN.md already exists. Proceed to Step 2.6.
+**Routing guard:** If triggered by a "Planning Complete" or "Coding" entry — skip Step 4.5 entirely. PLAN.md already exists. Proceed to Step 2.6.
 
-**Session 2 Opening:** Read `RESEARCH_PATH` from disk. This is your only source of truth. Do not make any GitHub API calls. The file SHAs, language context, and current behavior are all in RESEARCH.md. If you need to re-read a specific file to write an accurate diff, fetch it using the SHA from RESEARCH.md via `GET /repos/{owner}/{repo}/contents/{path}` — do not re-browse the repo.
+**If coming from a fresh "Research Complete" or continuing from research above:** Read `RESEARCH_PATH` from disk. This is your only source of truth. Do not make any GitHub API calls. The file SHAs, language context, and current behavior are all in RESEARCH.md. If you need to re-read a specific file to write an accurate diff, fetch it using the SHA from RESEARCH.md via `GET /repos/{owner}/{repo}/contents/{path}` — do not re-browse the repo.
 
 Before writing any code or reasoning about a diff, write a plan document to disk. This document is the single source of truth for what you intend to do and why. It is what a developer reads to understand the proposed change without reading the PR diff.
 
@@ -889,11 +905,11 @@ implementation_session_completed_at: ~
 2. Save the path as `PLAN_PATH` — you will reference it in Step 8 (PR body) and Step 9 (Notion feedback)
 3. If context threshold check fires here: write a handoff that includes `PLAN_PATH`. The plan document already exists, so the resume path skips Phase P and starts at Phase I.
 
-**Do not proceed to Session 2 Stop until `PLAN_PATH` is confirmed written to disk.**
+**Do not proceed to the Planning Complete checkpoint until `PLAN_PATH` is confirmed written to disk.**
 
 ---
 
-**SESSION 2 STOP — PLANNING COMPLETE**
+**PLANNING COMPLETE — write checkpoint, then continue**
 
 1. Update PLAN.md frontmatter: `status` → `planning_complete`, `plan_session_completed_at` → now (ISO-8601 UTC)
 
@@ -901,7 +917,7 @@ implementation_session_completed_at: ~
 
    ```python
    python3 <<'EOF'
-   import urllib.request, os, json
+   import urllib.request, os, json, sys
 
    PAGE_ID = "REPLACE"
 
@@ -920,24 +936,21 @@ implementation_session_completed_at: ~
    req.add_header('Notion-Version', '2022-06-28')
 
    print("calling Notion API...")
-   result = json.load(urllib.request.urlopen(req, timeout=15))
+   result = json.load(urllib.request.urlopen(req, timeout=60))
    print(f"Status set to Planning Complete: {result['id']}")
+   sys.stdout.flush()
    EOF
    ```
 
-3. Print: `PLANNING SESSION COMPLETE. Branch: {BRANCH_NAME}. Plan: {PLAN_PATH}. Stopping.`
+3. Print: `PLANNING CHECKPOINT WRITTEN. Branch: {BRANCH_NAME}. Plan: {PLAN_PATH}. Continuing to Step 5.`
 
-4. **STOP. Do not proceed to Step 5. Do not create a branch. Do not write code. Session 2 is done.**
-
----
-
-Note: Step 5 (Phase B) still runs in Session 3 — it is the in-context reasoning pass that validates the plan document before any GitHub write. The plan document is the output of Session 2; Step 5 is Session 3's quality gate on that output.
+4. **Continue immediately to Step 5 in the same invocation. Do not stop.** If Raycast kills the session here, re-triggering will resume from "Planning Complete" using the PLAN.md just written.
 
 ---
 
-### Step 5 — Plan the Change (Session 3 Entry Point)
+### Step 5 — Validate the Plan (Phase B)
 
-**Session 3 entry point.** When triggered by a "Planning Complete" or "Coding" entry, this step reads the existing PLAN.md from disk (located via Step 2.6) and validates it against the Phase B checklist before any GitHub write. This is not re-planning — do not call GitHub API to re-read files. If the plan is missing required sections or lacks an actual diff (code lines starting with `-`/`+`, not prose): **reset Notion to "Ready"** so Session 1 re-researches from scratch. Delete any partial PLAN.md or RESEARCH.md for this entry.
+This step validates the plan written in Step 4.5 before any GitHub write. When routing from a "Planning Complete" or "Coding" entry, this step reads the existing PLAN.md from disk (located via Step 2.6). This is not re-planning — do not call GitHub API to re-read files. If the plan is missing required sections or lacks an actual diff (code lines starting with `-`/`+`, not prose): **reset Notion to "Ready"** and delete any partial PLAN.md or RESEARCH.md for this entry.
 
 #### Phase B — Plan
 
@@ -992,7 +1005,7 @@ import urllib.request, os, json
 
 OWNER = "REPLACE"
 REPO = "REPLACE"
-DEFAULT_BRANCH = "main"  # or "master" from Step 3
+DEFAULT_BRANCH = "REPLACE"  # base_branch from Step 2 Notion field — never hardcode
 SLUG = "REPLACE-WITH-SLUG"  # e.g. fix-null-check-in-auth
 
 # Guard: branch name must not equal the default branch
@@ -1010,7 +1023,13 @@ req.add_header('Accept', 'application/vnd.github+json')
 req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 print("calling GitHub API...")
-ref_data = json.load(urllib.request.urlopen(req, timeout=15))
+try:
+    ref_data = json.load(urllib.request.urlopen(req, timeout=60))
+except urllib.error.HTTPError as e:
+    if e.code == 404:
+        print(f"STOP: Base branch '{DEFAULT_BRANCH}' not found in {OWNER}/{REPO}. Update Notion to 'Error'.")
+        raise SystemExit(1)
+    raise
 head_sha = ref_data['object']['sha']
 print(f"BRANCH_NAME={BRANCH_NAME}")
 print(f"head_sha={head_sha}")
@@ -1042,7 +1061,7 @@ def create_branch(name, sha):
     req.add_header('Content-Type', 'application/json')
     req.add_header('X-GitHub-Api-Version', '2022-11-28')
     print("calling GitHub API...")
-    return urllib.request.urlopen(req, timeout=15)
+    return urllib.request.urlopen(req, timeout=60)
 
 ACTIVE_BRANCH = BRANCH_NAME
 try:
@@ -1130,7 +1149,7 @@ def delete_branch(owner, repo, branch):
         req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
         req.add_header('Accept', 'application/vnd.github+json')
         req.add_header('X-GitHub-Api-Version', '2022-11-28')
-        urllib.request.urlopen(req, timeout=15)
+        urllib.request.urlopen(req, timeout=60)
         print(f"Orphaned branch deleted: {branch}")
     except Exception as cleanup_err:
         print(f"WARNING: Could not delete branch {branch} — clean up manually.")
@@ -1157,7 +1176,7 @@ req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
     print("calling GitHub API...")
-    result = json.load(urllib.request.urlopen(req, timeout=15))
+    result = json.load(urllib.request.urlopen(req, timeout=60))
     print(f"committed: {result['commit']['sha']}")
 except urllib.error.HTTPError as e:
     if e.code == 409:
@@ -1277,7 +1296,7 @@ import urllib.request, os, json
 OWNER = "REPLACE"
 REPO = "REPLACE"
 BRANCH_NAME = "REPLACE"  # use ACTIVE_BRANCH from Step 6
-DEFAULT_BRANCH = "main"
+DEFAULT_BRANCH = "REPLACE"  # base_branch from Step 2 Notion field
 NOTION_PAGE_ID = "REPLACE"
 NOTION_PAGE_URL = f"https://notion.so/{NOTION_PAGE_ID.replace('-', '')}"
 SKIPPED_FILES = []  # populate with any file paths skipped in Step 4
@@ -1308,7 +1327,7 @@ def delete_branch(owner, repo, branch):
         req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
         req.add_header('Accept', 'application/vnd.github+json')
         req.add_header('X-GitHub-Api-Version', '2022-11-28')
-        urllib.request.urlopen(req, timeout=15)
+        urllib.request.urlopen(req, timeout=60)
         print(f"Orphaned branch deleted: {branch}")
     except Exception as cleanup_err:
         print(f"WARNING: Could not delete branch {branch} — clean up manually.")
@@ -1381,7 +1400,7 @@ req.add_header('X-GitHub-Api-Version', '2022-11-28')
 
 try:
     print("calling GitHub API...")
-    pr = json.load(urllib.request.urlopen(req, timeout=15))
+    pr = json.load(urllib.request.urlopen(req, timeout=60))
     pr_url = pr['html_url']
     print(f"PR OPENED: {pr_url}")
     print(f"PR_URL={pr_url}")
@@ -1414,7 +1433,7 @@ def get_check_runs(owner, repo, sha):
     req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
     req.add_header('Accept', 'application/vnd.github+json')
     req.add_header('X-GitHub-Api-Version', '2022-11-28')
-    return json.load(urllib.request.urlopen(req, timeout=15))
+    return json.load(urllib.request.urlopen(req, timeout=60))
 
 CI_STATUS = "no-ci-detected"
 CI_DETAILS = "No check-runs found within 3 minutes."
@@ -1559,7 +1578,7 @@ req.add_header('Notion-Version', '2022-06-28')
 
 try:
     print("calling Notion API...")
-    result = json.load(urllib.request.urlopen(req, timeout=15))
+    result = json.load(urllib.request.urlopen(req, timeout=60))
     print(f"Notion updated: {result['id']}")
     print(f"  Status: PR Opened | PR URL: {PR_URL}")
     print(f"  Feedback written ({len(feedback_text)} chars)")
@@ -1613,6 +1632,7 @@ EOF
 | Full GitHub URL in Repo field | Auto-parse `owner/repo` from URL path; no user action needed |
 | Notion update fails (Step 9) | Print PR URL and page_id for manual fix; do not undo the PR |
 | Head equals base | Stop before branch creation; do not attempt to create the branch |
+| Base branch not found on GitHub (404 on `GET /git/ref/heads/{base_branch}`) | Update Notion to "Error", note which branch was missing, stop |
 | Fix description is too vague | Create branch, open PR with clarifying question in body, mark Notion "PR Opened" |
 | Multiple databases match search | List them all, ask user to confirm which one to use |
 | Context >= threshold after a phase | Write handoff, add resume task to HEARTBEAT.md, stop |
@@ -1639,9 +1659,12 @@ The target database is **OpenClaw** (`database_id: 2ffcd9598000412f8b21e8d6fa453
 | Feedback | text (rich_text) | Write |
 | PR URL | url | Write |
 | Branch | rich_text | Write |
+| Base Branch | text (rich_text) | Read |
+
+**`Base Branch`**: Optional. If set, the skill creates the feature branch off this branch and opens the PR targeting it. If empty, defaults to `main`. The user must add this column to the Notion database manually via the Notion UI.
 
 **Field permissions summary:**
-- Read: Name, Repo, Description
+- Read: Name, Repo, Description, Base Branch
 - Write: Status, Feedback, PR URL, Branch
 - Never write: Description
 
@@ -1675,19 +1698,19 @@ After each run, confirm:
 - [ ] Step 0 preflight passed (rate limit >= 100) before any writes
 - [ ] Notion entry was "Ready" before run, "PR Opened" after
 - [ ] A `koda/fix/*` branch exists in the GitHub repo
-- [ ] PR targets `main` (or the repo's default branch), not a feature branch
+- [ ] `Base Branch` was read from Notion in Step 2 — defaulted to `main` if field was empty
+- [ ] PR `base` matches the Notion `Base Branch` field (or `main` if unset)
 - [ ] PR body contains all sections: What, Why, Changed Files, Edge Cases, Unchanged Scope, Checklist, Source
-- [ ] `main` branch is untouched — no direct commits
+- [ ] `main` (or base branch) is untouched — no direct commits
 - [ ] No PR was merged
 - [ ] No orphaned branches exist (check repo's branch list if any step failed)
 - [ ] If any files were skipped (binary/large), they are listed in the PR body
 - [ ] `Description` field unchanged after run — it is read-only
 - [ ] `Feedback` field populated with: what was done, approach rationale, edge cases, questions
-- [ ] Session 1 stopped after writing RESEARCH.md — did NOT write PLAN.md or create a branch
-- [ ] Session 2 read RESEARCH.md and made no GitHub API calls — used SHAs from research file
-- [ ] Session 2 stopped after writing PLAN.md — did NOT create a branch
-- [ ] Session 3 context was below 60% threshold before creating the branch
-- [ ] Session 3 validated plan before any GitHub write — did NOT re-research
+- [ ] Single Raycast invocation completed full Research → Plan → Implement → PR cycle without manual re-trigger
+- [ ] If interrupted mid-run, re-triggering resumed from correct phase without repeating completed work
+- [ ] Plan was validated before any GitHub write — did NOT re-research
+- [ ] Context was below 60% threshold before creating the branch
 - [ ] Notion status sequence: Ready → Researching → Research Complete → Planning → Planning Complete → Coding → PR Opened
 
 ---
@@ -1736,6 +1759,7 @@ Resume from: Phase {next phase}
 - Target repo: {owner/repo}
 - Branch: {ACTIVE_BRANCH or "not yet created"}
 - Default branch: {default_branch}
+- Base branch: {base_branch}
 
 ## Research Findings (Phase A)
 {Full written output from Phase A. Leave empty if not yet completed.}
@@ -1797,7 +1821,7 @@ EOF
 When invoked with "resume from handoff at [path]":
 
 1. Read the handoff file
-2. Extract: `page_id`, `repo`, `owner`, `default_branch`, `ACTIVE_BRANCH`, all file SHAs, plan, phase just completed
+2. Extract: `page_id`, `repo`, `owner`, `default_branch`, `base_branch`, `ACTIVE_BRANCH`, all file SHAs, plan, phase just completed. Do NOT re-read `base_branch` from Notion — use the value from Critical References directly in Steps 6 and 8.
 3. Determine next phase from "Resume from"
 4. Skip all completed phases
 5. Use SHAs from handoff; only re-read a file if SHA is absent
