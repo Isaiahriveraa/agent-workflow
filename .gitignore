@@ -1,2 +1,4 @@
 .DS_Store
 thoughts/
+__pycache__/
+*.pyc
