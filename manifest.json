@@ -84,6 +84,13 @@
       "tier": 1,
       "tool": "openclaw",
       "type": "directory"
+    },
+    {
+      "source": "~/.openclaw/CLAUDE.md",
+      "target": "~/.agents/prompts/system.md",
+      "tier": 1,
+      "tool": "openclaw",
+      "type": "file"
     }
   ],
   "not_managed": [
@@ -91,9 +98,7 @@
     "~/.claude/hooks.json",
     "~/.codex/config.toml",
     "~/.openclaw/openclaw.json",
-    "~/.openclaw/workspace/SOUL.md",
     "~/.openclaw/workspace/IDENTITY.md",
-    "~/.openclaw/workspace/USER.md",
     "~/.codex/skills/.system/"
   ],
   "auto_discovery": {
@@ -102,11 +107,55 @@
   },
   "generated": [
     {
-      "source": "~/.gemini/commands",
-      "target": "~/.agents/commands",
+      "tool": "opencode",
+      "target": "~/.config/opencode/agents",
+      "source": "~/.agents/agents",
+      "type": "adapter-output",
+      "generator": "sync.sh gen-opencode-agents",
+      "surface": "agents",
+      "note": "OpenCode agents are generated from hub agent markdown into OpenCode-compatible frontmatter."
+    },
+    {
       "tool": "antigravity",
+      "target": "~/.gemini/commands",
+      "source": "~/.agents/commands",
       "type": "format-bridge",
+      "generator": "sync.sh gen-antigravity-commands",
+      "surface": "commands",
       "note": "Antigravity requires .toml (description + prompt fields). Hub stores commands as .md with YAML frontmatter. Run 'sync.sh gen-antigravity-commands' or 'sync.sh migrate' to regenerate after hub command changes."
+    },
+    {
+      "tool": "antigravity",
+      "target": "~/.gemini/agents",
+      "source": "~/.agents/agents",
+      "type": "adapter-output",
+      "generator": "sync.sh gen-antigravity-agents",
+      "surface": "agents",
+      "note": "Antigravity agents are generated from the hub agent definitions into Gemini-compatible agent files."
+    },
+    {
+      "tool": "antigravity",
+      "target": "~/.gemini/get-shit-done",
+      "source": "~/.agents/get-shit-done",
+      "type": "adapter-output",
+      "generator": "sync.sh gen-antigravity-gsd",
+      "surface": "gsd",
+      "note": "Get-shit-done content is bridged into Antigravity's local workflow directory."
+    },
+    {
+      "tool": "openclaw",
+      "target": "~/.openclaw/workspace",
+      "source": "~/.agents",
+      "type": "wrapper-output",
+      "generator": "sync.sh gen-openclaw-workspace",
+      "surface": "workspace-wrappers",
+      "outputs": [
+        "AGENTS.md",
+        "SOUL.md",
+        "USER.md",
+        "TOOLS.md"
+      ],
+      "note": "OpenClaw workspace wrappers preserve tool-local identity while pointing back to the hub as the workflow source."
     }
   ]
 }
