@@ -25,10 +25,11 @@ usage() {
 Usage: sync.sh <command>
 
 Commands:
-  verify      Check all symlinks are intact, report broken ones
-  repair      Recreate any broken symlinks from manifest
-  migrate     Move content from tool dirs to hub (idempotent)
-  gen-agents  Generate OpenCode agent definitions from canonical format
+  verify                    Check all symlinks are intact, report broken ones
+  repair                    Recreate any broken symlinks from manifest
+  migrate                   Move content from tool dirs to hub (idempotent)
+  gen-agents                Generate OpenCode agent definitions from canonical format
+  gen-antigravity-commands  Convert hub .md commands to antigravity .toml format
 
 Run 'sync.sh verify' periodically or on shell startup to catch
 tool updates that overwrite symlinks with real directories.
@@ -224,6 +225,9 @@ cmd_migrate() {
         info "Antigravity skills: already symlinked or parent doesn't exist"
     fi
 
+    # Antigravity commands (format bridge: .md -> .toml)
+    cmd_gen_antigravity_commands
+
     # OpenClaw skills
     if [ -d "$HOME/.openclaw/workspace" ] && [ ! -L "$HOME/.openclaw/workspace/skills" ]; then
         [ -d "$HOME/.openclaw/workspace/skills" ] && rm -rf "$HOME/.openclaw/workspace/skills"
@@ -237,6 +241,76 @@ cmd_migrate() {
     echo "Migration complete. Running verify..."
     echo ""
     cmd_verify
+}
+
+# --- gen-antigravity-commands ---
+cmd_gen_antigravity_commands() {
+    local out_dir="$HOME/.gemini/commands"
+    mkdir -p "$out_dir"
+
+    echo "Generating antigravity .toml commands from hub .md commands..."
+    echo ""
+
+    python3 << 'PYEOF'
+import os, re, glob
+
+hub_commands = os.path.expanduser("~/.agents/commands")
+out_base = os.path.expanduser("~/.gemini/commands")
+
+generated = 0
+skipped = 0
+
+for md_file in sorted(glob.glob(os.path.join(hub_commands, "**/*.md"), recursive=True)):
+    # Skip .bak files
+    if md_file.endswith(".bak") or ".bak." in md_file:
+        continue
+
+    with open(md_file) as f:
+        content = f.read()
+
+    # Parse YAML frontmatter
+    fm_match = re.match(r'^---\n(.*?)\n---\n', content, re.DOTALL)
+    if not fm_match:
+        print(f"  SKIP  {os.path.relpath(md_file, hub_commands)} (no frontmatter)")
+        skipped += 1
+        continue
+
+    fm = fm_match.group(1)
+    body = content[fm_match.end():].strip()
+
+    desc_m = re.search(r'^description:\s*(.+)$', fm, re.MULTILINE)
+    if not desc_m:
+        print(f"  SKIP  {os.path.relpath(md_file, hub_commands)} (no description)")
+        skipped += 1
+        continue
+
+    description = desc_m.group(1).strip().strip('"')
+
+    # Compute output path, mirroring subdirectory structure
+    rel = os.path.relpath(md_file, hub_commands)          # e.g. gsd/help.md
+    rel_toml = os.path.splitext(rel)[0] + ".toml"         # e.g. gsd/help.toml
+    out_path = os.path.join(out_base, rel_toml)
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+    # Escape backslashes and double-quotes in the prompt body for TOML multi-line string
+    # Use TOML literal multi-line strings (''' ... ''') to avoid escaping issues
+    # Fall back to basic double-quote string if body contains '''
+    if "'''" in body:
+        # Escape for basic TOML string
+        escaped = body.replace('\\', '\\\\').replace('"', '\\"')
+        toml_content = f'description = "{description}"\nprompt = "{escaped}"\n'
+    else:
+        toml_content = f"description = \"{description}\"\nprompt = '''\n{body}\n'''\n"
+
+    with open(out_path, 'w') as f:
+        f.write(toml_content)
+
+    print(f"  OK    {rel_toml}")
+    generated += 1
+
+print(f"\nDone. {generated} commands generated, {skipped} skipped.")
+PYEOF
 }
 
 # --- gen-agents ---
@@ -327,9 +401,10 @@ PYEOF
 
 # --- main ---
 case "${1:-}" in
-    verify)     cmd_verify ;;
-    repair)     cmd_repair ;;
-    migrate)    cmd_migrate ;;
-    gen-agents) cmd_gen_agents ;;
-    *)          usage ;;
+    verify)                    cmd_verify ;;
+    repair)                    cmd_repair ;;
+    migrate)                   cmd_migrate ;;
+    gen-agents)                cmd_gen_agents ;;
+    gen-antigravity-commands)  cmd_gen_antigravity_commands ;;
+    *)                         usage ;;
 esac

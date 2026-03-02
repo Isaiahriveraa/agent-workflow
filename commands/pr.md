@@ -1,3 +1,7 @@
+---
+description: Generate a GitHub pull request description using a structured template
+---
+
 # PR Guidelines:
 
 Use the git cli to make a pr request. Make sure to wait for me verify if we can commit it. Dont commit without my authorization. Look at git diff from the main and our current branch to make this pr request.
