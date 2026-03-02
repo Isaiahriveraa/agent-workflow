@@ -198,12 +198,23 @@ cmd_migrate() {
     fi
 
     # Codex AGENTS.md
-    if [ -f "$HOME/.codex/AGENTS.md" ] && [ ! -L "$HOME/.codex/AGENTS.md" ]; then
+    mkdir -p "$HOME/.codex"
+    if [ -L "$HOME/.codex/AGENTS.md" ]; then
+        current_target="$(readlink "$HOME/.codex/AGENTS.md" || true)"
+        if [ "$current_target" != "$HUB/AGENTS.md" ]; then
+            rm "$HOME/.codex/AGENTS.md"
+            ln -s "$HUB/AGENTS.md" "$HOME/.codex/AGENTS.md"
+            ok "Codex AGENTS.md relinked"
+        else
+            info "Codex AGENTS.md: already symlinked"
+        fi
+    elif [ -e "$HOME/.codex/AGENTS.md" ]; then
         rm "$HOME/.codex/AGENTS.md"
-        ln -s "$HUB/prompts/system.md" "$HOME/.codex/AGENTS.md"
+        ln -s "$HUB/AGENTS.md" "$HOME/.codex/AGENTS.md"
         ok "Codex AGENTS.md linked"
     else
-        info "Codex AGENTS.md: already symlinked or doesn't exist"
+        ln -s "$HUB/AGENTS.md" "$HOME/.codex/AGENTS.md"
+        ok "Codex AGENTS.md linked"
     fi
 
     # OpenCode commands

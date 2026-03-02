@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const read = (relativePath) => fs.readFileSync(new URL(`../${relativePath}`, import.meta.url), 'utf8');
+const readJson = (relativePath) => JSON.parse(read(relativePath));
 
 test('AGENTS declares contexts, rules, and adapters as canonical layers', () => {
   const content = read('AGENTS.md');
@@ -53,4 +54,13 @@ test('workflow commands reference explicit context files', () => {
   assert.match(projectTooling, /contexts\/tooling\.md/);
   assert.match(projectVerification, /contexts\/verification\.md/);
   assert.match(projectArtifacts, /contexts\/artifacts\.md/);
+});
+
+test('manifest points Codex CLI at the shared AGENTS contract', () => {
+  const manifest = readJson('manifest.json');
+  const codexLink = manifest.symlinks.find((entry) => entry.tool === 'codex-cli');
+
+  assert.ok(codexLink);
+  assert.equal(codexLink.source, '~/.codex/AGENTS.md');
+  assert.equal(codexLink.target, '~/.agents/AGENTS.md');
 });

@@ -3,22 +3,22 @@
 Use this file as the canonical resumable state for in-flight work.
 
 ## Current Workflow
-- workflow-artifact-continuity-upgrade
+- cli-workflow-parity-upgrade
 
 ## Current Phase
-- artifact working set persistence implemented and verified
+- phase-1 rollback boundary in progress
 
 ## Next Step
-- Decide whether to implement command templating so plans and runbooks emit package-manager-aware and verification-aware commands automatically.
+- Commit the current Codex parity baseline, then create backup and working branches for the cross-CLI parity upgrade.
 
 ## Blockers
 - None.
 
 ## Last Verified At
-- 2026-03-02T07:00:00Z
+- 2026-03-02T12:00:00Z
 
 ## Related Plan
-- workflow upgrade from external repo comparison and SSOT integration
+- /Users/isaiahrivera/.agents/thoughts/plans/2026-03-02-cross-cli-workflow-parity-upgrade.md
 
 ## Active Artifact Working Set
 - Last updated: 2026-03-02T07:00:29.026Z

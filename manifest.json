@@ -59,7 +59,7 @@
     },
     {
       "source": "~/.codex/AGENTS.md",
-      "target": "~/.agents/prompts/system.md",
+      "target": "~/.agents/AGENTS.md",
       "tier": 1,
       "tool": "codex-cli",
       "type": "file"
