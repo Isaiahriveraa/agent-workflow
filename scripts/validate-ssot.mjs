@@ -24,6 +24,14 @@ const requiredFiles = [
   'rules/common/verification-automation.md',
   'rules/common/artifact-retrieval.md',
   'adapters/claude-code/README.md',
+  'adapters/codex-cli/README.md',
+  'adapters/opencode/README.md',
+  'adapters/antigravity/README.md',
+  'adapters/openclaw/README.md',
+  'adapters/openclaw/templates/AGENTS.md',
+  'adapters/openclaw/templates/SOUL.md',
+  'adapters/openclaw/templates/USER.md',
+  'adapters/openclaw/templates/TOOLS.md',
   'hooks/gsd-check-update.js',
   'hooks/gsd-statusline.js',
   'commands/session-start.md',
@@ -48,6 +56,14 @@ const requiredHeadings = new Map([
   ['contexts/verification.md', ['## Available Checks', '## Preferred Order', '## Command Source', '## Notes']],
   ['contexts/artifacts.md', ['## Sources', '## Preferred Retrieval Order', '## Notes']],
   ['contexts/ui-ux.md', ['## Intent', '## Audience', '## Visual Direction', '## Constraints', '## Required States', '## Selected Skill']]
+]);
+
+const adapterReadmeHeadings = new Map([
+  ['adapters/claude-code/README.md', ['# Claude Code Adapter', '## Canonical Boundary']],
+  ['adapters/codex-cli/README.md', ['# Codex CLI Adapter', '## Managed Surface', '## Canonical Boundary']],
+  ['adapters/opencode/README.md', ['# OpenCode Adapter', '## Managed Surfaces', '## Generator Contract', '## Canonical Boundary']],
+  ['adapters/antigravity/README.md', ['# Antigravity Adapter', '## Managed Surfaces', '## Generator Contract', '## Canonical Boundary']],
+  ['adapters/openclaw/README.md', ['# OpenClaw Adapter', '## Managed Surfaces', '## Local-Only Surfaces', '## Canonical Boundary']]
 ]);
 
 const commandContracts = new Map([
@@ -87,6 +103,28 @@ for (const [relativePath, headings] of requiredHeadings) {
       hasError = true;
     }
   }
+}
+
+for (const [relativePath, headings] of adapterReadmeHeadings) {
+  const fullPath = path.join(root, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    continue;
+  }
+
+  const content = fs.readFileSync(fullPath, 'utf8');
+  for (const heading of headings) {
+    if (!content.includes(heading)) {
+      console.error(`Missing adapter heading "${heading}" in ${relativePath}`);
+      hasError = true;
+    }
+  }
+}
+
+const stateContent = fs.readFileSync(path.join(root, 'contexts/state.md'), 'utf8');
+const workingSetSections = stateContent.match(/^## Active Artifact Working Set$/gm) ?? [];
+if (workingSetSections.length !== 1) {
+  console.error(`Expected exactly one "## Active Artifact Working Set" section in contexts/state.md, found ${workingSetSections.length}`);
+  hasError = true;
 }
 
 for (const [relativePath, references] of commandContracts) {

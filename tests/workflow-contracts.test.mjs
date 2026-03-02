@@ -64,3 +64,44 @@ test('manifest points Codex CLI at the shared AGENTS contract', () => {
   assert.equal(codexLink.source, '~/.codex/AGENTS.md');
   assert.equal(codexLink.target, '~/.agents/AGENTS.md');
 });
+
+test('manifest represents prompt parity and generated adapter surfaces for all supported CLIs', () => {
+  const manifest = readJson('manifest.json');
+  const openclawPromptLink = manifest.symlinks.find((entry) =>
+    entry.tool === 'openclaw' && entry.source === '~/.openclaw/CLAUDE.md'
+  );
+  const generatedByTool = Object.groupBy(manifest.generated, ({ tool }) => tool);
+
+  assert.ok(openclawPromptLink);
+  assert.equal(openclawPromptLink.target, '~/.agents/prompts/system.md');
+
+  assert.deepEqual(
+    (generatedByTool.opencode ?? []).map((entry) => entry.surface).sort(),
+    ['agents']
+  );
+  assert.deepEqual(
+    (generatedByTool.antigravity ?? []).map((entry) => entry.surface).sort(),
+    ['agents', 'commands', 'gsd']
+  );
+  assert.deepEqual(
+    (generatedByTool.openclaw ?? []).map((entry) => entry.surface).sort(),
+    ['workspace-wrappers']
+  );
+
+  const openclawWorkspace = (generatedByTool.openclaw ?? [])[0];
+  assert.deepEqual(openclawWorkspace.outputs, ['AGENTS.md', 'SOUL.md', 'USER.md', 'TOOLS.md']);
+});
+
+test('adapter directories document non-claude parity boundaries', () => {
+  const codex = read('adapters/codex-cli/README.md');
+  const opencode = read('adapters/opencode/README.md');
+  const antigravity = read('adapters/antigravity/README.md');
+  const openclaw = read('adapters/openclaw/README.md');
+  const openclawAgentsTemplate = read('adapters/openclaw/templates/AGENTS.md');
+
+  assert.match(codex, /~\/\.codex\/AGENTS\.md/);
+  assert.match(opencode, /gen-opencode-agents/);
+  assert.match(antigravity, /gen-antigravity-gsd/);
+  assert.match(openclaw, /Generated workspace wrappers/);
+  assert.match(openclawAgentsTemplate, /\{\{HUB\}\}\/AGENTS\.md/);
+});
