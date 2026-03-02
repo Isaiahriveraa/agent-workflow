@@ -1,12 +1,16 @@
 {
   "version": "1.0.0",
-  "description": "Centralized AI tool configuration hub — single source of truth for skills, agents, commands, prompts, hooks, and GSD across all AI coding tools.",
+  "description": "Centralized AI tool configuration hub — single source of truth for prompts, contexts, commands, rules, skills, agents, and provider adapters across AI coding tools.",
   "hub": "~/.agents",
   "managed_content": {
+    "contexts": "~/.agents/contexts",
+    "thoughts": "~/.agents/thoughts",
     "skills": "~/.agents/skills",
     "agents": "~/.agents/agents",
     "commands": "~/.agents/commands",
     "hooks": "~/.agents/hooks",
+    "adapters": "~/.agents/adapters",
+    "rules": "~/.agents/rules",
     "prompts": "~/.agents/prompts",
     "get-shit-done": "~/.agents/get-shit-done"
   },
@@ -84,6 +88,7 @@
   ],
   "not_managed": [
     "~/.claude/settings.json",
+    "~/.claude/hooks.json",
     "~/.codex/config.toml",
     "~/.openclaw/openclaw.json",
     "~/.openclaw/workspace/SOUL.md",
@@ -94,5 +99,14 @@
   "auto_discovery": {
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed"
-  }
+  },
+  "generated": [
+    {
+      "source": "~/.gemini/commands",
+      "target": "~/.agents/commands",
+      "tool": "antigravity",
+      "type": "format-bridge",
+      "note": "Antigravity requires .toml (description + prompt fields). Hub stores commands as .md with YAML frontmatter. Run 'sync.sh gen-antigravity-commands' or 'sync.sh migrate' to regenerate after hub command changes."
+    }
+  ]
 }

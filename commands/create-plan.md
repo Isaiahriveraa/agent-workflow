@@ -35,6 +35,12 @@ Then wait for the user's input.
 
 ### Step 1: Context Gathering & Initial Analysis
 
+0. **Load canonical context before planning:**
+   - Read `~/.agents/contexts/decisions.md`
+   - Read `~/.agents/contexts/research-index.md` if prior research exists
+   - Load only the relevant rule cards from `~/.agents/rules/common/`
+   - Treat decisions recorded there as authoritative unless the user explicitly changes them
+
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
    - Related implementation plans
@@ -65,6 +71,7 @@ Then wait for the user's input.
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
+   - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
 
 5. **Present informed understanding and focused questions**:
    ```
@@ -397,3 +404,22 @@ When spawning research sub-tasks:
    - If a sub-task returns unexpected results, spawn follow-up tasks
    - Cross-check findings against the actual codebase
    - Don't accept results that seem incorrect
+
+## Verification Command Selection
+
+When writing `Automated Verification` sections:
+- Prefer actual repo commands from `~/.agents/contexts/verification.md`
+- Refresh them with `node ./scripts/verification-tools.mjs plan` when needed
+- Treat examples like `make test` or `npm run lint` as placeholders unless they match the repo's real commands
+
+## Workflow State Integration
+
+After writing the final plan:
+- Update `~/.agents/contexts/state.md`
+- Set `## Current Workflow` to `planning`
+- Set `## Current Phase` to `plan created`
+- Set `## Next Step` to the recommended execution entry point
+- Set `## Related Plan` to the plan path you created
+
+If the plan used new or existing research artifacts:
+- Add or update the matching entry in `~/.agents/contexts/research-index.md`

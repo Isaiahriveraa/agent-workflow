@@ -6,6 +6,8 @@ description: Create handoff document for transferring work to another session
 
 You are tasked with writing a handoff document to hand off your work to another agent in a new session. You will create a handoff document that is thorough, but also **concise**. The goal is to compact and summarize your context without losing any of the key details of what you're working on.
 
+Use `/pause-session` for normal pause/resume continuity. Use this command when the work needs a richer transfer artifact for another agent or a deliberate context compaction.
+
 
 ## Process
 ### 1. Filepath & Metadata

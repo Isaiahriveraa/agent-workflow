@@ -1,0 +1,16 @@
+{
+  "name": "agents-workflow-hub",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "validate:ssot": "node ./scripts/validate-ssot.mjs",
+    "test:workflows": "node --test ./tests/workflow-contracts.test.mjs",
+    "test:hooks": "node --test ./tests/hooks-nonblocking.test.mjs",
+    "test:sessions": "node --test ./tests/session-tools.test.mjs",
+    "test:tooling": "node --test ./tests/package-manager-tools.test.mjs",
+    "test:verification": "node --test ./tests/verification-tools.test.mjs",
+    "test:artifacts": "node --test ./tests/artifact-tools.test.mjs",
+    "test": "npm run test:workflows && npm run test:hooks && npm run test:sessions && npm run test:tooling && npm run test:verification && npm run test:artifacts"
+  }
+}

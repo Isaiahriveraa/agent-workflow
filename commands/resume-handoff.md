@@ -6,6 +6,8 @@ description: Resume work from handoff document with context analysis and validat
 
 You are tasked with resuming work from a handoff document through an interactive process. These handoffs contain critical context, learnings, and next steps from previous work sessions that need to be understood and continued.
 
+Prefer `/resume-session` for lightweight ordinary continuity. Use this command when resuming from a richer transfer artifact created specifically as a handoff.
+
 ## Initial Response
 
 When this command is invoked:

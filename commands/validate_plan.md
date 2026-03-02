@@ -12,12 +12,14 @@ When invoked:
 1. **Determine context** - Are you in an existing conversation or starting fresh?
    - If existing: Review what was implemented in this session
    - If fresh: Need to discover what was done through git and codebase analysis
+   - Read `~/.agents/contexts/state.md` and `~/.agents/contexts/decisions.md` before forming conclusions
 
 2. **Locate the plan**:
    - If plan path provided, use it
    - Otherwise, search recent commits for plan references or ask user
 
 3. **Gather implementation evidence**:
+   - Read `~/.agents/contexts/verification.md` before selecting automated checks
    ```bash
    # Check recent commits
    git log --oneline -n 20
@@ -78,6 +80,11 @@ For each phase in the plan:
    - Were error conditions handled?
    - Are there missing validations?
    - Could the implementation break existing functionality?
+
+5. **Check workflow contract fidelity**:
+   - Did the implementation honor locked decisions from `~/.agents/contexts/decisions.md`?
+   - Did the execution update `~/.agents/contexts/state.md` consistently?
+   - If reusable research was produced or consumed, does `~/.agents/contexts/research-index.md` reflect it?
 
 ### Step 3: Generate Validation Report
 
@@ -152,6 +159,7 @@ Always verify:
 - [ ] Error handling is robust
 - [ ] Documentation updated if needed
 - [ ] Manual test steps are clear
+- [ ] Workflow state and decisions files still match reality
 
 ## Relationship to Other Commands
 
