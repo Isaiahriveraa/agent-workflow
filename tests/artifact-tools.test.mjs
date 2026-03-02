@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 const root = '/Users/isaiahrivera/.agents';
 const read = (relativePath) => fs.readFileSync(`${root}/${relativePath}`, 'utf8');
@@ -93,6 +93,25 @@ test('artifact persistence writes and reads the active working set', () => {
     assert.match(stateContent, /- Source: test-suite/);
     assert.match(stateContent, /- Focus: artifact continuity/);
     assert.match(stateContent, new RegExp(`- plan: ${planPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  } finally {
+    fs.writeFileSync(`${root}/contexts/state.md`, originalState);
+  }
+});
+
+test('artifact tools reject duplicate working set sections in state', () => {
+  const originalState = read('contexts/state.md');
+  const duplicatedState = `${originalState.trimEnd()}\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`;
+
+  try {
+    fs.writeFileSync(`${root}/contexts/state.md`, duplicatedState);
+
+    const result = spawnSync('node', ['scripts/artifact-tools.mjs', 'active'], {
+      cwd: root,
+      encoding: 'utf8'
+    });
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Duplicate "## Active Artifact Working Set" sections found in contexts\/state\.md/);
   } finally {
     fs.writeFileSync(`${root}/contexts/state.md`, originalState);
   }

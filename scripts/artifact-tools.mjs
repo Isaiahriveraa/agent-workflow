@@ -14,6 +14,14 @@ const categories = {
 
 const readFile = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
 const readState = () => fs.readFileSync(statePath, 'utf8');
+const workingSetHeading = '## Active Artifact Working Set';
+
+const assertSingleWorkingSetSection = (state) => {
+  const matches = state.match(/^## Active Artifact Working Set$/gm) ?? [];
+  if (matches.length > 1) {
+    throw new Error(`Duplicate "${workingSetHeading}" sections found in contexts/state.md`);
+  }
+};
 
 const replaceSection = (content, heading, replacement) => {
   const pattern = new RegExp(`(^${heading}\\n)([\\s\\S]*?)(?=\\n## |\\s*$)`, 'm');
@@ -68,6 +76,7 @@ const parseOrderedArtifacts = (section) => {
 
 const readPersistedWorkingSet = () => {
   const state = readState();
+  assertSingleWorkingSetSection(state);
   const sectionMatch = state.match(/## Active Artifact Working Set\n([\s\S]*?)(?=\n## |\s*$)/);
   if (!sectionMatch) {
     return {
@@ -148,7 +157,8 @@ const renderWorkingSetSection = (workingSet) => {
 
 const persistWorkingSet = (workingSet) => {
   const state = readState();
-  const updated = replaceSection(state, '## Active Artifact Working Set', renderWorkingSetSection(workingSet));
+  assertSingleWorkingSetSection(state);
+  const updated = replaceSection(state, workingSetHeading, renderWorkingSetSection(workingSet));
   fs.writeFileSync(statePath, updated);
   return workingSet;
 };
