@@ -12,6 +12,7 @@
     "test:tooling": "node --test ./tests/package-manager-tools.test.mjs",
     "test:verification": "node --test ./tests/verification-tools.test.mjs",
     "test:artifacts": "node --test ./tests/artifact-tools.test.mjs",
-    "test": "npm run test:workflows && npm run test:adapters && npm run test:hooks && npm run test:sessions && npm run test:tooling && npm run test:verification && npm run test:artifacts"
+    "test:github-pr-proposer": "node --test ./tests/github-pr-proposer.test.mjs",
+    "test": "npm run test:workflows && npm run test:adapters && npm run test:hooks && npm run test:sessions && npm run test:tooling && npm run test:verification && npm run test:artifacts && npm run test:github-pr-proposer"
   }
 }
