@@ -9,7 +9,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 ## Initial Setup
 
 1. **If a plan path was provided as a parameter**, read the plan file fully before doing anything else.
-2. **Read `~/.agents/contexts/state.md` before starting work.**
+2. **Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's `state.md` before starting work.**
 3. **Read `~/.agents/contexts/decisions.md` before starting work.**
 
 4. **If no parameter was provided**, ask:
@@ -44,7 +44,7 @@ State clearly:
 - What files will be touched
 
 Before editing:
-- Update `~/.agents/contexts/state.md` with the active workflow, phase name, next step, and related plan path
+- Update the current project's `state.md` with the active workflow, phase name, next step, and related plan path
 
 Ask the user to confirm before proceeding, unless they've already pre-approved all phases.
 
@@ -88,7 +88,7 @@ Reply "done" or "confirmed" when you've verified these, or describe any issues y
 
 After the user confirms:
 - Update the plan file: check off completed items (`- [ ]` → `- [x]`)
-- Update `~/.agents/contexts/state.md` with the completed phase, next phase or completion state, blockers if any, and the latest verification timestamp
+- Update the current project's `state.md` with the completed phase, next phase or completion state, blockers if any, and the latest verification timestamp
 - State: "Phase [N] complete." and announce the next phase, or "All phases complete." if done
 
 ---
@@ -97,7 +97,7 @@ After the user confirms:
 
 If this is a long session and you suspect context drift:
 - Re-read the plan file before starting each new phase
-- Re-read `~/.agents/contexts/state.md` before starting each new phase
+- Re-read the current project's `state.md` before starting each new phase
 - This costs a few seconds and prevents costly mistakes
 
 ---

@@ -8,11 +8,12 @@ Start a lightweight resumable session for the current stream of work.
 
 ## Process
 
-1. Read `~/.agents/contexts/decisions.md`.
-2. Read `~/.agents/contexts/state.md`.
-3. Read `~/.agents/contexts/session-index.md`.
-4. If the user referenced an existing plan, research doc, or session artifact, read it fully.
-5. Create or refresh a session artifact under `~/.agents/thoughts/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md`.
+1. Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`.
+2. Read `~/.agents/contexts/decisions.md`.
+3. Read the current project's `state.md`.
+4. Read the current project's `session-index.md`.
+5. If the user referenced an existing plan, research doc, or session artifact, read it fully.
+6. Create or refresh a session artifact under the current project's `thoughts/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md`.
 
 ## Session Artifact Format
 
@@ -53,8 +54,8 @@ next_command: [recommended command]
 ## Index and State Updates
 
 After writing the session artifact:
-- Update `~/.agents/contexts/session-index.md`
-- Update `~/.agents/contexts/state.md`
+- Update the current project's `session-index.md`
+- Update the current project's `state.md`
 - Set `## Current Workflow` to the active workflow
 - Set `## Next Step` to the session's next action
 - Set `## Related Plan` if applicable

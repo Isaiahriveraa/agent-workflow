@@ -29,6 +29,7 @@ Then wait for the user's research query.
 0. **Load canonical context before research:**
    - Read `~/.agents/contexts/decisions.md`
    - Read `~/.agents/contexts/research-index.md`
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` if you need the current runtime workflow position from the project's `state.md`
    - Load `~/.agents/rules/common/search-first.md`
 
 1. **Read any directly mentioned files first:**

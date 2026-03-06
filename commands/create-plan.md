@@ -38,6 +38,7 @@ Then wait for the user's input.
 0. **Load canonical context before planning:**
    - Read `~/.agents/contexts/decisions.md`
    - Read `~/.agents/contexts/research-index.md` if prior research exists
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's runtime `state.md` when the existing workflow position matters
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
 
@@ -415,7 +416,8 @@ When writing `Automated Verification` sections:
 ## Workflow State Integration
 
 After writing the final plan:
-- Update `~/.agents/contexts/state.md`
+- Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+- Update the current project's runtime `state.md`
 - Set `## Current Workflow` to `planning`
 - Set `## Current Phase` to `plan created`
 - Set `## Next Step` to the recommended execution entry point
