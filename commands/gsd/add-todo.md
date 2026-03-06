@@ -23,9 +23,14 @@ Routes to the add-todo workflow which handles:
 </objective>
 
 <execution_context>
-@.planning/STATE.md
 @/Users/isaiahrivera/.claude/get-shit-done/workflows/add-todo.md
 </execution_context>
+
+<context>
+Arguments: $ARGUMENTS (optional todo description)
+
+State is resolved in-workflow via `init todos` and targeted reads.
+</context>
 
 <process>
 **Follow the add-todo workflow** from `@/Users/isaiahrivera/.claude/get-shit-done/workflows/add-todo.md`.
