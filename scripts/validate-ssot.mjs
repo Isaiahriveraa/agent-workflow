@@ -67,17 +67,22 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', '~/.agents/contexts/state.md']],
-  ['commands/implement_plan.md', ['~/.agents/contexts/state.md', '~/.agents/contexts/decisions.md']],
-  ['commands/validate_plan.md', ['~/.agents/contexts/state.md', '~/.agents/contexts/decisions.md']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', "current project's runtime `state.md`"]],
+  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md']],
+  ['commands/validate_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md']],
   ['commands/research_codebase.md', ['~/.agents/contexts/research-index.md', '~/.agents/contexts/decisions.md']],
-  ['commands/session-start.md', ['~/.agents/contexts/session-index.md', '~/.agents/contexts/state.md']],
-  ['commands/session-status.md', ['~/.agents/contexts/session-index.md', '~/.agents/contexts/state.md']],
-  ['commands/pause-session.md', ['~/.agents/contexts/session-index.md', '~/.agents/contexts/state.md']],
-  ['commands/resume-session.md', ['~/.agents/contexts/session-index.md', '~/.agents/contexts/state.md']],
+  ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
+  ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],
+  ['commands/pause-session.md', ["current project's `session-index.md`", "current project's `state.md`"]],
+  ['commands/resume-session.md', ["current project's `session-index.md`", "current project's `state.md`", '~/.agents/contexts/research-index.md']],
   ['commands/project-tooling.md', ['~/.agents/contexts/tooling.md', 'scripts/package-manager-tools.mjs']],
   ['commands/project-verification.md', ['~/.agents/contexts/verification.md', 'scripts/verification-tools.mjs']],
-  ['commands/project-artifacts.md', ['~/.agents/contexts/artifacts.md', 'scripts/artifact-tools.mjs']]
+  ['commands/project-artifacts.md', ["current project's `artifacts.md`", '~/.agents/contexts/research-index.md', 'scripts/artifact-tools.mjs']]
+]);
+
+const handoffContracts = new Map([
+  ['commands/create-handoff.md', ['~/.agents/thoughts/shared/handoffs/']],
+  ['commands/resume-handoff.md', ['~/.agents/thoughts/shared/handoffs/', '~/.agents/thoughts/plans', '~/.agents/thoughts/research']]
 ]);
 
 let hasError = false;
@@ -137,6 +142,21 @@ for (const [relativePath, references] of commandContracts) {
   for (const reference of references) {
     if (!content.includes(reference)) {
       console.error(`Missing command contract reference "${reference}" in ${relativePath}`);
+      hasError = true;
+    }
+  }
+}
+
+for (const [relativePath, references] of handoffContracts) {
+  const fullPath = path.join(root, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    continue;
+  }
+
+  const content = fs.readFileSync(fullPath, 'utf8');
+  for (const reference of references) {
+    if (!content.includes(reference)) {
+      console.error(`Missing handoff contract reference "${reference}" in ${relativePath}`);
       hasError = true;
     }
   }

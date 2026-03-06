@@ -22,8 +22,10 @@ test('system prompt documents context discipline and ui routing', () => {
   assert.match(content, /## Artifact Retrieval/);
 });
 
-test('workflow state includes artifact working set headings', () => {
+test('global workflow state is a compatibility document with runtime-state pointer', () => {
   const content = read('contexts/state.md');
+  assert.match(content, /shared compatibility document/);
+  assert.match(content, /~\/\.agents\/projects\/<project-id>\/contexts\/state\.md/);
   assert.match(content, /## Active Artifact Working Set/);
   assert.match(content, /### Selected By Category/);
   assert.match(content, /### Ordered Artifacts/);
@@ -43,17 +45,31 @@ test('workflow commands reference explicit context files', () => {
 
   assert.match(createPlan, /contexts\/decisions\.md/);
   assert.match(createPlan, /contexts\/research-index\.md/);
-  assert.match(createPlan, /contexts\/state\.md/);
-  assert.match(implementPlan, /contexts\/state\.md/);
+  assert.match(createPlan, /current project's runtime `state\.md`/);
+  assert.match(implementPlan, /current project's `state\.md`/);
   assert.match(implementPlan, /contexts\/decisions\.md/);
-  assert.match(validatePlan, /contexts\/state\.md/);
+  assert.match(validatePlan, /current project's `state\.md`/);
   assert.match(research, /contexts\/research-index\.md/);
-  assert.match(sessionStart, /contexts\/session-index\.md/);
-  assert.match(pauseSession, /contexts\/session-index\.md/);
-  assert.match(resumeSession, /contexts\/session-index\.md/);
+  assert.match(research, /project-context\.mjs current/);
+  assert.match(sessionStart, /current project's `session-index\.md`/);
+  assert.match(pauseSession, /current project's `session-index\.md`/);
+  assert.match(resumeSession, /current project's `session-index\.md`/);
   assert.match(projectTooling, /contexts\/tooling\.md/);
   assert.match(projectVerification, /contexts\/verification\.md/);
-  assert.match(projectArtifacts, /contexts\/artifacts\.md/);
+  assert.match(projectArtifacts, /current project's `artifacts\.md`/);
+  assert.match(projectArtifacts, /~\/\.agents\/contexts\/research-index\.md/);
+});
+
+test('handoff commands keep handoffs global while runtime state can be project-scoped', () => {
+  const createHandoff = read('commands/create-handoff.md');
+  const resumeHandoff = read('commands/resume-handoff.md');
+
+  assert.match(createHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\//);
+  assert.doesNotMatch(createHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
+  assert.match(resumeHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\/ENG-XXXX/);
+  assert.match(resumeHandoff, /~\/\.agents\/thoughts\/plans/);
+  assert.match(resumeHandoff, /~\/\.agents\/thoughts\/research/);
+  assert.doesNotMatch(resumeHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
 });
 
 test('manifest points Codex CLI at the shared AGENTS contract', () => {

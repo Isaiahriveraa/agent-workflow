@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { ensureProjectContext } from './project-context.mjs';
 
-const root = '/Users/isaiahrivera/.agents';
-const sessionsDir = path.join(root, 'thoughts/sessions/general');
-const indexPath = path.join(root, 'contexts/session-index.md');
+const project = ensureProjectContext();
+const sessionsDir = project.thoughtPaths.sessions;
+const indexPath = project.contextPaths.sessionIndex;
 
 const ensureDir = (dir) => {
   fs.mkdirSync(dir, { recursive: true });

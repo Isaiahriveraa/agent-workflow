@@ -1,35 +1,38 @@
 # Workflow State
 
-Use this file as the canonical resumable state for in-flight work.
+Use this file as a shared compatibility document, not the live per-project runtime state source.
+
+Per-project runtime workflow state now lives at `~/.agents/projects/<project-id>/contexts/state.md`.
+Use this global file only for legacy/shared notes that are not specific to a single repo.
 
 ## Current Workflow
-- cli-workflow-parity-upgrade
+- legacy/shared only - see project-local runtime state
 
 ## Current Phase
-- all phases complete
+- legacy/shared only - see project-local runtime state
 
 ## Next Step
-- Run `/validate_plan` for final plan validation and then create commits for the parity upgrade work.
+- Resolve the current project via `node ~/.agents/scripts/project-context.mjs current` and read that project's `contexts/state.md`
 
 ## Blockers
-- None.
+- None recorded at the shared/global level.
 
 ## Last Verified At
-- 2026-03-02T20:08:00Z
+- legacy/shared only
 
 ## Related Plan
-- /Users/isaiahrivera/.agents/thoughts/plans/2026-03-02-cross-cli-workflow-parity-upgrade.md
+- none
 
 ## Active Artifact Working Set
-- Last updated: 2026-03-02T07:00:29.026Z
-- Source: resume-handoff
-- Focus: agent workflow automation upgrade
+- Last updated: legacy/shared only
+- Source: legacy/shared only
+- Focus: per-project working sets now live in `~/.agents/projects/<project-id>/contexts/state.md`
 
 ### Selected By Category
 - plan: none
 - research: none
 - session: none
-- handoff: /Users/isaiahrivera/.agents/thoughts/shared/handoffs/ENG-general/2026-03-01_22-53-44_agent-workflow-automation-upgrade.md
+- handoff: none
 
 ### Ordered Artifacts
-1. /Users/isaiahrivera/.agents/thoughts/shared/handoffs/ENG-general/2026-03-01_22-53-44_agent-workflow-automation-upgrade.md
+1. none

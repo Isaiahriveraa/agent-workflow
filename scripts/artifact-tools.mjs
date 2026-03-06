@@ -1,18 +1,25 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { ensureProjectContext } from './project-context.mjs';
 
 const root = '/Users/isaiahrivera/.agents';
-const thoughtsRoot = path.join(root, 'thoughts');
-const statePath = path.join(root, 'contexts/state.md');
-
+const project = ensureProjectContext();
+const statePath = project.contextPaths.state;
+const researchIndexPath = path.join(root, 'contexts', 'research-index.md');
+const sharedArtifactRoots = {
+  plans: project.thoughtPaths.plans,
+  research: project.thoughtPaths.research,
+  handoffs: project.thoughtPaths.handoffs
+};
+const projectLocalArtifactRoots = {
+  sessions: project.thoughtPaths.sessions
+};
 const categories = {
-  plans: path.join(thoughtsRoot, 'plans'),
-  research: path.join(thoughtsRoot, 'research'),
-  sessions: path.join(thoughtsRoot, 'sessions'),
-  handoffs: path.join(thoughtsRoot, 'handoffs')
+  ...sharedArtifactRoots,
+  ...projectLocalArtifactRoots
 };
 
-const readFile = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
 const readState = () => fs.readFileSync(statePath, 'utf8');
 const workingSetHeading = '## Active Artifact Working Set';
 
@@ -164,8 +171,8 @@ const persistWorkingSet = (workingSet) => {
 };
 
 const state = readState();
-const sessionIndex = readFile('contexts/session-index.md');
-const researchIndex = readFile('contexts/research-index.md');
+const sessionIndex = readFile(project.contextPaths.sessionIndex);
+const researchIndex = readFile(researchIndexPath);
 const persistedWorkingSet = readPersistedWorkingSet();
 
 const tokenize = (value) =>
