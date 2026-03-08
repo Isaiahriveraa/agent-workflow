@@ -9,17 +9,18 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 ## Initial Setup
 
 1. **If a plan path was provided as a parameter**, read the plan file fully before doing anything else.
-2. **Read `~/.agents/contexts/state.md` before starting work.**
+2. **Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's `state.md` before starting work.**
 3. **Read `~/.agents/contexts/decisions.md` before starting work.**
+4. **Load `~/.agents/rules/common/workflow-router.md` before starting work.**
 
-4. **If no parameter was provided**, ask:
+5. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
-   Example: ~/.agents/thoughts/plans/2026-02-17-my-feature.md
+   Example: /absolute/path/to/project/.planning/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
-5. **Confirm readiness**:
+6. **Confirm readiness**:
    ```
    I've read the plan. It has [N] phases:
    1. [Phase 1 name] — [one-line goal]
@@ -44,7 +45,8 @@ State clearly:
 - What files will be touched
 
 Before editing:
-- Update `~/.agents/contexts/state.md` with the active workflow, phase name, next step, and related plan path
+- Update the current project's `state.md` with the active workflow, phase name, next step, and related plan path
+- Refuse to begin if the substantial-task workflow gate was bypassed and there is no decision-complete plan
 
 Ask the user to confirm before proceeding, unless they've already pre-approved all phases.
 
@@ -88,7 +90,7 @@ Reply "done" or "confirmed" when you've verified these, or describe any issues y
 
 After the user confirms:
 - Update the plan file: check off completed items (`- [ ]` → `- [x]`)
-- Update `~/.agents/contexts/state.md` with the completed phase, next phase or completion state, blockers if any, and the latest verification timestamp
+- Update the current project's `state.md` with the completed phase, next phase or completion state, blockers if any, and the latest verification timestamp
 - State: "Phase [N] complete." and announce the next phase, or "All phases complete." if done
 
 ---
@@ -97,7 +99,7 @@ After the user confirms:
 
 If this is a long session and you suspect context drift:
 - Re-read the plan file before starting each new phase
-- Re-read `~/.agents/contexts/state.md` before starting each new phase
+- Re-read the current project's `state.md` before starting each new phase
 - This costs a few seconds and prevents costly mistakes
 
 ---
@@ -132,7 +134,8 @@ When all phases are complete:
    ```
 
 2. Point to next steps:
-   - Run `/validate_plan` with this plan file for final verification
+   - Run the exact final verification command using this plan file path:
+     - `/validate_plan /absolute/path/to/plan.md`
    - Run `/cm` to create commits if you haven't done so inline
 
 ---

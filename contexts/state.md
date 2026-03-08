@@ -1,47 +1,43 @@
 # Workflow State
 
-Use this file as the canonical resumable state for in-flight work.
+Use this file as a shared compatibility document, not the live per-project runtime state source.
+
+Per-project runtime workflow state now lives at `[project root]/.agents/contexts/state.md`.
+Use this global file only for legacy/shared notes that are not specific to a single repo.
 
 ## Current Workflow
-- cli-workflow-parity-upgrade
+- context pressure handling
 
 ## Current Phase
-- phase-1 rollback boundary in progress
+- warning threshold
 
 ## Next Step
-- Commit the current Codex parity baseline, then create backup and working branches for the cross-CLI parity upgrade.
+- Wrap up the current task and resume from the latest checkpoint if needed.
 
 ## Blockers
-- None.
+- None recorded at the shared/global level.
 
 ## Last Verified At
-- 2026-03-02T12:00:00Z
+- 2026-03-08T18:38:31.470Z
 
 ## Related Plan
-- /Users/isaiahrivera/.agents/thoughts/plans/2026-03-02-cross-cli-workflow-parity-upgrade.md
+- /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-ai-workflow-hub-v2-continuity-and-expert-agents.md
 
 ## Active Artifact Working Set
-- Last updated: 2026-03-02T07:00:29.026Z
-- Source: resume-handoff
-- Focus: agent workflow automation upgrade
+- Last updated: 2026-03-08T18:38:31.470Z
+- Source: gsd-context-monitor
+- Focus: context monitor continuity
 
 ### Selected By Category
-- plan: none
-- research: none
-- session: none
-- handoff: /Users/isaiahrivera/.agents/thoughts/shared/handoffs/ENG-general/2026-03-01_22-53-44_agent-workflow-automation-upgrade.md
+- intake: /Users/isaiahrivera/.agents/.planning/intake/2026-03-08-phase-4-expert-routing-and-eval-coverage.md
+- plan: /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-ai-workflow-hub-v2-continuity-and-expert-agents.md
+- research: /Users/isaiahrivera/.agents/thoughts/research/2026-03-06-ai-workflow-consistency-and-continuity.md
+- session: /Users/isaiahrivera/.agents/sessions/general/2026-03-08_11-20-02_warning-context-threshold.md
+- handoff: /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_11-24-33_workflow-hub-v2-continuity-parity-expert-agents-handoff.md
 
 ### Ordered Artifacts
-1. /Users/isaiahrivera/.agents/thoughts/shared/handoffs/ENG-general/2026-03-01_22-53-44_agent-workflow-automation-upgrade.md
-
-- Source: none
-- Focus: none
-
-### Selected By Category
-- plan: none
-- research: none
-- session: none
-- handoff: none
-
-### Ordered Artifacts
-1. none
+1. /Users/isaiahrivera/.agents/.planning/intake/2026-03-08-phase-4-expert-routing-and-eval-coverage.md
+2. /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-ai-workflow-hub-v2-continuity-and-expert-agents.md
+3. /Users/isaiahrivera/.agents/thoughts/research/2026-03-06-ai-workflow-consistency-and-continuity.md
+4. /Users/isaiahrivera/.agents/sessions/general/2026-03-08_11-20-02_warning-context-threshold.md
+5. /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_11-24-33_workflow-hub-v2-continuity-parity-expert-agents-handoff.md

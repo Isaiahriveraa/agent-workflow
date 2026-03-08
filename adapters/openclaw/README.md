@@ -1,0 +1,29 @@
+# OpenClaw Adapter
+
+This directory contains OpenClaw-specific wrapper assets.
+
+## Managed Surfaces
+- `~/.openclaw/CLAUDE.md -> ~/.agents/prompts/system.md`
+- `~/.openclaw/workspace/skills -> ~/.agents/skills`
+- Generated workspace wrappers:
+  - `AGENTS.md`
+  - `SOUL.md`
+  - `USER.md`
+  - `TOOLS.md`
+
+## Capability Profile
+- commands: `unsupported`
+- agents: `unsupported`
+- hooks: `unsupported`
+- MCP: `unsupported`
+- approvals: `native`
+- session continuity: `bridged` through shared continuity helpers and project-local runtime state
+- workspace wrappers: `bridged`
+
+## Local-Only Surfaces
+- `~/.openclaw/openclaw.json`
+- `~/.openclaw/workspace/IDENTITY.md`
+
+## Canonical Boundary
+- Shared workflow policy stays in the hub.
+- Wrapper templates in `templates/` preserve OpenClaw-local intent without duplicating hub-owned policy.

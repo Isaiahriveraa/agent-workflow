@@ -1,72 +1,171 @@
 ---
-description: Generate a GitHub pull request description using a structured template
+description: Generate a professional GitHub pull request description sized to the actual diff
 ---
 
-# PR Guidelines:
+# PR Guidelines
 
-Use the git cli to make a pr request. Make sure to wait for me verify if we can commit it. Dont commit without my authorization. Look at git diff from the main and our current branch to make this pr request.
+Use the git CLI to prepare a pull request description based on the actual branch diff, not the conversation.
 
-Title
-Short, descriptive title of the change.
+## Operating Rules
 
-Summary
-What does this PR do?
+- Do not open a PR or push commits without my approval.
+- Inspect the branch against the intended base branch first.
+- Size the PR before writing it.
+- Keep the structure consistent across PRs.
+- Scale the amount of explanation to the size and risk of the change.
+- Small PRs should be brief and direct.
+- Large PRs should be compressed into a few high-signal sections, not a wall of explanation.
+- The PR should describe what changed, why it matters, how it was validated, and what reviewers should pay attention to.
 
-What problem does it solve?
+## Required Discovery
 
-Context / Background
-Link to issue(s), ticket(s), or spec.
+Before drafting the PR:
 
-Any relevant decisions or prior work.
+1. Check branch state:
+   - `git branch --show-current`
+   - `git status --short`
 
-Changes
-Main change 1
+2. Inspect the change against base:
+   - `git log --oneline <base>..HEAD`
+   - `git diff --stat <base>...HEAD`
+   - `git diff --name-only <base>...HEAD`
 
-Main change 2
+3. Decide PR size:
+   - `small`: 1-2 commits, narrow scope, low reviewer risk
+   - `medium`: several related commits, moderate surface area
+   - `large`: cross-cutting, architectural, or many files/subsystems
 
-Main change 3
+If the branch mixes unrelated stories, stop and say so before writing the PR.
 
-Implementation Details
-Key design choices.
+## PR Structure
 
-Important tradeoffs or constraints.
+Always use this structure and only include sections that add signal:
 
-Any new patterns, libraries, or APIs introduced.
+### Title
+- One line
+- Clear and specific
+- Match the branch story, not just the last commit
 
-Tests
-Added new tests
+### Summary
+- 1 short paragraph for `small`
+- 2-4 bullets for `medium` or `large`
+- Focus on user-facing or system-level outcome
 
-Updated existing tests
+### Why
+- Include only when the reason is not obvious from the summary
+- 1-3 lines max
 
-Manually tested
+### Changes
+- `small`: 2-4 bullets max
+- `medium`: 3-6 bullets max
+- `large`: group by area, not by file inventory
+- Mention major behavior changes, new contracts, migrations, generators, tests, or risks
 
-How to test:
+### Validation
+- List the actual checks that ran
+- Keep it short
+- Include manual validation only if it mattered
 
-Step 1
+### Risks
+- Include only if there is real rollout, migration, compatibility, or reviewer risk
+- If risk is negligible, say `Low`
 
-Step 2
+### Review Notes
+- Optional
+- Use only when reviewers should inspect a specific tradeoff, migration path, or irreversible decision
 
-Expected result
+## Size-Based Output Rules
 
-Impact / Risk
-What could go wrong?
+### Small PR
 
-Any migrations, data changes, or rollout concerns?
+Use:
+- `Title`
+- `Summary`
+- `Validation`
+- `Risks`
 
-Screenshots / Logs (if UI or bugfix) (if needed most of the time not needed)
-Before:
+Do not add background sections unless they are necessary.
+Do not explain obvious implementation details.
 
-After:
+### Medium PR
 
-Using the following PR template, generate a GitHub pull request description for this diff: <paste diff>
+Use:
+- `Title`
+- `Summary`
+- `Changes`
+- `Validation`
+- `Risks`
 
-Checklist
-Code builds and passes linters
+Only add `Why` if the motivation is not obvious.
 
-Tests pass locally
+### Large PR
 
-Documentation updated (if needed)
+Use:
+- `Title`
+- `Summary`
+- `Why`
+- `Changes`
+- `Validation`
+- `Risks`
+- `Review Notes`
 
-Breaking changes documented/communicated
+Even for large PRs:
+- keep bullets tight
+- avoid file-by-file narration
+- summarize by subsystem or reviewer concern
 
----
+## Writing Standard
+
+- Professional, direct, and plain.
+- No filler.
+- No marketing language.
+- No “this PR aims to”.
+- No “please review”.
+- No exaggerated detail for small commits.
+- No vague summaries like “misc fixes”.
+- Prefer concrete nouns and verbs over abstractions.
+
+## Output Format
+
+When I run `/pr`, return:
+
+1. The proposed PR title
+2. The PR size classification: `small`, `medium`, or `large`
+3. The full PR description in markdown
+4. A one-line note explaining why you chose that amount of detail
+
+## Default Template
+
+Use this exact shell for the final PR body, trimming sections that are not needed by the PR size rules above:
+
+```md
+## Summary
+
+[brief summary]
+
+## Why
+
+[only if needed]
+
+## Changes
+
+- [change]
+
+## Validation
+
+- [check]
+
+## Risks
+
+[Low or concrete risk note]
+
+## Review Notes
+
+[only if needed]
+```
+
+**NEVER include:**
+- AI attribution
+- Generated-by footers
+- Over-explaining small diffs
+- File-by-file changelogs unless explicitly requested

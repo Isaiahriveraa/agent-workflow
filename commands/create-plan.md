@@ -26,7 +26,7 @@ Please provide:
 
 I'll analyze this information and work with you to create a comprehensive plan.
 
-Tip: You can invoke this command with a file directly: `/create-plan ~/.agents/thoughts/research/2026-02-17-my-research.md`
+Tip: You can invoke this command with a file directly: `/create-plan /absolute/path/to/project/.planning/research/2026-02-17-my-research.md`
 ```
 
 Then wait for the user's input.
@@ -38,8 +38,10 @@ Then wait for the user's input.
 0. **Load canonical context before planning:**
    - Read `~/.agents/contexts/decisions.md`
    - Read `~/.agents/contexts/research-index.md` if prior research exists
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's runtime `state.md` when the existing workflow position matters
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
+   - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -72,6 +74,8 @@ Then wait for the user's input.
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
    - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
+   - Score readiness with `node ./scripts/workflow-router-tools.mjs score`
+   - If readiness is below threshold, do more research or ask focused questions before writing the plan
 
 5. **Present informed understanding and focused questions**:
    ```
@@ -143,6 +147,14 @@ After getting initial clarifications:
    Which approach aligns best with your vision?
    ```
 
+5. **Readiness gate before plan writing**:
+   - Do not write the implementation plan until the readiness gate passes
+   - Default thresholds:
+     - total `>= 70/100`
+     - clarity `>= 15/25`
+     - codebase coverage `>= 15/25`
+   - If the gate fails, keep researching or ask targeted questions instead of drafting implementation steps
+
 ### Step 3: Plan Structure Development
 
 Once aligned on approach:
@@ -168,7 +180,8 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
+1. **Write the plan** to `[project root]/.planning/plans/YYYY-MM-DD-description.md`
+   - In all user-facing responses, include the final plan location as an absolute filesystem path
    - Format: `YYYY-MM-DD-description.md` where:
      - YYYY-MM-DD is today's date (get it via `date +%Y-%m-%d`)
      - description is a brief kebab-case description
@@ -267,7 +280,7 @@ After structure approval:
 
 ## References
 
-- Related research: `~/.agents/thoughts/research/[relevant].md`
+- Related research: `[project root]/.planning/research/[relevant].md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -276,7 +289,10 @@ After structure approval:
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
+   `[project root]/.planning/plans/YYYY-MM-DD-description.md`
+
+   If you're ready to execute it, run:
+   `/implement_plan /absolute/path/to/project/.planning/plans/YYYY-MM-DD-description.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?
@@ -415,7 +431,8 @@ When writing `Automated Verification` sections:
 ## Workflow State Integration
 
 After writing the final plan:
-- Update `~/.agents/contexts/state.md`
+- Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+- Update the current project's runtime `state.md`
 - Set `## Current Workflow` to `planning`
 - Set `## Current Phase` to `plan created`
 - Set `## Next Step` to the recommended execution entry point

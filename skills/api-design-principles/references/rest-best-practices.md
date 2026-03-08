@@ -127,6 +127,7 @@ Response:
 GET /api/users?limit=20&cursor=eyJpZCI6MTIzfQ
 
 Response:
+
 {
   "items": [...],
   "next_cursor": "eyJpZCI6MTQzfQ",

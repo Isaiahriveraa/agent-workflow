@@ -1,4 +1,8 @@
 .DS_Store
 thoughts/
+.planning/
+sessions/
+projects/**
 __pycache__/
 *.pyc
+!projects/.gitkeep

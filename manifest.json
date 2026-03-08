@@ -84,6 +84,13 @@
       "tier": 1,
       "tool": "openclaw",
       "type": "directory"
+    },
+    {
+      "source": "~/.openclaw/CLAUDE.md",
+      "target": "~/.agents/prompts/system.md",
+      "tier": 1,
+      "tool": "openclaw",
+      "type": "file"
     }
   ],
   "not_managed": [
@@ -91,22 +98,200 @@
     "~/.claude/hooks.json",
     "~/.codex/config.toml",
     "~/.openclaw/openclaw.json",
-    "~/.openclaw/workspace/SOUL.md",
     "~/.openclaw/workspace/IDENTITY.md",
-    "~/.openclaw/workspace/USER.md",
     "~/.codex/skills/.system/"
   ],
   "auto_discovery": {
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed"
   },
+  "capabilities": {
+    "claude-code": {
+      "commands": {
+        "status": "native",
+        "contract": "~/.claude/commands -> ~/.agents/commands"
+      },
+      "agents": {
+        "status": "native",
+        "contract": "~/.claude/agents -> ~/.agents/agents"
+      },
+      "hooks": {
+        "status": "native",
+        "contract": "~/.claude/hooks -> ~/.agents/hooks plus adapter-native implementations"
+      },
+      "mcp": {
+        "status": "native",
+        "contract": "Tool-native MCP support; hub policy stays in prompts/commands/rules"
+      },
+      "approvals": {
+        "status": "native",
+        "contract": "Tool-native permission and approval controls"
+      },
+      "session_continuity": {
+        "status": "bridged",
+        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      }
+    },
+    "codex-cli": {
+      "commands": {
+        "status": "unsupported",
+        "contract": "No hub-managed Codex-native command bridge in this repo"
+      },
+      "agents": {
+        "status": "bridged",
+        "contract": "~/.codex/AGENTS.md -> ~/.agents/AGENTS.md"
+      },
+      "hooks": {
+        "status": "unsupported",
+        "contract": "No hub-managed Codex hook bridge"
+      },
+      "mcp": {
+        "status": "native",
+        "contract": "Tool-native MCP configured outside the hub"
+      },
+      "approvals": {
+        "status": "native",
+        "contract": "Tool-native sandbox and approval controls"
+      },
+      "session_continuity": {
+        "status": "bridged",
+        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      }
+    },
+    "opencode": {
+      "commands": {
+        "status": "native",
+        "contract": "~/.config/opencode/commands -> ~/.agents/commands"
+      },
+      "agents": {
+        "status": "bridged",
+        "contract": "Generated from ~/.agents/agents via sync.sh gen-opencode-agents"
+      },
+      "hooks": {
+        "status": "unsupported",
+        "contract": "No hub-managed OpenCode hook bridge"
+      },
+      "mcp": {
+        "status": "native",
+        "contract": "Tool-native MCP support when configured by the operator"
+      },
+      "approvals": {
+        "status": "native",
+        "contract": "Tool-native permission and approval controls"
+      },
+      "session_continuity": {
+        "status": "bridged",
+        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      }
+    },
+    "antigravity": {
+      "commands": {
+        "status": "bridged",
+        "contract": "Generated TOML commands from ~/.agents/commands via sync.sh gen-antigravity-commands"
+      },
+      "agents": {
+        "status": "bridged",
+        "contract": "Generated from ~/.agents/agents via sync.sh gen-antigravity-agents"
+      },
+      "hooks": {
+        "status": "unsupported",
+        "contract": "No hub-managed Antigravity hook bridge"
+      },
+      "mcp": {
+        "status": "unsupported",
+        "contract": "No hub-managed Antigravity MCP contract in this repo"
+      },
+      "approvals": {
+        "status": "native",
+        "contract": "Tool-native permission and approval controls"
+      },
+      "session_continuity": {
+        "status": "bridged",
+        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      }
+    },
+    "openclaw": {
+      "commands": {
+        "status": "unsupported",
+        "contract": "No hub-managed OpenClaw-native command bridge in this repo"
+      },
+      "agents": {
+        "status": "unsupported",
+        "contract": "No hub-managed OpenClaw agent generation contract in this repo"
+      },
+      "hooks": {
+        "status": "unsupported",
+        "contract": "No hub-managed OpenClaw hook bridge"
+      },
+      "mcp": {
+        "status": "unsupported",
+        "contract": "No hub-managed OpenClaw MCP contract in this repo"
+      },
+      "approvals": {
+        "status": "native",
+        "contract": "Tool-native permission and approval controls"
+      },
+      "session_continuity": {
+        "status": "bridged",
+        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      },
+      "workspace_wrappers": {
+        "status": "bridged",
+        "contract": "Generated workspace wrappers from ~/.agents via sync.sh gen-openclaw-workspace"
+      }
+    }
+  },
   "generated": [
     {
-      "source": "~/.gemini/commands",
-      "target": "~/.agents/commands",
+      "tool": "opencode",
+      "target": "~/.config/opencode/agents",
+      "source": "~/.agents/agents",
+      "type": "adapter-output",
+      "generator": "sync.sh gen-opencode-agents",
+      "surface": "agents",
+      "note": "OpenCode agents are generated from hub agent markdown into OpenCode-compatible frontmatter."
+    },
+    {
       "tool": "antigravity",
+      "target": "~/.gemini/commands",
+      "source": "~/.agents/commands",
       "type": "format-bridge",
+      "generator": "sync.sh gen-antigravity-commands",
+      "surface": "commands",
       "note": "Antigravity requires .toml (description + prompt fields). Hub stores commands as .md with YAML frontmatter. Run 'sync.sh gen-antigravity-commands' or 'sync.sh migrate' to regenerate after hub command changes."
+    },
+    {
+      "tool": "antigravity",
+      "target": "~/.gemini/agents",
+      "source": "~/.agents/agents",
+      "type": "adapter-output",
+      "generator": "sync.sh gen-antigravity-agents",
+      "surface": "agents",
+      "note": "Antigravity agents are generated from the hub agent definitions into Gemini-compatible agent files."
+    },
+    {
+      "tool": "antigravity",
+      "target": "~/.gemini/get-shit-done",
+      "source": "~/.agents/get-shit-done",
+      "type": "adapter-output",
+      "generator": "sync.sh gen-antigravity-gsd",
+      "surface": "gsd",
+      "note": "Get-shit-done content is bridged into Antigravity's local workflow directory."
+    },
+    {
+      "tool": "openclaw",
+      "target": "~/.openclaw/workspace",
+      "source": "~/.agents",
+      "type": "wrapper-output",
+      "generator": "sync.sh gen-openclaw-workspace",
+      "surface": "workspace-wrappers",
+      "outputs": [
+        "AGENTS.md",
+        "SOUL.md",
+        "USER.md",
+        "TOOLS.md"
+      ],
+      "note": "OpenClaw workspace wrappers preserve tool-local identity while pointing back to the hub as the workflow source."
     }
   ]
 }
