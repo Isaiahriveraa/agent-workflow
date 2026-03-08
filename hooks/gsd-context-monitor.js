@@ -34,6 +34,27 @@ const AGENTS_ROOT = process.env.AGENTS_ROOT
 const CONTINUITY_HELPER = process.env.AGENTS_CONTINUITY_HELPER
   ? path.resolve(process.env.AGENTS_CONTINUITY_HELPER)
   : path.join(AGENTS_ROOT, 'scripts', 'continuity-tools.mjs');
+const PLAN_SYNC_MODE = process.env.AGENTS_CLAUDE_PLAN_SYNC ?? 'on';
+const PLAN_SYNC_HELPER = process.env.AGENTS_CLAUDE_PLAN_SYNC_HELPER
+  ? path.resolve(process.env.AGENTS_CLAUDE_PLAN_SYNC_HELPER)
+  : path.join(AGENTS_ROOT, 'scripts', 'claude-plan-sync.mjs');
+
+const triggerClaudePlanSync = () => {
+  if (PLAN_SYNC_MODE === 'off') {
+    return;
+  }
+
+  try {
+    const child = spawn(process.execPath, [PLAN_SYNC_HELPER, 'sync'], {
+      detached: false,
+      stdio: 'ignore',
+      env: process.env
+    });
+    child.unref();
+  } catch (e) {
+    // Silent fail -- hook automation must not block tool execution
+  }
+};
 
 let input = '';
 process.stdin.setEncoding('utf8');
@@ -42,6 +63,8 @@ process.stdin.on('end', () => {
   try {
     const data = JSON.parse(input);
     const sessionId = data.session_id;
+
+    triggerClaudePlanSync();
 
     if (!sessionId) {
       process.exit(0);

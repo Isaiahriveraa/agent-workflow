@@ -102,7 +102,7 @@ Lightweight continuity artifacts are project-local runtime files. Shared/global 
 
 ## Sources
 - intake: [project root]/.planning/intake
-- plans: [project root]/.planning/plans
+- plans: ~/.agents/thoughts/plans
 - research: [project root]/.planning/research
 - sessions: [project root]/.agents/sessions
 - handoffs: \`~/.agents/thoughts/shared/handoffs\`
@@ -119,6 +119,7 @@ Lightweight continuity artifacts are project-local runtime files. Shared/global 
 - Use \`node ./scripts/artifact-tools.mjs persist --source [command] --focus "[workflow focus]"\` to lock the chosen working set into the current project's state file.
 - Prefer persisted session and working-set selections over heuristics when resuming work.
 - Use \`node ./scripts/workflow-router-tools.mjs capture\` to persist a substantial-task intake artifact before research or planning.
+- Legacy repo-local plan paths under \`[project root]/.planning/plans\` remain readable, but new canonical plans live under \`~/.agents/thoughts/plans\`.
 `
 };
 
@@ -162,7 +163,7 @@ export const getProjectContext = (options = {}) => {
     },
     thoughtPaths: {
       intake: path.join(planningDir, 'intake'),
-      plans: path.join(planningDir, 'plans'),
+      plans: path.join(agentsRoot, 'thoughts', 'plans'),
       research: path.join(planningDir, 'research'),
       sessions: sessionsDir,
       handoffs: path.join(agentsRoot, 'thoughts', 'shared', 'handoffs')

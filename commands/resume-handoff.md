@@ -15,7 +15,7 @@ When this command is invoked:
 1. **If the path to a handoff document was provided**:
    - If a handoff document path was provided as a parameter, skip the default message
    - Immediately read the handoff document FULLY
-   - Immediately read any repo-local plan or research documents it links to under the current project's `.planning/plans` or `.planning/research`. do NOT use a sub-agent to read these critical files.
+   - Immediately read any canonical or linked plan and research documents it references under `~/.agents/thoughts/plans` or the current project's `.planning/research`. do NOT use a sub-agent to read these critical files.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
@@ -27,7 +27,7 @@ When this command is invoked:
    - **If there is only one file in the directory**: proceed with that handoff
    - **If there are multiple files in the directory**: using the date and time specified in the file name (it will be in the format `YYYY-MM-DD_HH-MM-SS` in 24-hour time format), proceed with the _most recent_ handoff document.
    - Immediately read the handoff document FULLY
-   - Immediately read any repo-local plan or research documents it links to under the current project's `.planning/plans` or `.planning/research`; do NOT use a sub-agent to read these critical files.
+   - Immediately read any canonical or linked plan and research documents it references under `~/.agents/thoughts/plans` or the current project's `.planning/research`; do NOT use a sub-agent to read these critical files.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 

@@ -16,7 +16,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 5. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
-   Example: /absolute/path/to/project/.planning/plans/2026-02-17-my-feature.md
+   Example: /Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
@@ -134,8 +134,12 @@ When all phases are complete:
    ```
 
 2. Point to next steps:
-   - Run the exact final verification command using this plan file path:
-     - `/validate_plan /absolute/path/to/plan.md`
+   - End the response with this exact standalone block using this plan file path:
+     ```text
+     Next step
+
+     /validate_plan /absolute/path/to/plan.md
+     ```
    - Run `/cm` to create commits if you haven't done so inline
 
 ---

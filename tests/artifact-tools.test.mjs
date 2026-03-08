@@ -41,24 +41,28 @@ const setWorkingSet = (stateContent, lines) =>
 const withSeededArtifacts = (repoRoot, fn) => {
   const seedId = `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
   const intakePath = path.join(repoRoot, '.planning', 'intake', `${seedId}-intake.md`);
-  const planPath = path.join(repoRoot, '.planning', 'plans', `${seedId}-plan.md`);
+  const canonicalPlanPath = path.join(root, 'thoughts', 'plans', `${seedId}-plan.md`);
+  const legacyPlanPath = path.join(repoRoot, '.planning', 'plans', `${seedId}-legacy-plan.md`);
   const researchPath = path.join(repoRoot, '.planning', 'research', `${seedId}-research.md`);
   const handoffPath = path.join(root, 'thoughts', 'shared', 'handoffs', 'ENG-general', `${seedId}-handoff.md`);
 
   fs.mkdirSync(path.dirname(intakePath), { recursive: true });
-  fs.mkdirSync(path.dirname(planPath), { recursive: true });
+  fs.mkdirSync(path.dirname(canonicalPlanPath), { recursive: true });
+  fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
   fs.mkdirSync(path.dirname(researchPath), { recursive: true });
   fs.mkdirSync(path.dirname(handoffPath), { recursive: true });
   fs.writeFileSync(intakePath, '# Intake\n');
-  fs.writeFileSync(planPath, '# Plan\n');
+  fs.writeFileSync(canonicalPlanPath, '# Plan\n');
+  fs.writeFileSync(legacyPlanPath, '# Legacy Plan\n');
   fs.writeFileSync(researchPath, '# Research\n');
   fs.writeFileSync(handoffPath, '# Handoff\n');
 
   try {
-    return fn({ intakePath, planPath, researchPath, handoffPath });
+    return fn({ intakePath, canonicalPlanPath, legacyPlanPath, researchPath, handoffPath });
   } finally {
     fs.rmSync(intakePath, { force: true });
-    fs.rmSync(planPath, { force: true });
+    fs.rmSync(canonicalPlanPath, { force: true });
+    fs.rmSync(legacyPlanPath, { force: true });
     fs.rmSync(researchPath, { force: true });
     fs.rmSync(handoffPath, { force: true });
   }
@@ -91,7 +95,7 @@ test('artifact related command returns shared durable artifacts plus project ses
     const parsed = JSON.parse(output);
 
     assert.match(parsed.intake ?? '', /\/\.planning\/intake\//);
-    assert.match(parsed.plans ?? '', /\/\.planning\/plans\//);
+    assert.match(parsed.plans ?? '', /\/thoughts\/plans\//);
     assert.match(parsed.research ?? '', /\/\.planning\/research\//);
     assert.match(parsed.handoffs ?? '', /thoughts\/shared\/handoffs\//);
   });
@@ -104,7 +108,7 @@ test('artifact state exposes an active working set section in project-local stat
   assert.match(content, /### Ordered Artifacts/);
 });
 
-test('artifact suggestion still returns shared/global artifacts when project-local state starts empty', () => {
+test('artifact suggestion uses canonical shared artifacts only when they outrank repo-local fallback', () => {
   withSeededArtifacts(fixtureRepoRoot, () => {
       const project = runProjectContext(fixtureRepoRoot);
       const projectStatePath = project.contextPaths.state;
@@ -131,8 +135,26 @@ test('artifact suggestion still returns shared/global artifacts when project-loc
   });
 });
 
+test('artifact suggestion falls back to legacy repo-local plans when no canonical thought plan exists', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-legacy-')), 'legacy-only');
+  const legacyPlanPath = path.join(repoRoot, '.planning', 'plans', 'legacy-plan.md');
+  const researchPath = path.join(repoRoot, '.planning', 'research', 'legacy-research.md');
+
+  fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
+  fs.mkdirSync(path.dirname(researchPath), { recursive: true });
+  fs.writeFileSync(legacyPlanPath, '# Legacy Plan\n');
+  fs.writeFileSync(researchPath, '# Legacy Research\n');
+
+  try {
+    const parsed = JSON.parse(execArtifactTool(['suggest'], repoRoot));
+    assert.equal(parsed.suggested.plan, legacyPlanPath);
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
+});
+
 test('artifact persistence writes the active working set to project-local state only', () => {
-  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, planPath, researchPath, handoffPath }) => {
+  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, canonicalPlanPath, researchPath, handoffPath }) => {
       const project = runProjectContext(fixtureRepoRoot);
       const projectStatePath = project.contextPaths.state;
       const globalStatePath = `${root}/contexts/state.md`;
@@ -145,7 +167,7 @@ test('artifact persistence writes the active working set to project-local state 
           '--intake',
           intakePath,
           '--plan',
-          planPath,
+          canonicalPlanPath,
           '--research',
           researchPath,
           '--handoff',
@@ -160,24 +182,24 @@ test('artifact persistence writes the active working set to project-local state 
         assert.equal(persisted.source, 'test-suite');
         assert.equal(persisted.focus, 'artifact continuity');
         assert.equal(persisted.selected.intake, intakePath);
-        assert.equal(persisted.selected.plan, planPath);
+        assert.equal(persisted.selected.plan, canonicalPlanPath);
         assert.equal(persisted.selected.research, researchPath);
         assert.equal(persisted.selected.handoff, handoffPath);
         assert.ok(Array.isArray(persisted.ordered));
-        assert.ok(persisted.ordered.includes(planPath));
+        assert.ok(persisted.ordered.includes(canonicalPlanPath));
 
         const active = JSON.parse(execArtifactTool(['active'], fixtureRepoRoot));
 
         assert.equal(active.source, 'test-suite');
         assert.equal(active.focus, 'artifact continuity');
         assert.equal(active.selected.intake, intakePath);
-        assert.equal(active.selected.plan, planPath);
+        assert.equal(active.selected.plan, canonicalPlanPath);
 
         const stateContent = readFile(projectStatePath);
         assert.match(stateContent, /- Source: test-suite/);
         assert.match(stateContent, /- Focus: artifact continuity/);
         assert.match(stateContent, new RegExp(`- intake: ${intakePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
-        assert.match(stateContent, new RegExp(`- plan: ${planPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+        assert.match(stateContent, new RegExp(`- plan: ${canonicalPlanPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
         assert.equal(readFile(globalStatePath), originalGlobalState);
       } finally {
         fs.writeFileSync(projectStatePath, originalProjectState);
@@ -186,7 +208,7 @@ test('artifact persistence writes the active working set to project-local state 
 });
 
 test('artifact persistence remains normalized across repeated writes', () => {
-  withSeededArtifacts(fixtureRepoRoot, ({ planPath, researchPath, handoffPath }) => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
       const project = runProjectContext(fixtureRepoRoot);
       const projectStatePath = project.contextPaths.state;
       const originalProjectState = readFile(projectStatePath);
@@ -195,7 +217,7 @@ test('artifact persistence remains normalized across repeated writes', () => {
         execArtifactTool([
           'persist',
           '--plan',
-          planPath,
+          canonicalPlanPath,
           '--research',
           researchPath,
           '--source',
@@ -207,7 +229,7 @@ test('artifact persistence remains normalized across repeated writes', () => {
         execArtifactTool([
           'persist',
           '--plan',
-          planPath,
+          canonicalPlanPath,
           '--research',
           researchPath,
           '--handoff',
@@ -231,7 +253,7 @@ test('artifact persistence remains normalized across repeated writes', () => {
 });
 
 test('artifact persistence rewrites the entire working-set section when stale trailing content exists', () => {
-  withSeededArtifacts(fixtureRepoRoot, ({ planPath, researchPath, handoffPath }) => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
       const project = runProjectContext(fixtureRepoRoot);
       const projectStatePath = project.contextPaths.state;
       const originalState = readFile(projectStatePath);
@@ -243,7 +265,7 @@ test('artifact persistence rewrites the entire working-set section when stale tr
         execArtifactTool([
           'persist',
           '--plan',
-          planPath,
+          canonicalPlanPath,
           '--research',
           researchPath,
           '--handoff',
@@ -294,7 +316,7 @@ test('artifact tools reject duplicate working set sections in project-local stat
 });
 
 test('artifact suggestion prefers persisted selections over heuristics', () => {
-  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, planPath, researchPath, handoffPath }) => {
+  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, canonicalPlanPath, researchPath, handoffPath }) => {
       const project = runProjectContext(fixtureRepoRoot);
       const projectStatePath = project.contextPaths.state;
       const originalState = readFile(projectStatePath);
@@ -307,13 +329,13 @@ test('artifact suggestion prefers persisted selections over heuristics', () => {
 
 ### Selected By Category
 - intake: ${intakePath}
-- plan: ${planPath}
+- plan: ${canonicalPlanPath}
 - research: ${researchPath}
 - session: none
 - handoff: ${handoffPath}
 
 ### Ordered Artifacts
-1. ${planPath}
+1. ${canonicalPlanPath}
 2. ${researchPath}
 3. ${handoffPath}
 `);
@@ -323,10 +345,10 @@ test('artifact suggestion prefers persisted selections over heuristics', () => {
         const parsed = JSON.parse(execArtifactTool(['suggest'], fixtureRepoRoot));
 
         assert.equal(parsed.intake, intakePath);
-        assert.equal(parsed.plan, planPath);
+        assert.equal(parsed.plan, canonicalPlanPath);
         assert.equal(parsed.research, researchPath);
         assert.equal(parsed.handoff, handoffPath);
-        assert.equal(parsed.active.selected.plan, planPath);
+        assert.equal(parsed.active.selected.plan, canonicalPlanPath);
       } finally {
         fs.writeFileSync(projectStatePath, originalState);
       }
@@ -334,7 +356,7 @@ test('artifact suggestion prefers persisted selections over heuristics', () => {
 });
 
 test('artifact suggestion prefers explicit session-index artifacts over latest session heuristic', () => {
-  withSeededArtifacts(fixtureRepoRoot, ({ planPath, researchPath, handoffPath }) => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
       const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-session-')), 'resume-target');
       const project = runProjectContext(repoRoot);
       const sessionDir = project.thoughtPaths.sessions;
@@ -355,7 +377,7 @@ test('artifact suggestion prefers explicit session-index artifacts over latest s
 - Topic: continuity
 - Status: active
 - Artifact path: ${explicitSession}
-- Related plan: ${planPath}
+- Related plan: ${canonicalPlanPath}
 - Next command: /resume-session
 - Summary: explicit session index entry
 
@@ -405,7 +427,7 @@ test('artifact suggestion prefers explicit session-index artifacts over latest s
 });
 
 test('artifact working sets remain isolated across two repos', () => {
-  withSeededArtifacts(fixtureRepoRoot, ({ planPath }) => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath }) => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-isolation-'));
       const repoA = createFixtureRepo(path.join(tmpDir, 'one'), 'shared-name');
       const repoB = createFixtureRepo(path.join(tmpDir, 'two'), 'shared-name');
@@ -419,7 +441,7 @@ test('artifact working sets remain isolated across two repos', () => {
         execArtifactTool([
           'persist',
           '--plan',
-          planPath,
+          canonicalPlanPath,
           '--source',
           'repo-a-test',
           '--focus',
@@ -430,7 +452,7 @@ test('artifact working sets remain isolated across two repos', () => {
         const activeB = JSON.parse(execArtifactTool(['active'], repoB));
 
         assert.equal(activeA.source, 'repo-a-test');
-        assert.equal(activeA.selected.plan, planPath);
+        assert.equal(activeA.selected.plan, canonicalPlanPath);
         assert.equal(activeB.source, 'none');
         assert.equal(activeB.selected.plan, null);
 

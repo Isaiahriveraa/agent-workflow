@@ -12,10 +12,12 @@ const statePath = project.contextPaths.state;
 const researchIndexPath = path.join(root, 'contexts', 'research-index.md');
 const repoLocalArtifactRoots = {
   intake: project.thoughtPaths.intake,
-  plans: project.thoughtPaths.plans,
   research: project.thoughtPaths.research
 };
+const canonicalPlanRoot = project.thoughtPaths.plans;
+const legacyPlanRoot = path.join(project.planningDir, 'plans');
 const sharedArtifactRoots = {
+  plans: canonicalPlanRoot,
   handoffs: project.thoughtPaths.handoffs
 };
 const projectRuntimeArtifactRoots = {
@@ -59,6 +61,12 @@ const listFiles = (dir) => {
   }
 
   return files.sort((a, b) => (safeStat(b)?.mtimeMs ?? 0) - (safeStat(a)?.mtimeMs ?? 0));
+};
+
+const listPlanFiles = () => {
+  const canonical = listFiles(canonicalPlanRoot);
+  if (canonical.length > 0) return canonical;
+  return listFiles(legacyPlanRoot);
 };
 
 const parseBullets = (content, heading) => {
@@ -208,6 +216,19 @@ const stateTerms = new Set([
 ]);
 
 const explicitRelatedPlan = parseBullets(state, '## Related Plan').find((line) => line && line !== 'none');
+const canonicalLatestPlan = () => listFiles(canonicalPlanRoot)[0] ?? null;
+const legacyLatestPlan = () => listFiles(legacyPlanRoot)[0] ?? null;
+const defaultPlanSuggestion = () => {
+  if (explicitRelatedPlan && explicitRelatedPlan !== 'workflow upgrade from external repo comparison and SSOT integration') {
+    return explicitRelatedPlan;
+  }
+
+  if (project.projectRoot !== root) {
+    return legacyLatestPlan() ?? canonicalLatestPlan();
+  }
+
+  return canonicalLatestPlan() ?? legacyLatestPlan();
+};
 
 const scoreFile = (filePath) => {
   const base = path.basename(filePath).toLowerCase();
@@ -221,10 +242,14 @@ const scoreFile = (filePath) => {
   return score;
 };
 
-const pickLatest = (category) => listFiles(categories[category])[0] ?? null;
+const pickLatest = (category) => (
+  category === 'plans'
+    ? listPlanFiles()[0] ?? null
+    : listFiles(categories[category])[0] ?? null
+);
 
 const pickRelated = (category) => {
-  const files = listFiles(categories[category]);
+  const files = category === 'plans' ? listPlanFiles() : listFiles(categories[category]);
   if (files.length === 0) return null;
   return files
     .map((filePath) => ({ filePath, score: scoreFile(filePath) }))
@@ -248,9 +273,7 @@ const researchFromIndex = () => {
 
 const heuristicSuggestions = () => ({
   intake: pickRelated('intake'),
-  plan: explicitRelatedPlan && explicitRelatedPlan !== 'workflow upgrade from external repo comparison and SSOT integration'
-    ? explicitRelatedPlan
-    : pickRelated('plans'),
+  plan: defaultPlanSuggestion(),
   research: pickRelated('research') ?? researchFromIndex(),
   session: latestSessionFromIndex(),
   handoff: pickRelated('handoffs')

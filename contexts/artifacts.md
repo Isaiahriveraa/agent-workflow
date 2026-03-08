@@ -2,13 +2,13 @@
 
 Use this file to describe where resumable workflow artifacts live and how they should be prioritized.
 
-Runtime context and RPI artifacts are repo-local by default. Shared/global artifacts are only for intentionally shared handoffs and legacy references.
+Runtime context and RPI artifacts are split by type: canonical plans are hub-owned, while intake, research, and lightweight runtime continuity remain repo-local. Shared/global artifacts are only for intentionally shared handoffs and canonical plan storage.
 
 Lightweight continuity artifacts are project-local runtime files. Shared/global handoffs are transfer artifacts, not the ordinary pause/resume path.
 
 ## Sources
 - intake: `[project root]/.planning/intake`
-- plans: `[project root]/.planning/plans`
+- plans: `~/.agents/thoughts/plans`
 - research: `[project root]/.planning/research`
 - sessions: `[project root]/.agents/sessions`
 - handoffs: `~/.agents/thoughts/shared/handoffs`
@@ -26,4 +26,4 @@ Lightweight continuity artifacts are project-local runtime files. Shared/global 
 - Use `node ./scripts/artifact-tools.mjs persist --source [command] --focus "[workflow focus]"` to lock the current repo's working set into the current project's `state.md`.
 - Prefer persisted session and working-set selections over heuristics when resuming work.
 - Persist an intake artifact when a substantial request has been normalized before research or planning.
-- Legacy absolute paths to older shared/global plans or research docs remain readable, but new RPI artifacts should be written repo-locally.
+- Legacy absolute paths to older repo-local plan docs remain readable, but new canonical plans should be written to `~/.agents/thoughts/plans`.

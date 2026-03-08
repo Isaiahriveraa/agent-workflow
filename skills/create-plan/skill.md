@@ -170,7 +170,7 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `[project root]/.planning/plans/YYYY-MM-DD-description.md`
+1. **Write the plan** to `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
    - Format: `YYYY-MM-DD-description.md` where:
      - YYYY-MM-DD is today's date (get it via `date +%Y-%m-%d`)
      - description is a brief kebab-case description
@@ -278,7 +278,7 @@ After structure approval:
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `[project root]/.planning/plans/YYYY-MM-DD-description.md`
+   `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?

@@ -91,13 +91,15 @@ const commandContracts = new Map([
 
 const handoffContracts = new Map([
   ['commands/create-handoff.md', ['~/.agents/thoughts/shared/handoffs/', "current project's `state.md`", "current project's `session-index.md`", 'scripts/artifact-tools.mjs persist']],
-  ['commands/resume-handoff.md', ['~/.agents/thoughts/shared/handoffs/', '.planning/plans', '.planning/research']]
+  ['commands/resume-handoff.md', ['~/.agents/thoughts/shared/handoffs/', '~/.agents/thoughts/plans', '.planning/research']]
 ]);
 
 const explicitOutputContracts = new Map([
   ['commands/research_codebase.md', ['/create-plan /absolute/path/to/research.md']],
-  ['commands/create-handoff.md', ['Use the exact absolute handoff path written in the current run.', '/resume_handoff path/to/handoff.md']],
-  ['commands/implement_plan.md', ['/validate_plan /absolute/path/to/plan.md']]
+  ['commands/create-plan.md', ['Next step', '/implement_plan /Users/isaiahrivera/.agents/thoughts/plans/YYYY-MM-DD-description.md']],
+  ['commands/create-handoff.md', ['Use the exact absolute handoff path written in the current run.', 'Next step', '/resume_handoff path/to/handoff.md']],
+  ['commands/implement_plan.md', ['Next step', '/validate_plan /absolute/path/to/plan.md']],
+  ['commands/validate_plan.md', ['Do not emit a standalone `Next step` command block from this command unless the user explicitly asks for a specific follow-up command.']]
 ]);
 
 const continuityContracts = new Map([

@@ -180,14 +180,14 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `[project root]/.planning/plans/YYYY-MM-DD-description.md`
+1. **Write the plan** to `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
    - In all user-facing responses, include the final plan location as an absolute filesystem path
    - Format: `YYYY-MM-DD-description.md` where:
      - YYYY-MM-DD is today's date (get it via `date +%Y-%m-%d`)
      - description is a brief kebab-case description
    - Examples:
-     - `2026-02-17-improve-error-handling.md`
-     - `2026-02-17-rpi-workflow-integration.md`
+     - `/Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-improve-error-handling.md`
+     - `/Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-rpi-workflow-integration.md`
 
 2. **Use this template structure**:
 
@@ -289,16 +289,19 @@ After structure approval:
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `[project root]/.planning/plans/YYYY-MM-DD-description.md`
-
-   If you're ready to execute it, run:
-   `/implement_plan /absolute/path/to/project/.planning/plans/YYYY-MM-DD-description.md`
+   `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?
    - Are the success criteria specific enough?
    - Any technical details that need adjustment?
    - Missing edge cases or considerations?
+   ```
+   Then end the response with this exact standalone block using the saved plan path:
+   ```text
+   Next step
+
+   /implement_plan /Users/isaiahrivera/.agents/thoughts/plans/YYYY-MM-DD-description.md
    ```
 
 2. **Iterate based on feedback** - be ready to:

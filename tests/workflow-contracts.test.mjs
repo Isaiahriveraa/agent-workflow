@@ -94,20 +94,27 @@ test('handoff commands keep handoffs global while runtime state can be project-s
   assert.match(createHandoff, /artifact-tools\.mjs persist/);
   assert.doesNotMatch(createHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
   assert.match(resumeHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\/ENG-XXXX/);
-  assert.match(resumeHandoff, /\.planning\/plans/);
+  assert.match(resumeHandoff, /~\/\.agents\/thoughts\/plans/);
   assert.match(resumeHandoff, /\.planning\/research/);
   assert.doesNotMatch(resumeHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
 });
 
 test('artifact-producing workflow docs require exact next-command output', () => {
   const research = read('commands/research_codebase.md');
+  const createPlan = read('commands/create-plan.md');
   const createHandoff = read('commands/create-handoff.md');
   const implementPlan = read('commands/implement_plan.md');
+  const validatePlan = read('commands/validate_plan.md');
 
+  assert.match(createPlan, /Next step/);
+  assert.match(createPlan, /\/implement_plan \/Users\/[^/\n]+\/\.agents\/thoughts\/plans\/YYYY-MM-DD-description\.md/);
   assert.match(research, /\/create-plan \/absolute\/path\/to\/research\.md/);
   assert.match(createHandoff, /Use the exact absolute handoff path written in the current run\./);
+  assert.match(createHandoff, /Next step/);
   assert.match(createHandoff, /\/resume_handoff path\/to\/handoff\.md/);
+  assert.match(implementPlan, /Next step/);
   assert.match(implementPlan, /\/validate_plan \/absolute\/path\/to\/plan\.md/);
+  assert.match(validatePlan, /Do not emit a standalone `Next step` command block/);
 });
 
 test('ssot validation fails when a project-local runtime state duplicates the working-set section', () => {
@@ -152,16 +159,23 @@ test('manifest points Codex CLI at the shared AGENTS contract', () => {
 
 test('manifest represents prompt parity and generated adapter surfaces for all supported CLIs', () => {
   const manifest = readJson('manifest.json');
+  const claudePromptLink = manifest.symlinks.find((entry) =>
+    entry.tool === 'claude-code' && entry.source === '~/.claude/CLAUDE.md'
+  );
   const openclawPromptLink = manifest.symlinks.find((entry) =>
     entry.tool === 'openclaw' && entry.source === '~/.openclaw/CLAUDE.md'
   );
   const generatedByTool = Object.groupBy(manifest.generated, ({ tool }) => tool);
   const capabilities = manifest.capabilities;
 
+  assert.ok(claudePromptLink);
+  assert.equal(claudePromptLink.target, '~/.agents/adapters/claude-code/CLAUDE.md');
   assert.ok(openclawPromptLink);
   assert.equal(openclawPromptLink.target, '~/.agents/prompts/system.md');
   assert.deepEqual(Object.keys(capabilities).sort(), ['antigravity', 'claude-code', 'codex-cli', 'openclaw', 'opencode']);
+  assert.equal(capabilities['claude-code'].entrypoint.status, 'bridged');
   assert.equal(capabilities['claude-code'].commands.status, 'native');
+  assert.equal(capabilities['claude-code'].settings.status, 'validated-local');
   assert.equal(capabilities['codex-cli'].commands.status, 'unsupported');
   assert.equal(capabilities.opencode.agents.status, 'bridged');
   assert.equal(capabilities.antigravity.commands.status, 'bridged');
@@ -192,7 +206,11 @@ test('adapter directories document non-claude parity boundaries', () => {
   const claude = read('adapters/claude-code/README.md');
   const openclawAgentsTemplate = read('adapters/openclaw/templates/AGENTS.md');
 
+  assert.match(claude, /## Managed Surfaces/);
   assert.match(claude, /## Capability Profile/);
+  assert.match(claude, /Claude-local but contract-validated: `~\/\.claude\/settings\.json`/);
+  assert.match(claude, /additionalDirectories/);
+  assert.match(claude, /CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1/);
   assert.match(codex, /~\/\.codex\/AGENTS\.md/);
   assert.match(codex, /commands: `unsupported`/);
   assert.match(opencode, /gen-opencode-agents/);
@@ -202,4 +220,31 @@ test('adapter directories document non-claude parity boundaries', () => {
   assert.match(openclaw, /Generated workspace wrappers/);
   assert.match(openclaw, /workspace wrappers: `bridged`/);
   assert.match(openclawAgentsTemplate, /\{\{HUB\}\}\/AGENTS\.md/);
+});
+
+test('claude settings preserve local hooks while exposing the shared hub', () => {
+  const settings = JSON.parse(fs.readFileSync('/Users/isaiahrivera/.claude/settings.json', 'utf8'));
+  const manifest = readJson('manifest.json');
+  const validatedSettings = manifest.validated_local_contracts.find((entry) =>
+    entry.tool === 'claude-code' && entry.path === '~/.claude/settings.json'
+  );
+
+  assert.ok(validatedSettings);
+  assert.deepEqual(validatedSettings.required_fields, [
+    'additionalDirectories includes ~/.agents',
+    'permissions.allow includes Read(~/.agents/**)',
+    'env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1'
+  ]);
+  assert.ok(settings.additionalDirectories.includes('/Users/isaiahrivera/.agents'));
+  assert.ok(settings.permissions.allow.includes('Read(/Users/isaiahrivera/.agents/**)'));
+  assert.equal(settings.env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD, '1');
+  assert.equal(
+    settings.hooks.SessionStart[0].hooks[0].command,
+    'node "/Users/isaiahrivera/.claude/hooks/gsd-check-update.js"'
+  );
+  assert.equal(
+    settings.statusLine.command,
+    'node "/Users/isaiahrivera/.claude/hooks/gsd-statusline.js"'
+  );
+  assert.equal(settings.enabledPlugins['typescript-lsp@claude-plugins-official'], true);
 });

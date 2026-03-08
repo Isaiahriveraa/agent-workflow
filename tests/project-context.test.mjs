@@ -73,7 +73,7 @@ test('bootstrapping project context creates only runtime context files', () => {
 
     assert.equal(context.projectDir, path.join(repoRoot, '.agents'));
     assert.equal(context.contextsDir, path.join(repoRoot, '.agents', 'contexts'));
-    assert.equal(context.thoughtPaths.plans, path.join(repoRoot, '.planning', 'plans'));
+    assert.equal(context.thoughtPaths.plans, path.join(root, 'thoughts', 'plans'));
     assert.equal(context.thoughtPaths.research, path.join(repoRoot, '.planning', 'research'));
     assert.equal(fs.existsSync(context.thoughtPaths.sessions), false);
     assert.equal(context.thoughtPaths.handoffs, path.join(root, 'thoughts', 'shared', 'handoffs'));
