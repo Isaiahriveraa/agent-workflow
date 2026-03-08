@@ -148,6 +148,78 @@ test('ssot validation fails when a project-local runtime state duplicates the wo
   }
 });
 
+test('ssot validation fails when Claude entrypoint drifts back to the raw prompt target', () => {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-validate-ssot-'));
+  const home = path.join(fixtureRoot, 'home');
+
+  try {
+    fs.cpSync(root, fixtureRoot, {
+      recursive: true,
+      filter: (source) => !source.includes(`${path.sep}.git${path.sep}`) && !source.includes(`${path.sep}node_modules${path.sep}`)
+    });
+
+    fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+    fs.symlinkSync(path.join(fixtureRoot, 'prompts/system.md'), path.join(home, '.claude/CLAUDE.md'));
+    fs.writeFileSync(path.join(home, '.claude/settings.json'), JSON.stringify({
+      additionalDirectories: [fixtureRoot],
+      permissions: { allow: [`Read(${fixtureRoot}/**)`] },
+      env: { CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: '1' }
+    }, null, 2));
+
+    const result = spawnSync('node', ['scripts/validate-ssot.mjs'], {
+      cwd: fixtureRoot,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        AGENTS_ROOT: fixtureRoot,
+        HOME: home
+      }
+    });
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Claude Code entrypoint points to .*prompts\/system\.md.*expected .*adapters\/claude-code\/CLAUDE\.md/);
+  } finally {
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('ssot validation fails when Claude settings lose required hub access fields', () => {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-validate-ssot-'));
+  const home = path.join(fixtureRoot, 'home');
+
+  try {
+    fs.cpSync(root, fixtureRoot, {
+      recursive: true,
+      filter: (source) => !source.includes(`${path.sep}.git${path.sep}`) && !source.includes(`${path.sep}node_modules${path.sep}`)
+    });
+
+    fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+    fs.symlinkSync(path.join(fixtureRoot, 'adapters/claude-code/CLAUDE.md'), path.join(home, '.claude/CLAUDE.md'));
+    fs.writeFileSync(path.join(home, '.claude/settings.json'), JSON.stringify({
+      additionalDirectories: [],
+      permissions: { allow: [] },
+      env: {}
+    }, null, 2));
+
+    const result = spawnSync('node', ['scripts/validate-ssot.mjs'], {
+      cwd: fixtureRoot,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        AGENTS_ROOT: fixtureRoot,
+        HOME: home
+      }
+    });
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Claude settings missing additionalDirectories entry/);
+    assert.match(result.stderr, /Claude settings missing Read\(.*\/\*\*\) permission/);
+    assert.match(result.stderr, /CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD/);
+  } finally {
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
 test('manifest points Codex CLI at the shared AGENTS contract', () => {
   const manifest = readJson('manifest.json');
   const codexLink = manifest.symlinks.find((entry) => entry.tool === 'codex-cli');

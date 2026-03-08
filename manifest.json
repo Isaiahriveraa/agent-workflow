@@ -52,7 +52,7 @@
     },
     {
       "source": "~/.claude/CLAUDE.md",
-      "target": "~/.agents/prompts/system.md",
+      "target": "~/.agents/adapters/claude-code/CLAUDE.md",
       "tier": 1,
       "tool": "claude-code",
       "type": "file"
@@ -101,12 +101,28 @@
     "~/.openclaw/workspace/IDENTITY.md",
     "~/.codex/skills/.system/"
   ],
+  "validated_local_contracts": [
+    {
+      "tool": "claude-code",
+      "path": "~/.claude/settings.json",
+      "required_fields": [
+        "additionalDirectories includes ~/.agents",
+        "permissions.allow includes Read(~/.agents/**)",
+        "env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1"
+      ],
+      "note": "Claude settings stay hand-managed, but these access fields are validated as part of the adapter contract."
+    }
+  ],
   "auto_discovery": {
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed"
   },
   "capabilities": {
     "claude-code": {
+      "entrypoint": {
+        "status": "bridged",
+        "contract": "~/.claude/CLAUDE.md -> ~/.agents/adapters/claude-code/CLAUDE.md"
+      },
       "commands": {
         "status": "native",
         "contract": "~/.claude/commands -> ~/.agents/commands"
@@ -130,6 +146,10 @@
       "session_continuity": {
         "status": "bridged",
         "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      },
+      "settings": {
+        "status": "validated-local",
+        "contract": "~/.claude/settings.json remains local config but must preserve required ~/.agents access fields while keeping hook, statusline, and plugin ownership local"
       }
     },
     "codex-cli": {

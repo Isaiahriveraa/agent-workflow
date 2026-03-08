@@ -436,9 +436,9 @@ migrate_legacy_claude_content() {
     fi
 
     if [ -f "$HOME/.claude/CLAUDE.md" ] && [ ! -L "$HOME/.claude/CLAUDE.md" ]; then
-        cp "$HOME/.claude/CLAUDE.md" "$HUB/prompts/system.md"
+        cp "$HOME/.claude/CLAUDE.md" "$HUB/adapters/claude-code/CLAUDE.md"
         rm "$HOME/.claude/CLAUDE.md"
-        ln -s "$HUB/prompts/system.md" "$HOME/.claude/CLAUDE.md"
+        ln -s "$HUB/adapters/claude-code/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
         ok "System prompt migrated"
     else
         info "System prompt: already symlinked or doesn't exist"

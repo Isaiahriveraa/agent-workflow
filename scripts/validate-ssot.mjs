@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const root = process.env.AGENTS_ROOT
   ? path.resolve(process.env.AGENTS_ROOT)
   : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const home = path.resolve(process.env.HOME ?? path.join(root, '..'));
 
 const requiredFiles = [
   'AGENTS.md',
@@ -30,6 +31,7 @@ const requiredFiles = [
   'rules/common/ui-ux-routing.md',
   'rules/common/verification-automation.md',
   'rules/common/artifact-retrieval.md',
+  'adapters/claude-code/CLAUDE.md',
   'adapters/claude-code/README.md',
   'adapters/codex-cli/README.md',
   'adapters/opencode/README.md',
@@ -113,6 +115,16 @@ const continuityContracts = new Map([
 ]);
 
 let hasError = false;
+
+function expandHomePath(value) {
+  if (value.startsWith('~/.agents')) {
+    return path.join(root, value.slice('~/.agents/'.length));
+  }
+  if (value.startsWith('~/')) {
+    return path.join(home, value.slice(2));
+  }
+  return value;
+}
 
 const stateHeadings = requiredHeadings.get('contexts/state.md') ?? [];
 
@@ -264,6 +276,89 @@ for (const [relativePath, references] of continuityContracts) {
 const agentsContent = fs.existsSync(path.join(root, 'AGENTS.md'))
   ? fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')
   : '';
+
+const manifestPath = path.join(root, 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const claudePromptLink = manifest.symlinks?.find((entry) =>
+    entry.tool === 'claude-code' && entry.source === '~/.claude/CLAUDE.md'
+  );
+
+  if (!claudePromptLink) {
+    console.error('Manifest is missing the Claude Code CLAUDE.md symlink contract');
+    hasError = true;
+  } else {
+    if (claudePromptLink.target !== '~/.agents/adapters/claude-code/CLAUDE.md') {
+      console.error(`Claude Code CLAUDE.md must target ~/.agents/adapters/claude-code/CLAUDE.md, found ${claudePromptLink.target}`);
+      hasError = true;
+    }
+
+    const claudeEntrypointPath = expandHomePath(claudePromptLink.source);
+    const expectedTarget = expandHomePath(claudePromptLink.target);
+    if (!fs.existsSync(claudeEntrypointPath)) {
+      console.error(`Claude Code entrypoint is missing: ${claudeEntrypointPath}`);
+      hasError = true;
+    } else {
+      const stats = fs.lstatSync(claudeEntrypointPath);
+      if (!stats.isSymbolicLink()) {
+        console.error(`Claude Code entrypoint must be a symlink: ${claudeEntrypointPath}`);
+        hasError = true;
+      } else {
+        const actualTarget = fs.readlinkSync(claudeEntrypointPath);
+        if (actualTarget !== expectedTarget) {
+          console.error(`Claude Code entrypoint points to ${actualTarget} but expected ${expectedTarget}`);
+          hasError = true;
+        }
+      }
+    }
+  }
+
+  const validatedClaudeSettings = manifest.validated_local_contracts?.find((entry) =>
+    entry.tool === 'claude-code' && entry.path === '~/.claude/settings.json'
+  );
+  if (!validatedClaudeSettings) {
+    console.error('Manifest is missing the validated Claude settings contract');
+    hasError = true;
+  }
+
+  const claudeCapabilities = manifest.capabilities?.['claude-code'];
+  if (claudeCapabilities?.entrypoint?.contract !== '~/.claude/CLAUDE.md -> ~/.agents/adapters/claude-code/CLAUDE.md') {
+    console.error('Manifest Claude Code capability contract does not match the wrapper entrypoint');
+    hasError = true;
+  }
+
+  const settingsPath = path.join(home, '.claude', 'settings.json');
+  if (!fs.existsSync(settingsPath)) {
+    console.error(`Claude settings are missing: ${settingsPath}`);
+    hasError = true;
+  } else {
+    try {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      const additionalDirectories = Array.isArray(settings.additionalDirectories) ? settings.additionalDirectories : [];
+      const permissionsAllow = Array.isArray(settings.permissions?.allow) ? settings.permissions.allow : [];
+      const claudeMdFlag = settings.env?.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD;
+
+      if (!additionalDirectories.includes(path.join(home, '.agents'))) {
+        console.error(`Claude settings missing additionalDirectories entry for ${path.join(home, '.agents')}`);
+        hasError = true;
+      }
+
+      if (!permissionsAllow.includes(`Read(${path.join(home, '.agents')}/**)`)) {
+        console.error(`Claude settings missing Read(${path.join(home, '.agents')}/**) permission`);
+        hasError = true;
+      }
+
+      if (claudeMdFlag !== '1') {
+        console.error('Claude settings must set env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD to "1"');
+        hasError = true;
+      }
+    } catch (error) {
+      console.error(`Failed to parse Claude settings: ${settingsPath}`);
+      console.error(String(error));
+      hasError = true;
+    }
+  }
+}
 
 if (agentsContent.includes('Use `thoughts/sessions/` for ordinary workflow continuity')) {
   console.error('AGENTS.md still references legacy thoughts/sessions continuity for ordinary sessions');
