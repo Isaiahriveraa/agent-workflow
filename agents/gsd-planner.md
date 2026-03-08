@@ -420,8 +420,8 @@ Output: [Artifacts created]
 </objective>
 
 <execution_context>
-@/Users/isaiahrivera/.claude/get-shit-done/workflows/execute-plan.md
-@/Users/isaiahrivera/.claude/get-shit-done/templates/summary.md
+@~/.claude/get-shit-done/workflows/execute-plan.md
+@~/.claude/get-shit-done/templates/summary.md
 </execution_context>
 
 <context>

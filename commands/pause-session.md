@@ -13,7 +13,7 @@ Create a lightweight resumable checkpoint without requiring a full handoff.
 3. Read the current project's `state.md`.
 4. Read the current project's `session-index.md`.
 5. Read any directly relevant plan, research, or validation artifact referenced in the current project's `state.md`.
-6. Write a session artifact under the current project's `thoughts/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md`.
+6. Write a session artifact under the current project's `.agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md`.
 
 ## Required Sections
 
@@ -32,6 +32,8 @@ After writing the session artifact:
 - Update the current project's `state.md` with the paused workflow position
 - Preserve `## Related Plan`
 - Preserve the active artifact working set so resume flows do not re-guess context
+- Prefer the shared continuity helper when available:
+  - `node ./scripts/continuity-tools.mjs checkpoint --source pause-session --focus "[workflow focus]"`
 
 ## Escalation
 

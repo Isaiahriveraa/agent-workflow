@@ -23,8 +23,8 @@ if $ARGUMENTS.profile not in ["quality", "balanced", "budget"]:
 Ensure config exists and load current state:
 
 ```bash
-node /Users/isaiahrivera/.claude/get-shit-done/bin/gsd-tools.js config-ensure-section
-INIT=$(node /Users/isaiahrivera/.claude/get-shit-done/bin/gsd-tools.js state load)
+node ~/.claude/get-shit-done/bin/gsd-tools.js config-ensure-section
+INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js state load)
 ```
 
 This creates `.planning/config.json` with defaults if missing and loads current config.

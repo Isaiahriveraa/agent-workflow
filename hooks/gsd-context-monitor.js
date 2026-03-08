@@ -20,11 +20,20 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
 
 const WARNING_THRESHOLD = 35;  // remaining_percentage <= 35%
 const CRITICAL_THRESHOLD = 25; // remaining_percentage <= 25%
 const STALE_SECONDS = 60;      // ignore metrics older than 60s
 const DEBOUNCE_CALLS = 5;      // min tool uses between warnings
+const AUTOMATION_MODE = process.env.AGENTS_CONTINUITY_AUTOMATION ?? 'handoff';
+const AGENTS_ROOT = process.env.AGENTS_ROOT
+  ? path.resolve(process.env.AGENTS_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const CONTINUITY_HELPER = process.env.AGENTS_CONTINUITY_HELPER
+  ? path.resolve(process.env.AGENTS_CONTINUITY_HELPER)
+  : path.join(AGENTS_ROOT, 'scripts', 'continuity-tools.mjs');
 
 let input = '';
 process.stdin.setEncoding('utf8');
@@ -94,6 +103,35 @@ process.stdin.on('end', () => {
     warnData.callsSinceWarn = 0;
     warnData.lastLevel = currentLevel;
     fs.writeFileSync(warnPath, JSON.stringify(warnData));
+
+    if (AUTOMATION_MODE !== 'off') {
+      const focus = 'context monitor continuity';
+      const action = isCritical && AUTOMATION_MODE === 'handoff' ? 'handoff' : 'checkpoint';
+      const args = [
+        CONTINUITY_HELPER,
+        action,
+        '--source', 'gsd-context-monitor',
+        '--focus', focus,
+        '--topic', isCritical ? 'Critical Context Threshold' : 'Warning Context Threshold',
+        '--workflow', 'context pressure handling',
+        '--phase', isCritical ? 'critical threshold' : 'warning threshold',
+        '--next-step', isCritical
+          ? 'Resume from the latest continuity artifact before starting new work.'
+          : 'Wrap up the current task and resume from the latest checkpoint if needed.'
+      ];
+
+      // Fire and forget so continuity automation never blocks tool execution.
+      try {
+        const child = spawn(process.execPath, args, {
+          detached: false,
+          stdio: 'ignore',
+          env: process.env
+        });
+        child.unref();
+      } catch (e) {
+        // Silent fail -- hook automation must not block tool execution
+      }
+    }
 
     // Build warning message
     let message;

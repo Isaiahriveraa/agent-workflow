@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const agentsRoot = process.env.GITHUB_PR_PROPOSER_AGENTS_ROOT
   ? path.resolve(process.env.GITHUB_PR_PROPOSER_AGENTS_ROOT)
-  : '/Users/isaiahrivera/.agents';
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const workspaceRoot = process.env.GITHUB_PR_PROPOSER_WORKSPACE_ROOT
   ? path.resolve(process.env.GITHUB_PR_PROPOSER_WORKSPACE_ROOT)
   : '/home/node/.openclaw/workspace';

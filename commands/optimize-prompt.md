@@ -4,6 +4,9 @@ description: Rewrite a rough request into a structured, high-signal prompt for t
 
 # Optimize Prompt
 
+Use this command when the user wants the optimized prompt returned as a visible artifact.
+Internal prompt optimization for complex work may already happen automatically via `rules/common/prompt-optimization-routing.md`.
+
 Use the `prompt-handoff-optimizer` skill to rewrite rough user input into a cleaner agent handoff.
 
 ## Default Behavior
@@ -12,6 +15,7 @@ Use the `prompt-handoff-optimizer` skill to rewrite rough user input into a clea
 - Prefer cross-provider-safe prompt patterns
 - Return a ready-to-use prompt plus brief notes
 - Keep simple requests compact
+- For substantial requests, treat the optimized output as the intake artifact that drives research and planning
 
 ## If The User Included Prompt Content
 
@@ -56,4 +60,4 @@ When optimizing the prompt:
 If needed, load:
 
 - `prompt-handoff-optimizer`
-- `/Users/isaiahrivera/.agents/skills/prompt-handoff-optimizer/references/patterns.md`
+- `~/.agents/skills/prompt-handoff-optimizer/references/patterns.md`

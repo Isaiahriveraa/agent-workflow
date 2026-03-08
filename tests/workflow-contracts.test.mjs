@@ -42,7 +42,11 @@ test('global workflow state is a compatibility document with runtime-state point
   assert.match(content, /## Active Artifact Working Set/);
   assert.match(content, /### Selected By Category/);
   assert.match(content, /### Ordered Artifacts/);
-  assert.match(content, /- intake: none/);
+  assert.match(content, /- intake: /);
+  assert.match(content, /- plan: /);
+  assert.match(content, /- research: /);
+  assert.match(content, /- session: /);
+  assert.match(content, /- handoff: /);
 });
 
 test('workflow commands reference explicit context files', () => {

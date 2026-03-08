@@ -5,7 +5,7 @@ import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import os from 'node:os';
 
-const root = '/Users/isaiahrivera/.agents';
+const root = path.resolve(new URL('..', import.meta.url).pathname);
 
 const run = (script, args = [], options = {}) =>
   execFileSync('node', [script, ...args], {

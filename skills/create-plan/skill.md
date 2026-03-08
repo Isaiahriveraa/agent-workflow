@@ -27,7 +27,7 @@ Please provide:
 
 I'll analyze this information and work with you to create a comprehensive plan.
 
-Tip: You can invoke this command with a file directly: `/create-plan ~/.agents/thoughts/research/2026-02-17-my-research.md`
+Tip: You can invoke this command with a file directly: `/create-plan /absolute/path/to/project/.planning/research/2026-02-17-my-research.md`
 ```
 
 Then wait for the user's input.
@@ -170,7 +170,7 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
+1. **Write the plan** to `[project root]/.planning/plans/YYYY-MM-DD-description.md`
    - Format: `YYYY-MM-DD-description.md` where:
      - YYYY-MM-DD is today's date (get it via `date +%Y-%m-%d`)
      - description is a brief kebab-case description
@@ -269,7 +269,7 @@ After structure approval:
 
 ## References
 
-- Related research: `~/.agents/thoughts/research/[relevant].md`
+- Related research: `[project root]/.planning/research/[relevant].md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -278,7 +278,7 @@ After structure approval:
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
+   `[project root]/.planning/plans/YYYY-MM-DD-description.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?

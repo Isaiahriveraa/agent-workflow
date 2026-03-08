@@ -3,41 +3,23 @@
 Use this file to track reusable research artifacts so future work can find them without re-reading everything.
 
 ## Entries
-- Topic: development vs feat/interface-no-lecture branch comparison
-  Date: 2026-03-05
-  Source files: /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/KodaApp.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InterfaceManager.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InterfaceView.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/AISettingsView.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/AI/AIConfig.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/AI/LLMClient.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/AI/PromptOptimizer.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/Audio/AudioCaptureService.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/Grammar/GrammarCorrectionService.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/SessionManager.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/Speaker/VoiceProfileManager.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/STT/LanguagePostProcessor.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/STT/TranscriptionRouter.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InterfaceWindowCoordinator.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InterfaceTriggerPolicy.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InteractiveTranscriptBuffer.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/thoughts/shared/handoffs/general/2026-02-24_13-16-10_koda-interface-redesign-ai-merge.md
-  Artifact path: /Users/isaiahrivera/Documents/GitHubProjects/Koda/thoughts/research/2026-03-05-development-vs-interface-no-lecture-branch-map.md
-  Summary: Compared `development` and `feat/interface-no-lecture` from merge base `bd6c384`. Confirmed the voice pipeline on `development` is mostly additive under audio/STT/speaker/grammar modules, but found high-risk shared-file conflicts in `KodaApp`, `InterfaceManager`, `InterfaceView`, `AISettingsView`, `AIConfig`, `LLMClient`, `PromptOptimizer`, and `SetupView`.
+- Topic: AI workflow consistency, RPI execution order, and continuity awareness
+- Date: 2026-03-06
+- Source files: prompts/system.md; rules/common/prompt-optimization-routing.md; contexts/decisions.md; commands/research_codebase.md; commands/create-plan.md; commands/implement_plan.md; commands/validate_plan.md; commands/create-handoff.md; commands/resume-handoff.md; commands/pause-session.md; commands/resume-session.md; commands/project-artifacts.md; rules/common/session-continuity.md; contexts/tooling.md; scripts/project-context.mjs; scripts/artifact-tools.mjs; scripts/continuity-tools.mjs; scripts/handoff-tools.mjs; hooks/gsd-context-monitor.js; scripts/validate-ssot.mjs; projects/agents-43142fc2/contexts/state.md; projects/agents-43142fc2/contexts/session-index.md
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-06-ai-workflow-consistency-and-continuity.md
+- Summary: The repo defines an internal optimization -> research -> plan -> implement -> validate workflow, project-scoped continuity state, and helper-backed checkpoint/handoff automation; live state in this project also shows a duplicated active artifact working-set block, while SSOT validation still passes.
 
-- Topic: Interface redesign baseline versus lecture-recording branch map
-  Date: 2026-03-05
-  Source files: /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/KodaApp.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InterfaceManager.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InterfaceView.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/InterfaceWindowCoordinator.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/NativeInterfaceWindow.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/macOS/Sources/Koda/SettingsNavigation.swift, /Users/isaiahrivera/Documents/GitHubProjects/Koda/Planning/interface-popup-redesign-cleanup-plan.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/Planning/interface-window-unification-rpi-plan.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/Planning/interface-window-hybrid-host-rpi-plan.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/Planning/lecture-mode-long-form-transcription-plan.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/thoughts/shared/handoffs/general/2026-02-24_13-16-10_koda-interface-redesign-ai-merge.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/thoughts/shared/handoffs/general/2026-02-27_13-20-40_lecture-recording-interface-workflow.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/thoughts/shared/handoffs/general/2026-02-27_15-05-24_interface-window-unification-rpi.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/thoughts/shared/handoffs/general/2026-02-27_15-30-07_interface-window-hybrid-host-phase-2.md, /Users/isaiahrivera/Documents/GitHubProjects/Koda/thoughts/shared/handoffs/general/2026-02-27_16-22-43_hotkey-transcript-ui-followups.md
-  Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-05-interface-redesign-vs-lecture-branch-map.md
-  Summary: Documented `feat/redesign-interface` as the pre-lecture baseline, mapped the 15 commits added on `feat/lecture-recording`, classified interface-focused versus lecture-coupled changes, and described the current hybrid interface architecture plus where lecture state is currently coupled into it.
+- Topic: Autonomous workflow, drift control, context refresh, and state strictness
+- Date: 2026-03-06
+- Source files: AGENTS.md; prompts/system.md; commands/create-plan.md; commands/implement_plan.md; commands/create-handoff.md; commands/session-start.md; commands/pause-session.md; commands/resume-session.md; commands/project-artifacts.md; scripts/project-context.mjs; scripts/artifact-tools.mjs; hooks/gsd-context-monitor.js; adapters/claude-code/statusline/gsd-statusline.js; thoughts/plans/2026-03-02-openclaw-workflow-pr-automation.md
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-06-autonomous-workflow-drift-control-and-context-refresh.md
+- Summary: The repo already has strong RPI, runtime-state, artifact-persistence, and context-warning primitives, but automatic handoff creation, universal state writeback, and universal delegation/skill enforcement are still only partially automated.
 
-- Topic: Homepage AI economy workflow/backend contract truth
-  Date: 2026-03-05
-  Source files: /Users/isaiahrivera/Documents/GitHubProjects/openville/app/api/search/ranked/route.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/app/api/agents/search-and-select/route.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/app/api/agents/negotiate/run/route.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/app/api/agents/negotiate/[id]/route.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/app/api/agents/select-winner/route.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/features/workflow/client/types.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/features/workflow/client/repository.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/features/workflow/client/adapters.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/features/workflow/hooks/useOpenvilleFlow.ts, /Users/isaiahrivera/Documents/GitHubProjects/openville/features/landing/hooks/useLiveFunnel.ts
-  Artifact path: /Users/isaiahrivera/Documents/GitHubProjects/openville/thoughts/research/2026-03-05-homepage-ai-economy-contracts.md
-  Summary: Documented the live request/response contracts for search, shortlist, negotiation run, transcript fetch, and winner selection. Confirmed degraded and empty states, identified transcript id/shape mismatch in the current frontend client, and mapped which homepage workflow surfaces are already supportable without backend changes.
-
-- Topic: Neovim file rendering, file icons, and git review UI
-  Date: 2026-03-05
-  Source files: /Users/isaiahrivera/.config/nvim/init.lua, /Users/isaiahrivera/.config/nvim/lazy-lock.json
-  Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-05-nvim-file-rendering-and-git-ui.md
-  Summary: Documented the live Neovim setup for file icons and git review surfaces. Confirmed `nvim-web-devicons` is the only file-icon provider, Neo-tree overrides only git-status letters, and the git workflow is currently split across Neo-tree, Neogit, Diffview, Gitsigns, which-key, and a custom cheatsheet.
-
-- Topic: external workflow repo comparison for SSOT upgrade
-  Date: 2026-03-02
-  Source files: local `/Users/isaiahrivera/.agents/*`, external `everything-claude-code`
-  Artifact path: conversation plan and implemented SSOT workflow upgrade
-  Summary: Compared the current provider-agnostic agent architecture with a Claude-first workflow repo, then adopted explicit contexts, reusable rule cards, adapter isolation, and validation scripts.
-
-- Topic: Mobile responsiveness audit — iPhone SE (375px) — dashboard
-  Date: 2026-03-04
-  Source files: frontend/src/app/dashboard/layout.tsx, page.tsx, Navbar.tsx, MobileMenu.tsx, ProjectionTileGrid.tsx, DashboardWatchlist.tsx, SocialPanel.tsx, FriendActivityFeed.tsx, DailyMissionStrip.tsx, TrendingTickerTape.tsx, ArcadeButton.tsx, SlipDrawer.tsx, MobileBottomNav.tsx
-  Artifact path: ~/.agents/thoughts/research/2026-03-04-mobile-responsiveness-iphone-se.md
-  Summary: Full audit of mobile layout at 375px. Key findings: (1) LOGOUT missing on mobile — dashboard navbar never mounts MobileMenu; (2) watchlist/social hidden behind MobileBottomNav tabs (default view is "picks"); (3) SlipDrawer expansion (h-40) overflows pb-16 clearance when 3+ picks selected; (4) text-2xl price in 155px-wide tiles; (5) ArcadeButton px-4 py-2 with no min-h touch target.
+- Topic: RPI automation, validation, drift control, and uncertainty handling
+- Date: 2026-03-06
+- Source files: prompts/system.md; commands/research_codebase.md; commands/create-plan.md; commands/implement_plan.md; commands/validate_plan.md; commands/gsd/plan-phase.md; commands/gsd/research-phase.md; commands/gsd/execute-phase.md; commands/project-verification.md; contexts/tooling.md; contexts/verification.md; agents/gsd-planner.md; agents/gsd-plan-checker.md; agents/gsd-executor.md; agents/gsd-verifier.md; agents/gsd-integration-checker.md; scripts/project-context.mjs; scripts/artifact-tools.mjs; scripts/continuity-tools.mjs; scripts/verification-tools.mjs; hooks/gsd-context-monitor.js
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-06-rpi-automation-validation-and-drift-control.md
+- Summary: The repo already has direct and GSD-style RPI flows, a second-agent plan checker in the GSD path, verification tooling, and continuity automation; the next leverage point is enforcing those gates more uniformly across the plain command path.
 
 ## Entry Template
 - Topic:
@@ -46,14 +28,26 @@ Use this file to track reusable research artifacts so future work can find them 
 - Artifact path:
 - Summary:
 
-- Topic: Frontend security vulnerabilities and missing security/edge-case tests
-  Date: 2026-03-05
-  Source files: frontend/src/app/page.tsx, frontend/src/app/dashboard/layout.tsx, frontend/src/components/landing/nav/MobileMenu.tsx, frontend/next.config.mjs, frontend/src/tests/page.test.tsx, frontend/src/tests/landing-page.test.tsx, frontend/src/tests/mobile-menu.test.tsx, frontend/src/tests/dashboard-page.test.tsx, frontend/e2e/landing.spec.ts
-  Artifact path: thoughts/shared/research/2026-03-05-frontend-security-testing-gaps.md
-  Summary: Identified key frontend security gaps (missing dashboard auth guard, absent form validation/sanitization, potential untrusted href sink, missing Next.js security headers) and mapped missing security-focused test inventory.
+- Topic: VPS migration and Docker escape plan for OpenClaw runtime
+- Date: 2026-03-07
+- Source files: docker-compose.yml; scripts/check-raycast-endpoint.sh; config/openclaw.json; config/openclaw.json.example; config/agents/main/agent/auth-profiles.json; config/cron/jobs.json; config/exec-approvals.json; README.md; README runtime sections.
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-07-openclaw-vps-migration-options.md
+- Summary: The current OpenClaw setup is hard-wired to Docker service patterns and container paths (`openclaw:local`, `/home/node/...`, `127.0.0.1:18789`), so native VPS deployment should decouple workspace/runtime paths, auth source wiring, and launch mode into a host-managed service unit before removing Compose.
 
-- Topic: Pipeline E2E crash analysis — what's fixed, what's still broken, fix plan
-  Date: 2026-03-05
-  Source files: features/landing/hooks/useLiveFunnel.ts, features/landing/adapters/liveFunnelAdapters.ts, features/landing/components/market/HologramNode.tsx, features/landing/components/market/NeonFlowCanvas.tsx, features/workflow/client/repository.ts, features/workflow/client/types.ts, app/api/agents/search-and-select/route.ts, app/api/agents/negotiate/run/route.ts, app/api/agents/negotiate/[id]/route.ts, features/agents/negotiation/runNegotiations.ts
-  Artifact path: ~/.agents/thoughts/research/2026-03-05-pipeline-e2e-crash-analysis.md
-  Summary: Confirmed 5 bugs already fixed. Identified 3 remaining frontend-only bugs: (B) getNegotiationTranscript passes agentId but backend expects negotiationId, (C) transcript response shape mismatch ({negotiation,messages} vs {history}), (A) two independent RAG searches cause ID mismatch in visual. Plus (D) binary elimination animation needs staggering.
+- Topic: Telegram-first NVIDIA planner loop and automation architecture for OpenClaw
+- Date: 2026-03-07
+- Source files: README.md; docker-compose.yml; config/openclaw.json; config/cron/jobs.json; config/thoughts/shared/research/dominionism-Koda/2026-02-20_00-00-00_ai-prompt-optimization-research.md
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-07-telegram-first-nvidia-openclaw-automation.md
+- Summary: Revised research strengthens the original Telegram-first NVIDIA/OpenClaw architecture by defining a strict planner-to-OpenClaw handoff contract, separating control plane from worker plane, placing make.com in the approvals/SaaS-integration layer rather than the core reasoning loop, and enumerating the infrastructure, storage, queueing, and credential requirements for durable automation.
+
+- Topic: Hardened Telegram-to-OpenClaw automation plan
+- Date: 2026-03-07
+- Source files: ~/.claude/plans/joyful-swinging-wilkes.md; docker-compose.yml; README.md; config/openclaw.json; config/cron/jobs.json; config/exec-approvals.json; workspace/AGENTS.md
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-07-hardened-telegram-openclaw-automation.md
+- Summary: Refines the Telegram-first NVIDIA/OpenClaw architecture around a paranoid security posture, one private OpenClaw gateway per host, externalized durable state and secrets, typed planner-to-OpenClaw contracts, and strict compromise containment so OpenClaw can automate bounded work without becoming the public control plane or a broad blast-radius secret holder.
+
+- Topic: OpenClaw content monetization automation strategy, topology, and risk constraints
+- Date: 2026-03-08
+- Source files: ~/.claude/plans/zany-chasing-blossom.md; ~/.agents/thoughts/research/2026-03-07-hardened-telegram-openclaw-automation.md; ~/.agents/thoughts/research/2026-03-07-telegram-first-nvidia-openclaw-automation.md; docker-compose.yml; config/openclaw.json; config/cron/jobs.json
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/research/2026-03-08-openclaw-content-monetization-automation-strategy.md
+- Summary: Synthesizes the March 7 planning artifacts into a stronger strategy centered on one hardened OpenClaw gateway with specialist agents, an external orchestrator, approval-gated publishing, monetization-first content selection, platform-policy constraints, and explicit rejection of provider-key quota evasion as a scaling strategy.

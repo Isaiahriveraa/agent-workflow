@@ -135,7 +135,7 @@ Write to: .planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md
 
 ```
 Task(
-  prompt="First, read /Users/isaiahrivera/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + filled_prompt,
+  prompt="First, read ~/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + filled_prompt,
   subagent_type="general-purpose",
   model="{researcher_model}",
   description="Research Phase {phase}"
@@ -171,7 +171,7 @@ Continue research for Phase {phase_number}: {phase_name}
 
 ```
 Task(
-  prompt="First, read /Users/isaiahrivera/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + continuation_prompt,
+  prompt="First, read ~/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + continuation_prompt,
   subagent_type="general-purpose",
   model="{researcher_model}",
   description="Continue research Phase {phase}"

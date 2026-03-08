@@ -31,6 +31,8 @@ Then wait for the user's research query.
    - Read `~/.agents/contexts/research-index.md`
    - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` if you need the current runtime workflow position from the project's `state.md`
    - Load `~/.agents/rules/common/search-first.md`
+   - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
+   - If this research is the first step of a substantial request, capture the normalized intake artifact with `node ./scripts/workflow-router-tools.mjs capture`
 
 1. **Read any directly mentioned files first:**
    - If the user mentions specific files (tickets, docs, JSON), read them FULLY first
@@ -85,7 +87,8 @@ Then wait for the user's research query.
 5. **Gather metadata for the research document:**
    - Get today's date: `date +%Y-%m-%d`
    - If inside a git repo, get branch and commit: `git branch --show-current` and `git rev-parse --short HEAD`
-   - Filename: `~/.agents/thoughts/research/YYYY-MM-DD-description.md`
+   - Filename: `[project root]/.planning/research/YYYY-MM-DD-description.md`
+     - In all user-facing responses, report the research artifact using its absolute filesystem path
      - Format: `YYYY-MM-DD-description.md` where:
        - YYYY-MM-DD is today's date
        - description is a brief kebab-case description of the research topic
@@ -140,10 +143,10 @@ Then wait for the user's research query.
 
      ## Historical Context (from thoughts/)
      [Relevant insights from thoughts/ directory with references]
-     - `~/.agents/thoughts/research/something.md` - Historical decision about X
+     - `[project root]/.planning/research/something.md` - Historical decision about X
 
      ## Related Research
-     [Links to other research documents in ~/.agents/thoughts/research/ and entries referenced from `~/.agents/contexts/research-index.md`]
+     [Links to other research documents in the current project's `.planning/research/` and entries referenced from `~/.agents/contexts/research-index.md`]
 
      ## Open Questions
      [Any areas that need further investigation]
@@ -159,7 +162,10 @@ Then wait for the user's research query.
 8. **Present findings:**
    - Present a concise summary of findings to the user
    - Include key file references for easy navigation
-   - State where the research document was saved
+   - State where the research document was saved using the absolute filesystem path
+   - If an intake artifact was captured for this workflow, persist it into the current project's working set alongside the selected research artifact
+   - If the research artifact is intended to drive implementation planning, include the exact next command to run using the saved artifact path:
+     - `/create-plan /absolute/path/to/research.md`
    - Add or update an entry in `~/.agents/contexts/research-index.md` with the topic, date, source files, artifact path, and summary
    - Ask if they have follow-up questions or need clarification
 

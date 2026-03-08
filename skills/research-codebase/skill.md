@@ -86,7 +86,7 @@ Then wait for the user's research query.
 5. **Gather metadata for the research document:**
    - Get today's date: `date +%Y-%m-%d`
    - If inside a git repo, get branch and commit: `git branch --show-current` and `git rev-parse --short HEAD`
-   - Filename: `~/.agents/thoughts/research/YYYY-MM-DD-description.md`
+   - Filename: `[project root]/.planning/research/YYYY-MM-DD-description.md`
      - Format: `YYYY-MM-DD-description.md` where:
        - YYYY-MM-DD is today's date
        - description is a brief kebab-case description of the research topic
@@ -141,10 +141,10 @@ Then wait for the user's research query.
 
      ## Historical Context (from thoughts/)
      [Relevant insights from thoughts/ directory with references]
-     - `~/.agents/thoughts/research/something.md` - Historical decision about X
+     - `[project root]/.planning/research/something.md` - Historical decision about X
 
      ## Related Research
-     [Links to other research documents in ~/.agents/thoughts/research/ and entries referenced from `~/.agents/contexts/research-index.md`]
+     [Links to other research documents in the current project's `.planning/research/` and entries referenced from `~/.agents/contexts/research-index.md`]
 
      ## Open Questions
      [Any areas that need further investigation]
