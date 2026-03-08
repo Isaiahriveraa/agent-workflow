@@ -164,8 +164,12 @@ Then wait for the user's research query.
    - Include key file references for easy navigation
    - State where the research document was saved using the absolute filesystem path
    - If an intake artifact was captured for this workflow, persist it into the current project's working set alongside the selected research artifact
-   - If the research artifact is intended to drive implementation planning, include the exact next command to run using the saved artifact path:
-     - `/create-plan /absolute/path/to/research.md`
+   - If the research artifact is intended to drive implementation planning, end the response with this exact standalone block using the saved artifact path:
+     ```text
+     Next step
+
+     /create-plan /absolute/path/to/research.md
+     ```
    - Add or update an entry in `~/.agents/contexts/research-index.md` with the topic, date, source files, artifact path, and summary
    - Ask if they have follow-up questions or need clarification
 

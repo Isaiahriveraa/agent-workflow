@@ -170,6 +170,8 @@ Recommended workflow:
 3. `/validate_plan` - Verify implementation correctness
 4. `/describe_pr` - Generate PR description
 
+Do not emit a standalone `Next step` command block from this command unless the user explicitly asks for a specific follow-up command. Validation may end in multiple valid next actions, so a canonical yank target is not guaranteed here.
+
 The validation works best after commits are made, as it can analyze the git history to understand what was implemented.
 
 Remember: Good validation catches issues before they reach production. Be constructive but thorough in identifying gaps or improvements.

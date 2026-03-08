@@ -88,7 +88,9 @@ Confirm the handoff document was written successfully. Always report the handoff
 Once this is completed, you should respond to the user with the template between <template_response></template_response> XML tags. do NOT include the tags in your response.
 
 <template_response>
-Handoff created and synced! You can resume from this handoff in a new session with the following command:
+Handoff created and synced!
+
+Next step
 
 ```bash
 /resume_handoff path/to/handoff.md
@@ -100,7 +102,9 @@ Use the exact absolute handoff path written in the current run. Do not replace i
 for example (between <example_response></example_response> XML tags - do NOT include these tags in your actual response to the user)
 
 <example_response>
-Handoff created and synced! You can resume from this handoff in a new session with the following command:
+Handoff created and synced!
+
+Next step
 
 ```bash
 /resume_handoff ~/.agents/thoughts/shared/handoffs/ENG-2166/2025-01-08_13-44-55_ENG-2166_create-context-compaction.md
