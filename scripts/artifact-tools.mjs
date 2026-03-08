@@ -1,41 +1,45 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ensureProjectContext } from './project-context.mjs';
+import { assertSingleHeading, writeProjectStateSections } from './runtime-state-tools.mjs';
 
-const root = '/Users/isaiahrivera/.agents';
+const root = process.env.AGENTS_ROOT
+  ? path.resolve(process.env.AGENTS_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const project = ensureProjectContext();
 const statePath = project.contextPaths.state;
 const researchIndexPath = path.join(root, 'contexts', 'research-index.md');
-const sharedArtifactRoots = {
+const repoLocalArtifactRoots = {
+  intake: project.thoughtPaths.intake,
   plans: project.thoughtPaths.plans,
-  research: project.thoughtPaths.research,
+  research: project.thoughtPaths.research
+};
+const sharedArtifactRoots = {
   handoffs: project.thoughtPaths.handoffs
 };
-const projectLocalArtifactRoots = {
+const projectRuntimeArtifactRoots = {
   sessions: project.thoughtPaths.sessions
 };
 const categories = {
+  ...repoLocalArtifactRoots,
   ...sharedArtifactRoots,
-  ...projectLocalArtifactRoots
+  ...projectRuntimeArtifactRoots
 };
 
 const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
 const readState = () => fs.readFileSync(statePath, 'utf8');
 const workingSetHeading = '## Active Artifact Working Set';
-
-const assertSingleWorkingSetSection = (state) => {
-  const matches = state.match(/^## Active Artifact Working Set$/gm) ?? [];
-  if (matches.length > 1) {
-    throw new Error(`Duplicate "${workingSetHeading}" sections found in contexts/state.md`);
+const safeStat = (filePath) => {
+  try {
+    return fs.statSync(filePath);
+  } catch {
+    return null;
   }
 };
 
-const replaceSection = (content, heading, replacement) => {
-  const pattern = new RegExp(`(^${heading}\\n)([\\s\\S]*?)(?=\\n## |\\s*$)`, 'm');
-  if (!pattern.test(content)) {
-    return `${content.trimEnd()}\n\n${heading}\n${replacement.trimEnd()}\n`;
-  }
-  return content.replace(pattern, `$1${replacement.trimEnd()}\n`);
+const assertSingleWorkingSetSection = (state) => {
+  assertSingleHeading(state, workingSetHeading);
 };
 
 const listFiles = (dir) => {
@@ -48,11 +52,13 @@ const listFiles = (dir) => {
     if (entry.isDirectory()) {
       files.push(...listFiles(fullPath));
     } else if (entry.isFile() && entry.name.endsWith('.md') && entry.name !== '.gitkeep') {
-      files.push(fullPath);
+      if (safeStat(fullPath)) {
+        files.push(fullPath);
+      }
     }
   }
 
-  return files.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  return files.sort((a, b) => (safeStat(b)?.mtimeMs ?? 0) - (safeStat(a)?.mtimeMs ?? 0));
 };
 
 const parseBullets = (content, heading) => {
@@ -91,6 +97,7 @@ const readPersistedWorkingSet = () => {
       source: 'none',
       focus: 'none',
       selected: {
+        intake: null,
         plan: null,
         research: null,
         session: null,
@@ -105,6 +112,7 @@ const readPersistedWorkingSet = () => {
   const selectedSection = selectedMatch ? selectedMatch[1] : '';
 
   const selected = {
+    intake: parseStateField(selectedSection, 'intake'),
     plan: parseStateField(selectedSection, 'plan'),
     research: parseStateField(selectedSection, 'research'),
     session: parseStateField(selectedSection, 'session'),
@@ -135,7 +143,7 @@ const normalizeArtifactPath = (value) => {
 
 const buildOrderedArtifacts = (selected) => {
   const ordered = [];
-  for (const key of ['plan', 'research', 'session', 'handoff']) {
+  for (const key of ['intake', 'plan', 'research', 'session', 'handoff']) {
     const value = selected[key];
     if (value && !ordered.includes(value)) {
       ordered.push(value);
@@ -152,6 +160,7 @@ const renderWorkingSetSection = (workingSet) => {
     `- Focus: ${workingSet.focus}`,
     '',
     '### Selected By Category',
+    `- intake: ${workingSet.selected.intake ?? 'none'}`,
     `- plan: ${workingSet.selected.plan ?? 'none'}`,
     `- research: ${workingSet.selected.research ?? 'none'}`,
     `- session: ${workingSet.selected.session ?? 'none'}`,
@@ -165,10 +174,20 @@ const renderWorkingSetSection = (workingSet) => {
 const persistWorkingSet = (workingSet) => {
   const state = readState();
   assertSingleWorkingSetSection(state);
-  const updated = replaceSection(state, workingSetHeading, renderWorkingSetSection(workingSet));
-  fs.writeFileSync(statePath, updated);
+  writeProjectStateSections({
+    statePath,
+    sections: [
+      {
+        heading: workingSetHeading,
+        replacement: renderWorkingSetSection(workingSet)
+      }
+    ]
+  });
   return workingSet;
 };
+
+export const persistWorkingSetSelection = ({ overrides = {}, metadata = {} } = {}) =>
+  persistWorkingSet(resolvedWorkingSet(overrides, metadata));
 
 const state = readState();
 const sessionIndex = readFile(project.contextPaths.sessionIndex);
@@ -196,7 +215,8 @@ const scoreFile = (filePath) => {
   for (const term of stateTerms) {
     if (base.includes(term)) score += 3;
   }
-  const stat = fs.statSync(filePath);
+  const stat = safeStat(filePath);
+  if (!stat) return score;
   score += Math.min(5, Math.round((Date.now() - stat.mtimeMs < 7 * 24 * 60 * 60 * 1000) ? 5 : 1));
   return score;
 };
@@ -208,7 +228,7 @@ const pickRelated = (category) => {
   if (files.length === 0) return null;
   return files
     .map((filePath) => ({ filePath, score: scoreFile(filePath) }))
-    .sort((a, b) => b.score - a.score || fs.statSync(b.filePath).mtimeMs - fs.statSync(a.filePath).mtimeMs)[0]?.filePath ?? null;
+    .sort((a, b) => b.score - a.score || (safeStat(b.filePath)?.mtimeMs ?? 0) - (safeStat(a.filePath)?.mtimeMs ?? 0))[0]?.filePath ?? null;
 };
 
 const latestSessionFromIndex = () => {
@@ -227,10 +247,11 @@ const researchFromIndex = () => {
 };
 
 const heuristicSuggestions = () => ({
+  intake: pickRelated('intake'),
   plan: explicitRelatedPlan && explicitRelatedPlan !== 'workflow upgrade from external repo comparison and SSOT integration'
     ? explicitRelatedPlan
     : pickRelated('plans'),
-  research: researchFromIndex() ?? pickRelated('research'),
+  research: pickRelated('research') ?? researchFromIndex(),
   session: latestSessionFromIndex(),
   handoff: pickRelated('handoffs')
 });
@@ -238,6 +259,7 @@ const heuristicSuggestions = () => ({
 const resolvedWorkingSet = (overrides = {}, metadata = {}) => {
   const suggested = heuristicSuggestions();
   const selected = {
+    intake: normalizeArtifactPath(overrides.intake ?? persistedWorkingSet.selected.intake ?? suggested.intake ?? 'none'),
     plan: normalizeArtifactPath(overrides.plan ?? persistedWorkingSet.selected.plan ?? suggested.plan ?? 'none'),
     research: normalizeArtifactPath(overrides.research ?? persistedWorkingSet.selected.research ?? suggested.research ?? 'none'),
     session: normalizeArtifactPath(overrides.session ?? persistedWorkingSet.selected.session ?? suggested.session ?? 'none'),
@@ -262,6 +284,7 @@ const suggest = () => {
   });
 
   return {
+    intake: workingSet.selected.intake,
     plan: workingSet.selected.plan,
     research: workingSet.selected.research,
     session: workingSet.selected.session,
@@ -284,54 +307,60 @@ const parseArgs = (args) => {
   return parsed;
 };
 
-const command = process.argv[2];
+if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta.url) === process.argv[1]) {
+  const command = process.argv[2];
 
-try {
-  switch (command) {
-    case 'latest': {
-      const category = process.argv[3];
-      if (!categories[category]) {
-        console.error('Usage: node scripts/artifact-tools.mjs latest <plans|research|sessions|handoffs>');
-        process.exitCode = 1;
+  try {
+    switch (command) {
+      case 'latest': {
+        const category = process.argv[3];
+        if (!categories[category]) {
+          console.error('Usage: node scripts/artifact-tools.mjs latest <plans|research|sessions|handoffs>');
+          process.exitCode = 1;
+          break;
+        }
+        console.log(pickLatest(category) ?? '');
         break;
       }
-      console.log(pickLatest(category) ?? '');
-      break;
+      case 'related':
+        console.log(JSON.stringify({
+          intake: pickRelated('intake'),
+          plans: pickRelated('plans'),
+          research: pickRelated('research'),
+          sessions: pickRelated('sessions'),
+          handoffs: pickRelated('handoffs')
+        }, null, 2));
+        break;
+      case 'active':
+        console.log(JSON.stringify(readPersistedWorkingSet(), null, 2));
+        break;
+      case 'persist': {
+        const args = parseArgs(process.argv.slice(3));
+        console.log(JSON.stringify(persistWorkingSetSelection({
+          overrides: {
+            intake: args.intake,
+            plan: args.plan,
+            research: args.research,
+            session: args.session,
+            handoff: args.handoff
+          },
+          metadata: {
+            lastUpdated: new Date().toISOString(),
+            source: args.source ?? 'manual',
+            focus: args.focus ?? persistedWorkingSet.focus ?? 'none'
+          }
+        }), null, 2));
+        break;
+      }
+      case 'suggest':
+        console.log(JSON.stringify(suggest(), null, 2));
+        break;
+      default:
+        console.error('Usage: node scripts/artifact-tools.mjs <suggest|related|latest|active|persist>');
+        process.exitCode = 1;
     }
-    case 'related':
-      console.log(JSON.stringify({
-        plans: pickRelated('plans'),
-        research: pickRelated('research'),
-        sessions: pickRelated('sessions'),
-        handoffs: pickRelated('handoffs')
-      }, null, 2));
-      break;
-    case 'active':
-      console.log(JSON.stringify(readPersistedWorkingSet(), null, 2));
-      break;
-    case 'persist': {
-      const args = parseArgs(process.argv.slice(3));
-      const workingSet = resolvedWorkingSet({
-        plan: args.plan,
-        research: args.research,
-        session: args.session,
-        handoff: args.handoff
-      }, {
-        lastUpdated: new Date().toISOString(),
-        source: args.source ?? 'manual',
-        focus: args.focus ?? persistedWorkingSet.focus ?? 'none'
-      });
-      console.log(JSON.stringify(persistWorkingSet(workingSet), null, 2));
-      break;
-    }
-    case 'suggest':
-      console.log(JSON.stringify(suggest(), null, 2));
-      break;
-    default:
-      console.error('Usage: node scripts/artifact-tools.mjs <suggest|related|latest|active|persist>');
-      process.exitCode = 1;
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
   }
-} catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
 }

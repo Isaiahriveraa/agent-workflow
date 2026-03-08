@@ -11,6 +11,15 @@ This directory contains OpenClaw-specific wrapper assets.
   - `USER.md`
   - `TOOLS.md`
 
+## Capability Profile
+- commands: `unsupported`
+- agents: `unsupported`
+- hooks: `unsupported`
+- MCP: `unsupported`
+- approvals: `native`
+- session continuity: `bridged` through shared continuity helpers and project-local runtime state
+- workspace wrappers: `bridged`
+
 ## Local-Only Surfaces
 - `~/.openclaw/openclaw.json`
 - `~/.openclaw/workspace/IDENTITY.md`

@@ -8,6 +8,14 @@ This directory documents the Antigravity-specific integration boundary.
 - Generated agents in `~/.gemini/agents`
 - Generated get-shit-done bridge in `~/.gemini/get-shit-done`
 
+## Capability Profile
+- commands: `bridged` through generated TOML command files
+- agents: `bridged` through generated agent files
+- hooks: `unsupported`
+- MCP: `unsupported`
+- approvals: `native`
+- session continuity: `bridged` through shared continuity helpers and project-local runtime state
+
 ## Generator Contract
 - `sync.sh gen-antigravity-commands` bridges hub markdown commands into Antigravity TOML commands.
 - `sync.sh gen-antigravity-agents` publishes hub agents into Antigravity's local agent directory.

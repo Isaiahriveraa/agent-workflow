@@ -11,10 +11,10 @@ Prefer explicit artifact selection over broad context loading.
 - `contexts/state.md`
 - `contexts/session-index.md`
 - `contexts/research-index.md`
-- `thoughts/plans/`
-- `thoughts/research/`
-- `thoughts/sessions/`
-- `thoughts/handoffs/`
+- `.planning/plans/`
+- `.planning/research/`
+- `.agents/sessions/`
+- `thoughts/shared/handoffs/`
 
 ## Usage
 - `node ./scripts/artifact-tools.mjs suggest`

@@ -6,6 +6,8 @@ description: Resume work from the latest lightweight session checkpoint
 
 Resume work from a lightweight session checkpoint.
 
+This command resumes from the current project's project-local session artifacts. Use `/resume-handoff` only when resuming from a deliberate shared/global transfer artifact.
+
 ## Process
 
 1. Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`.
@@ -19,15 +21,16 @@ Resume work from a lightweight session checkpoint.
 9. If the active artifact working set is missing or stale, run `node ./scripts/artifact-tools.mjs persist --source resume-session --focus "[workflow focus]"` with any category overrides needed to lock the resumed working set into the current project's `state.md`.
 10. Read any plan or research artifacts referenced by the session, plus the active working set artifacts that are still relevant.
 11. Prefer the persisted working set over fresh heuristics when reporting current context.
-12. Present:
+12. If the current position came from a helper-backed checkpoint, preserve that persisted working set unless the operator explicitly overrides it.
+13. Present:
    - current position
    - active artifacts
    - suggested artifacts to read next
    - blockers
    - next recommended command
-13. Update the current project's `state.md` so the resumed workflow matches the session artifact and the active artifact working set.
+14. Update the current project's `state.md` so the resumed workflow matches the session artifact and the active artifact working set.
 
-Only runtime state is project-scoped here. Plans, research, and handoffs remain shared/global artifacts.
+Only runtime continuity state is project-scoped here. Plans and research may be repo-local, while handoffs remain shared/global transfer artifacts.
 
 ## If No Session Exists
 

@@ -1,13 +1,11 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const agentsRoot = '/Users/isaiahrivera/.agents';
-// Tests can override the runtime projects root so disposable state stays in /tmp
-// instead of accumulating under ~/.agents/projects.
-const projectsRoot = process.env.AGENTS_PROJECTS_ROOT
-  ? path.resolve(process.env.AGENTS_PROJECTS_ROOT)
-  : path.join(agentsRoot, 'projects');
+const agentsRoot = process.env.AGENTS_ROOT
+  ? path.resolve(process.env.AGENTS_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultWorkingDirectory = process.env.AGENTS_PROJECT_ROOT
   ? path.resolve(process.env.AGENTS_PROJECT_ROOT)
   : process.cwd();
@@ -65,6 +63,7 @@ Use this file as the canonical resumable state for in-flight work in the current
 - Focus: none
 
 ### Selected By Category
+- intake: none
 - plan: none
 - research: none
 - session: none
@@ -75,7 +74,9 @@ Use this file as the canonical resumable state for in-flight work in the current
 `,
   sessionIndex: `# Session Index
 
-Use this file to track resumable work sessions for the current project.
+Use this file to track project-local lightweight work sessions for the current project.
+
+Shared/global handoffs are recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.
 
 ## Active Sessions
 - No active sessions recorded.
@@ -95,24 +96,29 @@ Use this file to track resumable work sessions for the current project.
 `,
   artifacts: `# Artifact Retrieval Context
 
-Use this file to describe how the current project's runtime state should select from shared/global workflow artifacts.
+Use this file to describe how the current project's runtime state should select from repo-local and shared workflow artifacts.
+
+Lightweight continuity artifacts are project-local runtime files. Shared/global handoffs are transfer artifacts, not the ordinary pause/resume path.
 
 ## Sources
-- plans: ~/.agents/thoughts/plans
-- research: ~/.agents/thoughts/research
-- sessions: [project thoughts]/sessions
-- handoffs: ~/.agents/thoughts/shared/handoffs
+- intake: [project root]/.planning/intake
+- plans: [project root]/.planning/plans
+- research: [project root]/.planning/research
+- sessions: [project root]/.agents/sessions
+- handoffs: \`~/.agents/thoughts/shared/handoffs\`
 
 ## Preferred Retrieval Order
-1. active or explicitly requested session artifact
+1. active or explicitly requested intake/session artifact
 2. related plan from the current project's state file
-3. latest matching shared research artifact
+3. latest matching repo-local research artifact
 4. latest matching shared handoff artifact
 
 ## Notes
 - Use \`node ./scripts/artifact-tools.mjs suggest\` to retrieve likely relevant artifacts for the current project.
 - Use \`node ./scripts/artifact-tools.mjs active\` to inspect the persisted working set for the current project.
 - Use \`node ./scripts/artifact-tools.mjs persist --source [command] --focus "[workflow focus]"\` to lock the chosen working set into the current project's state file.
+- Prefer persisted session and working-set selections over heuristics when resuming work.
+- Use \`node ./scripts/workflow-router-tools.mjs capture\` to persist a substantial-task intake artifact before research or planning.
 `
 };
 
@@ -134,9 +140,13 @@ export const getProjectContext = (options = {}) => {
     ?? options.projectSlug
     ?? path.basename(projectRoot);
   const projectSlug = `${slugify(slugBase)}-${hashProjectRoot(projectRoot)}`;
-  const projectDir = path.join(projectsRoot, projectSlug);
-  const contextsDir = path.join(projectDir, 'contexts');
-  const thoughtsDir = path.join(projectDir, 'thoughts');
+  const isAgentsRepo = projectRoot === agentsRoot;
+  const projectDir = isAgentsRepo ? agentsRoot : path.join(projectRoot, '.agents');
+  const contextsDir = isAgentsRepo ? path.join(agentsRoot, 'contexts') : path.join(projectDir, 'contexts');
+  const planningDir = path.join(projectRoot, '.planning');
+  const sessionsDir = isAgentsRepo
+    ? path.join(agentsRoot, 'sessions', 'general')
+    : path.join(projectDir, 'sessions', 'general');
 
   return {
     agentsRoot,
@@ -144,16 +154,17 @@ export const getProjectContext = (options = {}) => {
     projectSlug,
     projectDir,
     contextsDir,
-    thoughtsDir,
+    planningDir,
     contextPaths: {
       state: path.join(contextsDir, 'state.md'),
       sessionIndex: path.join(contextsDir, 'session-index.md'),
       artifacts: path.join(contextsDir, 'artifacts.md')
     },
     thoughtPaths: {
-      plans: path.join(agentsRoot, 'thoughts', 'plans'),
-      research: path.join(agentsRoot, 'thoughts', 'research'),
-      sessions: path.join(thoughtsDir, 'sessions', 'general'),
+      intake: path.join(planningDir, 'intake'),
+      plans: path.join(planningDir, 'plans'),
+      research: path.join(planningDir, 'research'),
+      sessions: sessionsDir,
       handoffs: path.join(agentsRoot, 'thoughts', 'shared', 'handoffs')
     }
   };

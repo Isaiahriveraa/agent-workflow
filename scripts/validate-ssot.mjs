@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = '/Users/isaiahrivera/.agents';
+const root = process.env.AGENTS_ROOT
+  ? path.resolve(process.env.AGENTS_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const requiredFiles = [
   'AGENTS.md',
@@ -13,11 +16,15 @@ const requiredFiles = [
   'contexts/tooling.md',
   'contexts/verification.md',
   'contexts/artifacts.md',
+  'contexts/agent-catalog.md',
   'contexts/ui-ux.md',
   'rules/common/discovery-levels.md',
   'rules/common/decision-fidelity.md',
   'rules/common/search-first.md',
   'rules/common/learning-capture.md',
+  'rules/common/expert-agent-routing.md',
+  'rules/common/prompt-optimization-routing.md',
+  'rules/common/workflow-router.md',
   'rules/common/package-manager-detection.md',
   'rules/common/session-continuity.md',
   'rules/common/ui-ux-routing.md',
@@ -43,6 +50,7 @@ const requiredFiles = [
   'commands/project-artifacts.md',
   'scripts/session-tools.mjs',
   'scripts/package-manager-tools.mjs',
+  'scripts/workflow-router-tools.mjs',
   'scripts/verification-tools.mjs',
   'scripts/artifact-tools.mjs'
 ];
@@ -55,22 +63,23 @@ const requiredHeadings = new Map([
   ['contexts/tooling.md', ['## Package Manager', '## Notes']],
   ['contexts/verification.md', ['## Available Checks', '## Preferred Order', '## Command Source', '## Notes']],
   ['contexts/artifacts.md', ['## Sources', '## Preferred Retrieval Order', '## Notes']],
+  ['contexts/agent-catalog.md', ['## Agent Classes', '## Workflow Experts', '## Routing Defaults', '## Constraints']],
   ['contexts/ui-ux.md', ['## Intent', '## Audience', '## Visual Direction', '## Constraints', '## Required States', '## Selected Skill']]
 ]);
 
 const adapterReadmeHeadings = new Map([
-  ['adapters/claude-code/README.md', ['# Claude Code Adapter', '## Canonical Boundary']],
-  ['adapters/codex-cli/README.md', ['# Codex CLI Adapter', '## Managed Surface', '## Canonical Boundary']],
-  ['adapters/opencode/README.md', ['# OpenCode Adapter', '## Managed Surfaces', '## Generator Contract', '## Canonical Boundary']],
-  ['adapters/antigravity/README.md', ['# Antigravity Adapter', '## Managed Surfaces', '## Generator Contract', '## Canonical Boundary']],
-  ['adapters/openclaw/README.md', ['# OpenClaw Adapter', '## Managed Surfaces', '## Local-Only Surfaces', '## Canonical Boundary']]
+  ['adapters/claude-code/README.md', ['# Claude Code Adapter', '## Capability Profile', '## Canonical Boundary']],
+  ['adapters/codex-cli/README.md', ['# Codex CLI Adapter', '## Managed Surface', '## Capability Profile', '## Canonical Boundary']],
+  ['adapters/opencode/README.md', ['# OpenCode Adapter', '## Managed Surfaces', '## Capability Profile', '## Generator Contract', '## Canonical Boundary']],
+  ['adapters/antigravity/README.md', ['# Antigravity Adapter', '## Managed Surfaces', '## Capability Profile', '## Generator Contract', '## Canonical Boundary']],
+  ['adapters/openclaw/README.md', ['# OpenClaw Adapter', '## Managed Surfaces', '## Capability Profile', '## Local-Only Surfaces', '## Canonical Boundary']]
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', "current project's runtime `state.md`"]],
-  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score']],
+  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md']],
   ['commands/validate_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md']],
-  ['commands/research_codebase.md', ['~/.agents/contexts/research-index.md', '~/.agents/contexts/decisions.md']],
+  ['commands/research_codebase.md', ['~/.agents/contexts/research-index.md', '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/pause-session.md', ["current project's `session-index.md`", "current project's `state.md`"]],
@@ -81,11 +90,59 @@ const commandContracts = new Map([
 ]);
 
 const handoffContracts = new Map([
-  ['commands/create-handoff.md', ['~/.agents/thoughts/shared/handoffs/']],
-  ['commands/resume-handoff.md', ['~/.agents/thoughts/shared/handoffs/', '~/.agents/thoughts/plans', '~/.agents/thoughts/research']]
+  ['commands/create-handoff.md', ['~/.agents/thoughts/shared/handoffs/', "current project's `state.md`", "current project's `session-index.md`", 'scripts/artifact-tools.mjs persist']],
+  ['commands/resume-handoff.md', ['~/.agents/thoughts/shared/handoffs/', '.planning/plans', '.planning/research']]
+]);
+
+const explicitOutputContracts = new Map([
+  ['commands/research_codebase.md', ['/create-plan /absolute/path/to/research.md']],
+  ['commands/create-handoff.md', ['Use the exact absolute handoff path written in the current run.', '/resume_handoff path/to/handoff.md']],
+  ['commands/implement_plan.md', ['/validate_plan /absolute/path/to/plan.md']]
+]);
+
+const continuityContracts = new Map([
+  ['AGENTS.md', ['project-local `.agents/sessions/`', 'thoughts/shared/handoffs/']],
+  ['rules/common/artifact-retrieval.md', ['.agents/sessions/', 'thoughts/shared/handoffs/']],
+  ['contexts/artifacts.md', ['project-local runtime files', '~/.agents/thoughts/shared/handoffs']],
+  ['contexts/session-index.md', ['project-local lightweight work sessions', 'Shared/global handoffs']],
+  ['commands/session-start.md', ['ordinary pause/resume continuity', ".agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md"]],
+  ['commands/resume-session.md', ['project-local session artifacts', 'shared/global transfer artifact']],
+  ['commands/project-artifacts.md', ['handoffs remain shared/global transfer artifacts']]
 ]);
 
 let hasError = false;
+
+const stateHeadings = requiredHeadings.get('contexts/state.md') ?? [];
+
+function validateWorkingState(relativePath) {
+  const fullPath = path.join(root, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    return;
+  }
+
+  const content = fs.readFileSync(fullPath, 'utf8');
+
+  for (const heading of stateHeadings) {
+    if (!content.includes(heading)) {
+      console.error(`Missing heading "${heading}" in ${relativePath}`);
+      hasError = true;
+    }
+  }
+
+  const workingSetSections = content.match(/^## Active Artifact Working Set$/gm) ?? [];
+  if (workingSetSections.length !== 1) {
+    console.error(`Expected exactly one "## Active Artifact Working Set" section in ${relativePath}, found ${workingSetSections.length}`);
+    hasError = true;
+  }
+
+  for (const heading of ['### Selected By Category', '### Ordered Artifacts']) {
+    const matches = content.match(new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'gm')) ?? [];
+    if (matches.length !== 1) {
+      console.error(`Expected exactly one "${heading}" section in ${relativePath}, found ${matches.length}`);
+      hasError = true;
+    }
+  }
+}
 
 for (const relativePath of requiredFiles) {
   const fullPath = path.join(root, relativePath);
@@ -96,6 +153,10 @@ for (const relativePath of requiredFiles) {
 }
 
 for (const [relativePath, headings] of requiredHeadings) {
+  if (relativePath === 'contexts/state.md') {
+    continue;
+  }
+
   const fullPath = path.join(root, relativePath);
   if (!fs.existsSync(fullPath)) {
     continue;
@@ -125,11 +186,17 @@ for (const [relativePath, headings] of adapterReadmeHeadings) {
   }
 }
 
-const stateContent = fs.readFileSync(path.join(root, 'contexts/state.md'), 'utf8');
-const workingSetSections = stateContent.match(/^## Active Artifact Working Set$/gm) ?? [];
-if (workingSetSections.length !== 1) {
-  console.error(`Expected exactly one "## Active Artifact Working Set" section in contexts/state.md, found ${workingSetSections.length}`);
-  hasError = true;
+validateWorkingState('contexts/state.md');
+
+const projectsRoot = path.join(root, 'projects');
+if (fs.existsSync(projectsRoot)) {
+  for (const entry of fs.readdirSync(projectsRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    validateWorkingState(path.join('projects', entry.name, 'contexts', 'state.md'));
+  }
 }
 
 for (const [relativePath, references] of commandContracts) {
@@ -160,6 +227,45 @@ for (const [relativePath, references] of handoffContracts) {
       hasError = true;
     }
   }
+}
+
+for (const [relativePath, references] of explicitOutputContracts) {
+  const fullPath = path.join(root, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    continue;
+  }
+
+  const content = fs.readFileSync(fullPath, 'utf8');
+  for (const reference of references) {
+    if (!content.includes(reference)) {
+      console.error(`Missing explicit output contract "${reference}" in ${relativePath}`);
+      hasError = true;
+    }
+  }
+}
+
+for (const [relativePath, references] of continuityContracts) {
+  const fullPath = path.join(root, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    continue;
+  }
+
+  const content = fs.readFileSync(fullPath, 'utf8');
+  for (const reference of references) {
+    if (!content.includes(reference)) {
+      console.error(`Missing continuity contract "${reference}" in ${relativePath}`);
+      hasError = true;
+    }
+  }
+}
+
+const agentsContent = fs.existsSync(path.join(root, 'AGENTS.md'))
+  ? fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8')
+  : '';
+
+if (agentsContent.includes('Use `thoughts/sessions/` for ordinary workflow continuity')) {
+  console.error('AGENTS.md still references legacy thoughts/sessions continuity for ordinary sessions');
+  hasError = true;
 }
 
 if (hasError) {

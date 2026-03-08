@@ -15,18 +15,19 @@ When this command is invoked:
 1. **If the path to a handoff document was provided**:
    - If a handoff document path was provided as a parameter, skip the default message
    - Immediately read the handoff document FULLY
-   - Immediately read any research or plan documents that it links to under the shared/global artifact directories `~/.agents/thoughts/plans` or `~/.agents/thoughts/research`. do NOT use a sub-agent to read these critical files.
+   - Immediately read any repo-local plan or research documents it links to under the current project's `.planning/plans` or `.planning/research`. do NOT use a sub-agent to read these critical files.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
 2. **If a ticket number (like ENG-XXXX) was provided**:
-   - locate the most recent handoff document for the ticket in the shared/global handoff directory `~/.agents/thoughts/shared/handoffs/ENG-XXXX`. e.g. for `ENG-2124` the handoffs would be in `~/.agents/thoughts/shared/handoffs/ENG-2124/`. **List this directory's contents.**
+   - Prefer resolving the target with `node ./scripts/handoff-tools.mjs resolve ENG-XXXX` when helper-backed recovery tooling is available.
+   - locate the most recent handoff document for the ticket in the shared/global handoff directory `~/.agents/thoughts/shared/handoffs/ENG-XXXX`. e.g. for `ENG-2124` the handoffs would be in `~/.agents/thoughts/shared/handoffs/ENG-2124/`. **List this directory's contents using absolute filesystem paths.**
    - There may be zero, one or multiple files in the directory.
    - **If there are zero files in the directory, or the directory does not exist**: tell the user: "I'm sorry, I can't seem to find that handoff document. Can you please provide me with a path to it?"
    - **If there is only one file in the directory**: proceed with that handoff
    - **If there are multiple files in the directory**: using the date and time specified in the file name (it will be in the format `YYYY-MM-DD_HH-MM-SS` in 24-hour time format), proceed with the _most recent_ handoff document.
    - Immediately read the handoff document FULLY
-   - Immediately read any research or plan documents that it links to under the shared/global artifact directories `~/.agents/thoughts/plans` or `~/.agents/thoughts/research`; do NOT use a sub-agent to read these critical files.
+   - Immediately read any repo-local plan or research documents it links to under the current project's `.planning/plans` or `.planning/research`; do NOT use a sub-agent to read these critical files.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
@@ -113,6 +114,8 @@ Then wait for the user's input.
    Shall I proceed with [recommended action 1], or would you like to adjust the approach?
    ```
 
+   When referring back to the handoff or linked artifacts in the user-facing analysis, use absolute filesystem paths.
+
 2. **Get confirmation** before proceeding
 
 ### Step 3: Create Action Plan
@@ -169,6 +172,7 @@ Then wait for the user's input.
    - Verify all file references still exist
    - Check for breaking changes since handoff
    - Confirm patterns are still valid
+   - Prefer persisted active artifacts and helper-backed handoff resolution over fresh guessing when both exist
 
 ## Common Scenarios
 

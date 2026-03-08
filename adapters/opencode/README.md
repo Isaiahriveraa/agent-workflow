@@ -6,6 +6,14 @@ This directory documents the OpenCode-specific integration boundary.
 - `~/.config/opencode/commands -> ~/.agents/commands`
 - Generated agents in `~/.config/opencode/agents`
 
+## Capability Profile
+- commands: `native`
+- agents: `bridged` through generated OpenCode-compatible agent files
+- hooks: `unsupported`
+- MCP: `native`
+- approvals: `native`
+- session continuity: `bridged` through shared continuity helpers and project-local runtime state
+
 ## Generator Contract
 - `sync.sh gen-opencode-agents` generates OpenCode-compatible agent frontmatter from hub agents.
 - OpenCode command behavior remains hub-native via the shared commands symlink.
