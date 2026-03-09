@@ -14,6 +14,15 @@ Use this file before substantial design-heavy work so the interaction and visual
 ## Constraints
 - Not set.
 
+## References
+- Not set.
+
+## Banned Patterns
+- Not set.
+
+## Differentiation Target
+- Not set.
+
 ## Required States
 - loading
 - error
@@ -23,4 +32,7 @@ Use this file before substantial design-heavy work so the interaction and visual
 - responsive mobile and desktop layouts
 
 ## Selected Skill
+- Not set.
+
+## Selected Capsule
 - Not set.

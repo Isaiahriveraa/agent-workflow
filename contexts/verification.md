@@ -21,3 +21,4 @@ Use this file to record the canonical automated checks available in the current 
 ## Notes
 - Prefer the aggregate `test` script for normal verification.
 - Use targeted scripts when diagnosing a specific workflow surface.
+- Use workflow tests to enforce capsule selection, quality gates, and learning-loop contracts.

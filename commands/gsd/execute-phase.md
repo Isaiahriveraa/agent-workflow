@@ -16,6 +16,8 @@ allowed-tools:
 <objective>
 Execute all plans in a phase using wave-based parallel execution.
 
+For substantial workflow changes, refuse execution when the selected plan fails `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]`.
+
 Orchestrator stays lean: discover plans, analyze dependencies, group into waves, spawn subagents, collect results. Each subagent loads the full execute-plan context and handles its own plan.
 
 Context budget: ~15% orchestrator, 100% fresh per subagent.

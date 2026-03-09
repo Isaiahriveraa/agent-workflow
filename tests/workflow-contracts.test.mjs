@@ -12,9 +12,14 @@ const root = path.resolve(new URL('..', import.meta.url).pathname);
 test('AGENTS declares contexts, rules, and adapters as canonical layers', () => {
   const content = read('AGENTS.md');
   assert.match(content, /Contexts:/);
+  assert.match(content, /Capsules:/);
   assert.match(content, /Rules:/);
   assert.match(content, /Adapters:/);
   assert.match(content, /contexts\/agent-catalog\.md/);
+  assert.match(content, /contexts\/user-taste\.md/);
+  assert.match(content, /Capsule Rules/);
+  assert.match(content, /output-quality gate rule/);
+  assert.match(content, /learning-loop rule/);
   assert.match(content, /expert-agent routing rule/);
   assert.match(content, /expert-agent-routing-tools\.mjs route/);
   assert.match(content, /project-local `\.agents\/sessions\/`/);
@@ -26,6 +31,8 @@ test('system prompt documents context discipline and ui routing', () => {
   const content = read('prompts/system.md');
   assert.match(content, /## Canonical Workflow Layers/);
   assert.match(content, /## Context Discipline/);
+  assert.match(content, /## Capsule Routing/);
+  assert.match(content, /## Learning Loop/);
   assert.match(content, /## UI\/UX Routing/);
   assert.match(content, /## Tooling Automation/);
   assert.match(content, /## Verification Automation/);
@@ -49,10 +56,22 @@ test('global workflow state is a compatibility document with runtime-state point
   assert.match(content, /- handoff: /);
 });
 
+test('global research and session indexes are compatibility documents with runtime pointers', () => {
+  const research = read('contexts/research-index.md');
+  const session = read('contexts/session-index.md');
+
+  assert.match(research, /shared compatibility document/);
+  assert.match(research, /\[project root\]\/\.agents\/contexts\/research-index\.md/);
+  assert.match(session, /shared compatibility document/);
+  assert.match(session, /\[project root\]\/\.agents\/contexts\/session-index\.md/);
+  assert.match(session, /Shared\/global handoffs/);
+});
+
 test('workflow commands reference explicit context files', () => {
   const createPlan = read('commands/create-plan.md');
   const implementPlan = read('commands/implement_plan.md');
   const validatePlan = read('commands/validate_plan.md');
+  const optimizePrompt = read('commands/optimize-prompt.md');
   const research = read('commands/research_codebase.md');
   const sessionStart = read('commands/session-start.md');
   const pauseSession = read('commands/pause-session.md');
@@ -62,25 +81,45 @@ test('workflow commands reference explicit context files', () => {
   const projectArtifacts = read('commands/project-artifacts.md');
 
   assert.match(createPlan, /contexts\/decisions\.md/);
-  assert.match(createPlan, /contexts\/research-index\.md/);
+  assert.match(createPlan, /current project's runtime `research-index\.md`/);
+  assert.match(createPlan, /contexts\/failure-patterns\.md/);
+  assert.match(createPlan, /contexts\/lessons-learned\.md/);
+  assert.match(createPlan, /select and load the relevant capsule/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
+  assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
+  assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(implementPlan, /current project's `state\.md`/);
   assert.match(implementPlan, /contexts\/decisions\.md/);
   assert.match(implementPlan, /rules\/common\/workflow-router\.md/);
+  assert.match(implementPlan, /critic, grader, and memory-policy files/);
+  assert.match(implementPlan, /workflow-artifact-tools\.mjs grade-plan/);
+  assert.match(implementPlan, /plan_ready_for_implementation/);
+  assert.match(implementPlan, /Never retry blindly after a verified miss/);
+  assert.match(implementPlan, /lesson-tools\.mjs capture/);
   assert.match(validatePlan, /current project's `state\.md`/);
-  assert.match(research, /contexts\/research-index\.md/);
+  assert.match(validatePlan, /contexts\/lessons-learned\.md/);
+  assert.match(validatePlan, /contexts\/failure-patterns\.md/);
+  assert.match(validatePlan, /current project's `research-index\.md`/);
+  assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-research/);
+  assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-plan/);
+  assert.match(validatePlan, /lesson-tools\.mjs capture/);
+  assert.match(optimizePrompt, /Capsule:/);
+  assert.match(research, /current project's `research-index\.md`/);
   assert.match(research, /project-context\.mjs current/);
   assert.match(research, /workflow-router-tools\.mjs capture/);
+  assert.match(research, /workflow-artifact-tools\.mjs grade-research/);
+  assert.match(research, /research_ready_for_planning/);
   assert.match(sessionStart, /current project's `session-index\.md`/);
   assert.match(sessionStart, /ordinary pause\/resume continuity/);
   assert.match(pauseSession, /current project's `session-index\.md`/);
   assert.match(resumeSession, /current project's `session-index\.md`/);
+  assert.match(resumeSession, /current project's `research-index\.md`/);
   assert.match(resumeSession, /project-local session artifacts/);
   assert.match(projectTooling, /contexts\/tooling\.md/);
   assert.match(projectVerification, /contexts\/verification\.md/);
   assert.match(projectArtifacts, /current project's `artifacts\.md`/);
-  assert.match(projectArtifacts, /~\/\.agents\/contexts\/research-index\.md/);
+  assert.match(projectArtifacts, /current project's `research-index\.md`/);
   assert.match(projectArtifacts, /handoffs remain shared\/global transfer artifacts/);
 });
 
@@ -227,6 +266,32 @@ test('manifest points Codex CLI at the shared AGENTS contract', () => {
   assert.ok(codexLink);
   assert.equal(codexLink.source, '~/.codex/AGENTS.md');
   assert.equal(codexLink.target, '~/.agents/AGENTS.md');
+  assert.equal(manifest.managed_content.capsules, '~/.agents/capsules');
+});
+
+test('learning contexts, quality gate rules, and capsules exist with expected sections', () => {
+  const userTaste = read('contexts/user-taste.md');
+  const failurePatterns = read('contexts/failure-patterns.md');
+  const referenceLibrary = read('contexts/reference-library.md');
+  const lessons = read('contexts/lessons-learned.md');
+  const learningLoop = read('rules/common/learning-loop.md');
+  const qualityGate = read('rules/common/output-quality-gate.md');
+  const creativeAssembly = read('capsules/creative-redesign/assembly.md');
+  const apiCritic = read('capsules/api-workflow/critic.md');
+
+  assert.match(userTaste, /## Preferred Characteristics/);
+  assert.match(userTaste, /## Recent Confirmations/);
+  assert.match(failurePatterns, /## Recurring Failure Classes/);
+  assert.match(failurePatterns, /## Recent Entries/);
+  assert.match(referenceLibrary, /## Approved Sources/);
+  assert.match(lessons, /## Writeback Policy/);
+  assert.match(lessons, /## Recent Artifacts/);
+  assert.match(learningLoop, /## Required Flow/);
+  assert.match(learningLoop, /lesson-tools\.mjs capture/);
+  assert.match(qualityGate, /## Minimum Creative Gate/);
+  assert.match(qualityGate, /## Minimum API Gate/);
+  assert.match(creativeAssembly, /contexts\/user-taste\.md/);
+  assert.match(apiCritic, /edge cases are not handled/);
 });
 
 test('manifest represents prompt parity and generated adapter surfaces for all supported CLIs', () => {
@@ -305,7 +370,9 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   assert.deepEqual(validatedSettings.required_fields, [
     'additionalDirectories includes ~/.agents',
     'permissions.allow includes Read(~/.agents/**)',
-    'env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1'
+    'env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1',
+    'hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.js',
+    'hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.js'
   ]);
   assert.ok(settings.additionalDirectories.includes('/Users/isaiahrivera/.agents'));
   assert.ok(settings.permissions.allow.includes('Read(/Users/isaiahrivera/.agents/**)'));
@@ -313,6 +380,14 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   assert.equal(
     settings.hooks.SessionStart[0].hooks[0].command,
     'node "/Users/isaiahrivera/.claude/hooks/gsd-check-update.js"'
+  );
+  assert.equal(
+    settings.hooks.Stop[0].hooks[0].command,
+    'node "/Users/isaiahrivera/.claude/hooks/gsd-stop-lesson-capture.js"'
+  );
+  assert.equal(
+    settings.hooks.SubagentStop[0].hooks[0].command,
+    'node "/Users/isaiahrivera/.claude/hooks/gsd-stop-lesson-capture.js"'
   );
   assert.equal(
     settings.statusLine.command,

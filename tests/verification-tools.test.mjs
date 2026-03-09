@@ -12,6 +12,7 @@ test('verification context exists with required sections', () => {
   assert.match(content, /## Available Checks/);
   assert.match(content, /## Preferred Order/);
   assert.match(content, /## Command Source/);
+  assert.match(content, /learning-loop contracts/);
 });
 
 test('verification detector reports available verification scripts', () => {

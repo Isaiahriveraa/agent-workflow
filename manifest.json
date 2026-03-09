@@ -4,6 +4,7 @@
   "hub": "~/.agents",
   "managed_content": {
     "contexts": "~/.agents/contexts",
+    "capsules": "~/.agents/capsules",
     "thoughts": "~/.agents/thoughts",
     "skills": "~/.agents/skills",
     "agents": "~/.agents/agents",
@@ -108,7 +109,9 @@
       "required_fields": [
         "additionalDirectories includes ~/.agents",
         "permissions.allow includes Read(~/.agents/**)",
-        "env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1"
+        "env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1",
+        "hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.js",
+        "hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.js"
       ],
       "note": "Claude settings stay hand-managed, but these access fields are validated as part of the adapter contract."
     }
