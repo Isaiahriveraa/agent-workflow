@@ -1,8 +1,17 @@
 # Research Index
 
-Use this file to track reusable research artifacts so future work can find them without re-reading everything.
+Use this file as a shared compatibility document, not the live per-project runtime research index source.
+
+Per-project runtime research now lives at `[project root]/.agents/contexts/research-index.md`.
+Use this global file only for shared or legacy notes that are not specific to a single repo.
 
 ## Entries
+- Topic: Claude vs other agent capability parity
+- Date: 2026-03-09
+- Source files: manifest.json; adapters/claude-code/README.md; adapters/claude-code/hooks/gsd-stop-lesson-capture.js; hooks/gsd-stop-lesson-capture.js; hooks/gsd-context-monitor.js; scripts/lesson-tools.mjs; scripts/validate-ssot.mjs; adapters/codex-cli/README.md; adapters/opencode/README.md; adapters/antigravity/README.md; adapters/openclaw/README.md; adapters/openclaw/templates/AGENTS.md; sync.sh; tests/hooks-nonblocking.test.mjs; tests/workflow-contracts.test.mjs; tests/adapter-generation.test.mjs; docs.anthropic.com Claude Code hooks/settings; developers.openai.com Codex config/non-interactive docs; github.com/openai/codex; opencode.ai plugins docs; github.com/sst/opencode; github.com/google-gemini/gemini-cli; github.com/google-gemini/gemini-cli-extensions; github.com/google-gemini/gemini-cli/issues/4433; openclaw.dev hooks/config/plugins docs; github.com/openclaw/openclaw; docs.github.com Copilot coding-agent hooks docs
+- Artifact path: /Users/isaiahrivera/.agents/.planning/research/2026-03-09-claude-vs-other-agent-capability-parity.md
+- Summary: The refined parity research now breaks the problem into shared behavioral phases and backend classes. Claude remains the native reference; OpenCode is the strongest immediate non-Claude hook target; OpenClaw now has real upstream hook/plugin surfaces; Gemini CLI has credible extension and emerging hook paths; and Codex should be treated as a wrapper/notify/MCP/external-automation backend rather than a Claude-style local-hook backend.
+
 - Topic: AI workflow consistency, RPI execution order, and continuity awareness
 - Date: 2026-03-06
 - Source files: prompts/system.md; rules/common/prompt-optimization-routing.md; contexts/decisions.md; commands/research_codebase.md; commands/create-plan.md; commands/implement_plan.md; commands/validate_plan.md; commands/create-handoff.md; commands/resume-handoff.md; commands/pause-session.md; commands/resume-session.md; commands/project-artifacts.md; rules/common/session-continuity.md; contexts/tooling.md; scripts/project-context.mjs; scripts/artifact-tools.mjs; scripts/continuity-tools.mjs; scripts/handoff-tools.mjs; hooks/gsd-context-monitor.js; scripts/validate-ssot.mjs; projects/agents-43142fc2/contexts/state.md; projects/agents-43142fc2/contexts/session-index.md
