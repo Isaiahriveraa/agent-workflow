@@ -12,9 +12,14 @@ const root = path.resolve(new URL('..', import.meta.url).pathname);
 test('AGENTS declares contexts, rules, and adapters as canonical layers', () => {
   const content = read('AGENTS.md');
   assert.match(content, /Contexts:/);
+  assert.match(content, /Capsules:/);
   assert.match(content, /Rules:/);
   assert.match(content, /Adapters:/);
   assert.match(content, /contexts\/agent-catalog\.md/);
+  assert.match(content, /contexts\/user-taste\.md/);
+  assert.match(content, /Capsule Rules/);
+  assert.match(content, /output-quality gate rule/);
+  assert.match(content, /learning-loop rule/);
   assert.match(content, /expert-agent routing rule/);
   assert.match(content, /expert-agent-routing-tools\.mjs route/);
   assert.match(content, /project-local `\.agents\/sessions\/`/);
@@ -26,6 +31,8 @@ test('system prompt documents context discipline and ui routing', () => {
   const content = read('prompts/system.md');
   assert.match(content, /## Canonical Workflow Layers/);
   assert.match(content, /## Context Discipline/);
+  assert.match(content, /## Capsule Routing/);
+  assert.match(content, /## Learning Loop/);
   assert.match(content, /## UI\/UX Routing/);
   assert.match(content, /## Tooling Automation/);
   assert.match(content, /## Verification Automation/);
@@ -53,6 +60,7 @@ test('workflow commands reference explicit context files', () => {
   const createPlan = read('commands/create-plan.md');
   const implementPlan = read('commands/implement_plan.md');
   const validatePlan = read('commands/validate_plan.md');
+  const optimizePrompt = read('commands/optimize-prompt.md');
   const research = read('commands/research_codebase.md');
   const sessionStart = read('commands/session-start.md');
   const pauseSession = read('commands/pause-session.md');
@@ -63,12 +71,22 @@ test('workflow commands reference explicit context files', () => {
 
   assert.match(createPlan, /contexts\/decisions\.md/);
   assert.match(createPlan, /contexts\/research-index\.md/);
+  assert.match(createPlan, /contexts\/failure-patterns\.md/);
+  assert.match(createPlan, /contexts\/lessons-learned\.md/);
+  assert.match(createPlan, /select and load the relevant capsule/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
   assert.match(implementPlan, /current project's `state\.md`/);
   assert.match(implementPlan, /contexts\/decisions\.md/);
   assert.match(implementPlan, /rules\/common\/workflow-router\.md/);
+  assert.match(implementPlan, /critic, grader, and memory-policy files/);
+  assert.match(implementPlan, /Never retry blindly after a verified miss/);
+  assert.match(implementPlan, /lesson-tools\.mjs capture/);
   assert.match(validatePlan, /current project's `state\.md`/);
+  assert.match(validatePlan, /contexts\/lessons-learned\.md/);
+  assert.match(validatePlan, /contexts\/failure-patterns\.md/);
+  assert.match(validatePlan, /lesson-tools\.mjs capture/);
+  assert.match(optimizePrompt, /Capsule:/);
   assert.match(research, /contexts\/research-index\.md/);
   assert.match(research, /project-context\.mjs current/);
   assert.match(research, /workflow-router-tools\.mjs capture/);
@@ -227,6 +245,32 @@ test('manifest points Codex CLI at the shared AGENTS contract', () => {
   assert.ok(codexLink);
   assert.equal(codexLink.source, '~/.codex/AGENTS.md');
   assert.equal(codexLink.target, '~/.agents/AGENTS.md');
+  assert.equal(manifest.managed_content.capsules, '~/.agents/capsules');
+});
+
+test('learning contexts, quality gate rules, and capsules exist with expected sections', () => {
+  const userTaste = read('contexts/user-taste.md');
+  const failurePatterns = read('contexts/failure-patterns.md');
+  const referenceLibrary = read('contexts/reference-library.md');
+  const lessons = read('contexts/lessons-learned.md');
+  const learningLoop = read('rules/common/learning-loop.md');
+  const qualityGate = read('rules/common/output-quality-gate.md');
+  const creativeAssembly = read('capsules/creative-redesign/assembly.md');
+  const apiCritic = read('capsules/api-workflow/critic.md');
+
+  assert.match(userTaste, /## Preferred Characteristics/);
+  assert.match(userTaste, /## Recent Confirmations/);
+  assert.match(failurePatterns, /## Recurring Failure Classes/);
+  assert.match(failurePatterns, /## Recent Entries/);
+  assert.match(referenceLibrary, /## Approved Sources/);
+  assert.match(lessons, /## Writeback Policy/);
+  assert.match(lessons, /## Recent Artifacts/);
+  assert.match(learningLoop, /## Required Flow/);
+  assert.match(learningLoop, /lesson-tools\.mjs capture/);
+  assert.match(qualityGate, /## Minimum Creative Gate/);
+  assert.match(qualityGate, /## Minimum API Gate/);
+  assert.match(creativeAssembly, /contexts\/user-taste\.md/);
+  assert.match(apiCritic, /edge cases are not handled/);
 });
 
 test('manifest represents prompt parity and generated adapter surfaces for all supported CLIs', () => {

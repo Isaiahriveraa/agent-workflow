@@ -199,6 +199,7 @@ Avoid:
 ## Canonical Workflow Layers
 - `prompts/` defines the base operating philosophy and communication style.
 - `contexts/` holds reusable state such as decisions, workflow state, research indexes, and UI/UX briefs.
+- `capsules/` holds task-class operating packs for context assembly, critique, grading, and learning.
 - `commands/` define executable workflows and should reference context files instead of duplicating durable policy.
 - `rules/common/` holds reusable workflow policy that can be loaded selectively.
 - `adapters/` holds provider-specific operational assets and must not become the canonical policy source.
@@ -213,6 +214,22 @@ Avoid:
 - Treat `contexts/verification.md` as the source of truth for available automated checks and preferred verification order.
 - Treat `contexts/artifacts.md` as the source of truth for resumable artifact retrieval priorities.
 - Require `contexts/ui-ux.md` before substantial design-heavy UI work.
+- Treat `contexts/user-taste.md` as the source of truth for durable user-specific output preferences.
+- Treat `contexts/failure-patterns.md` as the source of truth for reusable failure diagnoses.
+- Treat `contexts/reference-library.md` as the source of truth for approved examples and references.
+- Treat `contexts/lessons-learned.md` as the source of truth for promoted reusable lessons.
+
+## Capsule Routing
+- Use task-class capsules when better context assembly and critique would materially change the result.
+- Use `capsules/creative-redesign/` for redesign and anti-generic creative work.
+- Use `capsules/api-workflow/` for API design and contract-heavy workflow tasks.
+- Load the smallest capsule that matches the task instead of bulk-loading all capsules.
+
+## Learning Loop
+- When the user corrects you, an eval fails, or a critic rejects the output, do not just retry blindly.
+- Diagnose what was wrong, why it happened, and which reusable failure class it belongs to.
+- Write back durable local lessons automatically with `node ./scripts/lesson-tools.mjs capture ...` when the evidence is strong enough.
+- If the failure suggests a workflow-level improvement, surface a concrete suggestion instead of silently changing core policy.
 
 ## Session Continuity
 - Prefer lightweight session checkpoints for ordinary pause/resume workflows.
@@ -226,6 +243,7 @@ Avoid:
 ## Verification Automation
 - Prefer actual repo verification commands over generic examples.
 - Use shared verification helpers to derive preferred check order from the repo's real scripts.
+- Treat critic and eval outcomes as inputs to the learning loop, not just pass/fail end states.
 
 ## Artifact Retrieval
 - Prefer targeted artifact selection over loading every plan, research note, or handoff.
@@ -236,3 +254,4 @@ Avoid:
 - Use `frontend-design` for marketing and art-direction-heavy work.
 - Use `ui-ux-pro-max` for product UI and application flows.
 - Use `superdesign-1.0.0` for refinement inside an existing design system.
+- Load `capsules/creative-redesign/` before substantial redesign work.

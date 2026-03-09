@@ -16,11 +16,13 @@ Treat the request as substantial when one or more are true:
 
 For substantial requests, use this order:
 1. optimize prompt
-2. research current state
-3. score readiness
-4. create a decision-complete plan
-5. implement
-6. validate
+2. select capsule when the task class requires richer context assembly
+3. research current state
+4. score readiness
+5. create a decision-complete plan
+6. implement
+7. validate
+8. run the learning loop after verified failures or explicit corrections
 
 Do not skip from intake to implementation.
 

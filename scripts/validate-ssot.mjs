@@ -19,11 +19,17 @@ const requiredFiles = [
   'contexts/artifacts.md',
   'contexts/agent-catalog.md',
   'contexts/ui-ux.md',
+  'contexts/user-taste.md',
+  'contexts/failure-patterns.md',
+  'contexts/reference-library.md',
+  'contexts/lessons-learned.md',
   'rules/common/discovery-levels.md',
   'rules/common/decision-fidelity.md',
   'rules/common/search-first.md',
   'rules/common/learning-capture.md',
+  'rules/common/learning-loop.md',
   'rules/common/expert-agent-routing.md',
+  'rules/common/output-quality-gate.md',
   'rules/common/prompt-optimization-routing.md',
   'rules/common/workflow-router.md',
   'rules/common/package-manager-detection.md',
@@ -31,6 +37,21 @@ const requiredFiles = [
   'rules/common/ui-ux-routing.md',
   'rules/common/verification-automation.md',
   'rules/common/artifact-retrieval.md',
+  'capsules/creative-redesign/intent.md',
+  'capsules/creative-redesign/assembly.md',
+  'capsules/creative-redesign/examples.md',
+  'capsules/creative-redesign/anti-patterns.md',
+  'capsules/creative-redesign/critic.md',
+  'capsules/creative-redesign/grader.md',
+  'capsules/creative-redesign/memory-policy.md',
+  'capsules/api-workflow/intent.md',
+  'capsules/api-workflow/assembly.md',
+  'capsules/api-workflow/examples.md',
+  'capsules/api-workflow/anti-patterns.md',
+  'capsules/api-workflow/critic.md',
+  'capsules/api-workflow/grader.md',
+  'capsules/api-workflow/memory-policy.md',
+  'thoughts/lessons/README.md',
   'adapters/claude-code/CLAUDE.md',
   'adapters/claude-code/README.md',
   'adapters/codex-cli/README.md',
@@ -53,6 +74,7 @@ const requiredFiles = [
   'scripts/session-tools.mjs',
   'scripts/package-manager-tools.mjs',
   'scripts/workflow-router-tools.mjs',
+  'scripts/lesson-tools.mjs',
   'scripts/verification-tools.mjs',
   'scripts/artifact-tools.mjs'
 ];
@@ -66,7 +88,11 @@ const requiredHeadings = new Map([
   ['contexts/verification.md', ['## Available Checks', '## Preferred Order', '## Command Source', '## Notes']],
   ['contexts/artifacts.md', ['## Sources', '## Preferred Retrieval Order', '## Notes']],
   ['contexts/agent-catalog.md', ['## Agent Classes', '## Workflow Experts', '## Routing Defaults', '## Constraints']],
-  ['contexts/ui-ux.md', ['## Intent', '## Audience', '## Visual Direction', '## Constraints', '## Required States', '## Selected Skill']]
+  ['contexts/ui-ux.md', ['## Intent', '## Audience', '## Visual Direction', '## Constraints', '## References', '## Banned Patterns', '## Differentiation Target', '## Required States', '## Selected Skill', '## Selected Capsule']],
+  ['contexts/user-taste.md', ['## Preferred Characteristics', '## Disliked Patterns', '## Recent Confirmations', '## Evidence Threshold', '## Last Updated']],
+  ['contexts/failure-patterns.md', ['## Recurring Failure Classes', '## Diagnosis Format', '## Recent Entries', '## Promotion Rules', '## Last Updated']],
+  ['contexts/reference-library.md', ['## Approved Sources', '## Reference Entry Format', '## Selection Guidance', '## Last Updated']],
+  ['contexts/lessons-learned.md', ['## Active Lessons', '## Lesson Format', '## Writeback Policy', '## Recent Artifacts', '## Last Updated']]
 ]);
 
 const adapterReadmeHeadings = new Map([
@@ -78,9 +104,9 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score']],
-  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md']],
-  ['commands/validate_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule']],
+  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'load it before starting work and honor its critic, grader, and memory-policy files', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture']],
+  ['commands/validate_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/lesson-tools.mjs capture']],
   ['commands/research_codebase.md', ['~/.agents/contexts/research-index.md', '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],

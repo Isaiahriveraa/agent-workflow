@@ -13,6 +13,7 @@ Run the internal optimization pass when one or more are true:
   - likely to touch multiple subsystems
   - likely to take more than 30 minutes
 - The request changes shared workflow behavior, agent policy, or cross-provider behavior.
+- The task is a redesign, API workflow, or other quality-sensitive task that should route through a capsule.
 
 ## When To Skip
 
@@ -41,6 +42,9 @@ Do this silently unless the user explicitly asks to see the rewritten prompt or 
    - preserve explicit user choices
    - state non-goals when they prevent scope creep
    - prefer visible artifacts such as assumptions, checklists, or verification notes over hidden reasoning asks
+4. Select a task-class operating pack when quality depends on richer context assembly:
+   - use `capsules/creative-redesign/` for redesign and anti-generic creative work
+   - use `capsules/api-workflow/` for API design and contract-heavy workflow tasks
 
 Use the smallest structure that removes uncertainty. Prefer the `prompt-handoff-optimizer` shape:
 - `GOAL`
@@ -48,6 +52,7 @@ Use the smallest structure that removes uncertainty. Prefer the `prompt-handoff-
 - `CONSTRAINTS`
 - `DELIVERABLE`
 - `VALIDATION`
+- `CAPSULE`
 
 ## RPI Routing
 

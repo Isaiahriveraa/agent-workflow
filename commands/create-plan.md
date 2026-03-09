@@ -39,9 +39,11 @@ Then wait for the user's input.
    - Read `~/.agents/contexts/decisions.md`
    - Read `~/.agents/contexts/research-index.md` if prior research exists
    - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's runtime `state.md` when the existing workflow position matters
+   - Read `~/.agents/contexts/failure-patterns.md` and `~/.agents/contexts/lessons-learned.md` when the task class is likely to benefit from prior mistakes
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
+   - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -73,6 +75,7 @@ Then wait for the user's input.
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
+   - Identify whether capsule-specific context, references, anti-patterns, or grading criteria are still missing
    - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
    - Score readiness with `node ./scripts/workflow-router-tools.mjs score`
    - If readiness is below threshold, do more research or ask focused questions before writing the plan
@@ -269,6 +272,12 @@ After structure approval:
 1. [Specific step to verify feature]
 2. [Another verification step]
 3. [Edge case to test manually]
+
+## Learning Loop Hooks
+
+- What failure signals should trigger diagnosis during implementation
+- Which learning contexts or lesson artifacts may be updated if a verified miss occurs
+- What workflow improvements should be suggested to the user instead of silently applied
 
 ## Performance Considerations
 

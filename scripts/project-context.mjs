@@ -165,6 +165,7 @@ export const getProjectContext = (options = {}) => {
       intake: path.join(planningDir, 'intake'),
       plans: path.join(agentsRoot, 'thoughts', 'plans'),
       research: path.join(planningDir, 'research'),
+      lessons: path.join(agentsRoot, 'thoughts', 'lessons'),
       sessions: sessionsDir,
       handoffs: path.join(agentsRoot, 'thoughts', 'shared', 'handoffs')
     }

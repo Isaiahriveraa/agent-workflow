@@ -21,6 +21,7 @@ When invoked:
 
 3. **Gather implementation evidence**:
    - Read `~/.agents/contexts/verification.md` before selecting automated checks
+   - Read `~/.agents/contexts/lessons-learned.md` and `~/.agents/contexts/failure-patterns.md` when the work involved failures, retries, or corrections
    ```bash
    # Check recent commits
    git log --oneline -n 20
@@ -86,6 +87,7 @@ For each phase in the plan:
    - Did the implementation honor locked decisions from `~/.agents/contexts/decisions.md`?
    - Did the execution update the current project's `state.md` consistently?
    - If reusable research was produced or consumed, does `~/.agents/contexts/research-index.md` reflect it?
+   - If the implementation hit verified failures or explicit corrections, did it capture a durable lesson with `node ./scripts/lesson-tools.mjs capture ...` or explain why no lesson was promoted?
 
 ### Step 3: Generate Validation Report
 
