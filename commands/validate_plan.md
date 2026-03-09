@@ -87,6 +87,8 @@ For each phase in the plan:
    - Did the implementation honor locked decisions from `~/.agents/contexts/decisions.md`?
    - Did the execution update the current project's `state.md` consistently?
    - If reusable research was produced or consumed, does the current project's `research-index.md` reflect it?
+   - For substantial workflows, did the related research and plan artifacts pass `node ./scripts/workflow-artifact-tools.mjs grade-research` and `node ./scripts/workflow-artifact-tools.mjs grade-plan` before implementation began?
+   - If readiness failed or a new blocker emerged mid-flight, did execution stop and route back through critique/refinement or `/iterate_plan`?
    - If the implementation hit verified failures or explicit corrections, did it capture a durable lesson with `node ./scripts/lesson-tools.mjs capture ...` or explain why no lesson was promoted?
 
 ### Step 3: Generate Validation Report

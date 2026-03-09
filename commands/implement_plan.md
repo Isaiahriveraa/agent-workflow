@@ -13,15 +13,16 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 3. **Read `~/.agents/contexts/decisions.md` before starting work.**
 4. **Load `~/.agents/rules/common/workflow-router.md` before starting work.**
 5. **If the task class calls for a capsule, load it before starting work and honor its critic, grader, and memory-policy files.**
+6. **For substantial plans, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
 
-6. **If no parameter was provided**, ask:
+7. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
    Example: /Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
-7. **Confirm readiness**:
+8. **Confirm readiness**:
    ```
    I've read the plan. It has [N] phases:
    1. [Phase 1 name] — [one-line goal]
@@ -48,6 +49,7 @@ State clearly:
 Before editing:
 - Update the current project's `state.md` with the active workflow, phase name, next step, and related plan path
 - Refuse to begin if the substantial-task workflow gate was bypassed and there is no decision-complete plan
+- For substantial plans, refuse to begin unless parser-backed output proves `plan_ready_for_implementation: true`
 
 Ask the user to confirm before proceeding, unless they've already pre-approved all phases.
 
@@ -130,6 +132,8 @@ If this is a long session and you suspect context drift:
   B) Skip it and continue
   C) Add it as a note for later
   ```
+
+- If newly discovered work maps to `blocking_unknown`, `decision_missing`, `evidence_weak`, `verification_missing`, `dependency_unmodeled`, or `rollout_unspecified`, route it to `/iterate_plan` or full re-planning instead of inventing a new design during implementation.
 
 - After explicit user correction or eval-backed failure, update local learning artifacts with `node ./scripts/lesson-tools.mjs capture ...` when the lesson is durable and evidence-backed.
 

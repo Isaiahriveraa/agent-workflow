@@ -45,6 +45,7 @@ Then wait for the user's input.
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
+   - For substantial requests backed by research, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -158,6 +159,7 @@ After getting initial clarifications:
      - clarity `>= 15/25`
      - codebase coverage `>= 15/25`
    - If the gate fails, keep researching or ask targeted questions instead of drafting implementation steps
+   - For substantial workflows, do not treat prose alone as sufficient: require parser-backed research readiness before finalizing the plan
 
 ### Step 3: Plan Structure Development
 
@@ -294,6 +296,9 @@ After structure approval:
 - Similar implementation: `[file:line]`
 ````
 
+For substantial plans, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-plan`.
+Do not mark the plan ready or hand it to implementation unless parser-backed output proves `plan_ready_for_implementation: true`.
+
 ### Step 5: Review
 
 1. **Present the draft plan location**:
@@ -307,6 +312,7 @@ After structure approval:
    - Any technical details that need adjustment?
    - Missing edge cases or considerations?
    ```
+   For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
    Then end the response with this exact standalone block using the saved plan path:
    ```text
    Next step

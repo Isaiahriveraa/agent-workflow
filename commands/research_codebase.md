@@ -34,6 +34,7 @@ Then wait for the user's research query.
    - Load `~/.agents/rules/common/search-first.md`
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If this research is the first step of a substantial request, capture the normalized intake artifact with `node ./scripts/workflow-router-tools.mjs capture`
+   - For substantial requests, require at least one critique/refinement cycle before handoff
 
 1. **Read any directly mentioned files first:**
    - If the user mentions specific files (tickets, docs, JSON), read them FULLY first
@@ -153,6 +154,9 @@ Then wait for the user's research query.
      [Any areas that need further investigation]
      ```
 
+     For substantial research intended to drive implementation planning, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-research`.
+     Do not hand off to planning unless parser-backed output proves `research_ready_for_planning: true`.
+
 7. **Add GitHub permalinks (if applicable):**
    - Check if inside a git repo with a remote: `git remote get-url origin 2>/dev/null`
    - If a remote exists and commit is pushed, generate GitHub permalinks:
@@ -165,6 +169,7 @@ Then wait for the user's research query.
    - Include key file references for easy navigation
    - State where the research document was saved using the absolute filesystem path
    - If an intake artifact was captured for this workflow, persist it into the current project's working set alongside the selected research artifact
+   - For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [absolute research path]` and refuse the planning handoff if it does not pass
    - If the research artifact is intended to drive implementation planning, end the response with this exact standalone block using the saved artifact path:
      ```text
      Next step

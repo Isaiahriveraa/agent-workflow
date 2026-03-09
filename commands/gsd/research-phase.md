@@ -11,6 +11,8 @@ allowed-tools:
 <objective>
 Research how to implement a phase. Spawns gsd-phase-researcher agent with phase context.
 
+For substantial workflow changes, require critique/refinement and parser-backed research readiness before handing off to planning.
+
 **Note:** This is a standalone research command. For most workflows, use `/gsd:plan-phase` which integrates research automatically.
 
 **Use this command when:**
@@ -145,6 +147,7 @@ Task(
 ## 5. Handle Agent Return
 
 **`## RESEARCH COMPLETE`:** Display summary, offer: Plan phase, Dig deeper, Review full, Done.
+Before offering planning on substantial work, require `node ./scripts/workflow-artifact-tools.mjs grade-research --file [artifact path]` to pass.
 
 **`## CHECKPOINT REACHED`:** Present to user, get response, spawn continuation.
 

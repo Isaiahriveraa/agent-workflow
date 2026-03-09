@@ -38,6 +38,73 @@ const setWorkingSet = (stateContent, lines) =>
     /## Active Artifact Working Set\n[\s\S]*$/m,
     `## Active Artifact Working Set\n${lines.trimEnd()}\n`
   );
+const readyResearchArtifact = `---
+artifact_type: research
+substantial: true
+critique_completed: true
+critique_cycles: 1
+refinement_cycles: 1
+critique_artifacts: ["/tmp/research-critique.md"]
+blocking_unknown_count: 0
+evidence_level: strong
+research_ready_for_planning: true
+related_intake: /tmp/intake.md
+last_validated: 2026-03-09T04:00:00.000Z
+---
+
+# Research Artifact
+
+## Findings
+- Existing workflow routing is shallow.
+
+## Implementation Implications
+- Add parser-backed readiness checks.
+
+## Interfaces and Contracts
+- workflow-router-tools.mjs stays intake-focused.
+
+## Verification Implications
+- Add contract tests and parser tests.
+
+## Critique
+- Initial draft missed fail-closed enforcement.
+
+## Blocker Resolution
+- Resolved the unknown by defining the blocker taxonomy.
+`;
+const weakResearchArtifact = `---
+artifact_type: research
+substantial: true
+critique_completed: true
+critique_cycles: 1
+refinement_cycles: 1
+blocking_unknown_count: 0
+evidence_level: weak
+research_ready_for_planning: true
+related_intake: /tmp/intake.md
+last_validated: 2026-03-09T04:00:00.000Z
+---
+
+# Weak Research
+
+## Findings
+- Existing workflow routing is shallow.
+
+## Implementation Implications
+- Add parser-backed readiness checks.
+
+## Interfaces and Contracts
+- workflow-router-tools.mjs stays intake-focused.
+
+## Verification Implications
+- Add contract tests and parser tests.
+
+## Critique
+- Initial draft missed fail-closed enforcement.
+
+## Blocker Resolution
+- Resolved the unknown by defining the blocker taxonomy.
+`;
 const withSeededArtifacts = (repoRoot, fn) => {
   const seedId = `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
   const intakePath = path.join(repoRoot, '.planning', 'intake', `${seedId}-intake.md`);
@@ -462,4 +529,87 @@ test('artifact working sets remain isolated across two repos', () => {
         fs.rmSync(tmpDir, { recursive: true, force: true });
       }
   });
+});
+
+test('artifact suggestion prefers ready research over a newer non-ready artifact', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-readiness-')), 'ready-beats-newer');
+  const readyPath = path.join(repoRoot, '.planning', 'research', '2026-03-08-ready.md');
+  const weakPath = path.join(repoRoot, '.planning', 'research', '2026-03-09-weak.md');
+
+  fs.mkdirSync(path.dirname(readyPath), { recursive: true });
+  fs.writeFileSync(readyPath, readyResearchArtifact);
+  fs.writeFileSync(weakPath, weakResearchArtifact);
+  const older = new Date('2026-03-08T00:00:00Z');
+  const newer = new Date('2026-03-09T00:00:00Z');
+  fs.utimesSync(readyPath, older, older);
+  fs.utimesSync(weakPath, newer, newer);
+
+  try {
+    const parsed = JSON.parse(execArtifactTool(['suggest'], repoRoot));
+
+    assert.equal(parsed.suggested.research, readyPath);
+    assert.equal(parsed.research, readyPath);
+    assert.equal(parsed.readiness.research.status, 'ready');
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
+});
+
+test('artifact suggestion reports legacy substantial plans as inspectable but blocked for implementation', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-legacy-block-')), 'legacy-block');
+  const legacyPlanPath = path.join(root, 'thoughts', 'plans', `${Date.now()}-legacy-substantial-plan.md`);
+
+  fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
+  fs.writeFileSync(legacyPlanPath, `# Legacy Plan
+
+## Overview
+
+Legacy plan without readiness frontmatter.
+
+## Implementation Approach
+
+- Introduce a parser-backed helper.
+
+## Phase 1
+
+- Add tests and integration hooks.
+
+## Testing Strategy
+
+- Run workflow contract tests.
+`);
+
+  try {
+    const project = runProjectContext(repoRoot);
+    const statePath = project.contextPaths.state;
+    const originalState = readFile(statePath);
+    const seededState = setWorkingSet(originalState, `
+- Last updated: 2026-03-09T00:00:00Z
+- Source: manual
+- Focus: legacy plan block
+
+### Selected By Category
+- intake: none
+- plan: none
+- research: none
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. none
+`);
+
+    fs.writeFileSync(statePath, seededState);
+
+    const parsed = JSON.parse(execArtifactTool(['suggest'], repoRoot));
+
+    assert.equal(parsed.suggested.plan, legacyPlanPath);
+    assert.equal(parsed.plan, legacyPlanPath);
+    assert.equal(parsed.readiness.plan.status, 'legacy_substantial');
+    assert.equal(parsed.readiness.plan.legacySubstantial, true);
+    assert.deepEqual(parsed.readiness.plan.blockedCommands, ['/implement_plan', '/resume-session']);
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    fs.rmSync(legacyPlanPath, { force: true });
+  }
 });

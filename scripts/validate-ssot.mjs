@@ -106,10 +106,10 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule']],
-  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'load it before starting work and honor its critic, grader, and memory-policy files', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture']],
-  ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/lesson-tools.mjs capture']],
-  ['commands/research_codebase.md', ["current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule']],
+  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'scripts/workflow-artifact-tools.mjs grade-plan', 'plan_ready_for_implementation', 'load it before starting work and honor its critic, grader, and memory-policy files', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture']],
+  ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'scripts/lesson-tools.mjs capture']],
+  ['commands/research_codebase.md', ["current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture', 'scripts/workflow-artifact-tools.mjs grade-research', 'research_ready_for_planning']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/pause-session.md', ["current project's `session-index.md`", "current project's `state.md`"]],

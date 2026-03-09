@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ensureProjectContext } from './project-context.mjs';
 import { assertSingleHeading, writeProjectStateSections } from './runtime-state-tools.mjs';
+import { gradePlanArtifact, gradeResearchArtifact } from './workflow-artifact-tools.mjs';
 
 const root = process.env.AGENTS_ROOT
   ? path.resolve(process.env.AGENTS_ROOT)
@@ -93,6 +94,86 @@ const parseOrderedArtifacts = (section) => {
     .filter((line) => /^\d+\.\s+/.test(line))
     .map((line) => line.replace(/^\d+\.\s+/, '').trim())
     .filter((line) => line && line !== 'none');
+};
+
+const safeReadFile = (filePath) => {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+};
+
+const looksSubstantial = (content) => {
+  if (!content) return false;
+  return (
+    /^##\s+Phase\s+\d+/im.test(content) ||
+    /^##\s+Implementation Approach$/im.test(content) ||
+    /^##\s+Detailed Findings$/im.test(content) ||
+    /^##\s+Testing Strategy$/im.test(content)
+  );
+};
+
+const classifyArtifactReadiness = (category, filePath) => {
+  if (!filePath) {
+    return {
+      status: 'missing',
+      ready: false,
+      legacySubstantial: false,
+      blockedCommands: []
+    };
+  }
+
+  if (category !== 'plan' && category !== 'research') {
+    return {
+      status: 'not_applicable',
+      ready: false,
+      legacySubstantial: false,
+      blockedCommands: []
+    };
+  }
+
+  const content = safeReadFile(filePath);
+  if (!content) {
+    return {
+      status: 'unreadable',
+      ready: false,
+      legacySubstantial: false,
+      blockedCommands: []
+    };
+  }
+
+  try {
+    const grade = category === 'plan'
+      ? gradePlanArtifact({ filePath, content })
+      : gradeResearchArtifact({ filePath, content });
+
+    return {
+      status: grade.passes ? 'ready' : 'not_ready',
+      ready: grade.passes,
+      legacySubstantial: false,
+      blockedCommands: grade.passes
+        ? []
+        : category === 'plan'
+          ? ['/implement_plan', '/resume-session']
+          : ['/create-plan'],
+      blockers: grade.blockers,
+      readinessField: grade.readinessField
+    };
+  } catch (error) {
+    const legacySubstantial = looksSubstantial(content);
+    return {
+      status: legacySubstantial ? 'legacy_substantial' : 'legacy_nonready',
+      ready: false,
+      legacySubstantial,
+      blockedCommands: legacySubstantial
+        ? category === 'plan'
+          ? ['/implement_plan', '/resume-session']
+          : ['/create-plan']
+        : [],
+      warning: error.message
+    };
+  }
 };
 
 const readPersistedWorkingSet = () => {
@@ -242,6 +323,14 @@ const scoreFile = (filePath) => {
   return score;
 };
 
+const readinessRank = (category, filePath) => {
+  const readiness = classifyArtifactReadiness(category, filePath);
+  if (readiness.ready) return 3;
+  if (!readiness.legacySubstantial && readiness.status === 'not_ready') return 2;
+  if (readiness.legacySubstantial) return 0;
+  return 1;
+};
+
 const pickLatest = (category) => (
   category === 'plans'
     ? listPlanFiles()[0] ?? null
@@ -251,9 +340,18 @@ const pickLatest = (category) => (
 const pickRelated = (category) => {
   const files = category === 'plans' ? listPlanFiles() : listFiles(categories[category]);
   if (files.length === 0) return null;
+  const readinessCategory = category === 'plans' ? 'plan' : category === 'research' ? 'research' : null;
   return files
-    .map((filePath) => ({ filePath, score: scoreFile(filePath) }))
-    .sort((a, b) => b.score - a.score || (safeStat(b.filePath)?.mtimeMs ?? 0) - (safeStat(a.filePath)?.mtimeMs ?? 0))[0]?.filePath ?? null;
+    .map((filePath) => ({
+      filePath,
+      score: scoreFile(filePath),
+      readiness: readinessCategory ? readinessRank(readinessCategory, filePath) : -1
+    }))
+    .sort((a, b) =>
+      b.readiness - a.readiness ||
+      b.score - a.score ||
+      (safeStat(b.filePath)?.mtimeMs ?? 0) - (safeStat(a.filePath)?.mtimeMs ?? 0)
+    )[0]?.filePath ?? null;
 };
 
 const latestSessionFromIndex = () => {
@@ -312,6 +410,10 @@ const suggest = () => {
     research: workingSet.selected.research,
     session: workingSet.selected.session,
     handoff: workingSet.selected.handoff,
+    readiness: {
+      plan: classifyArtifactReadiness('plan', workingSet.selected.plan),
+      research: classifyArtifactReadiness('research', workingSet.selected.research)
+    },
     active: workingSet,
     suggested
   };
