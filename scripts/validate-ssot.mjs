@@ -106,17 +106,17 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule']],
   ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'load it before starting work and honor its critic, grader, and memory-policy files', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture']],
-  ['commands/validate_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/lesson-tools.mjs capture']],
-  ['commands/research_codebase.md', ['~/.agents/contexts/research-index.md', '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture']],
+  ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/lesson-tools.mjs capture']],
+  ['commands/research_codebase.md', ["current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/pause-session.md', ["current project's `session-index.md`", "current project's `state.md`"]],
-  ['commands/resume-session.md', ["current project's `session-index.md`", "current project's `state.md`", '~/.agents/contexts/research-index.md']],
+  ['commands/resume-session.md', ["current project's `session-index.md`", "current project's `state.md`", "current project's `research-index.md`"]],
   ['commands/project-tooling.md', ['~/.agents/contexts/tooling.md', 'scripts/package-manager-tools.mjs']],
   ['commands/project-verification.md', ['~/.agents/contexts/verification.md', 'scripts/verification-tools.mjs']],
-  ['commands/project-artifacts.md', ["current project's `artifacts.md`", '~/.agents/contexts/research-index.md', 'scripts/artifact-tools.mjs']]
+  ['commands/project-artifacts.md', ["current project's `artifacts.md`", "current project's `research-index.md`", 'scripts/artifact-tools.mjs']]
 ]);
 
 const handoffContracts = new Map([
@@ -136,7 +136,8 @@ const continuityContracts = new Map([
   ['AGENTS.md', ['project-local `.agents/sessions/`', 'thoughts/shared/handoffs/']],
   ['rules/common/artifact-retrieval.md', ['.agents/sessions/', 'thoughts/shared/handoffs/']],
   ['contexts/artifacts.md', ['project-local runtime files', '~/.agents/thoughts/shared/handoffs']],
-  ['contexts/session-index.md', ['project-local lightweight work sessions', 'Shared/global handoffs']],
+  ['contexts/research-index.md', ['shared compatibility document', '[project root]/.agents/contexts/research-index.md']],
+  ['contexts/session-index.md', ['shared compatibility document', '[project root]/.agents/contexts/session-index.md', 'Shared/global handoffs']],
   ['commands/session-start.md', ['ordinary pause/resume continuity', ".agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md"]],
   ['commands/resume-session.md', ['project-local session artifacts', 'shared/global transfer artifact']],
   ['commands/project-artifacts.md', ['handoffs remain shared/global transfer artifacts']]

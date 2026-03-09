@@ -37,8 +37,9 @@ Then wait for the user's input.
 
 0. **Load canonical context before planning:**
    - Read `~/.agents/contexts/decisions.md`
-   - Read `~/.agents/contexts/research-index.md` if prior research exists
-   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's runtime `state.md` when the existing workflow position matters
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+   - Read the current project's runtime `research-index.md` if prior research exists
+   - Read the current project's runtime `state.md` when the existing workflow position matters
    - Read `~/.agents/contexts/failure-patterns.md` and `~/.agents/contexts/lessons-learned.md` when the task class is likely to benefit from prior mistakes
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
@@ -451,4 +452,4 @@ After writing the final plan:
 - Set `## Related Plan` to the plan path you created
 
 If the plan used new or existing research artifacts:
-- Add or update the matching entry in `~/.agents/contexts/research-index.md`
+- Add or update the matching entry in the current project's runtime `research-index.md`

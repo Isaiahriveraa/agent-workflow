@@ -56,6 +56,17 @@ test('global workflow state is a compatibility document with runtime-state point
   assert.match(content, /- handoff: /);
 });
 
+test('global research and session indexes are compatibility documents with runtime pointers', () => {
+  const research = read('contexts/research-index.md');
+  const session = read('contexts/session-index.md');
+
+  assert.match(research, /shared compatibility document/);
+  assert.match(research, /\[project root\]\/\.agents\/contexts\/research-index\.md/);
+  assert.match(session, /shared compatibility document/);
+  assert.match(session, /\[project root\]\/\.agents\/contexts\/session-index\.md/);
+  assert.match(session, /Shared\/global handoffs/);
+});
+
 test('workflow commands reference explicit context files', () => {
   const createPlan = read('commands/create-plan.md');
   const implementPlan = read('commands/implement_plan.md');
@@ -70,7 +81,7 @@ test('workflow commands reference explicit context files', () => {
   const projectArtifacts = read('commands/project-artifacts.md');
 
   assert.match(createPlan, /contexts\/decisions\.md/);
-  assert.match(createPlan, /contexts\/research-index\.md/);
+  assert.match(createPlan, /current project's runtime `research-index\.md`/);
   assert.match(createPlan, /contexts\/failure-patterns\.md/);
   assert.match(createPlan, /contexts\/lessons-learned\.md/);
   assert.match(createPlan, /select and load the relevant capsule/);
@@ -85,20 +96,22 @@ test('workflow commands reference explicit context files', () => {
   assert.match(validatePlan, /current project's `state\.md`/);
   assert.match(validatePlan, /contexts\/lessons-learned\.md/);
   assert.match(validatePlan, /contexts\/failure-patterns\.md/);
+  assert.match(validatePlan, /current project's `research-index\.md`/);
   assert.match(validatePlan, /lesson-tools\.mjs capture/);
   assert.match(optimizePrompt, /Capsule:/);
-  assert.match(research, /contexts\/research-index\.md/);
+  assert.match(research, /current project's `research-index\.md`/);
   assert.match(research, /project-context\.mjs current/);
   assert.match(research, /workflow-router-tools\.mjs capture/);
   assert.match(sessionStart, /current project's `session-index\.md`/);
   assert.match(sessionStart, /ordinary pause\/resume continuity/);
   assert.match(pauseSession, /current project's `session-index\.md`/);
   assert.match(resumeSession, /current project's `session-index\.md`/);
+  assert.match(resumeSession, /current project's `research-index\.md`/);
   assert.match(resumeSession, /project-local session artifacts/);
   assert.match(projectTooling, /contexts\/tooling\.md/);
   assert.match(projectVerification, /contexts\/verification\.md/);
   assert.match(projectArtifacts, /current project's `artifacts\.md`/);
-  assert.match(projectArtifacts, /~\/\.agents\/contexts\/research-index\.md/);
+  assert.match(projectArtifacts, /current project's `research-index\.md`/);
   assert.match(projectArtifacts, /handoffs remain shared\/global transfer artifacts/);
 });
 

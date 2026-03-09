@@ -207,9 +207,10 @@ Avoid:
 ## Context Discipline
 - Load only the minimum relevant files from `contexts/` for the current task.
 - Treat `contexts/decisions.md` as the source of truth for locked decisions and deferred ideas.
-- Treat `contexts/state.md` as the source of truth for resumable workflow progress.
-- Treat `contexts/research-index.md` as the index for reusable research artifacts.
-- Treat `contexts/session-index.md` as the index for resumable work sessions.
+- Treat the current project's `.agents/contexts/state.md` as the live source of truth for resumable workflow progress.
+- Treat the current project's `.agents/contexts/research-index.md` as the live index for reusable research artifacts.
+- Treat the current project's `.agents/contexts/session-index.md` as the live index for resumable work sessions.
+- Treat the tracked `contexts/state.md`, `contexts/research-index.md`, and `contexts/session-index.md` files in this repo as shared compatibility documents, not live per-project runtime files.
 - Treat `contexts/tooling.md` as the source of truth for detected environment tooling defaults.
 - Treat `contexts/verification.md` as the source of truth for available automated checks and preferred verification order.
 - Treat `contexts/artifacts.md` as the source of truth for resumable artifact retrieval priorities.

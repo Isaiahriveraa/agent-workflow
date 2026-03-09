@@ -3,6 +3,8 @@ thoughts/
 .planning/
 sessions/
 projects/**
+/.agents/contexts/
+/.agents/sessions/
 __pycache__/
 *.pyc
 !projects/.gitkeep

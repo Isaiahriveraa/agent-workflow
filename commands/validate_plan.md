@@ -86,7 +86,7 @@ For each phase in the plan:
 5. **Check workflow contract fidelity**:
    - Did the implementation honor locked decisions from `~/.agents/contexts/decisions.md`?
    - Did the execution update the current project's `state.md` consistently?
-   - If reusable research was produced or consumed, does `~/.agents/contexts/research-index.md` reflect it?
+   - If reusable research was produced or consumed, does the current project's `research-index.md` reflect it?
    - If the implementation hit verified failures or explicit corrections, did it capture a durable lesson with `node ./scripts/lesson-tools.mjs capture ...` or explain why no lesson was promoted?
 
 ### Step 3: Generate Validation Report

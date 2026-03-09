@@ -28,8 +28,9 @@ Then wait for the user's research query.
 
 0. **Load canonical context before research:**
    - Read `~/.agents/contexts/decisions.md`
-   - Read `~/.agents/contexts/research-index.md`
-   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` if you need the current runtime workflow position from the project's `state.md`
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+   - Read the current project's `research-index.md`
+   - Read the current project's `state.md` if you need the current runtime workflow position
    - Load `~/.agents/rules/common/search-first.md`
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If this research is the first step of a substantial request, capture the normalized intake artifact with `node ./scripts/workflow-router-tools.mjs capture`
@@ -146,7 +147,7 @@ Then wait for the user's research query.
      - `[project root]/.planning/research/something.md` - Historical decision about X
 
      ## Related Research
-     [Links to other research documents in the current project's `.planning/research/` and entries referenced from `~/.agents/contexts/research-index.md`]
+     [Links to other research documents in the current project's `.planning/research/` and entries referenced from the current project's `.agents/contexts/research-index.md`]
 
      ## Open Questions
      [Any areas that need further investigation]
@@ -170,7 +171,7 @@ Then wait for the user's research query.
 
      /create-plan /absolute/path/to/research.md
      ```
-   - Add or update an entry in `~/.agents/contexts/research-index.md` with the topic, date, source files, artifact path, and summary
+   - Add or update an entry in the current project's `research-index.md` with the topic, date, source files, artifact path, and summary
    - Ask if they have follow-up questions or need clarification
 
 9. **Handle follow-up questions:**

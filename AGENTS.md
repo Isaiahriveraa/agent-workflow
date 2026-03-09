@@ -42,9 +42,10 @@ This file is the canonical source for agent behavior across repos.
 - `contexts/` is the canonical workspace state layer for reusable planning and execution context.
 - Load only the minimum context files needed for the task instead of bulk-loading the whole directory.
 - `contexts/decisions.md` is the source of truth for locked decisions, deferred ideas, and open questions.
-- `contexts/state.md` is the source of truth for resumable workflow state.
-- `contexts/research-index.md` is the index for reusable research artifacts.
-- `contexts/session-index.md` is the index for resumable work sessions.
+- The current project's `.agents/contexts/state.md` is the live source of truth for resumable workflow state.
+- The current project's `.agents/contexts/research-index.md` is the live index for reusable research artifacts.
+- The current project's `.agents/contexts/session-index.md` is the live index for resumable work sessions.
+- The tracked `contexts/state.md`, `contexts/research-index.md`, and `contexts/session-index.md` files in this repo are shared compatibility documents, not live per-project runtime files.
 - `contexts/tooling.md` is the source of truth for detected environment tooling defaults.
 - `contexts/verification.md` is the source of truth for available automated checks and preferred verification order.
 - `contexts/artifacts.md` is the source of truth for resumable artifact retrieval priorities.

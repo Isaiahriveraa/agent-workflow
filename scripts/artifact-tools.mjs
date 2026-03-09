@@ -9,7 +9,7 @@ const root = process.env.AGENTS_ROOT
   : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const project = ensureProjectContext();
 const statePath = project.contextPaths.state;
-const researchIndexPath = path.join(root, 'contexts', 'research-index.md');
+const researchIndexPath = project.contextPaths.researchIndex;
 const repoLocalArtifactRoots = {
   intake: project.thoughtPaths.intake,
   research: project.thoughtPaths.research
