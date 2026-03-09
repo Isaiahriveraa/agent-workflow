@@ -124,3 +124,63 @@ test('lesson capture requires an absolute source artifact path', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('lesson queue persists a pending item and flush processes it', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
+  const repoRoot = createRepo(tmpDir, 'queue');
+  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'queued-source.md');
+
+  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
+  fs.writeFileSync(sourceArtifact, '# Queued Source\n');
+
+  const originalLessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
+  const originalPatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
+  const originalTaste = fs.readFileSync(path.join(root, 'contexts', 'user-taste.md'), 'utf8');
+
+  try {
+    const queued = JSON.parse(execLessonTool([
+      'queue',
+      '--task-class', 'api-workflow',
+      '--trigger', 'critic rejection',
+      '--failure-class', 'edge-case miss',
+      '--diagnosis', 'The contract missed an error-path edge case.',
+      '--rule', 'Queue reusable API misses for automatic writeback after the run.',
+      '--fix', 'Add the missing branch and test before retrying.',
+      '--source-artifact', sourceArtifact,
+      '--confidence', 'medium'
+    ], repoRoot));
+
+    assert.equal(queued.queued, true);
+    assert.equal(fs.existsSync(queued.queuePath), true);
+
+    const flushed = JSON.parse(execLessonTool(['flush'], repoRoot));
+    assert.equal(flushed.processed, 1);
+    assert.equal(flushed.failed, 0);
+    assert.equal(fs.existsSync(queued.queuePath), false);
+
+    const lessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
+    const failurePatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
+
+    assert.match(lessons, /api-workflow \| critic rejection/);
+    assert.match(failurePatterns, /edge-case miss \| trigger: critic rejection/);
+  } finally {
+    fs.writeFileSync(path.join(root, 'contexts', 'lessons-learned.md'), originalLessons);
+    fs.writeFileSync(path.join(root, 'contexts', 'failure-patterns.md'), originalPatterns);
+    fs.writeFileSync(path.join(root, 'contexts', 'user-taste.md'), originalTaste);
+
+    const lessonsDir = path.join(root, 'thoughts', 'lessons');
+    if (fs.existsSync(lessonsDir)) {
+      for (const entry of fs.readdirSync(lessonsDir)) {
+        if (entry.includes('api-workflow-edge-case-miss')) {
+          fs.rmSync(path.join(lessonsDir, entry), { force: true });
+        }
+      }
+      const queuePath = path.join(lessonsDir, 'queue');
+      if (fs.existsSync(queuePath)) {
+        fs.rmSync(queuePath, { recursive: true, force: true });
+      }
+    }
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});

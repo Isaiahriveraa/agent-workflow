@@ -63,7 +63,9 @@ const requiredFiles = [
   'adapters/openclaw/templates/USER.md',
   'adapters/openclaw/templates/TOOLS.md',
   'hooks/gsd-check-update.js',
+  'hooks/gsd-stop-lesson-capture.js',
   'hooks/gsd-statusline.js',
+  'adapters/claude-code/hooks/gsd-stop-lesson-capture.js',
   'commands/session-start.md',
   'commands/session-status.md',
   'commands/pause-session.md',
@@ -376,6 +378,27 @@ if (fs.existsSync(manifestPath)) {
 
       if (claudeMdFlag !== '1') {
         console.error('Claude settings must set env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD to "1"');
+        hasError = true;
+      }
+
+      const stopHooks = Array.isArray(settings.hooks?.Stop) ? settings.hooks.Stop : [];
+      const subagentStopHooks = Array.isArray(settings.hooks?.SubagentStop) ? settings.hooks.SubagentStop : [];
+      const hasStopHook = stopHooks.some((matcher) =>
+        Array.isArray(matcher.hooks) &&
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.js')}"`)
+      );
+      const hasSubagentStopHook = subagentStopHooks.some((matcher) =>
+        Array.isArray(matcher.hooks) &&
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.js')}"`)
+      );
+
+      if (!hasStopHook) {
+        console.error('Claude settings missing Stop hook for gsd-stop-lesson-capture.js');
+        hasError = true;
+      }
+
+      if (!hasSubagentStopHook) {
+        console.error('Claude settings missing SubagentStop hook for gsd-stop-lesson-capture.js');
         hasError = true;
       }
     } catch (error) {

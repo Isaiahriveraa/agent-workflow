@@ -14,6 +14,7 @@ const contexts = {
   failurePatterns: path.join(root, 'contexts', 'failure-patterns.md'),
   lessonsLearned: path.join(root, 'contexts', 'lessons-learned.md')
 };
+const queueDir = path.join(project.thoughtPaths.lessons, 'queue');
 
 const parseArgs = (args) => {
   const parsed = {};
@@ -134,7 +135,7 @@ const writeLessonArtifact = (payload) => {
   return { artifactPath, iso };
 };
 
-const captureLesson = (args) => {
+const normalizeCapturePayload = (args) => {
   const taskClass = requiredArg(args, 'task-class');
   const trigger = requiredArg(args, 'trigger');
   const failureClass = requiredArg(args, 'failure-class');
@@ -152,7 +153,7 @@ const captureLesson = (args) => {
     throw new Error('capture requires --source-artifact to be an absolute path');
   }
 
-  const payload = {
+  return {
     taskClass,
     trigger,
     failureClass,
@@ -162,9 +163,26 @@ const captureLesson = (args) => {
     sourceArtifact,
     confidence,
     systemic,
-    suggestion
+    suggestion,
+    preferenceKind,
+    preference
   };
+};
 
+const applyCapturePayload = (payload) => {
+  const {
+    taskClass,
+    trigger,
+    failureClass,
+    diagnosis,
+    rule,
+    fix,
+    confidence,
+    systemic,
+    suggestion,
+    preferenceKind,
+    preference
+  } = payload;
   const { artifactPath, iso } = writeLessonArtifact(payload);
   const summary = `[${iso.slice(0, 10)}] ${taskClass} | ${trigger} | ${rule} | confidence: ${confidence} | source: ${artifactPath}`;
   const failureEntry = `[${iso.slice(0, 10)}] ${failureClass} | trigger: ${trigger} | diagnosis: ${diagnosis} | prevention: ${rule}`;
@@ -237,6 +255,74 @@ const captureLesson = (args) => {
   };
 };
 
+const captureLesson = (args) => applyCapturePayload(normalizeCapturePayload(args));
+
+const queueLesson = (args) => {
+  const payload = normalizeCapturePayload(args);
+  const iso = new Date().toISOString();
+  const stamp = iso.replace(/[:.]/g, '-');
+  const slug = slugify(`${payload.taskClass}-${payload.failureClass}-${payload.rule}`);
+  const queuePath = path.join(queueDir, `${stamp}-${slug}.json`);
+
+  fs.mkdirSync(queueDir, { recursive: true });
+  fs.writeFileSync(queuePath, JSON.stringify({ ...payload, queuedAt: iso }, null, 2));
+
+  return {
+    queued: true,
+    queuePath,
+    taskClass: payload.taskClass,
+    failureClass: payload.failureClass
+  };
+};
+
+const flushQueue = () => {
+  if (!fs.existsSync(queueDir)) {
+    return {
+      queueDir,
+      processed: 0,
+      failed: 0,
+      results: []
+    };
+  }
+
+  const queueEntries = fs.readdirSync(queueDir)
+    .filter((entry) => entry.endsWith('.json'))
+    .sort();
+  const results = [];
+  let processed = 0;
+  let failed = 0;
+
+  for (const entry of queueEntries) {
+    const queuePath = path.join(queueDir, entry);
+
+    try {
+      const payload = JSON.parse(fs.readFileSync(queuePath, 'utf8'));
+      const capture = applyCapturePayload(payload);
+      fs.rmSync(queuePath, { force: true });
+      processed += 1;
+      results.push({
+        queuePath,
+        status: 'processed',
+        artifactPath: capture.artifactPath
+      });
+    } catch (error) {
+      failed += 1;
+      results.push({
+        queuePath,
+        status: 'failed',
+        error: error.message
+      });
+    }
+  }
+
+  return {
+    queueDir,
+    processed,
+    failed,
+    results
+  };
+};
+
 if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta.url) === process.argv[1]) {
   const command = process.argv[2];
   const args = parseArgs(process.argv.slice(3));
@@ -246,8 +332,14 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
       case 'capture':
         console.log(JSON.stringify(captureLesson(args), null, 2));
         break;
+      case 'queue':
+        console.log(JSON.stringify(queueLesson(args), null, 2));
+        break;
+      case 'flush':
+        console.log(JSON.stringify(flushQueue(), null, 2));
+        break;
       default:
-        console.error('Usage: node scripts/lesson-tools.mjs capture --task-class <value> --trigger <value> --failure-class <value> --diagnosis <value> --rule <value> --fix <value> --source-artifact <absolute path> [--confidence low|medium|high] [--systemic true|false] [--suggestion <text>] [--preference-kind preferred|disliked --preference <text>]');
+        console.error('Usage: node scripts/lesson-tools.mjs <capture|queue|flush> [--task-class <value> --trigger <value> --failure-class <value> --diagnosis <value> --rule <value> --fix <value> --source-artifact <absolute path> [--confidence low|medium|high] [--systemic true|false] [--suggestion <text>] [--preference-kind preferred|disliked --preference <text>]]');
         process.exitCode = 1;
     }
   } catch (error) {

@@ -349,7 +349,9 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   assert.deepEqual(validatedSettings.required_fields, [
     'additionalDirectories includes ~/.agents',
     'permissions.allow includes Read(~/.agents/**)',
-    'env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1'
+    'env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1',
+    'hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.js',
+    'hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.js'
   ]);
   assert.ok(settings.additionalDirectories.includes('/Users/isaiahrivera/.agents'));
   assert.ok(settings.permissions.allow.includes('Read(/Users/isaiahrivera/.agents/**)'));
@@ -357,6 +359,14 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   assert.equal(
     settings.hooks.SessionStart[0].hooks[0].command,
     'node "/Users/isaiahrivera/.claude/hooks/gsd-check-update.js"'
+  );
+  assert.equal(
+    settings.hooks.Stop[0].hooks[0].command,
+    'node "/Users/isaiahrivera/.claude/hooks/gsd-stop-lesson-capture.js"'
+  );
+  assert.equal(
+    settings.hooks.SubagentStop[0].hooks[0].command,
+    'node "/Users/isaiahrivera/.claude/hooks/gsd-stop-lesson-capture.js"'
   );
   assert.equal(
     settings.statusLine.command,
