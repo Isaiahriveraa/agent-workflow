@@ -1,35 +1,48 @@
 # Agents Workflow Hub
 
-This repo is the shareable starter for the workflow system: prompts, commands, rules, skills, adapters, scripts, and tests live here. Personal runtime state does not.
+This repo is the shareable starter for the workflow system. Reusable policy, prompts, commands, adapters, skills, capsules, scripts, and tests live here. Machine-local secrets and runtime state do not.
 
 ## What Gets Shared
-- `prompts/`, `commands/`, `rules/`, `skills/`, `agents/`, `adapters/`
-- `scripts/`, `tests/`, `get-shit-done/`
-- starter `contexts/*.md`
+- `prompts/`, `commands/`, `rules/`, `agents/`, `skills/`, `adapters/`, `hooks/`
+- `capsules/` for task-class operating packs
+- `contexts/` for shared starter context and canonical workflow metadata
+- `scripts/`, `tests/`, `manifest.json`, and `sync.sh`
 - onboarding and sharing docs
 
 ## What Stays Local
-- `.planning/`
-- `sessions/`
-- `thoughts/`
-- `projects/`
-- session checkpoints, handoffs, live plans, live research, and per-project runtime state
+- Root secrets and caches: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `node_modules/`
+- Repo-local scratch/runtime: `.planning/`, `projects/`, and `thoughts/`
+- Per-project runtime created inside a target repo:
+  - `[project]/.planning/`
+  - `[project]/.agents/contexts/`
+  - `[project]/.agents/sessions/`
 
-`.planning/`, `sessions/`, `thoughts/`, and `projects/` are gitignored. The repo ships only the reusable workflow and starter context documents.
+The public repo is intended to be inspectable. Credentials, databases, handoffs, live plans, live research, and active project runtime state are not.
 
 ## First-Time Setup
-1. Clone the repo.
-2. Run `npm run init:local-state`.
-3. Run `npm test` to verify the install.
-4. Start using the workflow; runtime state will be created locally under `.planning/`, `sessions/`, `thoughts/`, and `projects/`.
+1. Clone the repo into `~/.agents` if you want the default path assumptions used throughout the hub.
+2. Run `npm install`.
+3. Run `npm run init:local-state`.
+4. Run `npm run validate:ssot`.
+5. Run `npm test`.
 
-## Safe Public Export
-If you want to publish a clean public version without carrying this repo's old history:
+`npm run init:local-state` bootstraps the local directories this repo expects for plans, research, and handoffs. Project-specific runtime files are created later from the target project via `node ~/.agents/scripts/project-context.mjs current`.
+
+## Public Release Checklist
+1. Confirm `git ls-files '.env*'` only shows `.env.example`.
+2. Confirm `git ls-files 'memory.db' '.agents-memory/**'` returns nothing.
+3. Review `git status --short` and make sure ignored runtime files were not force-added.
+4. Run `npm run validate:ssot`.
+5. Run `npm test`.
+
+## Export A Clean Public Snapshot
+If you want a fresh public repo without carrying older git history:
 
 1. Finish the cleanup on your working branch.
 2. Run `npm run export:public -- --dest ../agents-workflow-hub-public --init-git`.
-3. `cd` into the exported directory.
-4. Review the contents, commit there, and push that directory as a new GitHub repo.
+3. Review the exported directory before publishing it.
 
-## Sharing Rule
-Before pushing changes, check `git status` and confirm nothing under ignored runtime directories was force-added. See `SHARING.md` for the exact sharing model.
+The export script copies tracked files only. Ignored local files such as `.env`, `memory.db`, `.agents-memory/`, and project runtime state are not included.
+
+## Sharing Model
+See `SHARING.md` for the exact split between tracked workflow assets and local-only runtime surfaces.

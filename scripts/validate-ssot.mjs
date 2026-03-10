@@ -51,7 +51,6 @@ const requiredFiles = [
   'capsules/api-workflow/critic.md',
   'capsules/api-workflow/grader.md',
   'capsules/api-workflow/memory-policy.md',
-  'thoughts/lessons/README.md',
   'adapters/claude-code/CLAUDE.md',
   'adapters/claude-code/README.md',
   'adapters/codex-cli/README.md',

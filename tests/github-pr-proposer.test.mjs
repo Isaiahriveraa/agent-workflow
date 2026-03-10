@@ -6,6 +6,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import os from 'node:os';
 
 const root = path.resolve(new URL('..', import.meta.url).pathname);
+const exampleRepo = 'example-owner/example-repo';
+const exampleRepoSlug = 'example-owner-example-repo';
 
 const run = (script, args = [], options = {}) =>
   execFileSync('node', [script, ...args], {
@@ -61,26 +63,26 @@ test('artifact helper resolves canonical research, plan, and handoff paths', () 
   withTempGithubPrProposerRoots((env) => {
     const research = JSON.parse(run('scripts/github-pr-proposer/artifacts.mjs', [
       'resolve-research',
-      '--repo', 'Isaiahriveraa/Guru',
+      '--repo', exampleRepo,
       '--page-id', '311da0f2-ab8c-8089-b40b-fcae833befa8'
     ], { env }));
     const plan = JSON.parse(run('scripts/github-pr-proposer/artifacts.mjs', [
       'resolve-plan',
-      '--repo', 'Isaiahriveraa/Guru',
+      '--repo', exampleRepo,
       '--page-id', '311da0f2-ab8c-8089-b40b-fcae833befa8'
     ], { env }));
     const handoff = JSON.parse(run('scripts/github-pr-proposer/artifacts.mjs', [
       'resolve-handoff',
-      '--repo', 'Isaiahriveraa/Guru',
+      '--repo', exampleRepo,
       '--page-id', '311da0f2-ab8c-8089-b40b-fcae833befa8'
     ], { env }));
 
     assert.equal(research.ok, true);
-    assert.match(research.path, /\/thoughts\/research\/github-pr-proposer\/isaiahriveraa-guru\/311da0f2-ab8c-8089-b40b-fcae833befa8\.md$/);
+    assert.match(research.path, new RegExp(`/thoughts/research/github-pr-proposer/${exampleRepoSlug}/311da0f2-ab8c-8089-b40b-fcae833befa8\\.md$`));
     assert.equal(plan.ok, true);
-    assert.match(plan.path, /\/thoughts\/plans\/github-pr-proposer\/isaiahriveraa-guru\/311da0f2-ab8c-8089-b40b-fcae833befa8\.md$/);
+    assert.match(plan.path, new RegExp(`/thoughts/plans/github-pr-proposer/${exampleRepoSlug}/311da0f2-ab8c-8089-b40b-fcae833befa8\\.md$`));
     assert.equal(handoff.ok, true);
-    assert.match(handoff.path, /\/thoughts\/shared\/handoffs\/github-pr-proposer\/isaiahriveraa-guru\/311da0f2-ab8c-8089-b40b-fcae833befa8\.md$/);
+    assert.match(handoff.path, new RegExp(`/thoughts/shared/handoffs/github-pr-proposer/${exampleRepoSlug}/311da0f2-ab8c-8089-b40b-fcae833befa8\\.md$`));
   });
 });
 
@@ -114,17 +116,17 @@ test('artifact helper resolves openclaw-local research, plan, and handoff paths'
     };
     const research = JSON.parse(run('scripts/github-pr-proposer/artifacts.mjs', [
       'resolve-research',
-      '--repo', 'Isaiahriveraa/Guru',
+      '--repo', exampleRepo,
       '--page-id', '311da0f2-ab8c-8089-b40b-fcae833befa8'
     ], { env: localEnv }));
     const plan = JSON.parse(run('scripts/github-pr-proposer/artifacts.mjs', [
       'resolve-plan',
-      '--repo', 'Isaiahriveraa/Guru',
+      '--repo', exampleRepo,
       '--page-id', '311da0f2-ab8c-8089-b40b-fcae833befa8'
     ], { env: localEnv }));
     const handoff = JSON.parse(run('scripts/github-pr-proposer/artifacts.mjs', [
       'resolve-handoff',
-      '--repo', 'Isaiahriveraa/Guru',
+      '--repo', exampleRepo,
       '--page-id', '311da0f2-ab8c-8089-b40b-fcae833befa8'
     ], { env: localEnv }));
 
@@ -175,14 +177,14 @@ test('artifact helper validates openclaw-local namespaced paths', () => {
 test('github-read normalize-repo validates repo shape without network access', () => {
   const parsed = JSON.parse(run('scripts/github-pr-proposer/github-read.mjs', [
     'normalize-repo',
-    '--repo', 'Isaiahriveraa/Guru'
+    '--repo', exampleRepo
   ]));
 
   assert.equal(parsed.ok, true);
   assert.deepEqual(parsed.result, {
-    owner: 'Isaiahriveraa',
-    name: 'Guru',
-    slug: 'Isaiahriveraa/Guru'
+    owner: 'example-owner',
+    name: 'example-repo',
+    slug: exampleRepo
   });
 });
 
@@ -204,7 +206,7 @@ test('github-write helper validates required flags before any network call', () 
   const result = spawnSync('node', [
     'scripts/github-pr-proposer/github-write.mjs',
     'create-pr',
-    '--repo', 'Isaiahriveraa/Guru',
+    '--repo', exampleRepo,
     '--title', 'Test PR'
   ], {
     cwd: root,

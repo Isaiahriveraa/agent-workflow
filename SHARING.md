@@ -1,33 +1,49 @@
 # Sharing Model
 
-This repo is split into two layers.
+This repo is split into two layers: tracked workflow assets and local runtime state.
 
-## Shared Layer
-- Reusable workflow assets: prompts, commands, rules, skills, adapters, agents
-- Helper scripts and tests
-- Starter global contexts under `contexts/`
-- Onboarding and setup docs
+## Tracked Shared Layer
+- Reusable workflow assets: `prompts/`, `commands/`, `rules/`, `skills/`, `agents/`, `adapters/`, `hooks/`
+- Task-class operating packs under `capsules/`
+- Helper scripts, tests, `manifest.json`, `package.json`, `sync.sh`
+- Shared contexts under `contexts/`
+- Onboarding and setup docs such as `README.md`, `SHARING.md`, and `.env.example`
 
 ## Local Runtime Layer
-- `.planning/` for repo-local intake, plan, and research artifacts
-- `sessions/` for repo-local lightweight session artifacts
-- `thoughts/` for plans, research, handoffs, and session artifacts
-- `projects/` for per-project runtime `state.md`, `session-index.md`, and `artifacts.md`
+- Root-local files ignored in this repo:
+  - `.env`
+  - `.env.local`
+  - `.agents-memory/`
+  - `memory.db`
+  - `.planning/`
+  - `thoughts/`
+  - `projects/`
+  - `node_modules/`
+- Per-project runtime generated inside the target repo:
+  - `[project]/.planning/`
+  - `[project]/.agents/contexts/`
+  - `[project]/.agents/sessions/`
 
-The local runtime layer is intentionally gitignored so a clone starts clean.
+The local runtime layer is intentionally untracked so a clone starts clean and so public publication does not expose credentials or active project state.
 
 ## Classification
-- Share as-is: `prompts/`, `commands/`, `rules/`, `skills/`, `agents/`, `adapters/`, `hooks/`, `scripts/`, `tests/`, `get-shit-done/`, `manifest.json`, `package.json`
-- Replace with starter content: `contexts/decisions.md`, `contexts/state.md`, `contexts/research-index.md`, `contexts/session-index.md`, `contexts/tooling.md`, `contexts/verification.md`, `contexts/artifacts.md`, `contexts/ui-ux.md`
-- Keep local only: `.planning/`, `sessions/`, `thoughts/`, `projects/`
-- Generate on first setup: local runtime directories created by `npm run init:local-state` and per-project context files created by `node ./scripts/project-context.mjs current`
+- Share as-is: `prompts/`, `commands/`, `rules/`, `skills/`, `agents/`, `adapters/`, `hooks/`, `capsules/`, `scripts/`, `tests/`, `get-shit-done/`, `manifest.json`, `package.json`, `package-lock.json`
+- Keep tracked but generic: `contexts/*.md` and `.env.example`
+- Keep local only: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `.planning/`, `thoughts/`, `projects/`, and per-project `.agents/` runtime files
+- Generate on first setup: repo-local starter directories from `npm run init:local-state` and per-project context files from `node ~/.agents/scripts/project-context.mjs current`
 
 ## Safety Checklist
-- Do not commit files under `.planning/`, `sessions/`, `thoughts/`, or `projects/`
-- Keep tracked `contexts/` generic and free of personal history or absolute machine-specific paths
-- Prefer repo-relative or `~/.agents` references in docs; do not use a personal home-directory path in shareable files
+- Do not commit `.env`, `.env.local`, `memory.db`, `.agents-memory/`, or force-added files from ignored runtime paths
+- Keep tracked `contexts/` generic and free of live operator history
+- Keep docs and examples on `~/.agents` or repo-relative paths, not personal home-directory paths
+- Review `git status --ignored` if your working copy has local `thoughts/` artifacts you do not want lingering on disk
 
 ## Safest Publish Path
 - Do not push the full existing git history if earlier commits may contain private runtime state
 - Export a fresh public snapshot with `npm run export:public -- --dest ../agents-workflow-hub-public --init-git`
 - Publish the exported directory as a new repo or from a fresh root commit
+
+## Verification Before Publishing
+Run the repo's actual checks:
+1. `npm run validate:ssot`
+2. `npm test`
