@@ -175,14 +175,15 @@ For substantial research intended to drive implementation planning:
 
 3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
    - Read the critique document fully
-   - Revise the research document to address all blocking issues (re-run sub-agents if needed)
+   - Spawn `critique-responder` to revise the research document against the critique findings (re-run research sub-agents if needed)
    - Update frontmatter: increment `critique_cycles`, add critique path to `critique_artifacts` (single-line array only)
    - Re-spawn the critic (max 2 revision cycles total — 3 runs)
    - If still blocking after 2 revisions: surface issues to the user; do NOT hand off to planning
 
 4. **If `## CRITIQUE: WARNINGS ONLY` or `## CRITIQUE: ADVISORY`:**
-   - Address material warnings
+   - Use `critique-responder` for any material warning-driven revisions
    - Update frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Before handoff, use `artifact-gatekeeper` when readiness is ambiguous or the critique/grade signals conflict
    - Proceed to `grade-research`
 
 5. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**

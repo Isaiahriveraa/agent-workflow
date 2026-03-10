@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import { MemoryClient } from 'mem0ai';
 
 import {
@@ -9,10 +10,11 @@ import {
   MEMORY_KINDS,
   MEMORY_WORKFLOW_STAGES,
   SHARED_SCOPE_ALLOWED_KINDS,
-  SUPPORTED_MEM0_OSS_PROFILE,
+  SUPPORTED_MEM0_LANCEDB_PROFILE,
   SUPPORTED_MEM0_PROFILE,
   normalizeMemoryRecord
 } from './memory-sidecar-contract.mjs';
+import { LanceDbLangChainStore } from './memory-lancedb-store.mjs';
 import { getProjectContext } from './project-context.mjs';
 
 const require = createRequire(import.meta.url);
@@ -31,46 +33,84 @@ export const MEMORY_ENV_KEYS = Object.freeze({
   organizationId: 'AGENTS_MEMORY_ORGANIZATION_ID',
   projectId: 'AGENTS_MEMORY_PROJECT_ID',
   sharedUserId: 'AGENTS_MEMORY_SHARED_USER_ID',
-  ossLlmBaseUrl: 'AGENTS_MEMORY_OSS_LLM_BASE_URL',
-  ossLlmApiKey: 'AGENTS_MEMORY_OSS_LLM_API_KEY',
-  ossLlmModel: 'AGENTS_MEMORY_OSS_LLM_MODEL',
-  ossEmbedderBaseUrl: 'AGENTS_MEMORY_OSS_EMBEDDER_BASE_URL',
-  ossEmbedderApiKey: 'AGENTS_MEMORY_OSS_EMBEDDER_API_KEY',
-  ossVectorstoreUrl: 'AGENTS_MEMORY_OSS_VECTORSTORE_URL',
-  ossVectorstoreCollection: 'AGENTS_MEMORY_OSS_VECTORSTORE_COLLECTION',
-  ossHistoryDbPath: 'AGENTS_MEMORY_OSS_HISTORY_DB_PATH',
+  localLlmBaseUrl: 'AGENTS_MEMORY_OSS_LLM_BASE_URL',
+  localLlmApiKey: 'AGENTS_MEMORY_OSS_LLM_API_KEY',
+  localLlmModel: 'AGENTS_MEMORY_OSS_LLM_MODEL',
+  localEmbedderBaseUrl: 'AGENTS_MEMORY_OSS_EMBEDDER_BASE_URL',
+  localEmbedderApiKey: 'AGENTS_MEMORY_OSS_EMBEDDER_API_KEY',
+  localHistoryDbPath: 'AGENTS_MEMORY_OSS_HISTORY_DB_PATH',
+  lanceDbPath: 'AGENTS_MEMORY_LANCEDB_PATH',
+  lanceDbTableBase: 'AGENTS_MEMORY_LANCEDB_TABLE_BASE',
   projectIdOverride: 'AGENTS_MEMORY_PROJECT_ID_OVERRIDE'
 });
 
-const resolveBackendProfile = (backend) =>
-  backend === 'mem0-oss' ? SUPPORTED_MEM0_OSS_PROFILE : SUPPORTED_MEM0_PROFILE;
+const resolveBackendProfile = (backend) => {
+  if (backend === 'mem0-lancedb' || backend === 'mem0-oss') {
+    return SUPPORTED_MEM0_LANCEDB_PROFILE;
+  }
+
+  return SUPPORTED_MEM0_PROFILE;
+};
+
+const resolveLanceDbPath = (env) => {
+  const explicit = env[MEMORY_ENV_KEYS.lanceDbPath]?.trim();
+  if (explicit) {
+    return {
+      path: explicit,
+      resolution: 'explicit-env'
+    };
+  }
+
+  const historyDbPath = env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim();
+  if (!historyDbPath) {
+    return {
+      path: null,
+      resolution: 'missing'
+    };
+  }
+
+  return {
+    path: path.join(path.dirname(historyDbPath), 'lancedb'),
+    resolution: 'derived-from-history-db'
+  };
+};
 
 const buildReadiness = ({ backend, env }) => {
   if (backend === 'mem0-oss') {
+    return {
+      backend: 'mem0-oss',
+      overall: false,
+      deprecated: true,
+      projectIdentityOverridePresent: Boolean(env[MEMORY_ENV_KEYS.projectIdOverride]?.trim())
+    };
+  }
+
+  if (backend === 'mem0-lancedb') {
     const embedder = {
-      apiKeyPresent: Boolean(env[MEMORY_ENV_KEYS.ossEmbedderApiKey]?.trim()),
-      baseUrlPresent: Boolean(env[MEMORY_ENV_KEYS.ossEmbedderBaseUrl]?.trim())
+      apiKeyPresent: Boolean(env[MEMORY_ENV_KEYS.localEmbedderApiKey]?.trim()),
+      baseUrlPresent: Boolean(env[MEMORY_ENV_KEYS.localEmbedderBaseUrl]?.trim())
     };
     const llm = {
-      apiKeyPresent: Boolean(env[MEMORY_ENV_KEYS.ossLlmApiKey]?.trim()),
-      modelPresent: Boolean(env[MEMORY_ENV_KEYS.ossLlmModel]?.trim()),
-      baseUrlPresent: Boolean(env[MEMORY_ENV_KEYS.ossLlmBaseUrl]?.trim())
+      apiKeyPresent: Boolean(env[MEMORY_ENV_KEYS.localLlmApiKey]?.trim()),
+      modelPresent: Boolean(env[MEMORY_ENV_KEYS.localLlmModel]?.trim()),
+      baseUrlPresent: Boolean(env[MEMORY_ENV_KEYS.localLlmBaseUrl]?.trim())
     };
-    const vectorStore = {
-      urlPresent: Boolean(env[MEMORY_ENV_KEYS.ossVectorstoreUrl]?.trim()),
-      collection: env[MEMORY_ENV_KEYS.ossVectorstoreCollection]?.trim() || SUPPORTED_MEM0_OSS_PROFILE.storage.collectionName
-    };
+    const lanceDb = resolveLanceDbPath(env);
     const historyDb = {
-      pathPresent: Boolean(env[MEMORY_ENV_KEYS.ossHistoryDbPath]?.trim()),
-      resolution: env[MEMORY_ENV_KEYS.ossHistoryDbPath]?.trim() ? 'explicit-env' : 'missing'
+      pathPresent: Boolean(env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim()),
+      resolution: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() ? 'explicit-env' : 'missing'
     };
 
     return {
-      backend: 'mem0-oss',
-      overall: embedder.apiKeyPresent && llm.apiKeyPresent && llm.modelPresent && vectorStore.urlPresent && historyDb.pathPresent,
+      backend: 'mem0-lancedb',
+      overall: embedder.apiKeyPresent && llm.apiKeyPresent && llm.modelPresent && Boolean(lanceDb.path) && historyDb.pathPresent,
       embedder,
       llm,
-      vectorStore,
+      lanceDb: {
+        pathPresent: Boolean(lanceDb.path),
+        pathResolution: lanceDb.resolution,
+        tableBase: env[MEMORY_ENV_KEYS.lanceDbTableBase]?.trim() || SUPPORTED_MEM0_LANCEDB_PROFILE.storage.tableBaseName
+      },
       historyDb,
       projectIdentityOverridePresent: Boolean(env[MEMORY_ENV_KEYS.projectIdOverride]?.trim())
     };
@@ -105,26 +145,25 @@ export const resolveMemorySidecarConfig = ({ env = process.env } = {}) => {
       organizationId: env[MEMORY_ENV_KEYS.organizationId]?.trim() || null,
       projectId: env[MEMORY_ENV_KEYS.projectId]?.trim() || null
     },
-    mem0Oss: {
+    localMemory: {
       llm: {
-        baseUrl: env[MEMORY_ENV_KEYS.ossLlmBaseUrl]?.trim() || null,
-        apiKeyPresent: readiness.backend === 'mem0-oss' ? readiness.llm.apiKeyPresent : false,
-        model: env[MEMORY_ENV_KEYS.ossLlmModel]?.trim() || null
+        baseUrl: env[MEMORY_ENV_KEYS.localLlmBaseUrl]?.trim() || null,
+        apiKeyPresent: readiness.backend === 'mem0-lancedb' ? readiness.llm.apiKeyPresent : false,
+        model: env[MEMORY_ENV_KEYS.localLlmModel]?.trim() || null
       },
       embedder: {
-        baseUrl: env[MEMORY_ENV_KEYS.ossEmbedderBaseUrl]?.trim() || null,
-        apiKeyPresent: readiness.backend === 'mem0-oss' ? readiness.embedder.apiKeyPresent : false,
-        model: SUPPORTED_MEM0_OSS_PROFILE.storage.embeddingModel
+        baseUrl: env[MEMORY_ENV_KEYS.localEmbedderBaseUrl]?.trim() || null,
+        apiKeyPresent: readiness.backend === 'mem0-lancedb' ? readiness.embedder.apiKeyPresent : false,
+        model: SUPPORTED_MEM0_LANCEDB_PROFILE.storage.embeddingModel
       },
-      vectorStore: {
-        url: env[MEMORY_ENV_KEYS.ossVectorstoreUrl]?.trim() || null,
-        collection: readiness.backend === 'mem0-oss'
-          ? readiness.vectorStore.collection
-          : SUPPORTED_MEM0_OSS_PROFILE.storage.collectionName
+      lanceDb: {
+        path: resolveLanceDbPath(env).path,
+        pathResolution: resolveLanceDbPath(env).resolution,
+        tableBase: env[MEMORY_ENV_KEYS.lanceDbTableBase]?.trim() || SUPPORTED_MEM0_LANCEDB_PROFILE.storage.tableBaseName
       },
       historyDb: {
-        path: env[MEMORY_ENV_KEYS.ossHistoryDbPath]?.trim() || null,
-        resolution: readiness.backend === 'mem0-oss' ? readiness.historyDb.resolution : 'unconfigured'
+        path: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() || null,
+        resolution: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() ? 'explicit-env' : 'missing'
       }
     },
     scope: {
@@ -146,14 +185,19 @@ const buildDisabledPayload = ({ workflowStage, projectContext, config }) => ({
   warnings: []
 });
 
+const buildDeprecatedBackendWarning = () =>
+  'Memory backend "mem0-oss" is deprecated. Set AGENTS_MEMORY_BACKEND=mem0-lancedb, add AGENTS_MEMORY_OSS_HISTORY_DB_PATH, and remove AGENTS_MEMORY_OSS_VECTORSTORE_URL and AGENTS_MEMORY_OSS_VECTORSTORE_COLLECTION from your environment.';
+
 const buildUnavailableWarning = (config) =>
-  `Memory enabled but backend "${config.backend}" is unavailable; returning empty advisory recall.`;
+  config.backend === 'mem0-oss'
+    ? buildDeprecatedBackendWarning()
+    : `Memory enabled but backend "${config.backend}" is unavailable; returning empty advisory recall.`;
 
 const buildCredentialWarning = (config) =>
   `Memory enabled but backend "${config.backend}" is missing required credentials; returning empty advisory recall.`;
 
 const hasBackendReadiness = (config) => {
-  if (config.backend === 'mem0-oss') {
+  if (config.backend === 'mem0-lancedb') {
     return config.readiness?.overall === true;
   }
 
@@ -205,7 +249,7 @@ const buildCompatibleWorkflowStages = (workflowStage) =>
     ? ['implement-plan', 'create-plan']
     : ['create-plan'];
 
-let mem0OssMemoryClass = null;
+let localMemoryClass = null;
 
 const shouldAllowMem0TelemetryImport = () => {
   if (!Object.prototype.hasOwnProperty.call(process.env, 'MEM0_TELEMETRY')) {
@@ -215,24 +259,24 @@ const shouldAllowMem0TelemetryImport = () => {
   return String(process.env.MEM0_TELEMETRY).trim().toLowerCase() === 'false';
 };
 
-export const prepareMem0OssRuntimeEnv = (config) => {
-  const embedderBaseUrl = config?.mem0Oss?.embedder?.baseUrl?.trim();
+export const prepareLocalMemoryRuntimeEnv = (config) => {
+  const embedderBaseUrl = config?.localMemory?.embedder?.baseUrl?.trim();
   if (embedderBaseUrl) {
     process.env.OPENAI_BASE_URL = embedderBaseUrl;
   }
 };
 
-const getMem0OssMemoryClass = () => {
-  if (mem0OssMemoryClass) {
-    return mem0OssMemoryClass;
+const getLocalMemoryClass = () => {
+  if (localMemoryClass) {
+    return localMemoryClass;
   }
 
   if (!shouldAllowMem0TelemetryImport()) {
     return null;
   }
 
-  ({ Memory: mem0OssMemoryClass } = require('mem0ai/oss'));
-  return mem0OssMemoryClass;
+  ({ Memory: localMemoryClass } = require('mem0ai/oss'));
+  return localMemoryClass;
 };
 
 const dedupeRecallItems = (records) => {
@@ -268,7 +312,7 @@ const buildMem0Metadata = (record, userId) => ({
   ...record.metadata
 });
 
-const buildOssMetadata = (record, userId) => ({
+const buildLocalMemoryMetadata = (record, userId) => ({
   project_id: record.project_id,
   workflow_stage: record.workflow_stage,
   memory_kind: record.memory_kind,
@@ -279,7 +323,7 @@ const buildOssMetadata = (record, userId) => ({
   confidence: record.confidence,
   score: record.score ?? record.confidence,
   idempotency_key: record.idempotency_key ?? null,
-  match_reason: record.match_reason ?? 'mem0-oss-search',
+  match_reason: record.match_reason ?? 'mem0-lancedb-search',
   created_at: normalizeCreatedAt(record.created_at),
   user_id: userId,
   ...record.metadata
@@ -308,7 +352,7 @@ const normalizeMem0Memory = ({ memory, projectId }) =>
     }
   });
 
-const normalizeOssMemoryItem = ({ memory, projectId }) => {
+const normalizeLocalMemoryItem = ({ memory, projectId }) => {
   const metadata = memory.metadata ?? {};
 
   return normalizeMemoryRecord({
@@ -323,7 +367,7 @@ const normalizeOssMemoryItem = ({ memory, projectId }) => {
     superseded: metadata.superseded === true,
     confidence: Number(metadata.confidence ?? memory.score ?? 0),
     score: Number(memory.score ?? metadata.score ?? metadata.confidence ?? 0),
-    match_reason: metadata.match_reason ?? 'mem0-oss-search',
+    match_reason: metadata.match_reason ?? 'mem0-lancedb-search',
     created_at: memory.createdAt ?? memory.updatedAt ?? metadata.created_at,
     idempotency_key: metadata.idempotency_key ?? null,
     metadata: {
@@ -385,7 +429,7 @@ const mapMem0SearchResults = ({ items, query }) =>
       ]
     }));
 
-const buildOssSearchFilters = ({ query, config, scope }) => ({
+const buildLocalMemorySearchFilters = ({ query, config, scope }) => ({
   userId: buildScopeUserId({
     scope,
     projectId: query.project_id,
@@ -396,6 +440,16 @@ const buildOssSearchFilters = ({ query, config, scope }) => ({
     MEMORY_CONTRACT_LIMITS.maxRecallItems
   )
 });
+
+const sanitizeTableSegment = (value) =>
+  String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 48) || 'memory';
+
+const buildLanceDbTableName = ({ config, userId }) =>
+  `${config.localMemory.lanceDb.tableBase}_${sanitizeTableSegment(userId)}`;
 
 const applyClientSideFilters = (records, query) => {
   const compatibleStages = new Set(buildCompatibleWorkflowStages(query.workflow_stage));
@@ -411,10 +465,10 @@ const applyClientSideFilters = (records, query) => {
   );
 };
 
-const normalizeOssSearchResults = ({ items, projectId }) =>
+const normalizeLocalMemorySearchResults = ({ items, projectId }) =>
   items.flatMap((item) => {
     try {
-      return [normalizeOssMemoryItem({ memory: item, projectId })];
+      return [normalizeLocalMemoryItem({ memory: item, projectId })];
     } catch {
       return [];
     }
@@ -513,43 +567,78 @@ export const createMem0MemoryBackend = ({ client, config }) => {
   };
 };
 
-const buildMem0OssConfig = (config) => ({
+const buildMem0LanceDbConfig = ({ config, store }) => ({
   embedder: {
     provider: 'openai',
     config: {
-      apiKey: process.env[MEMORY_ENV_KEYS.ossEmbedderApiKey],
-      model: SUPPORTED_MEM0_OSS_PROFILE.storage.embeddingModel,
-      ...(config.mem0Oss.embedder.baseUrl ? { baseURL: config.mem0Oss.embedder.baseUrl } : {})
+      apiKey: process.env[MEMORY_ENV_KEYS.localEmbedderApiKey],
+      model: config.localMemory.embedder.model,
+      ...(config.localMemory.embedder.baseUrl ? { baseURL: config.localMemory.embedder.baseUrl } : {})
     }
   },
   vectorStore: {
-    provider: 'qdrant',
+    provider: 'langchain',
     config: {
-      collectionName: config.mem0Oss.vectorStore.collection,
-      url: config.mem0Oss.vectorStore.url,
-      dimension: SUPPORTED_MEM0_OSS_PROFILE.storage.embeddingDims
+      client: store
     }
   },
   llm: {
     provider: 'openai',
     config: {
-      apiKey: process.env[MEMORY_ENV_KEYS.ossLlmApiKey],
-      model: config.mem0Oss.llm.model,
-      ...(config.mem0Oss.llm.baseUrl ? { baseURL: config.mem0Oss.llm.baseUrl } : {})
+      apiKey: process.env[MEMORY_ENV_KEYS.localLlmApiKey],
+      model: config.localMemory.llm.model,
+      ...(config.localMemory.llm.baseUrl ? { baseURL: config.localMemory.llm.baseUrl } : {})
     }
   },
-  historyDbPath: config.mem0Oss.historyDb.path,
+  historyDbPath: config.localMemory.historyDb.path,
   disableHistory: false
 });
 
-export const createMem0OssMemoryBackend = ({ client, config }) => {
-  const ossClient = client;
+const createMem0LanceDbNamespaceFactory = (config) => {
+  const namespaces = new Map();
+
+  return async (userId) => {
+    if (namespaces.has(userId)) {
+      return namespaces.get(userId);
+    }
+
+    const Memory = getLocalMemoryClass();
+    if (!Memory) {
+      return null;
+    }
+
+    const store = new LanceDbLangChainStore({
+      dbPath: config.localMemory.lanceDb.path,
+      tableName: buildLanceDbTableName({ config, userId })
+    });
+    const memoryClient = new Memory(buildMem0LanceDbConfig({ config, store }));
+    const namespace = { userId, store, memoryClient };
+    namespaces.set(userId, namespace);
+    return namespace;
+  };
+};
+
+export const createMem0LanceDbMemoryBackend = ({ config, namespaceFactory } = {}) => {
+  const resolveNamespace = namespaceFactory ?? createMem0LanceDbNamespaceFactory(config);
 
   return {
     async search(query) {
-      const projectSearch = await ossClient.search(
+      const projectUserId = buildScopeUserId({
+        scope: 'project',
+        projectId: query.project_id,
+        sharedUserId: config.scope.sharedUserId
+      });
+      const projectNamespace = await resolveNamespace(projectUserId);
+      if (!projectNamespace) {
+        return {
+          items: [],
+          total_considered: 0
+        };
+      }
+
+      const projectSearch = await projectNamespace.memoryClient.search(
         buildMem0QueryText(query),
-        buildOssSearchFilters({ query, config, scope: 'project' })
+        buildLocalMemorySearchFilters({ query, config, scope: 'project' })
       );
       let rawItems = Array.isArray(projectSearch?.results) ? projectSearch.results : [];
 
@@ -557,15 +646,18 @@ export const createMem0OssMemoryBackend = ({ client, config }) => {
         .some((kind) => SHARED_SCOPE_ALLOWED_KINDS.includes(kind));
 
       if (allowShared) {
-        const sharedSearch = await ossClient.search(
-          buildMem0QueryText(query),
-          buildOssSearchFilters({ query, config, scope: 'shared' })
-        );
-        rawItems = rawItems.concat(Array.isArray(sharedSearch?.results) ? sharedSearch.results : []);
+        const sharedNamespace = await resolveNamespace(config.scope.sharedUserId);
+        if (sharedNamespace) {
+          const sharedSearch = await sharedNamespace.memoryClient.search(
+            buildMem0QueryText(query),
+            buildLocalMemorySearchFilters({ query, config, scope: 'shared' })
+          );
+          rawItems = rawItems.concat(Array.isArray(sharedSearch?.results) ? sharedSearch.results : []);
+        }
       }
 
       const filtered = applyClientSideFilters(
-        normalizeOssSearchResults({
+        normalizeLocalMemorySearchResults({
           items: rawItems,
           projectId: query.project_id
         }),
@@ -597,7 +689,12 @@ export const createMem0OssMemoryBackend = ({ client, config }) => {
         projectId: record.project_id,
         sharedUserId: config.scope.sharedUserId
       });
-      const metadata = buildOssMetadata(record, userId);
+      const namespace = await resolveNamespace(userId);
+      if (!namespace) {
+        throw new Error('LanceDB namespace initialization failed');
+      }
+
+      const metadata = buildLocalMemoryMetadata(record, userId);
       const normalizedInput = normalizeMemoryRecord({
         ...record,
         created_at: metadata.created_at,
@@ -605,15 +702,13 @@ export const createMem0OssMemoryBackend = ({ client, config }) => {
       });
 
       if (normalizedInput.idempotency_key) {
-        const existing = await ossClient.getAll({ userId });
-        const existingItems = Array.isArray(existing?.results) ? existing.results : [];
-        const match = existingItems.find((item) => item.metadata?.idempotency_key === normalizedInput.idempotency_key);
-        if (match?.id) {
-          await ossClient.delete(match.id);
+        const existingIds = await namespace.store.findMemoryIdsByIdempotencyKey(normalizedInput.idempotency_key);
+        for (const memoryId of existingIds) {
+          await namespace.store.deleteByMemoryId(memoryId);
         }
       }
 
-      const added = await ossClient.add([
+      const added = await namespace.memoryClient.add([
         {
           role: 'user',
           content: normalizedInput.summary
@@ -643,26 +738,25 @@ export const resolveMemorySidecarBackend = ({ config, backend, client } = {}) =>
   }
 
   if (config.backend === 'mem0-oss') {
+    return {
+      deprecated: true
+    };
+  }
+
+  if (config.backend === 'mem0-lancedb') {
     if (!hasBackendReadiness(config)) {
       return null;
     }
 
-    prepareMem0OssRuntimeEnv(config);
-
-    const ossClient = client ?? (() => {
-      const Memory = getMem0OssMemoryClass();
-      if (!Memory) {
-        return null;
-      }
-
-      return new Memory(buildMem0OssConfig(config));
-    })();
-
-    if (!ossClient) {
+    prepareLocalMemoryRuntimeEnv(config);
+    if (!client && !getLocalMemoryClass()) {
       return null;
     }
 
-    return createMem0OssMemoryBackend({ client: ossClient, config });
+    return createMem0LanceDbMemoryBackend({
+      config,
+      namespaceFactory: client
+    });
   }
 
   if (config.backend !== 'mem0' || !config.credentials.apiKeyPresent) {

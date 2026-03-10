@@ -30,6 +30,15 @@ const readInput = (args) => {
 const workflowPatterns = [
   /\bworkflow\b/i,
   /\bcontinuity\b/i,
+  /\bcritique\b/i,
+  /\brevision\b/i,
+  /\brefinement\b/i,
+  /\bgate(?:keeper)?\b/i,
+  /\bpromotion\b/i,
+  /\bready to advance\b/i,
+  /\btrace\b/i,
+  /\btrajectory\b/i,
+  /\bdelegation\b/i,
   /\bhandoff\b/i,
   /\bsession\b/i,
   /\bparity\b/i,
@@ -69,6 +78,25 @@ const categoryMatchers = {
     /\bworking set\b/i,
     /\bruntime state\b/i
   ],
+  critique_response: [
+    /\bcritique\b/i,
+    /\breviewer findings\b/i,
+    /\brespond to critique\b/i,
+    /\bresponse matrix\b/i,
+    /\brevision loop\b/i,
+    /\brefinement cycle\b/i,
+    /\baddress findings\b/i
+  ],
+  artifact_governance: [
+    /\bartifact\b/i,
+    /\bpromotion\b/i,
+    /\badvance\b/i,
+    /\bready(?: for)? planning\b/i,
+    /\bready(?: to)? execute\b/i,
+    /\bgate(?:keeper)?\b/i,
+    /\bgrade(?:-research|-plan)?\b/i,
+    /\bpromotion-ready\b/i
+  ],
   parity: [
     /\bparity\b/i,
     /\badapter\b/i,
@@ -102,6 +130,15 @@ const categoryMatchers = {
     /\bverification\b/i,
     /\btest(?:s|ing)?\b/i
   ],
+  trace: [
+    /\btrace\b/i,
+    /\btrajectory\b/i,
+    /\bdelegation\b/i,
+    /\bhandoff quality\b/i,
+    /\btool[- ]use\b/i,
+    /\bcheckpoint quality\b/i,
+    /\borchestration drift\b/i
+  ],
   tooling: [
     /\bmcp\b/i,
     /\bapproval\b/i,
@@ -116,14 +153,20 @@ const categoryMatchers = {
 
 const expertByCategory = {
   continuity: 'continuity-manager',
+  critique_response: 'critique-responder',
+  artifact_governance: 'artifact-gatekeeper',
   parity: 'adapter-parity-auditor',
   workflow_gating: 'workflow-router-auditor',
   eval: 'eval-engineer',
+  trace: 'trace-grader',
   tooling: 'tooling-integrator'
 };
 
 const dominantIntentMatchers = {
+  critique_response: [/\brespond\b/i, /\brevise\b/i, /\bfix findings\b/i, /\baddress critique\b/i],
+  artifact_governance: [/\badvance\b/i, /\bgate\b/i, /\bpromotion\b/i, /\bready\b/i],
   eval: [/\bdesign\b/i, /\bregression\b/i, /\bscenario\b/i, /\bcoverage\b/i, /\btest(?:s|ing)?\b/i],
+  trace: [/\btrace\b/i, /\btrajectory\b/i, /\bdelegation\b/i, /\btool[- ]use\b/i],
   workflow_gating: [/\baudit\b/i, /\bcheck whether\b/i, /\bskipp(?:ed|ing)\b/i, /\breadiness\b/i],
   tooling: [/\bclarify\b/i, /\bconfigure\b/i, /\bintegrat(?:e|ion)\b/i, /\bwire\b/i],
   parity: [/\baudit\b/i, /\bcompare\b/i, /\bmatrix\b/i],
@@ -191,7 +234,16 @@ const routeTask = (input) => {
     };
   }
 
-  for (const category of ['eval', 'workflow_gating', 'tooling', 'parity', 'continuity']) {
+  for (const category of [
+    'artifact_governance',
+    'critique_response',
+    'trace',
+    'eval',
+    'workflow_gating',
+    'tooling',
+    'parity',
+    'continuity'
+  ]) {
     if (
       categories.includes(category) &&
       dominantIntentMatchers[category].some((pattern) => pattern.test(trimmed))
