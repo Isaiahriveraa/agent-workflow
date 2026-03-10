@@ -157,6 +157,41 @@ Then wait for the user's research query.
      For substantial research intended to drive implementation planning, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-research`.
      Do not hand off to planning unless parser-backed output proves `research_ready_for_planning: true`.
 
+#### Step 6.5: Adversarial Critique (substantial research only)
+
+For substantial research intended to drive implementation planning:
+
+1. **Spawn `rpi-critic` agent** with the research document path:
+   ```
+   Task(
+     prompt="Critique the research at [research_path]. artifact_type: research",
+     subagent_type="rpi-critic",
+     description="Critique research document"
+   )
+   ```
+
+2. **Wait for completion**. The critic writes to `.planning/critique/YYYY-MM-DD-HHMMSS-[slug]-critique.md`
+   and returns a structured verdict.
+
+3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
+   - Read the critique document fully
+   - Revise the research document to address all blocking issues (re-run sub-agents if needed)
+   - Update frontmatter: increment `critique_cycles`, add critique path to `critique_artifacts` (single-line array only)
+   - Re-spawn the critic (max 2 revision cycles total — 3 runs)
+   - If still blocking after 2 revisions: surface issues to the user; do NOT hand off to planning
+
+4. **If `## CRITIQUE: WARNINGS ONLY` or `## CRITIQUE: ADVISORY`:**
+   - Address material warnings
+   - Update frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Proceed to `grade-research`
+
+5. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**
+   - Present the blocking issues to the user
+   - Wait for guidance before handing off to planning
+
+**Skip condition**: Skip if this research is non-substantial (exploratory, not intended to drive a plan).
+Note frontmatter: `critique_completed: false`, `critique_cycles: 0`.
+
 7. **Add GitHub permalinks (if applicable):**
    - Check if inside a git repo with a remote: `git remote get-url origin 2>/dev/null`
    - If a remote exists and commit is pushed, generate GitHub permalinks:

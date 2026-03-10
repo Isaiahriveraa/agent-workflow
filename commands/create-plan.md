@@ -305,6 +305,47 @@ After structure approval:
 For substantial plans, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-plan`.
 Do not mark the plan ready or hand it to implementation unless parser-backed output proves `plan_ready_for_implementation: true`.
 
+### Step 4.5: Adversarial Critique (substantial plans only)
+
+For plans where `substantial: true` (classified by `node ./scripts/workflow-router-tools.mjs classify`):
+
+1. **Spawn `rpi-critic` agent** with the draft plan path:
+   ```
+   Task(
+     prompt="Critique the plan at [plan_path]. artifact_type: plan",
+     subagent_type="rpi-critic",
+     description="Critique plan draft"
+   )
+   ```
+
+2. **Wait for the critic to complete**. The critic writes a critique document to
+   `.planning/critique/YYYY-MM-DD-HHMMSS-[slug]-critique.md` and returns a structured verdict.
+
+3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
+   - Read the critique document fully
+   - Revise the plan to address all blocking issues
+   - Update plan frontmatter: increment `critique_cycles`, add critique document path to `critique_artifacts` (single-line array only)
+   - Re-spawn the critic (max 2 revision cycles total — 3 runs)
+   - If still blocking after 2 revisions: surface the blocking issues to the user and ask for guidance; do NOT proceed to Step 5
+
+4. **If `## CRITIQUE: WARNINGS ONLY`:**
+   - Read the critique document
+   - Address any warnings that materially affect the plan
+   - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Proceed to Step 5
+
+5. **If `## CRITIQUE: ADVISORY`:**
+   - Optionally address advisory suggestions
+   - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Proceed to Step 5
+
+6. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**
+   - Present the blocking issues to the user
+   - Wait for guidance before proceeding
+
+**Skip condition**: If `substantial: false` from the classifier, skip this step and note in the plan
+frontmatter: `critique_completed: false`, `critique_cycles: 0`.
+
 ### Step 5: Review
 
 1. **Present the draft plan location**:
