@@ -14,15 +14,24 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 4. **Load `~/.agents/rules/common/workflow-router.md` before starting work.**
 5. **If the task class calls for a capsule, load it before starting work and honor its critic, grader, and memory-policy files.**
 6. **For substantial plans, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
+7. **After canonical plan/state/decision context is loaded and before phase execution begins, call `scripts/memory-sidecar-adapter.mjs` for workflow stage `implement-plan` only when advisory memory is enabled.**
+8. **Use the same precedence rule during implementation entry:**
+   1. active runtime state and selected artifacts
+   2. explicit decisions and active research/plan
+   3. advisory memory recall
+   4. no recall when relevance is weak
+9. **Treat advisory implementation recall as optional input only: disabled mode must preserve current behavior, empty recall is success, and explicit artifacts stay authoritative when advisory memory disagrees.**
+10. **Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections.**
+11. **Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; plan grading and readiness remain bound to canonical artifacts only.**
 
-7. **If no parameter was provided**, ask:
+12. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
    Example: /Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
-8. **Confirm readiness**:
+13. **Confirm readiness**:
    ```
    I've read the plan. It has [N] phases:
    1. [Phase 1 name] — [one-line goal]

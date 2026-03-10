@@ -8,6 +8,18 @@ import { spawnSync } from 'node:child_process';
 const read = (relativePath) => fs.readFileSync(new URL(`../${relativePath}`, import.meta.url), 'utf8');
 const readJson = (relativePath) => JSON.parse(read(relativePath));
 const root = path.resolve(new URL('..', import.meta.url).pathname);
+const copyFilter = (source) => {
+  if (source.includes(`${path.sep}.git${path.sep}`) || source.includes(`${path.sep}node_modules${path.sep}`)) {
+    return false;
+  }
+
+  try {
+    fs.lstatSync(source);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 test('AGENTS declares contexts, rules, and adapters as canonical layers', () => {
   const content = read('AGENTS.md');
@@ -89,12 +101,23 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
+  assert.match(createPlan, /scripts\/memory-sidecar-adapter\.mjs/);
+  assert.match(createPlan, /workflow stage `create-plan`/);
+  assert.match(createPlan, /Do not write advisory recall into the current project's runtime `state\.md`, `research-index\.md`, or active artifact selections/);
+  assert.match(createPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
   assert.match(implementPlan, /current project's `state\.md`/);
   assert.match(implementPlan, /contexts\/decisions\.md/);
   assert.match(implementPlan, /rules\/common\/workflow-router\.md/);
   assert.match(implementPlan, /critic, grader, and memory-policy files/);
   assert.match(implementPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(implementPlan, /plan_ready_for_implementation/);
+  assert.match(implementPlan, /scripts\/memory-sidecar-adapter\.mjs/);
+  assert.match(implementPlan, /workflow stage `implement-plan`/);
+  assert.match(implementPlan, /active runtime state and selected artifacts/);
+  assert.match(implementPlan, /advisory memory recall/);
+  assert.match(implementPlan, /disabled mode must preserve current behavior/);
+  assert.match(implementPlan, /Do not write advisory recall into the current project's `state\.md`, `research-index\.md`, session continuity artifacts, or active artifact selections/);
+  assert.match(implementPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
   assert.match(implementPlan, /Never retry blindly after a verified miss/);
   assert.match(implementPlan, /lesson-tools\.mjs capture/);
   assert.match(validatePlan, /current project's `state\.md`/);
@@ -162,7 +185,7 @@ test('ssot validation fails when a project-local runtime state duplicates the wo
   try {
     fs.cpSync(root, fixtureRoot, {
       recursive: true,
-      filter: (source) => !source.includes(`${path.sep}.git${path.sep}`) && !source.includes(`${path.sep}node_modules${path.sep}`)
+      filter: copyFilter
     });
 
     const projectStatePath = path.join(fixtureRoot, 'projects', 'agents-43142fc2', 'contexts', 'state.md');
@@ -194,7 +217,7 @@ test('ssot validation fails when Claude entrypoint drifts back to the raw prompt
   try {
     fs.cpSync(root, fixtureRoot, {
       recursive: true,
-      filter: (source) => !source.includes(`${path.sep}.git${path.sep}`) && !source.includes(`${path.sep}node_modules${path.sep}`)
+      filter: copyFilter
     });
 
     fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
@@ -229,7 +252,7 @@ test('ssot validation fails when Claude settings lose required hub access fields
   try {
     fs.cpSync(root, fixtureRoot, {
       recursive: true,
-      filter: (source) => !source.includes(`${path.sep}.git${path.sep}`) && !source.includes(`${path.sep}node_modules${path.sep}`)
+      filter: copyFilter
     });
 
     fs.mkdirSync(path.join(home, '.claude'), { recursive: true });

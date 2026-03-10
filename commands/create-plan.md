@@ -46,6 +46,12 @@ Then wait for the user's input.
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
    - For substantial requests backed by research, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
+   - After canonical context is loaded and before plan drafting, call `scripts/memory-sidecar-adapter.mjs` for workflow stage `create-plan` only when advisory memory is enabled
+   - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
+   - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold
+   - Treat advisory recall as optional input only: empty recall is success, and explicit research, decisions, and selected artifacts remain authoritative
+   - Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections
+   - Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; artifact grading stays bound to canonical files only
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
