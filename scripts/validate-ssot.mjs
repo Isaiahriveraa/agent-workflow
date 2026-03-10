@@ -19,11 +19,17 @@ const requiredFiles = [
   'contexts/artifacts.md',
   'contexts/agent-catalog.md',
   'contexts/ui-ux.md',
+  'contexts/user-taste.md',
+  'contexts/failure-patterns.md',
+  'contexts/reference-library.md',
+  'contexts/lessons-learned.md',
   'rules/common/discovery-levels.md',
   'rules/common/decision-fidelity.md',
   'rules/common/search-first.md',
   'rules/common/learning-capture.md',
+  'rules/common/learning-loop.md',
   'rules/common/expert-agent-routing.md',
+  'rules/common/output-quality-gate.md',
   'rules/common/prompt-optimization-routing.md',
   'rules/common/workflow-router.md',
   'rules/common/package-manager-detection.md',
@@ -31,6 +37,21 @@ const requiredFiles = [
   'rules/common/ui-ux-routing.md',
   'rules/common/verification-automation.md',
   'rules/common/artifact-retrieval.md',
+  'capsules/creative-redesign/intent.md',
+  'capsules/creative-redesign/assembly.md',
+  'capsules/creative-redesign/examples.md',
+  'capsules/creative-redesign/anti-patterns.md',
+  'capsules/creative-redesign/critic.md',
+  'capsules/creative-redesign/grader.md',
+  'capsules/creative-redesign/memory-policy.md',
+  'capsules/api-workflow/intent.md',
+  'capsules/api-workflow/assembly.md',
+  'capsules/api-workflow/examples.md',
+  'capsules/api-workflow/anti-patterns.md',
+  'capsules/api-workflow/critic.md',
+  'capsules/api-workflow/grader.md',
+  'capsules/api-workflow/memory-policy.md',
+  'thoughts/lessons/README.md',
   'adapters/claude-code/CLAUDE.md',
   'adapters/claude-code/README.md',
   'adapters/codex-cli/README.md',
@@ -42,7 +63,9 @@ const requiredFiles = [
   'adapters/openclaw/templates/USER.md',
   'adapters/openclaw/templates/TOOLS.md',
   'hooks/gsd-check-update.js',
+  'hooks/gsd-stop-lesson-capture.js',
   'hooks/gsd-statusline.js',
+  'adapters/claude-code/hooks/gsd-stop-lesson-capture.js',
   'commands/session-start.md',
   'commands/session-status.md',
   'commands/pause-session.md',
@@ -53,6 +76,7 @@ const requiredFiles = [
   'scripts/session-tools.mjs',
   'scripts/package-manager-tools.mjs',
   'scripts/workflow-router-tools.mjs',
+  'scripts/lesson-tools.mjs',
   'scripts/verification-tools.mjs',
   'scripts/artifact-tools.mjs'
 ];
@@ -66,7 +90,11 @@ const requiredHeadings = new Map([
   ['contexts/verification.md', ['## Available Checks', '## Preferred Order', '## Command Source', '## Notes']],
   ['contexts/artifacts.md', ['## Sources', '## Preferred Retrieval Order', '## Notes']],
   ['contexts/agent-catalog.md', ['## Agent Classes', '## Workflow Experts', '## Routing Defaults', '## Constraints']],
-  ['contexts/ui-ux.md', ['## Intent', '## Audience', '## Visual Direction', '## Constraints', '## Required States', '## Selected Skill']]
+  ['contexts/ui-ux.md', ['## Intent', '## Audience', '## Visual Direction', '## Constraints', '## References', '## Banned Patterns', '## Differentiation Target', '## Required States', '## Selected Skill', '## Selected Capsule']],
+  ['contexts/user-taste.md', ['## Preferred Characteristics', '## Disliked Patterns', '## Recent Confirmations', '## Evidence Threshold', '## Last Updated']],
+  ['contexts/failure-patterns.md', ['## Recurring Failure Classes', '## Diagnosis Format', '## Recent Entries', '## Promotion Rules', '## Last Updated']],
+  ['contexts/reference-library.md', ['## Approved Sources', '## Reference Entry Format', '## Selection Guidance', '## Last Updated']],
+  ['contexts/lessons-learned.md', ['## Active Lessons', '## Lesson Format', '## Writeback Policy', '## Recent Artifacts', '## Last Updated']]
 ]);
 
 const adapterReadmeHeadings = new Map([
@@ -78,17 +106,17 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', '~/.agents/contexts/research-index.md', "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score']],
-  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md']],
-  ['commands/validate_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md']],
-  ['commands/research_codebase.md', ['~/.agents/contexts/research-index.md', '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `create-plan`', "Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`']],
+  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'scripts/workflow-artifact-tools.mjs grade-plan', 'plan_ready_for_implementation', 'load it before starting work and honor its critic, grader, and memory-policy files', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `implement-plan`', 'active runtime state and selected artifacts', 'advisory memory recall', 'disabled mode must preserve current behavior', "Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture']],
+  ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'scripts/lesson-tools.mjs capture']],
+  ['commands/research_codebase.md', ["current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture', 'scripts/workflow-artifact-tools.mjs grade-research', 'research_ready_for_planning']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/pause-session.md', ["current project's `session-index.md`", "current project's `state.md`"]],
-  ['commands/resume-session.md', ["current project's `session-index.md`", "current project's `state.md`", '~/.agents/contexts/research-index.md']],
+  ['commands/resume-session.md', ["current project's `session-index.md`", "current project's `state.md`", "current project's `research-index.md`"]],
   ['commands/project-tooling.md', ['~/.agents/contexts/tooling.md', 'scripts/package-manager-tools.mjs']],
   ['commands/project-verification.md', ['~/.agents/contexts/verification.md', 'scripts/verification-tools.mjs']],
-  ['commands/project-artifacts.md', ["current project's `artifacts.md`", '~/.agents/contexts/research-index.md', 'scripts/artifact-tools.mjs']]
+  ['commands/project-artifacts.md', ["current project's `artifacts.md`", "current project's `research-index.md`", 'scripts/artifact-tools.mjs']]
 ]);
 
 const handoffContracts = new Map([
@@ -108,7 +136,8 @@ const continuityContracts = new Map([
   ['AGENTS.md', ['project-local `.agents/sessions/`', 'thoughts/shared/handoffs/']],
   ['rules/common/artifact-retrieval.md', ['.agents/sessions/', 'thoughts/shared/handoffs/']],
   ['contexts/artifacts.md', ['project-local runtime files', '~/.agents/thoughts/shared/handoffs']],
-  ['contexts/session-index.md', ['project-local lightweight work sessions', 'Shared/global handoffs']],
+  ['contexts/research-index.md', ['shared compatibility document', '[project root]/.agents/contexts/research-index.md']],
+  ['contexts/session-index.md', ['shared compatibility document', '[project root]/.agents/contexts/session-index.md', 'Shared/global handoffs']],
   ['commands/session-start.md', ['ordinary pause/resume continuity', ".agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md"]],
   ['commands/resume-session.md', ['project-local session artifacts', 'shared/global transfer artifact']],
   ['commands/project-artifacts.md', ['handoffs remain shared/global transfer artifacts']]
@@ -350,6 +379,27 @@ if (fs.existsSync(manifestPath)) {
 
       if (claudeMdFlag !== '1') {
         console.error('Claude settings must set env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD to "1"');
+        hasError = true;
+      }
+
+      const stopHooks = Array.isArray(settings.hooks?.Stop) ? settings.hooks.Stop : [];
+      const subagentStopHooks = Array.isArray(settings.hooks?.SubagentStop) ? settings.hooks.SubagentStop : [];
+      const hasStopHook = stopHooks.some((matcher) =>
+        Array.isArray(matcher.hooks) &&
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.js')}"`)
+      );
+      const hasSubagentStopHook = subagentStopHooks.some((matcher) =>
+        Array.isArray(matcher.hooks) &&
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.js')}"`)
+      );
+
+      if (!hasStopHook) {
+        console.error('Claude settings missing Stop hook for gsd-stop-lesson-capture.js');
+        hasError = true;
+      }
+
+      if (!hasSubagentStopHook) {
+        console.error('Claude settings missing SubagentStop hook for gsd-stop-lesson-capture.js');
         hasError = true;
       }
     } catch (error) {

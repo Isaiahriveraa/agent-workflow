@@ -68,6 +68,7 @@ test('bootstrapping project context creates only runtime context files', () => {
     const context = runCurrent(repoRoot);
 
     assert.ok(fs.existsSync(context.contextPaths.state));
+    assert.ok(fs.existsSync(context.contextPaths.researchIndex));
     assert.ok(fs.existsSync(context.contextPaths.sessionIndex));
     assert.ok(fs.existsSync(context.contextPaths.artifacts));
 

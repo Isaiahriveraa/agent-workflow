@@ -72,6 +72,22 @@ Use this file as the canonical resumable state for in-flight work in the current
 ### Ordered Artifacts
 1. none
 `,
+  researchIndex: `# Research Index
+
+Use this file to track project-local reusable research artifacts for the current project.
+
+Shared/global research notes may still exist, but this file is the live source of truth for research artifacts produced for ordinary work in the current project.
+
+## Entries
+- No project-local research artifacts recorded yet.
+
+## Entry Template
+- Topic:
+- Date:
+- Source files:
+- Artifact path:
+- Summary:
+`,
   sessionIndex: `# Session Index
 
 Use this file to track project-local lightweight work sessions for the current project.
@@ -141,13 +157,10 @@ export const getProjectContext = (options = {}) => {
     ?? options.projectSlug
     ?? path.basename(projectRoot);
   const projectSlug = `${slugify(slugBase)}-${hashProjectRoot(projectRoot)}`;
-  const isAgentsRepo = projectRoot === agentsRoot;
-  const projectDir = isAgentsRepo ? agentsRoot : path.join(projectRoot, '.agents');
-  const contextsDir = isAgentsRepo ? path.join(agentsRoot, 'contexts') : path.join(projectDir, 'contexts');
+  const projectDir = path.join(projectRoot, '.agents');
+  const contextsDir = path.join(projectDir, 'contexts');
   const planningDir = path.join(projectRoot, '.planning');
-  const sessionsDir = isAgentsRepo
-    ? path.join(agentsRoot, 'sessions', 'general')
-    : path.join(projectDir, 'sessions', 'general');
+  const sessionsDir = path.join(projectDir, 'sessions', 'general');
 
   return {
     agentsRoot,
@@ -158,6 +171,7 @@ export const getProjectContext = (options = {}) => {
     planningDir,
     contextPaths: {
       state: path.join(contextsDir, 'state.md'),
+      researchIndex: path.join(contextsDir, 'research-index.md'),
       sessionIndex: path.join(contextsDir, 'session-index.md'),
       artifacts: path.join(contextsDir, 'artifacts.md')
     },
@@ -165,6 +179,7 @@ export const getProjectContext = (options = {}) => {
       intake: path.join(planningDir, 'intake'),
       plans: path.join(agentsRoot, 'thoughts', 'plans'),
       research: path.join(planningDir, 'research'),
+      lessons: path.join(agentsRoot, 'thoughts', 'lessons'),
       sessions: sessionsDir,
       handoffs: path.join(agentsRoot, 'thoughts', 'shared', 'handoffs')
     }
@@ -177,6 +192,7 @@ export const ensureProjectContext = (options = {}) => {
   fs.mkdirSync(context.contextsDir, { recursive: true });
 
   ensureFile(context.contextPaths.state, bootstrapFiles.state);
+  ensureFile(context.contextPaths.researchIndex, bootstrapFiles.researchIndex);
   ensureFile(context.contextPaths.sessionIndex, bootstrapFiles.sessionIndex);
   ensureFile(context.contextPaths.artifacts, bootstrapFiles.artifacts);
 

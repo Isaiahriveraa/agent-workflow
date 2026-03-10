@@ -9,7 +9,8 @@ Route design-heavy work to one specialist skill and brief it explicitly.
 
 ## Brief Requirement
 - Read or create `contexts/ui-ux.md` before substantial UI work.
-- Populate intent, audience, visual direction, constraints, required states, and selected skill.
+- Load `capsules/creative-redesign/` before substantial redesign work.
+- Populate intent, audience, visual direction, constraints, references, banned patterns, differentiation target, required states, selected skill, and selected capsule.
 
 ## Required States
 - loading

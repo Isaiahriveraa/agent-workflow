@@ -37,11 +37,21 @@ Then wait for the user's input.
 
 0. **Load canonical context before planning:**
    - Read `~/.agents/contexts/decisions.md`
-   - Read `~/.agents/contexts/research-index.md` if prior research exists
-   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's runtime `state.md` when the existing workflow position matters
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+   - Read the current project's runtime `research-index.md` if prior research exists
+   - Read the current project's runtime `state.md` when the existing workflow position matters
+   - Read `~/.agents/contexts/failure-patterns.md` and `~/.agents/contexts/lessons-learned.md` when the task class is likely to benefit from prior mistakes
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
+   - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
+   - For substantial requests backed by research, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
+   - After canonical context is loaded and before plan drafting, call `scripts/memory-sidecar-adapter.mjs` for workflow stage `create-plan` only when advisory memory is enabled
+   - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
+   - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold
+   - Treat advisory recall as optional input only: empty recall is success, and explicit research, decisions, and selected artifacts remain authoritative
+   - Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections
+   - Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; artifact grading stays bound to canonical files only
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -73,6 +83,7 @@ Then wait for the user's input.
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
+   - Identify whether capsule-specific context, references, anti-patterns, or grading criteria are still missing
    - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
    - Score readiness with `node ./scripts/workflow-router-tools.mjs score`
    - If readiness is below threshold, do more research or ask focused questions before writing the plan
@@ -154,6 +165,7 @@ After getting initial clarifications:
      - clarity `>= 15/25`
      - codebase coverage `>= 15/25`
    - If the gate fails, keep researching or ask targeted questions instead of drafting implementation steps
+   - For substantial workflows, do not treat prose alone as sufficient: require parser-backed research readiness before finalizing the plan
 
 ### Step 3: Plan Structure Development
 
@@ -270,6 +282,12 @@ After structure approval:
 2. [Another verification step]
 3. [Edge case to test manually]
 
+## Learning Loop Hooks
+
+- What failure signals should trigger diagnosis during implementation
+- Which learning contexts or lesson artifacts may be updated if a verified miss occurs
+- What workflow improvements should be suggested to the user instead of silently applied
+
 ## Performance Considerations
 
 [Any performance implications or optimizations needed]
@@ -284,6 +302,9 @@ After structure approval:
 - Similar implementation: `[file:line]`
 ````
 
+For substantial plans, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-plan`.
+Do not mark the plan ready or hand it to implementation unless parser-backed output proves `plan_ready_for_implementation: true`.
+
 ### Step 5: Review
 
 1. **Present the draft plan location**:
@@ -297,6 +318,7 @@ After structure approval:
    - Any technical details that need adjustment?
    - Missing edge cases or considerations?
    ```
+   For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
    Then end the response with this exact standalone block using the saved plan path:
    ```text
    Next step
@@ -442,4 +464,4 @@ After writing the final plan:
 - Set `## Related Plan` to the plan path you created
 
 If the plan used new or existing research artifacts:
-- Add or update the matching entry in `~/.agents/contexts/research-index.md`
+- Add or update the matching entry in the current project's runtime `research-index.md`

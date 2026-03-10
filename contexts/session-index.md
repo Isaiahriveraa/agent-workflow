@@ -1,29 +1,25 @@
 # Session Index
 
-Use this file to track project-local lightweight work sessions and the most recent continuity checkpoint for each stream of work.
+Use this file as a shared compatibility document, not the live per-project runtime session index source.
 
-Shared/global handoffs are recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.
+Per-project runtime session continuity now lives at `[project root]/.agents/contexts/session-index.md`.
+Use this global file only for shared transfer notes that should remain discoverable across repos.
+
+Shared/global handoffs may be recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.
 
 ## Active Sessions
-- Session ID: 2026-03-08_16-40-07_warning-context-threshold
-- Date: 2026-03-08T23:40:07.092Z
-- Topic: Warning Context Threshold
-- Status: active
-- Artifact path: /Users/isaiahrivera/.agents/sessions/general/2026-03-08_16-40-07_warning-context-threshold.md
-- Related plan: /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-native-claude-plan-import-and-thoughts-canonicalization.md
-- Next command: /resume-session
-- Summary: Checkpoint created by gsd-context-monitor
+- No active sessions recorded.
 
 ## Recent Sessions
-- Session ID: handoff-2026-03-08-13-05-04
-- Date: 2026-03-08T20:06:46.499Z
-- Topic: Claude plan importer and thoughts canonicalization
+- Session ID: handoff-2026-03-08-18-26-18
+- Date: 2026-03-09T01:27:23.695Z
+- Topic: Cross-agent lesson automation
 - Status: handed_off
-- Artifact path: /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_13-05-04_claude-plan-import-and-thoughts-canonicalization.md
+- Artifact path: /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_18-26-18_cross-agent-lesson-automation.md
 - Related plan: /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-native-claude-plan-import-and-thoughts-canonicalization.md
-- Next command: /resume_handoff /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_13-05-04_claude-plan-import-and-thoughts-canonicalization.md
+- Next command: /resume_handoff /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_18-26-18_cross-agent-lesson-automation.md
 - Summary: Handoff sync recorded by create-handoff
-- Session ID: handoff-2026-03-08-11-24-33
+- Session ID: handoff-2026-03-08-18-05-16
 
 ## Entry Template
 - Session ID:

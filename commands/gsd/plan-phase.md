@@ -16,6 +16,8 @@ allowed-tools:
 <objective>
 Create executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.
 
+For substantial workflow changes, require parser-backed research readiness before planning is finalized and parser-backed plan readiness before execution handoff.
+
 **Default flow:** Research (if needed) → Plan → Verify → Done
 
 **Orchestrator role:** Parse arguments, validate phase, research domain (unless skipped), spawn gsd-planner, verify with gsd-plan-checker, iterate until pass or max iterations, present results.

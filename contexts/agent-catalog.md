@@ -24,6 +24,10 @@ Use this file to track the workflow expert agents that act as the hub's control 
   - trigger: workflow regression risk, parity validation work, scenario test design
   - scope: workflow eval design, scenario coverage, regression gaps
   - deliverable: eval plan or verification findings tied to concrete tests
+- `failure-analyst`
+  - trigger: explicit user correction, critic rejection, repeated misses, lesson promotion work
+  - scope: failure diagnosis, reusable lesson extraction, workflow improvement suggestion drafting
+  - deliverable: diagnosis summary with lesson candidates and evidence
 - `tooling-integrator`
   - trigger: MCP, approvals, permission surfaces, tool wiring, external helper integration
   - scope: tool integration contracts and their operational boundaries
@@ -38,6 +42,7 @@ Use this file to track the workflow expert agents that act as the hub's control 
 - parity or adapter mismatch -> `adapter-parity-auditor`
 - workflow-gate or RPI compliance issue -> `workflow-router-auditor`
 - eval, scenario, or regression design -> `eval-engineer`
+- repeated failures or learning-loop work -> `failure-analyst`
 - MCP, permissions, or tool-surface work -> `tooling-integrator`
 - unclear specialist choice -> `expert-agent-router`
 

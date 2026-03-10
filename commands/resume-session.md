@@ -15,7 +15,7 @@ This command resumes from the current project's project-local session artifacts.
 3. If a session path or id is provided, read that session artifact fully.
 4. If no argument is provided, use the most recent active session from the current project's `session-index.md`.
 5. Read the current project's `state.md`.
-6. Read `~/.agents/contexts/research-index.md`.
+6. Read the current project's `research-index.md`.
 7. Read the current project's `artifacts.md`.
 8. Run `node ./scripts/artifact-tools.mjs suggest`.
 9. If the active artifact working set is missing or stale, run `node ./scripts/artifact-tools.mjs persist --source resume-session --focus "[workflow focus]"` with any category overrides needed to lock the resumed working set into the current project's `state.md`.
