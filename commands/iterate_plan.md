@@ -28,7 +28,7 @@ Surgically adjust an existing plan when requirements change, new information eme
 2. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
-   Example: /Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-my-feature.md
+   Example: /absolute/path/to/.agents/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
@@ -124,7 +124,7 @@ Ask for confirmation before the changes are considered final.
 State clearly where to resume:
 ```
 Plan updated. Resume with Phase [N]: [Phase Name].
-Use /implement_plan /Users/isaiahrivera/.agents/thoughts/plans/[filename].md to continue.
+Use /implement_plan /absolute/path/to/.agents/thoughts/plans/[filename].md to continue.
 ```
 
 ---

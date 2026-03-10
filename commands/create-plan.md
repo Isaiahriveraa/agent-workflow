@@ -198,8 +198,8 @@ After structure approval:
      - YYYY-MM-DD is today's date (get it via `date +%Y-%m-%d`)
      - description is a brief kebab-case description
    - Examples:
-     - `/Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-improve-error-handling.md`
-     - `/Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-rpi-workflow-integration.md`
+     - `/absolute/path/to/.agents/thoughts/plans/2026-02-17-improve-error-handling.md`
+     - `/absolute/path/to/.agents/thoughts/plans/2026-02-17-rpi-workflow-integration.md`
 
 2. **Use this template structure**:
 
@@ -366,7 +366,7 @@ frontmatter: `critique_completed: false`, `critique_cycles: 0`.
    ```text
    Next step
 
-   /implement_plan /Users/isaiahrivera/.agents/thoughts/plans/YYYY-MM-DD-description.md
+   /implement_plan /absolute/path/to/.agents/thoughts/plans/YYYY-MM-DD-description.md
    ```
 
 2. **Iterate based on feedback** - be ready to:

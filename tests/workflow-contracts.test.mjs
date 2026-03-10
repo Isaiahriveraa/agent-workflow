@@ -169,7 +169,7 @@ test('artifact-producing workflow docs require exact next-command output', () =>
   const validatePlan = read('commands/validate_plan.md');
 
   assert.match(createPlan, /Next step/);
-  assert.match(createPlan, /\/implement_plan \/Users\/[^/\n]+\/\.agents\/thoughts\/plans\/YYYY-MM-DD-description\.md/);
+  assert.match(createPlan, /\/implement_plan \/absolute\/path\/to\/\.agents\/thoughts\/plans\/YYYY-MM-DD-description\.md/);
   assert.match(research, /\/create-plan \/absolute\/path\/to\/research\.md/);
   assert.match(createHandoff, /Use the exact absolute handoff path written in the current run\./);
   assert.match(createHandoff, /Next step/);
@@ -189,7 +189,48 @@ test('ssot validation fails when a project-local runtime state duplicates the wo
     });
 
     const projectStatePath = path.join(fixtureRoot, 'projects', 'agents-43142fc2', 'contexts', 'state.md');
-    const originalState = fs.readFileSync(projectStatePath, 'utf8');
+    fs.mkdirSync(path.dirname(projectStatePath), { recursive: true });
+    const originalState = `# Workflow State
+
+Use this file as a shared compatibility document, not the live per-project runtime state source.
+
+Per-project runtime workflow state now lives at \`[project root]/.agents/contexts/state.md\`.
+Use this global file only for legacy/shared notes that are not specific to a single repo.
+
+## Current Workflow
+- Not set.
+
+## Current Phase
+- Not set.
+
+## Next Step
+- Not set.
+
+## Blockers
+- None recorded at the shared/global level.
+
+## Last Verified At
+- Not set.
+
+## Related Plan
+- Not set.
+
+## Active Artifact Working Set
+- Last updated: not set
+- Source: not set
+- Focus: not set
+
+### Selected By Category
+- intake: not set
+- plan: not set
+- research: not set
+- session: not set
+- handoff: not set
+
+### Ordered Artifacts
+1. not set
+`;
+    fs.writeFileSync(projectStatePath, originalState);
     const duplicatedState = `${originalState.trimEnd()}\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- intake: none\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`;
 
     fs.writeFileSync(projectStatePath, duplicatedState);
@@ -394,14 +435,17 @@ test('adapter directories document non-claude parity boundaries', () => {
   assert.match(antigravity, /commands: `bridged`/);
   assert.match(antigravity, /agents: `bridged` through generated Gemini-schema agent files/);
   assert.match(geminiWrapper, /# Gemini Workflow Wrapper/);
-  assert.match(geminiWrapper, /@\/Users\/isaiahrivera\/\.agents\/prompts\/system\.md/);
+  assert.match(geminiWrapper, /@~\/\.agents\/prompts\/system\.md/);
   assert.match(openclaw, /Generated workspace wrappers/);
   assert.match(openclaw, /workspace wrappers: `bridged`/);
   assert.match(openclawAgentsTemplate, /\{\{HUB\}\}\/AGENTS\.md/);
 });
 
 test('claude settings preserve local hooks while exposing the shared hub', () => {
-  const settings = JSON.parse(fs.readFileSync('/Users/isaiahrivera/.claude/settings.json', 'utf8'));
+  const homeDir = os.homedir();
+  const agentsDir = path.join(homeDir, '.agents');
+  const claudeDir = path.join(homeDir, '.claude');
+  const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
   const manifest = readJson('manifest.json');
   const validatedSettings = manifest.validated_local_contracts.find((entry) =>
     entry.tool === 'claude-code' && entry.path === '~/.claude/settings.json'
@@ -415,24 +459,24 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
     'hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.js',
     'hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.js'
   ]);
-  assert.ok(settings.additionalDirectories.includes('/Users/isaiahrivera/.agents'));
-  assert.ok(settings.permissions.allow.includes('Read(/Users/isaiahrivera/.agents/**)'));
+  assert.ok(settings.additionalDirectories.includes(agentsDir));
+  assert.ok(settings.permissions.allow.includes(`Read(${agentsDir}/**)`));
   assert.equal(settings.env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD, '1');
   assert.equal(
     settings.hooks.SessionStart[0].hooks[0].command,
-    'node "/Users/isaiahrivera/.claude/hooks/gsd-check-update.js"'
+    `node "${path.join(claudeDir, 'hooks/gsd-check-update.js')}"`
   );
   assert.equal(
     settings.hooks.Stop[0].hooks[0].command,
-    'node "/Users/isaiahrivera/.claude/hooks/gsd-stop-lesson-capture.js"'
+    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.js')}"`
   );
   assert.equal(
     settings.hooks.SubagentStop[0].hooks[0].command,
-    'node "/Users/isaiahrivera/.claude/hooks/gsd-stop-lesson-capture.js"'
+    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.js')}"`
   );
   assert.equal(
     settings.statusLine.command,
-    'node "/Users/isaiahrivera/.claude/hooks/gsd-statusline.js"'
+    `node "${path.join(claudeDir, 'hooks/gsd-statusline.js')}"`
   );
   assert.equal(settings.enabledPlugins['typescript-lsp@claude-plugins-official'], true);
 });

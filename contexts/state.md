@@ -6,38 +6,34 @@ Per-project runtime workflow state now lives at `[project root]/.agents/contexts
 Use this global file only for legacy/shared notes that are not specific to a single repo.
 
 ## Current Workflow
-- cross-agent lesson automation
+- Not set.
 
 ## Current Phase
-- handoff created
+- Not set.
 
 ## Next Step
-- Resume from the handoff and create hook or wrapper automation for the weaker agents.
+- Not set.
 
 ## Blockers
 - None recorded at the shared/global level.
 
 ## Last Verified At
-- 2026-03-09T01:27:23.695Z
+- Not set.
 
 ## Related Plan
-- /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-native-claude-plan-import-and-thoughts-canonicalization.md
+- Not set.
 
 ## Active Artifact Working Set
-- Last updated: 2026-03-09T01:40:06.597Z
-- Source: research-codebase
-- Focus: Claude vs other agent capability parity
+- Last updated: not set
+- Source: not set
+- Focus: not set
 
 ### Selected By Category
-- intake: /Users/isaiahrivera/.agents/.planning/intake/2026-03-09-claude-vs-other-agent-capability-parity.md
-- plan: /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-native-claude-plan-import-and-thoughts-canonicalization.md
-- research: /Users/isaiahrivera/.agents/.planning/research/2026-03-09-claude-vs-other-agent-capability-parity.md
-- session: /Users/isaiahrivera/.agents/sessions/general/2026-03-08_11-20-02_warning-context-threshold.md
-- handoff: /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_18-26-18_cross-agent-lesson-automation.md
+- intake: not set
+- plan: not set
+- research: not set
+- session: not set
+- handoff: not set
 
 ### Ordered Artifacts
-1. /Users/isaiahrivera/.agents/.planning/intake/2026-03-09-claude-vs-other-agent-capability-parity.md
-2. /Users/isaiahrivera/.agents/thoughts/plans/2026-03-08-native-claude-plan-import-and-thoughts-canonicalization.md
-3. /Users/isaiahrivera/.agents/.planning/research/2026-03-09-claude-vs-other-agent-capability-parity.md
-4. /Users/isaiahrivera/.agents/sessions/general/2026-03-08_11-20-02_warning-context-threshold.md
-5. /Users/isaiahrivera/.agents/thoughts/shared/handoffs/general/2026-03-08_18-26-18_cross-agent-lesson-automation.md
+1. not set

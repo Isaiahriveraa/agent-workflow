@@ -22,7 +22,7 @@ Then proceed with setup and onboarding.
 **Before doing anything else**, run the setup script to ensure the central tutorials repository exists:
 
 ```bash
-python3 /Users/isaiahrivera/.agents/skills/coding-tutor/scripts/setup_tutorials.py
+python3 ~/.agents/skills/coding-tutor/scripts/setup_tutorials.py
 ```
 
 This creates `~/coding-tutor-tutorials/` if it doesn't exist. All tutorials and the learner profile are stored there, shared across all your projects.
@@ -75,7 +75,7 @@ Our general goal is to take the user from newbie to a senior engineer in record 
 Before creating a tutorial, make a plan by following these steps:
 
 - **Load learner context**: Read `~/coding-tutor-tutorials/learner_profile.md` to understand who you're teaching - their background, goals, and personality.
-- **Survey existing knowledge**: Run `python3 /Users/isaiahrivera/.agents/skills/coding-tutor/scripts/index_tutorials.py` to understand what concepts have been covered, at what depth, and how well they landed (understanding scores). Optionally, dive into particular tutorials in `~/coding-tutor-tutorials/` to read them.
+- **Survey existing knowledge**: Run `python3 ~/.agents/skills/coding-tutor/scripts/index_tutorials.py` to understand what concepts have been covered, at what depth, and how well they landed (understanding scores). Optionally, dive into particular tutorials in `~/coding-tutor-tutorials/` to read them.
 - **Identify the gap**: What's the next concept that would be most valuable? Consider both what they've asked for AND what naturally follows from their current knowledge. Think of a curriculum that would get them from their current point to Senior Engineer - what should be the next 3 topics they need to learn to advance their programming knowledge in this direction?
 - **Find the anchor**: Locate real examples in the codebase that demonstrate this concept. Learning from abstract examples is forgettable; learning from YOUR code is sticky.
 - **(Optional) Use ask-user-question tool**: Ask clarifying questions to the learner to understand their intent, goals or expectations if it'll help you make a better plan.
@@ -113,7 +113,7 @@ Quiz sessions recorded here.
 Run `scripts/create_tutorial.py` like this to create a new tutorial with template:
 
 ```bash
-python3 /Users/isaiahrivera/.agents/skills/coding-tutor/scripts/create_tutorial.py "Topic Name" --concepts "Concept1,Concept2"
+python3 ~/.agents/skills/coding-tutor/scripts/create_tutorial.py "Topic Name" --concepts "Concept1,Concept2"
 ```
 
 This creates an empty template of the tutorial. Then you should edit the newly created file to write in the actual tutorial.
@@ -163,7 +163,7 @@ Tutorials teach. Quizzes verify. The score should reflect what the learner actua
 
 **Triggers:**
 - Explicit: "Quiz me on React hooks" → quiz that specific concept
-- Open: "Quiz me on something" → run `python3 /Users/isaiahrivera/.agents/skills/coding-tutor/scripts/quiz_priority.py` to get a prioritized list based on spaced repetition, then choose what to quiz
+- Open: "Quiz me on something" → run `python3 ~/.agents/skills/coding-tutor/scripts/quiz_priority.py` to get a prioritized list based on spaced repetition, then choose what to quiz
 
 **Spaced Repetition:**
 

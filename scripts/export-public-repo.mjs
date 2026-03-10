@@ -39,16 +39,16 @@ if (fs.existsSync(destRoot) && fs.readdirSync(destRoot).length > 0) {
 
 fs.mkdirSync(destRoot, { recursive: true });
 
-const trackedAndUntracked = execFileSync(
+const trackedFiles = execFileSync(
   'git',
-  ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+  ['ls-files', '--cached', '-z'],
   { cwd: repoRoot, encoding: 'utf8' }
 )
   .split('\0')
   .filter(Boolean)
   .sort();
 
-for (const relativePath of trackedAndUntracked) {
+for (const relativePath of trackedFiles) {
   const sourcePath = path.join(repoRoot, relativePath);
   if (!fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isFile()) {
     continue;
@@ -67,6 +67,6 @@ console.log(JSON.stringify({
   ok: true,
   source: repoRoot,
   destination: destRoot,
-  filesExported: trackedAndUntracked.length,
+  filesExported: trackedFiles.length,
   gitInitialized: Boolean(args.initGit)
 }, null, 2));
