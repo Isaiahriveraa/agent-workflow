@@ -19,6 +19,8 @@
     "test": "npm run test:workflows && npm run test:adapters && npm run test:hooks && npm run test:sessions && npm run test:tooling && npm run test:verification && npm run test:artifacts && npm run test:github-pr-proposer"
   },
   "dependencies": {
+    "@lancedb/lancedb": "^0.26.2",
+    "@langchain/core": "^0.3.80",
     "mem0ai": "^2.3.0"
   }
 }
