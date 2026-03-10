@@ -5,17 +5,18 @@ import os from 'node:os';
 import path from 'node:path';
 
 import {
+  createMem0LanceDbMemoryBackend,
   createMem0MemoryBackend,
-  createMem0OssMemoryBackend,
   createMemorySidecarAdapter,
   DeterministicMemoryBackend,
   getRelevantMemories,
   MEMORY_ENV_KEYS,
-  prepareMem0OssRuntimeEnv,
+  prepareLocalMemoryRuntimeEnv,
   recordMemory,
   resolveMemorySidecarBackend,
   resolveMemorySidecarConfig
 } from '../scripts/memory-sidecar-adapter.mjs';
+import { LanceDbLangChainStore } from '../scripts/memory-lancedb-store.mjs';
 import { getProjectContext } from '../scripts/project-context.mjs';
 
 const createRepo = (baseDir, name) => {
@@ -24,7 +25,7 @@ const createRepo = (baseDir, name) => {
   return repoRoot;
 };
 
-const buildOssEnv = (overrides = {}) => ({
+const buildDeprecatedBackendEnv = (overrides = {}) => ({
   AGENTS_MEMORY_ENABLED: 'true',
   AGENTS_MEMORY_BACKEND: 'mem0-oss',
   AGENTS_MEMORY_OSS_LLM_API_KEY: 'oss-llm-key',
@@ -32,6 +33,17 @@ const buildOssEnv = (overrides = {}) => ({
   AGENTS_MEMORY_OSS_EMBEDDER_API_KEY: 'oss-embed-key',
   AGENTS_MEMORY_OSS_VECTORSTORE_URL: 'http://localhost:6333',
   AGENTS_MEMORY_OSS_HISTORY_DB_PATH: '/tmp/agents-memory/history.db',
+  ...overrides
+});
+
+const buildLanceDbEnv = (overrides = {}) => ({
+  AGENTS_MEMORY_ENABLED: 'true',
+  AGENTS_MEMORY_BACKEND: 'mem0-lancedb',
+  AGENTS_MEMORY_OSS_LLM_API_KEY: 'oss-llm-key',
+  AGENTS_MEMORY_OSS_LLM_MODEL: 'gpt-4.1-mini',
+  AGENTS_MEMORY_OSS_EMBEDDER_API_KEY: 'oss-embed-key',
+  AGENTS_MEMORY_OSS_HISTORY_DB_PATH: '/tmp/agents-memory/history.db',
+  AGENTS_MEMORY_LANCEDB_PATH: '/tmp/agents-memory/lancedb',
   ...overrides
 });
 
@@ -46,7 +58,7 @@ test('memory adapter config stays disabled by default and exposes the supported 
   assert.equal(config.readiness.overall, false);
 });
 
-test('mem0 oss config exposes the oss profile and backend-specific readiness shape', () => {
+test('deprecated mem0 oss config keeps the local runtime profile and deprecated readiness shape', () => {
   const config = resolveMemorySidecarConfig({
     env: {
       AGENTS_MEMORY_ENABLED: 'true',
@@ -54,7 +66,6 @@ test('mem0 oss config exposes the oss profile and backend-specific readiness sha
       AGENTS_MEMORY_OSS_LLM_API_KEY: 'oss-llm-key',
       AGENTS_MEMORY_OSS_LLM_MODEL: 'gpt-4.1-mini',
       AGENTS_MEMORY_OSS_EMBEDDER_API_KEY: 'oss-embed-key',
-      AGENTS_MEMORY_OSS_VECTORSTORE_URL: 'http://localhost:6333',
       AGENTS_MEMORY_OSS_HISTORY_DB_PATH: '/tmp/agents-memory/history.db',
       AGENTS_MEMORY_PROJECT_ID_OVERRIDE: 'stable-project-id'
     }
@@ -64,17 +75,33 @@ test('mem0 oss config exposes the oss profile and backend-specific readiness sha
   assert.equal(config.backend, 'mem0-oss');
   assert.equal(config.profile, 'oss-node');
   assert.equal(config.readiness.backend, 'mem0-oss');
-  assert.equal(config.readiness.overall, true);
-  assert.equal(config.readiness.embedder.apiKeyPresent, true);
-  assert.equal(config.readiness.llm.apiKeyPresent, true);
-  assert.equal(config.readiness.llm.modelPresent, true);
-  assert.equal(config.readiness.vectorStore.urlPresent, true);
-  assert.equal(config.readiness.vectorStore.collection, 'agents-memory-v1');
-  assert.equal(config.readiness.historyDb.pathPresent, true);
-  assert.equal(config.readiness.historyDb.resolution, 'explicit-env');
+  assert.equal(config.readiness.overall, false);
+  assert.equal(config.readiness.deprecated, true);
+  assert.equal(config.localMemory.llm.apiKeyPresent, false);
+  assert.equal(config.localMemory.embedder.apiKeyPresent, false);
+  assert.equal(config.localMemory.historyDb.resolution, 'explicit-env');
   assert.equal(config.readiness.projectIdentityOverridePresent, true);
-  assert.equal(config.mem0Oss.vectorStore.collection, 'agents-memory-v1');
-  assert.equal(config.mem0Oss.historyDb.resolution, 'explicit-env');
+  assert.equal(config.projectIdentity.override, 'stable-project-id');
+});
+
+test('mem0 lancedb config exposes the lancedb profile and derived path shape', () => {
+  const config = resolveMemorySidecarConfig({
+    env: buildLanceDbEnv({
+      AGENTS_MEMORY_LANCEDB_PATH: '',
+      AGENTS_MEMORY_PROJECT_ID_OVERRIDE: 'stable-project-id'
+    })
+  });
+
+  assert.equal(config.enabled, true);
+  assert.equal(config.backend, 'mem0-lancedb');
+  assert.equal(config.profile, 'oss-node');
+  assert.equal(config.readiness.backend, 'mem0-lancedb');
+  assert.equal(config.readiness.overall, true);
+  assert.equal(config.readiness.lanceDb.pathPresent, true);
+  assert.equal(config.readiness.lanceDb.pathResolution, 'derived-from-history-db');
+  assert.equal(config.readiness.lanceDb.tableBase, 'agents_memory_v1');
+  assert.equal(config.localMemory.lanceDb.path, '/tmp/agents-memory/lancedb');
+  assert.equal(config.localMemory.lanceDb.pathResolution, 'derived-from-history-db');
   assert.equal(config.projectIdentity.override, 'stable-project-id');
 });
 
@@ -192,7 +219,7 @@ test('enabled mode warns and returns empty recall when no backend is available',
   }
 });
 
-test('mem0 oss mode warns and returns empty recall when required readiness inputs are missing', async () => {
+test('mem0 oss mode warns and returns empty recall with the deprecation message', async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-adapter-'));
   const repoRoot = createRepo(tmpDir, 'oss-warning');
 
@@ -211,7 +238,37 @@ test('mem0 oss mode warns and returns empty recall when required readiness input
     assert.equal(result.enabled, true);
     assert.deepEqual(result.items, []);
     assert.equal(result.warnings.length, 1);
-    assert.match(result.warnings[0], /missing required credentials/);
+    assert.match(result.warnings[0], /AGENTS_MEMORY_BACKEND=mem0-lancedb/);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('deprecated mem0 oss backend returns a migration warning instead of resolving silently to null', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-adapter-'));
+  const repoRoot = createRepo(tmpDir, 'oss-deprecated');
+
+  try {
+    const config = resolveMemorySidecarConfig({
+      env: buildDeprecatedBackendEnv()
+    });
+
+    const backend = resolveMemorySidecarBackend({ config });
+    const result = await getRelevantMemories({
+      workflowStage: 'implement-plan',
+      cwd: repoRoot
+    }, {
+      config
+    });
+
+    assert.deepEqual(backend, { deprecated: true });
+    assert.equal(result.enabled, true);
+    assert.deepEqual(result.items, []);
+    assert.equal(result.warnings.length, 1);
+    assert.match(result.warnings[0], /AGENTS_MEMORY_BACKEND=mem0-lancedb/);
+    assert.match(result.warnings[0], /AGENTS_MEMORY_OSS_HISTORY_DB_PATH/);
+    assert.match(result.warnings[0], /AGENTS_MEMORY_OSS_VECTORSTORE_URL/);
+    assert.match(result.warnings[0], /AGENTS_MEMORY_OSS_VECTORSTORE_COLLECTION/);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
@@ -423,244 +480,166 @@ test('resolveMemorySidecarBackend creates a Mem0 backend only when credentials a
   assert.equal(missingCredentials, null);
 });
 
-test('resolveMemorySidecarBackend activates mem0 oss when the backend is ready', () => {
+test('resolveMemorySidecarBackend resolves mem0 oss to the deprecated backend warning path', () => {
   const config = resolveMemorySidecarConfig({
-    env: buildOssEnv()
+    env: buildDeprecatedBackendEnv()
   });
+  const backend = resolveMemorySidecarBackend({ config });
+
+  assert.deepEqual(backend, { deprecated: true });
+});
+
+test('resolveMemorySidecarBackend activates mem0 lancedb when the backend is ready', () => {
   const backend = resolveMemorySidecarBackend({
-    config,
-    client: {
-      async search() {
-        return { results: [] };
+    config: resolveMemorySidecarConfig({
+      env: buildLanceDbEnv()
+    }),
+    client: async () => ({
+      userId: 'project:test',
+      store: {
+        async findMemoryIdsByIdempotencyKey() {
+          return [];
+        },
+        async deleteByMemoryId() {}
       },
-      async getAll() {
-        return { results: [] };
-      },
-      async add() {
-        return { results: [] };
+      memoryClient: {
+        async search() {
+          return { results: [] };
+        },
+        async add() {
+          return { results: [] };
+        }
       }
-    }
+    })
   });
 
   assert.equal(typeof backend.search, 'function');
   assert.equal(typeof backend.record, 'function');
 });
 
-test('mem0 oss search performs dual scope lookup, filters client-side, and dedupes by idempotency key', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-oss-'));
-  const repoRoot = createRepo(tmpDir, 'oss-search');
+test('mem0 lancedb search performs dual scope lookup and record deletes prior idempotent rows', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-lancedb-'));
+  const repoRoot = createRepo(tmpDir, 'lancedb-search');
   const projectContext = getProjectContext({ cwd: repoRoot, projectRoot: repoRoot });
   const calls = [];
-  const client = {
-    async search(_queryText, options) {
-      calls.push(options);
-      if (options.userId === `project:${projectContext.projectSlug}`) {
-        return {
-          results: [
-            {
-              id: 'project-keep',
-              memory: 'Keep the project lesson',
-              score: 0.94,
-              createdAt: '2026-03-09T03:00:00.000Z',
-              metadata: {
-                project_id: projectContext.projectSlug,
-                workflow_stage: 'create-plan',
-                memory_kind: 'lesson',
-                scope: 'project',
-                source_artifact: '/tmp/project.md',
-                source_exists: true,
-                superseded: false,
-                confidence: 0.94,
-                idempotency_key: 'dedupe-1'
-              }
-            },
-            {
-              id: 'project-drop-stage',
-              memory: 'Wrong stage',
-              score: 0.99,
-              createdAt: '2026-03-09T02:00:00.000Z',
-              metadata: {
-                project_id: projectContext.projectSlug,
-                workflow_stage: 'implement-plan',
-                memory_kind: 'lesson',
-                scope: 'project',
-                source_artifact: '/tmp/stage.md',
-                source_exists: true,
-                superseded: false,
-                confidence: 0.99
-              }
-            },
-            {
-              id: 'project-drop-source',
-              memory: 'Deleted source',
-              score: 0.93,
-              createdAt: '2026-03-09T01:00:00.000Z',
-              metadata: {
-                project_id: projectContext.projectSlug,
-                workflow_stage: 'create-plan',
-                memory_kind: 'lesson',
-                scope: 'project',
-                source_artifact: '/tmp/deleted.md',
-                source_exists: false,
-                superseded: false,
-                confidence: 0.93
-              }
-            }
-          ]
-        };
-      }
-
+  const backend = createMem0LanceDbMemoryBackend({
+    config: resolveMemorySidecarConfig({
+      env: buildLanceDbEnv()
+    }),
+    namespaceFactory: async (userId) => {
+      calls.push(['namespace', userId]);
       return {
-        results: [
-          {
-            id: 'shared-dedupe',
-            memory: 'Keep the project lesson',
-            score: 0.89,
-            createdAt: '2026-03-09T04:00:00.000Z',
-            metadata: {
-              project_id: projectContext.projectSlug,
-              workflow_stage: 'create-plan',
-              memory_kind: 'lesson',
-              scope: 'shared',
-              source_artifact: '/tmp/shared.md',
-              source_exists: true,
-              superseded: false,
-              confidence: 0.89,
-              idempotency_key: 'dedupe-1'
-            }
+        userId,
+        store: {
+          async findMemoryIdsByIdempotencyKey(key) {
+            calls.push(['find', userId, key]);
+            return ['existing-memory-1'];
           },
-          {
-            id: 'shared-keep',
-            memory: 'Keep the shared preference',
-            score: 0.91,
-            createdAt: '2026-03-09T05:00:00.000Z',
-            metadata: {
-              project_id: projectContext.projectSlug,
-              workflow_stage: 'create-plan',
-              memory_kind: 'user_preference',
-              scope: 'shared',
-              source_artifact: '/tmp/shared-preference.md',
-              source_exists: true,
-              superseded: false,
-              confidence: 0.91
-            }
-          },
-          {
-            id: 'shared-drop-kind',
-            memory: 'Wrong kind for the query',
-            score: 0.92,
-            createdAt: '2026-03-09T06:00:00.000Z',
-            metadata: {
-              project_id: projectContext.projectSlug,
-              workflow_stage: 'create-plan',
-              memory_kind: 'failure_pattern',
-              scope: 'shared',
-              source_artifact: '/tmp/failure.md',
-              source_exists: true,
-              superseded: false,
-              confidence: 0.92
-            }
-          },
-          {
-            id: 'shared-drop-superseded',
-            memory: 'Superseded shared lesson',
-            score: 0.95,
-            createdAt: '2026-03-09T07:00:00.000Z',
-            metadata: {
-              project_id: projectContext.projectSlug,
-              workflow_stage: 'create-plan',
-              memory_kind: 'lesson',
-              scope: 'shared',
-              source_artifact: '/tmp/old.md',
-              source_exists: true,
-              superseded: true,
-              confidence: 0.95
-            }
+          async deleteByMemoryId(memoryId) {
+            calls.push(['delete', userId, memoryId]);
           }
-        ]
+        },
+        memoryClient: {
+          async search(_queryText, options) {
+            calls.push(['search', userId, options.userId]);
+            if (userId.startsWith('project:')) {
+              return {
+                results: [
+                  {
+                    id: 'project-keep',
+                    memory: 'Keep the scoped project lesson',
+                    score: 0.95,
+                    createdAt: '2026-03-09T03:00:00.000Z',
+                    metadata: {
+                      project_id: projectContext.projectSlug,
+                      workflow_stage: 'create-plan',
+                      memory_kind: 'lesson',
+                      scope: 'project',
+                      source_artifact: '/tmp/project.md',
+                      source_exists: true,
+                      superseded: false,
+                      confidence: 0.95
+                    }
+                  }
+                ]
+              };
+            }
+
+            return {
+              results: [
+                {
+                  id: 'shared-keep',
+                  memory: 'Keep the shared preference',
+                  score: 0.93,
+                  createdAt: '2026-03-09T04:00:00.000Z',
+                  metadata: {
+                    project_id: projectContext.projectSlug,
+                    workflow_stage: 'create-plan',
+                    memory_kind: 'user_preference',
+                    scope: 'shared',
+                    source_artifact: '/tmp/shared.md',
+                    source_exists: true,
+                    superseded: false,
+                    confidence: 0.93
+                  }
+                }
+              ]
+            };
+          },
+          async add(_messages, options) {
+            calls.push(['add', userId, options.userId, options.metadata.idempotency_key]);
+            return {
+              results: [
+                {
+                  id: 'lancedb-new-1'
+                }
+              ]
+            };
+          }
+        }
       };
     }
-  };
+  });
 
   try {
-    const result = await getRelevantMemories({
-      workflowStage: 'create-plan',
-      projectContext,
-      allowedMemoryKinds: ['lesson', 'user_preference'],
-      minScore: 0.9,
-      queryText: 'project lessons and preferences'
-    }, {
-      env: buildOssEnv(),
-      client
+    const recall = await backend.search({
+      project_id: projectContext.projectSlug,
+      workflow_stage: 'create-plan',
+      allowed_memory_kinds: ['lesson', 'user_preference'],
+      min_score: 0.8,
+      top_k: 3,
+      query_text: 'project lessons and preferences'
+    });
+    const recorded = await backend.record({
+      project_id: projectContext.projectSlug,
+      workflow_stage: 'create-plan',
+      memory_kind: 'lesson',
+      scope: 'project',
+      summary: 'Delete then re-add the LanceDB memory entry.',
+      source_artifact: '/tmp/lancedb/lesson.md',
+      idempotency_key: 'stable-key-lancedb',
+      confidence: 0.9
     });
 
-    assert.equal(result.enabled, true);
-    assert.equal(calls.length, 2);
-    assert.deepEqual(calls.map((item) => item.userId), [
-      `project:${projectContext.projectSlug}`,
-      'agents-shared'
+    assert.deepEqual(recall.items.map((item) => item.id), ['project-keep', 'shared-keep']);
+    assert.equal(recorded.id, 'lancedb-new-1');
+    assert.deepEqual(calls.filter(([name]) => name === 'search'), [
+      ['search', `project:${projectContext.projectSlug}`, `project:${projectContext.projectSlug}`],
+      ['search', 'agents-shared', 'agents-shared']
     ]);
-    assert.ok(calls.every((item) => item.limit === 12));
-    assert.deepEqual(result.items.map((item) => item.id), ['project-keep', 'shared-keep']);
+    assert.deepEqual(calls.slice(-3), [
+      ['find', `project:${projectContext.projectSlug}`, 'stable-key-lancedb'],
+      ['delete', `project:${projectContext.projectSlug}`, 'existing-memory-1'],
+      ['add', `project:${projectContext.projectSlug}`, `project:${projectContext.projectSlug}`, 'stable-key-lancedb']
+    ]);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
 
-test('mem0 oss search uses only project scope when shared kinds are not allowed', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-oss-'));
-  const repoRoot = createRepo(tmpDir, 'oss-project-only');
-  const projectContext = getProjectContext({ cwd: repoRoot, projectRoot: repoRoot });
-  const calls = [];
-  const client = {
-    async search(_queryText, options) {
-      calls.push(options);
-      return {
-        results: [
-          {
-            id: 'project-only',
-            memory: 'Failure pattern stays project-scoped',
-            score: 0.95,
-            createdAt: '2026-03-09T01:00:00.000Z',
-            metadata: {
-              project_id: projectContext.projectSlug,
-              workflow_stage: 'implement-plan',
-              memory_kind: 'failure_pattern',
-              scope: 'project',
-              source_artifact: '/tmp/failure-pattern.md',
-              source_exists: true,
-              superseded: false,
-              confidence: 0.95
-            }
-          }
-        ]
-      };
-    }
-  };
-
-  try {
-    const result = await getRelevantMemories({
-      workflowStage: 'implement-plan',
-      projectContext,
-      allowedMemoryKinds: ['failure_pattern'],
-      minScore: 0.9,
-      queryText: 'failure pattern'
-    }, {
-      env: buildOssEnv(),
-      client
-    });
-
-    assert.equal(calls.length, 1);
-    assert.equal(result.items.length, 1);
-    assert.equal(result.items[0].id, 'project-only');
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-});
-
-test('mem0 oss search caps output at the contract recall limit', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-oss-'));
-  const repoRoot = createRepo(tmpDir, 'oss-cap');
+test('mem0 lancedb backend caps output at the contract recall limit', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-lancedb-'));
+  const repoRoot = createRepo(tmpDir, 'lancedb-cap');
   const projectContext = getProjectContext({ cwd: repoRoot, projectRoot: repoRoot });
   const results = Array.from({ length: 5 }, (_, index) => ({
     id: `project-${index + 1}`,
@@ -678,13 +657,25 @@ test('mem0 oss search caps output at the contract recall limit', async () => {
       confidence: 0.99 - index * 0.01
     }
   }));
-  const backend = createMem0OssMemoryBackend({
-    client: {
-      async search() {
-        return { results };
+  const backend = createMem0LanceDbMemoryBackend({
+    config: resolveMemorySidecarConfig({ env: buildLanceDbEnv() }),
+    namespaceFactory: async (userId) => ({
+      userId,
+      store: {
+        async findMemoryIdsByIdempotencyKey() {
+          return [];
+        },
+        async deleteByMemoryId() {}
+      },
+      memoryClient: {
+        async search() {
+          return { results };
+        },
+        async add() {
+          return { results: [] };
+        }
       }
-    },
-    config: resolveMemorySidecarConfig({ env: buildOssEnv() })
+    })
   });
 
   try {
@@ -704,205 +695,165 @@ test('mem0 oss search caps output at the contract recall limit', async () => {
   }
 });
 
-test('mem0 oss record deletes existing idempotent memory and re-adds with infer disabled', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-oss-'));
-  const repoRoot = createRepo(tmpDir, 'oss-record');
+test('mem0 lancedb search drops records with wrong workflow_stage', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-lancedb-'));
+  const repoRoot = createRepo(tmpDir, 'lancedb-stage-filter');
   const projectContext = getProjectContext({ cwd: repoRoot, projectRoot: repoRoot });
-  const calls = [];
-  const client = {
-    async getAll(options) {
-      calls.push(['getAll', options]);
-      return {
-        results: [
-          {
-            id: 'oss-existing-1',
-            metadata: {
-              idempotency_key: 'stable-key-oss'
-            }
-          }
-        ]
-      };
-    },
-    async delete(memoryId) {
-      calls.push(['delete', memoryId]);
-      return { message: 'deleted' };
-    },
-    async add(messages, options) {
-      calls.push(['add', messages, options]);
-      return {
-        results: [
-          {
-            id: 'oss-new-1'
-          }
-        ]
-      };
-    },
-    async update() {
-      throw new Error('update should not be called');
-    }
-  };
+  const backend = createMem0LanceDbMemoryBackend({
+    config: resolveMemorySidecarConfig({ env: buildLanceDbEnv() }),
+    namespaceFactory: async (userId) => ({
+      userId,
+      store: {
+        async findMemoryIdsByIdempotencyKey() {
+          return [];
+        },
+        async deleteByMemoryId() {}
+      },
+      memoryClient: {
+        async search() {
+          return {
+            results: [
+              {
+                id: 'keep-create-plan',
+                memory: 'Create-plan lesson',
+                score: 0.94,
+                createdAt: '2026-03-09T03:00:00.000Z',
+                metadata: {
+                  project_id: projectContext.projectSlug,
+                  workflow_stage: 'create-plan',
+                  memory_kind: 'lesson',
+                  scope: 'project',
+                  source_artifact: '/tmp/keep.md',
+                  source_exists: true,
+                  superseded: false,
+                  confidence: 0.94
+                }
+              },
+              {
+                id: 'drop-implement-plan',
+                memory: 'Implementation-only memory',
+                score: 0.99,
+                createdAt: '2026-03-09T04:00:00.000Z',
+                metadata: {
+                  project_id: projectContext.projectSlug,
+                  workflow_stage: 'implement-plan',
+                  memory_kind: 'lesson',
+                  scope: 'project',
+                  source_artifact: '/tmp/drop.md',
+                  source_exists: true,
+                  superseded: false,
+                  confidence: 0.99
+                }
+              }
+            ]
+          };
+        },
+        async add() {
+          return { results: [] };
+        }
+      }
+    })
+  });
 
   try {
-    const result = await recordMemory({
+    const result = await backend.search({
+      project_id: projectContext.projectSlug,
       workflow_stage: 'create-plan',
-      memory_kind: 'lesson',
-      scope: 'project',
-      summary: 'Delete then re-add the OSS memory entry.',
-      source_artifact: '/tmp/oss-record/lesson.md',
-      idempotency_key: 'stable-key-oss'
-    }, {
-      env: buildOssEnv(),
-      projectContext,
-      client
+      allowed_memory_kinds: ['lesson'],
+      min_score: 0.8,
+      top_k: 3,
+      query_text: 'lesson'
     });
 
-    assert.equal(result.recorded, true);
-    assert.deepEqual(calls[0], ['getAll', { userId: `project:${projectContext.projectSlug}` }]);
-    assert.deepEqual(calls[1], ['delete', 'oss-existing-1']);
-    assert.equal(calls[2][0], 'add');
-    assert.equal(calls[2][2].infer, false);
-    assert.equal(result.record.id, 'oss-new-1');
+    assert.deepEqual(result.items.map((item) => item.id), ['keep-create-plan']);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
 
-test('mem0 oss record skips getAll and delete when no idempotency key is present', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-oss-'));
-  const repoRoot = createRepo(tmpDir, 'oss-record-direct');
+test('mem0 lancedb search drops superseded records', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-lancedb-'));
+  const repoRoot = createRepo(tmpDir, 'lancedb-superseded-filter');
   const projectContext = getProjectContext({ cwd: repoRoot, projectRoot: repoRoot });
-  const calls = [];
-  const client = {
-    async add(messages, options) {
-      calls.push(['add', messages, options]);
-      return {
-        results: [
-          {
-            id: 'oss-direct-1'
-          }
-        ]
-      };
-    }
-  };
+  const backend = createMem0LanceDbMemoryBackend({
+    config: resolveMemorySidecarConfig({ env: buildLanceDbEnv() }),
+    namespaceFactory: async (userId) => ({
+      userId,
+      store: {
+        async findMemoryIdsByIdempotencyKey() {
+          return [];
+        },
+        async deleteByMemoryId() {}
+      },
+      memoryClient: {
+        async search() {
+          return {
+            results: [
+              {
+                id: 'keep-current',
+                memory: 'Current lesson',
+                score: 0.91,
+                createdAt: '2026-03-09T03:00:00.000Z',
+                metadata: {
+                  project_id: projectContext.projectSlug,
+                  workflow_stage: 'create-plan',
+                  memory_kind: 'lesson',
+                  scope: 'project',
+                  source_artifact: '/tmp/current.md',
+                  source_exists: true,
+                  superseded: false,
+                  confidence: 0.91
+                }
+              },
+              {
+                id: 'drop-superseded',
+                memory: 'Superseded lesson',
+                score: 0.97,
+                createdAt: '2026-03-09T04:00:00.000Z',
+                metadata: {
+                  project_id: projectContext.projectSlug,
+                  workflow_stage: 'create-plan',
+                  memory_kind: 'lesson',
+                  scope: 'project',
+                  source_artifact: '/tmp/old.md',
+                  source_exists: true,
+                  superseded: true,
+                  confidence: 0.97
+                }
+              }
+            ]
+          };
+        },
+        async add() {
+          return { results: [] };
+        }
+      }
+    })
+  });
 
   try {
-    const result = await recordMemory({
-      workflow_stage: 'implement-plan',
-      memory_kind: 'lesson',
-      scope: 'project',
-      summary: 'Direct OSS record without idempotency.',
-      source_artifact: '/tmp/oss-record/direct.md'
-    }, {
-      env: buildOssEnv(),
-      projectContext,
-      client
+    const result = await backend.search({
+      project_id: projectContext.projectSlug,
+      workflow_stage: 'create-plan',
+      allowed_memory_kinds: ['lesson'],
+      min_score: 0.8,
+      top_k: 3,
+      query_text: 'lesson'
     });
 
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0][0], 'add');
-    assert.equal(calls[0][2].infer, false);
-    assert.equal(result.record.id, 'oss-direct-1');
+    assert.deepEqual(result.items.map((item) => item.id), ['keep-current']);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
 
-test('mem0 oss backend stays unavailable when history db path is missing', () => {
-  const backend = resolveMemorySidecarBackend({
-    config: resolveMemorySidecarConfig({
-      env: buildOssEnv({
-        AGENTS_MEMORY_OSS_HISTORY_DB_PATH: ''
-      })
-    }),
-    client: {
-      async search() {
-        return { results: [] };
-      }
-    }
-  });
-
-  assert.equal(backend, null);
-});
-
-test('mem0 oss backend stays unavailable when vector store url is missing', () => {
-  const backend = resolveMemorySidecarBackend({
-    config: resolveMemorySidecarConfig({
-      env: buildOssEnv({
-        AGENTS_MEMORY_OSS_VECTORSTORE_URL: ''
-      })
-    }),
-    client: {
-      async search() {
-        return { results: [] };
-      }
-    }
-  });
-
-  assert.equal(backend, null);
-});
-
-test('mem0 oss backend stays unavailable when embedder credentials are missing', () => {
-  const backend = resolveMemorySidecarBackend({
-    config: resolveMemorySidecarConfig({
-      env: buildOssEnv({
-        AGENTS_MEMORY_OSS_EMBEDDER_API_KEY: ''
-      })
-    }),
-    client: {
-      async search() {
-        return { results: [] };
-      }
-    }
-  });
-
-  assert.equal(backend, null);
-});
-
-test('mem0 oss backend stays unavailable when llm config is missing', () => {
-  const backend = resolveMemorySidecarBackend({
-    config: resolveMemorySidecarConfig({
-      env: buildOssEnv({
-        AGENTS_MEMORY_OSS_LLM_MODEL: ''
-      })
-    }),
-    client: {
-      async search() {
-        return { results: [] };
-      }
-    }
-  });
-
-  assert.equal(backend, null);
-});
-
-test('mem0 oss setup requires MEM0_TELEMETRY=false before runtime import', () => {
-  const previous = process.env.MEM0_TELEMETRY;
-  process.env.MEM0_TELEMETRY = 'true';
-
-  try {
-    const backend = resolveMemorySidecarBackend({
-      config: resolveMemorySidecarConfig({
-        env: buildOssEnv()
-      })
-    });
-
-    assert.equal(backend, null);
-  } finally {
-    if (previous === undefined) {
-      delete process.env.MEM0_TELEMETRY;
-    } else {
-      process.env.MEM0_TELEMETRY = previous;
-    }
-  }
-});
-
-test('mem0 oss runtime env mirrors embedder base url into OPENAI_BASE_URL', () => {
+test('local memory runtime env mirrors embedder base url into OPENAI_BASE_URL', () => {
   const previous = process.env.OPENAI_BASE_URL;
 
   try {
     process.env.OPENAI_BASE_URL = 'https://old.example/v1';
-    prepareMem0OssRuntimeEnv(resolveMemorySidecarConfig({
-      env: buildOssEnv({
+    prepareLocalMemoryRuntimeEnv(resolveMemorySidecarConfig({
+      env: buildDeprecatedBackendEnv({
         AGENTS_MEMORY_OSS_EMBEDDER_BASE_URL: 'https://openrouter.ai/api/v1'
       })
     }));
@@ -917,31 +868,105 @@ test('mem0 oss runtime env mirrors embedder base url into OPENAI_BASE_URL', () =
   }
 });
 
-test('project id override is used by both oss search and record paths', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-oss-'));
-  const repoRoot = createRepo(tmpDir, 'oss-override');
+test('lancedb langchain store can insert, search, and delete records locally', async () => {
+  const dbPath = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lancedb-store-'));
+  const store = new LanceDbLangChainStore({
+    dbPath,
+    tableName: 'agents_memory_v1_project_test'
+  });
+
+  try {
+    await store.addVectors(
+      [[1, 0], [0.9, 0.1]],
+      [
+        { metadata: { idempotency_key: 'key-1', summary: 'alpha' } },
+        { metadata: { idempotency_key: 'key-2', summary: 'beta' } }
+      ],
+      { ids: ['mem-1', 'mem-2'] }
+    );
+
+    const matches = await store.similaritySearchVectorWithScore([1, 0], 2);
+    const dedupe = await store.findMemoryIdsByIdempotencyKey('key-1');
+    await store.delete({ filter: { _mem0_id: 'mem-1' } });
+    const afterDelete = await store.findMemoryIdsByIdempotencyKey('key-1');
+
+    assert.equal(matches.length, 2);
+    assert.equal(matches[0][0].metadata.idempotency_key, 'key-1');
+    assert.ok(matches[0][1] >= matches[1][1]);
+    assert.deepEqual(dedupe, ['mem-1']);
+    assert.deepEqual(afterDelete, []);
+  } finally {
+    fs.rmSync(dbPath, { recursive: true, force: true });
+  }
+});
+
+test('mem0 lancedb backend stays unavailable when the history db path is missing', () => {
+  const backend = resolveMemorySidecarBackend({
+    config: resolveMemorySidecarConfig({
+      env: buildLanceDbEnv({
+        AGENTS_MEMORY_OSS_HISTORY_DB_PATH: ''
+      })
+    }),
+    client: async () => null
+  });
+
+  assert.equal(backend, null);
+});
+
+test('mem0 lancedb backend stays unavailable when lancedb path is missing AND history db path is missing', () => {
+  const backend = resolveMemorySidecarBackend({
+    config: resolveMemorySidecarConfig({
+      env: buildLanceDbEnv({
+        AGENTS_MEMORY_LANCEDB_PATH: '',
+        AGENTS_MEMORY_OSS_HISTORY_DB_PATH: ''
+      })
+    }),
+    client: async () => null
+  });
+
+  assert.equal(backend, null);
+});
+
+test('project id override is used by lancedb search and record paths', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-lancedb-'));
+  const repoRoot = createRepo(tmpDir, 'lancedb-override');
   const projectContext = getProjectContext({ cwd: repoRoot, projectRoot: repoRoot });
   const calls = [];
   const override = 'stable-project-id';
-  const env = buildOssEnv({
+  const env = buildLanceDbEnv({
     AGENTS_MEMORY_PROJECT_ID_OVERRIDE: override
   });
-  const client = {
-    async search(_queryText, options) {
-      calls.push(['search', options.userId]);
-      return { results: [] };
-    },
-    async add(_messages, options) {
-      calls.push(['add', options.userId]);
-      return {
-        results: [
-          {
-            id: 'oss-override-1'
-          }
-        ]
-      };
-    }
-  };
+  const backend = createMem0LanceDbMemoryBackend({
+    config: resolveMemorySidecarConfig({ env }),
+    namespaceFactory: async (userId) => ({
+      userId,
+      store: {
+        async findMemoryIdsByIdempotencyKey(key) {
+          calls.push(['find', userId, key]);
+          return [];
+        },
+        async deleteByMemoryId(memoryId) {
+          calls.push(['delete', userId, memoryId]);
+        }
+      },
+      memoryClient: {
+        async search(_queryText, options) {
+          calls.push(['search', userId, options.userId]);
+          return { results: [] };
+        },
+        async add(_messages, options) {
+          calls.push(['add', userId, options.userId]);
+          return {
+            results: [
+              {
+                id: 'lancedb-override-1'
+              }
+            ]
+          };
+        }
+      }
+    })
+  });
 
   try {
     const recall = await getRelevantMemories({
@@ -949,7 +974,7 @@ test('project id override is used by both oss search and record paths', async ()
       projectContext
     }, {
       env,
-      client
+      backend
     });
 
     const recorded = await recordMemory({
@@ -957,19 +982,19 @@ test('project id override is used by both oss search and record paths', async ()
       memory_kind: 'lesson',
       scope: 'project',
       summary: 'Use the stable override for recall and writes.',
-      source_artifact: '/tmp/oss-override/lesson.md'
+      source_artifact: '/tmp/lancedb-override/lesson.md'
     }, {
       env,
       projectContext,
-      client
+      backend
     });
 
     assert.equal(recall.project_id, override);
     assert.equal(recorded.record.project_id, override);
     assert.deepEqual(calls, [
-      ['search', `project:${override}`],
-      ['search', 'agents-shared'],
-      ['add', `project:${override}`]
+      ['search', `project:${override}`, `project:${override}`],
+      ['search', 'agents-shared', 'agents-shared'],
+      ['add', `project:${override}`, `project:${override}`]
     ]);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });

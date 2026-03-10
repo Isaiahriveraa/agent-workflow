@@ -73,18 +73,18 @@ export const SUPPORTED_MEM0_PROFILE = Object.freeze({
   }
 });
 
-export const SUPPORTED_MEM0_OSS_PROFILE = Object.freeze({
+export const SUPPORTED_MEM0_LANCEDB_PROFILE = Object.freeze({
   enabledByDefault: false,
   integration: 'oss-node',
-  backend: 'mem0-oss',
+  backend: 'mem0-lancedb',
   projectIdentity: 'projectSlug-or-override',
-  branchIsolation: 'shared-project-namespace',
+  branchIsolation: 'dedicated-lancedb-table-per-scope',
   storage: {
     persistenceRequired: true,
     inMemoryFallbackAllowed: false,
-    provider: 'qdrant',
-    collectionName: 'agents-memory-v1',
-    embeddingDims: 1536,
+    provider: 'lancedb',
+    tableBaseName: 'agents_memory_v1',
+    pathTemplate: '<projectRoot>/.agents-memory/lancedb',
     embeddingModel: 'text-embedding-3-small'
   },
   model: {
@@ -98,7 +98,7 @@ export const SUPPORTED_MEM0_OSS_PROFILE = Object.freeze({
     explicitPathRequired: true
   },
   upsertStrategy: 'delete-and-readd',
-  filterStrategy: 'dual-search-client-side-merge',
+  filterStrategy: 'scope-isolated-table-plus-client-side-merge',
   failureMode: {
     disabled: 'silent-no-op',
     enabledBackendUnavailable: 'warn-and-return-empty'

@@ -11,10 +11,10 @@ import {
   MEMORY_EVALUATION_THRESHOLDS,
   MEMORY_KINDS,
   SHARED_SCOPE_ALLOWED_KINDS,
-  SUPPORTED_MEM0_OSS_PROFILE,
+  SUPPORTED_MEM0_LANCEDB_PROFILE,
   SUPPORTED_MEM0_PROFILE
 } from '../scripts/memory-sidecar-contract.mjs';
-import { createMem0OssMemoryBackend } from '../scripts/memory-sidecar-adapter.mjs';
+import { createMem0LanceDbMemoryBackend } from '../scripts/memory-sidecar-adapter.mjs';
 import { getProjectContext } from '../scripts/project-context.mjs';
 
 const root = path.resolve(new URL('..', import.meta.url).pathname);
@@ -68,24 +68,24 @@ test('supported mem0 profile stays disabled by default and forbids in-memory per
   assert.equal(SUPPORTED_MEM0_PROFILE.failureMode.enabledBackendUnavailable, 'warn-and-return-empty');
 });
 
-test('supported mem0 oss profile stays disabled by default and locks the qdrant contract', () => {
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.enabledByDefault, false);
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.integration, 'oss-node');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.backend, 'mem0-oss');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.storage.persistenceRequired, true);
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.storage.inMemoryFallbackAllowed, false);
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.storage.provider, 'qdrant');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.storage.collectionName, 'agents-memory-v1');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.storage.embeddingDims, 1536);
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.storage.embeddingModel, 'text-embedding-3-small');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.model.primary, 'env:AGENTS_MEMORY_OSS_LLM_MODEL');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.model.embedding, 'text-embedding-3-small');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.model.inferMode, false);
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.historyDb.pathTemplate, '<projectRoot>/.agents-memory/history.db');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.historyDb.explicitPathRequired, true);
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.upsertStrategy, 'delete-and-readd');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.filterStrategy, 'dual-search-client-side-merge');
-  assert.equal(SUPPORTED_MEM0_OSS_PROFILE.openclaw.supportedInV1, false);
+test('supported mem0 lancedb profile stays disabled by default and locks the lancedb contract', () => {
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.enabledByDefault, false);
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.integration, 'oss-node');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.backend, 'mem0-lancedb');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.storage.persistenceRequired, true);
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.storage.inMemoryFallbackAllowed, false);
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.storage.provider, 'lancedb');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.storage.tableBaseName, 'agents_memory_v1');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.storage.pathTemplate, '<projectRoot>/.agents-memory/lancedb');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.storage.embeddingModel, 'text-embedding-3-small');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.model.primary, 'env:AGENTS_MEMORY_OSS_LLM_MODEL');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.model.embedding, 'text-embedding-3-small');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.model.inferMode, false);
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.historyDb.pathTemplate, '<projectRoot>/.agents-memory/history.db');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.historyDb.explicitPathRequired, true);
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.upsertStrategy, 'delete-and-readd');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.filterStrategy, 'scope-isolated-table-plus-client-side-merge');
+  assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.openclaw.supportedInV1, false);
 });
 
 test('shared scope remains limited to the locked kinds', () => {
@@ -121,47 +121,59 @@ test('deterministic backend replays the phase 0 fixtures', () => {
   }
 });
 
-test('oss backend replay matches the locked phase 0 fixture rubric', async () => {
+test('lancedb backend replay matches the locked phase 0 fixture rubric', async () => {
   for (const scenario of fixture.scenarios) {
-    const backend = createMem0OssMemoryBackend({
-      client: {
-        async search(_queryText, options) {
-          const scope = options.userId === 'agents-shared' ? 'shared' : 'project';
-          const results = scenario.records
-            .filter((record) => record.scope === scope)
-            .filter((record) => {
-              if (scope === 'shared') {
-                return true;
-              }
-
-              return record.project_id === scenario.query.project_id;
-            })
-            .map((record) => ({
-              id: record.id,
-              memory: record.summary,
-              score: record.score,
-              createdAt: record.created_at,
-              metadata: {
-                project_id: record.project_id,
-                workflow_stage: record.workflow_stage,
-                memory_kind: record.memory_kind,
-                scope: record.scope,
-                source_artifact: record.source_artifact,
-                source_exists: record.source_exists !== false,
-                superseded: record.superseded === true,
-                confidence: record.score,
-                idempotency_key: record.idempotency_key ?? null
-              }
-            }));
-
-          return { results };
-        }
-      },
+    const backend = createMem0LanceDbMemoryBackend({
       config: {
         scope: {
           sharedUserId: 'agents-shared'
         }
-      }
+      },
+      namespaceFactory: async (userId) => ({
+        userId,
+        store: {
+          async findMemoryIdsByIdempotencyKey() {
+            return [];
+          },
+          async deleteByMemoryId() {}
+        },
+        memoryClient: {
+          async search(_queryText, options) {
+            const scope = options.userId === 'agents-shared' ? 'shared' : 'project';
+            const results = scenario.records
+              .filter((record) => record.scope === scope)
+              .filter((record) => {
+                if (scope === 'shared') {
+                  return true;
+                }
+
+                return record.project_id === scenario.query.project_id;
+              })
+              .map((record) => ({
+                id: record.id,
+                memory: record.summary,
+                score: record.score,
+                createdAt: record.created_at,
+                metadata: {
+                  project_id: record.project_id,
+                  workflow_stage: record.workflow_stage,
+                  memory_kind: record.memory_kind,
+                  scope: record.scope,
+                  source_artifact: record.source_artifact,
+                  source_exists: record.source_exists !== false,
+                  superseded: record.superseded === true,
+                  confidence: record.score,
+                  idempotency_key: record.idempotency_key ?? null
+                }
+              }));
+
+            return { results };
+          },
+          async add() {
+            throw new Error(`record path should not run in fixture replay for ${userId}`);
+          }
+        }
+      })
     });
 
     const result = await backend.search(scenario.query);
