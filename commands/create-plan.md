@@ -323,20 +323,22 @@ For plans where `substantial: true` (classified by `node ./scripts/workflow-rout
 
 3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
    - Read the critique document fully
-   - Revise the plan to address all blocking issues
+   - Spawn `critique-responder` to revise the plan against the critique findings
    - Update plan frontmatter: increment `critique_cycles`, add critique document path to `critique_artifacts` (single-line array only)
    - Re-spawn the critic (max 2 revision cycles total — 3 runs)
    - If still blocking after 2 revisions: surface the blocking issues to the user and ask for guidance; do NOT proceed to Step 5
 
 4. **If `## CRITIQUE: WARNINGS ONLY`:**
    - Read the critique document
-   - Address any warnings that materially affect the plan
+   - Use `critique-responder` for any warning-driven revisions that materially affect the plan
    - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Use `artifact-gatekeeper` if critique evidence and parser-backed grade results point in different directions
    - Proceed to Step 5
 
 5. **If `## CRITIQUE: ADVISORY`:**
    - Optionally address advisory suggestions
    - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Use `artifact-gatekeeper` when advancement readiness is still unclear
    - Proceed to Step 5
 
 6. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**
