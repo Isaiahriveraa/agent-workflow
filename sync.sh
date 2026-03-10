@@ -171,8 +171,7 @@ Commands:
   gen-agents                Backward-compatible alias for gen-opencode-agents
   gen-opencode-agents       Generate OpenCode agents from hub agents
   gen-antigravity-commands  Generate Antigravity command TOML from hub commands
-  gen-antigravity-agents    Generate Antigravity agents from hub agents
-  gen-antigravity-gsd       Sync hub get-shit-done content into Antigravity
+  gen-antigravity-agents    Generate Gemini-compatible agents from hub agents
   gen-openclaw-workspace    Generate OpenClaw workspace wrappers
 
 Set HOME and/or HUB to run against fixture environments without touching your real tool directories.
@@ -335,12 +334,6 @@ elif tool == "antigravity" and surface == "agents":
     if missing:
         fail(f"missing generated agents: {', '.join(missing[:5])}")
     print(f"{len(expected)} agents present")
-elif tool == "antigravity" and surface == "gsd":
-    expected = list_files(source)
-    missing = [name for name in expected if not os.path.exists(os.path.join(target, name))]
-    if missing:
-        fail(f"missing synced gsd files: {', '.join(missing[:5])}")
-    print(f"{len(expected)} gsd files present")
 elif tool == "openclaw" and surface == "workspace-wrappers":
     missing = [name for name in declared_outputs if not os.path.exists(os.path.join(target, name))]
     if missing:
@@ -365,7 +358,6 @@ run_generator_command() {
         "sync.sh gen-opencode-agents") cmd_gen_opencode_agents ;;
         "sync.sh gen-antigravity-commands") cmd_gen_antigravity_commands ;;
         "sync.sh gen-antigravity-agents") cmd_gen_antigravity_agents ;;
-        "sync.sh gen-antigravity-gsd") cmd_gen_antigravity_gsd ;;
         "sync.sh gen-openclaw-workspace") cmd_gen_openclaw_workspace ;;
         *)
             echo "Unknown generator command in manifest: $1" >&2
@@ -445,6 +437,21 @@ migrate_legacy_claude_content() {
     fi
 }
 
+cleanup_legacy_antigravity_content() {
+    local gemini_skills="$HOME/.gemini/skills"
+
+    if [ -L "$gemini_skills" ]; then
+        rm "$gemini_skills"
+        ok "Removed legacy ~/.gemini/skills symlink"
+    elif [ -d "$gemini_skills" ]; then
+        local backup="${gemini_skills}.bak.$(date +%Y%m%d%H%M%S)"
+        warn "Backing up legacy ~/.gemini/skills to $backup"
+        mv "$gemini_skills" "$backup"
+    else
+        info "Gemini skills mirror: not present"
+    fi
+}
+
 cmd_verify() {
     local all_ok=true
     local src tgt actual generated_ok=true
@@ -510,6 +517,7 @@ cmd_migrate() {
     echo ""
 
     migrate_legacy_claude_content
+    cleanup_legacy_antigravity_content
 
     echo ""
     echo "Repairing manifest symlinks..."
@@ -542,6 +550,13 @@ import re
 hub_commands = os.path.join(os.environ["HUB"], "commands")
 out_base = os.path.expanduser("~/.gemini/commands")
 
+def rewrite_for_gemini(value):
+    return (
+        value
+        .replace("~/.claude/get-shit-done", "~/.gemini/get-shit-done")
+        .replace("$HOME/.claude/get-shit-done", "$HOME/.gemini/get-shit-done")
+    )
+
 generated = 0
 skipped = 0
 
@@ -565,7 +580,7 @@ for md_file in sorted(glob.glob(os.path.join(hub_commands, "**/*.md"), recursive
         continue
 
     description = desc_match.group(1).strip().strip('"')
-    body = content[frontmatter.end():].strip()
+    body = rewrite_for_gemini(content[frontmatter.end():].strip())
 
     rel = os.path.relpath(md_file, hub_commands)
     rel_toml = os.path.splitext(rel)[0] + ".toml"
@@ -689,10 +704,69 @@ cmd_gen_antigravity_agents() {
     HUB="$HUB" HOME="$HOME" python3 <<'PYEOF'
 import glob
 import os
-import shutil
+import re
 
 source = os.path.join(os.environ["HUB"], "agents")
 target = os.path.expanduser("~/.gemini/agents")
+
+TOOL_MAP = {
+    "Read": "read_file",
+    "Write": "write_file",
+    "Edit": "replace",
+    "MultiEdit": "replace",
+    "Bash": "run_shell_command",
+    "Grep": "grep_search",
+    "Glob": "glob",
+    "LS": "list_directory",
+    "WebFetch": "web_fetch",
+    "WebSearch": "google_web_search",
+    "TodoWrite": "write_todos",
+}
+
+SAFE_GEMINI_MODEL_PREFIXES = (
+    "gemini-",
+    "models/",
+)
+
+def parse_frontmatter(content):
+    frontmatter = re.match(r'^---\n(.*?)\n---\n?', content, re.DOTALL)
+    if not frontmatter:
+        return {}, content
+
+    metadata = {}
+    for raw_line in frontmatter.group(1).splitlines():
+        if not raw_line.strip() or ":" not in raw_line:
+            continue
+        key, value = raw_line.split(":", 1)
+        metadata[key.strip()] = value.strip()
+
+    return metadata, content[frontmatter.end():].lstrip("\n")
+
+def clean_scalar(value):
+    value = value.strip().strip('"').strip("'")
+    value = value.replace("\\n", " ")
+    return " ".join(value.split())
+
+def yaml_quote(value):
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+def rewrite_for_gemini(value):
+    return (
+        value
+        .replace("~/.claude/get-shit-done", "~/.gemini/get-shit-done")
+        .replace("$HOME/.claude/get-shit-done", "$HOME/.gemini/get-shit-done")
+    )
+
+def map_tools(value):
+    mapped = []
+    for raw_tool in [item.strip() for item in value.split(",") if item.strip()]:
+        translated = TOOL_MAP.get(raw_tool)
+        if translated and translated not in mapped:
+            mapped.append(translated)
+            if translated == "replace" and "write_file" not in mapped:
+                mapped.append("write_file")
+    return mapped
 
 expected = {os.path.basename(path) for path in glob.glob(os.path.join(source, "*.md"))}
 existing = {name for name in os.listdir(target) if name.endswith(".md")}
@@ -704,66 +778,42 @@ for stale in sorted(existing - expected):
 generated = 0
 for md_file in sorted(glob.glob(os.path.join(source, "*.md"))):
     name = os.path.basename(md_file)
-    shutil.copy2(md_file, os.path.join(target, name))
+
+    with open(md_file, 'r', encoding='utf8') as handle:
+        content = handle.read()
+
+    metadata, body = parse_frontmatter(content)
+
+    frontmatter_lines = [
+        "---",
+        "kind: local",
+        f"name: {yaml_quote(clean_scalar(metadata.get('name', os.path.splitext(name)[0])))}",
+    ]
+
+    description = clean_scalar(metadata.get("description", ""))
+    if description:
+        frontmatter_lines.append(f"description: {yaml_quote(description)}")
+
+    model = clean_scalar(metadata.get("model", ""))
+    if model and model.startswith(SAFE_GEMINI_MODEL_PREFIXES):
+        frontmatter_lines.append(f"model: {yaml_quote(model)}")
+
+    tools = map_tools(metadata.get("tools", ""))
+    if tools:
+        frontmatter_lines.append("tools:")
+        for tool in tools:
+            frontmatter_lines.append(f"  - {yaml_quote(tool)}")
+
+    frontmatter_lines.append("---")
+
+    rendered = "\n".join(frontmatter_lines) + "\n\n" + rewrite_for_gemini(body.rstrip()) + "\n"
+    with open(os.path.join(target, name), 'w', encoding='utf8') as handle:
+        handle.write(rendered)
+
     print(f"  Generated: {name}")
     generated += 1
 
 print(f"\nDone. {generated} agents in {target}")
-PYEOF
-}
-
-cmd_gen_antigravity_gsd() {
-    local target_dir="$HOME/.gemini/get-shit-done"
-    mkdir -p "$target_dir"
-
-    echo "Syncing get-shit-done content into Antigravity..."
-    echo ""
-
-    HUB="$HUB" HOME="$HOME" python3 <<'PYEOF'
-import os
-import shutil
-
-source = os.path.join(os.environ["HUB"], "get-shit-done")
-target = os.path.expanduser("~/.gemini/get-shit-done")
-
-source_entries = set()
-
-for current_root, dirnames, filenames in os.walk(source):
-    rel_root = os.path.relpath(current_root, source)
-    if rel_root == ".":
-        rel_root = ""
-    target_root = os.path.join(target, rel_root)
-    os.makedirs(target_root, exist_ok=True)
-
-    for dirname in dirnames:
-        source_entries.add(os.path.join(rel_root, dirname).strip("./"))
-        os.makedirs(os.path.join(target_root, dirname), exist_ok=True)
-
-    for filename in filenames:
-        rel_path = os.path.join(rel_root, filename).strip("./")
-        source_entries.add(rel_path)
-        shutil.copy2(os.path.join(current_root, filename), os.path.join(target_root, filename))
-        print(f"  Synced: {rel_path}")
-
-for current_root, dirnames, filenames in os.walk(target, topdown=False):
-    rel_root = os.path.relpath(current_root, target)
-    if rel_root == ".":
-        rel_root = ""
-
-    for filename in filenames:
-        rel_path = os.path.join(rel_root, filename).strip("./")
-        if rel_path not in source_entries:
-            os.remove(os.path.join(current_root, filename))
-            print(f"  Removed stale: {rel_path}")
-
-    for dirname in dirnames:
-        rel_path = os.path.join(rel_root, dirname).strip("./")
-        full_path = os.path.join(current_root, dirname)
-        if rel_path not in source_entries and not os.listdir(full_path):
-            os.rmdir(full_path)
-            print(f"  Removed stale dir: {rel_path}")
-
-print("\nDone. Antigravity get-shit-done content synchronized.")
 PYEOF
 }
 
@@ -813,7 +863,6 @@ case "${1:-}" in
     gen-opencode-agents)       cmd_gen_opencode_agents ;;
     gen-antigravity-commands)  cmd_gen_antigravity_commands ;;
     gen-antigravity-agents)    cmd_gen_antigravity_agents ;;
-    gen-antigravity-gsd)       cmd_gen_antigravity_gsd ;;
     gen-openclaw-workspace)    cmd_gen_openclaw_workspace ;;
     *)                         usage ;;
 esac

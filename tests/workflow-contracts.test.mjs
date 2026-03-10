@@ -327,17 +327,29 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   );
   const generatedByTool = Object.groupBy(manifest.generated, ({ tool }) => tool);
   const capabilities = manifest.capabilities;
+  const geminiEntrypointLink = manifest.symlinks.find((entry) =>
+    entry.tool === 'antigravity' && entry.source === '~/.gemini/GEMINI.md'
+  );
+  const geminiGsdLink = manifest.symlinks.find((entry) =>
+    entry.tool === 'antigravity' && entry.source === '~/.gemini/get-shit-done'
+  );
 
   assert.ok(claudePromptLink);
   assert.equal(claudePromptLink.target, '~/.agents/adapters/claude-code/CLAUDE.md');
   assert.ok(openclawPromptLink);
   assert.equal(openclawPromptLink.target, '~/.agents/prompts/system.md');
+  assert.ok(geminiEntrypointLink);
+  assert.equal(geminiEntrypointLink.target, '~/.agents/adapters/antigravity/GEMINI.md');
+  assert.ok(geminiGsdLink);
+  assert.equal(geminiGsdLink.target, '~/.agents/get-shit-done');
   assert.deepEqual(Object.keys(capabilities).sort(), ['antigravity', 'claude-code', 'codex-cli', 'openclaw', 'opencode']);
   assert.equal(capabilities['claude-code'].entrypoint.status, 'bridged');
   assert.equal(capabilities['claude-code'].commands.status, 'native');
   assert.equal(capabilities['claude-code'].settings.status, 'validated-local');
   assert.equal(capabilities['codex-cli'].commands.status, 'unsupported');
   assert.equal(capabilities.opencode.agents.status, 'bridged');
+  assert.equal(capabilities.antigravity.entrypoint.status, 'bridged');
+  assert.equal(capabilities.antigravity.skills.status, 'native');
   assert.equal(capabilities.antigravity.commands.status, 'bridged');
   assert.equal(capabilities.openclaw.workspace_wrappers.status, 'bridged');
 
@@ -347,7 +359,7 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   );
   assert.deepEqual(
     (generatedByTool.antigravity ?? []).map((entry) => entry.surface).sort(),
-    ['agents', 'commands', 'gsd']
+    ['agents', 'commands']
   );
   assert.deepEqual(
     (generatedByTool.openclaw ?? []).map((entry) => entry.surface).sort(),
@@ -362,6 +374,7 @@ test('adapter directories document non-claude parity boundaries', () => {
   const codex = read('adapters/codex-cli/README.md');
   const opencode = read('adapters/opencode/README.md');
   const antigravity = read('adapters/antigravity/README.md');
+  const geminiWrapper = read('adapters/antigravity/GEMINI.md');
   const openclaw = read('adapters/openclaw/README.md');
   const claude = read('adapters/claude-code/README.md');
   const openclawAgentsTemplate = read('adapters/openclaw/templates/AGENTS.md');
@@ -375,8 +388,13 @@ test('adapter directories document non-claude parity boundaries', () => {
   assert.match(codex, /commands: `unsupported`/);
   assert.match(opencode, /gen-opencode-agents/);
   assert.match(opencode, /agents: `bridged`/);
-  assert.match(antigravity, /gen-antigravity-gsd/);
+  assert.match(antigravity, /~\/\.gemini\/GEMINI\.md/);
+  assert.match(antigravity, /skills: `native` through Gemini's `~\/\.agents\/skills` user-scope alias/);
+  assert.match(antigravity, /~\/\.gemini\/get-shit-done -> ~\/\.agents\/get-shit-done/);
   assert.match(antigravity, /commands: `bridged`/);
+  assert.match(antigravity, /agents: `bridged` through generated Gemini-schema agent files/);
+  assert.match(geminiWrapper, /# Gemini Workflow Wrapper/);
+  assert.match(geminiWrapper, /@\/Users\/isaiahrivera\/\.agents\/prompts\/system\.md/);
   assert.match(openclaw, /Generated workspace wrappers/);
   assert.match(openclaw, /workspace wrappers: `bridged`/);
   assert.match(openclawAgentsTemplate, /\{\{HUB\}\}\/AGENTS\.md/);

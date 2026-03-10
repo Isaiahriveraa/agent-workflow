@@ -73,8 +73,15 @@
       "type": "directory"
     },
     {
-      "source": "~/.gemini/antigravity/skills",
-      "target": "~/.agents/skills",
+      "source": "~/.gemini/GEMINI.md",
+      "target": "~/.agents/adapters/antigravity/GEMINI.md",
+      "tier": 1,
+      "tool": "antigravity",
+      "type": "file"
+    },
+    {
+      "source": "~/.gemini/get-shit-done",
+      "target": "~/.agents/get-shit-done",
       "tier": 1,
       "tool": "antigravity",
       "type": "directory"
@@ -118,7 +125,8 @@
   ],
   "auto_discovery": {
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
-    "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed"
+    "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
+    "antigravity_skills": "Auto-discovers from ~/.agents/skills/ as the user-scope alias — no ~/.gemini/skills symlink needed"
   },
   "capabilities": {
     "claude-code": {
@@ -208,13 +216,21 @@
       }
     },
     "antigravity": {
+      "entrypoint": {
+        "status": "bridged",
+        "contract": "~/.gemini/GEMINI.md -> ~/.agents/adapters/antigravity/GEMINI.md"
+      },
+      "skills": {
+        "status": "native",
+        "contract": "Auto-discovers user skills from ~/.agents/skills without a mirrored ~/.gemini/skills directory"
+      },
       "commands": {
         "status": "bridged",
-        "contract": "Generated TOML commands from ~/.agents/commands via sync.sh gen-antigravity-commands"
+        "contract": "Generated TOML commands from ~/.agents/commands via sync.sh gen-antigravity-commands with Gemini path rewriting"
       },
       "agents": {
         "status": "bridged",
-        "contract": "Generated from ~/.agents/agents via sync.sh gen-antigravity-agents"
+        "contract": "Generated from ~/.agents/agents via sync.sh gen-antigravity-agents into Gemini-compatible agent frontmatter"
       },
       "hooks": {
         "status": "unsupported",
@@ -290,16 +306,7 @@
       "type": "adapter-output",
       "generator": "sync.sh gen-antigravity-agents",
       "surface": "agents",
-      "note": "Antigravity agents are generated from the hub agent definitions into Gemini-compatible agent files."
-    },
-    {
-      "tool": "antigravity",
-      "target": "~/.gemini/get-shit-done",
-      "source": "~/.agents/get-shit-done",
-      "type": "adapter-output",
-      "generator": "sync.sh gen-antigravity-gsd",
-      "surface": "gsd",
-      "note": "Get-shit-done content is bridged into Antigravity's local workflow directory."
+      "note": "Antigravity agents are generated from the hub agent definitions into Gemini-compatible agent files with translated frontmatter and Gemini-native tool names."
     },
     {
       "tool": "openclaw",

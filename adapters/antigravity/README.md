@@ -3,24 +3,28 @@
 This directory documents the Antigravity-specific integration boundary.
 
 ## Managed Surfaces
-- `~/.gemini/antigravity/skills -> ~/.agents/skills`
+- `~/.gemini/GEMINI.md -> ~/.agents/adapters/antigravity/GEMINI.md`
+- `~/.gemini/get-shit-done -> ~/.agents/get-shit-done`
 - Generated commands in `~/.gemini/commands`
 - Generated agents in `~/.gemini/agents`
-- Generated get-shit-done bridge in `~/.gemini/get-shit-done`
 
 ## Capability Profile
+- entrypoint: `bridged` through `GEMINI.md`
+- skills: `native` through Gemini's `~/.agents/skills` user-scope alias
+- get-shit-done: `native` through a direct symlink
 - commands: `bridged` through generated TOML command files
-- agents: `bridged` through generated agent files
+- agents: `bridged` through generated Gemini-schema agent files
 - hooks: `unsupported`
 - MCP: `unsupported`
 - approvals: `native`
 - session continuity: `bridged` through shared continuity helpers and project-local runtime state
 
 ## Generator Contract
-- `sync.sh gen-antigravity-commands` bridges hub markdown commands into Antigravity TOML commands.
-- `sync.sh gen-antigravity-agents` publishes hub agents into Antigravity's local agent directory.
-- `sync.sh gen-antigravity-gsd` mirrors shared get-shit-done workflow content into Antigravity's expected local structure.
+- `sync.sh gen-antigravity-commands` bridges hub markdown commands into Gemini TOML commands and rewrites Claude-local workflow paths to Gemini-local paths.
+- `sync.sh gen-antigravity-agents` translates hub agent markdown into Gemini-compatible agent frontmatter and Gemini-native tool names.
 
 ## Canonical Boundary
 - Shared workflow policy stays in the hub.
-- This adapter only handles translation and placement for Antigravity-native surfaces.
+- Gemini-native surfaces are symlinked directly when the hub format already matches.
+- This adapter only translates the surfaces whose schema differs from the hub: commands and agents.
+- Do not mirror `~/.agents/skills` into `~/.gemini/skills`; Gemini already discovers the `.agents` alias and a second copy creates duplicate-skill warnings.
