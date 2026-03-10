@@ -1,6 +1,6 @@
 # Agent Catalog
 
-Use this file to track the workflow expert agents that act as the hub's control plane for continuity, parity, routing, evals, and tool integration.
+Use this file to track the workflow expert agents that act as the hub's control plane for continuity, critique response, artifact gating, parity, routing, evals, and tool integration.
 
 ## Agent Classes
 - workflow experts: agents that maintain the workflow system itself
@@ -16,6 +16,14 @@ Use this file to track the workflow expert agents that act as the hub's control 
   - trigger: substantial work that may be skipping optimize -> research -> plan -> implement -> validate
   - scope: workflow gate compliance, readiness evidence, route correctness
   - deliverable: audit summary with pass/fail routing findings
+- `critique-responder`
+  - trigger: critique findings, checker feedback, refinement cycles after artifact review
+  - scope: critique-to-fix mapping, artifact revisions, response matrices
+  - deliverable: revised artifact plus a finding-resolution summary
+- `artifact-gatekeeper`
+  - trigger: artifact promotion decisions, grade ambiguity, inconsistent critique/refinement evidence
+  - scope: readiness criteria, grade results, critique evidence, advancement decisions
+  - deliverable: `advance`, `revise`, or `human-judgment-required` with evidence
 - `adapter-parity-auditor`
   - trigger: adapter drift, capability ambiguity, cross-CLI behavior mismatch
   - scope: manifest parity contracts, adapter docs, generated bridge expectations
@@ -24,6 +32,10 @@ Use this file to track the workflow expert agents that act as the hub's control 
   - trigger: workflow regression risk, parity validation work, scenario test design
   - scope: workflow eval design, scenario coverage, regression gaps
   - deliverable: eval plan or verification findings tied to concrete tests
+- `trace-grader`
+  - trigger: trajectory-quality questions, delegation drift, tool-use trace review
+  - scope: execution traces, handoffs, delegation paths, checkpoint quality
+  - deliverable: trace-grade findings or a trace rubric with explicit criteria
 - `failure-analyst`
   - trigger: explicit user correction, critic rejection, repeated misses, lesson promotion work
   - scope: failure diagnosis, reusable lesson extraction, workflow improvement suggestion drafting
@@ -41,7 +53,10 @@ Use this file to track the workflow expert agents that act as the hub's control 
 - continuity issue -> `continuity-manager`
 - parity or adapter mismatch -> `adapter-parity-auditor`
 - workflow-gate or RPI compliance issue -> `workflow-router-auditor`
+- critique-response or revision loop issue -> `critique-responder`
+- artifact promotion or readiness decision -> `artifact-gatekeeper`
 - eval, scenario, or regression design -> `eval-engineer`
+- trace-quality or delegation-loop issue -> `trace-grader`
 - repeated failures or learning-loop work -> `failure-analyst`
 - MCP, permissions, or tool-surface work -> `tooling-integrator`
 - unclear specialist choice -> `expert-agent-router`
