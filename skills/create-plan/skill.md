@@ -27,7 +27,7 @@ Please provide:
 
 I'll analyze this information and work with you to create a comprehensive plan.
 
-Tip: You can invoke this command with a file directly: `/create-plan ~/.agents/thoughts/research/2026-02-17-my-research.md`
+Tip: You can invoke this command with a file directly: `/create-plan /absolute/path/to/project/.planning/research/2026-02-17-my-research.md`
 ```
 
 Then wait for the user's input.
@@ -35,6 +35,13 @@ Then wait for the user's input.
 ## Process Steps
 
 ### Step 1: Context Gathering & Initial Analysis
+
+0. **Load canonical context before planning:**
+   - Read `~/.agents/contexts/decisions.md`
+   - Read `~/.agents/contexts/research-index.md` if prior research exists
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's runtime `state.md` when the existing workflow position matters
+   - Load only the relevant rule cards from `~/.agents/rules/common/`
+   - Treat decisions recorded there as authoritative unless the user explicitly changes them
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -66,6 +73,7 @@ Then wait for the user's input.
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
+   - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
 
 5. **Present informed understanding and focused questions**:
    ```
@@ -261,7 +269,7 @@ After structure approval:
 
 ## References
 
-- Related research: `~/.agents/thoughts/research/[relevant].md`
+- Related research: `[project root]/.planning/research/[relevant].md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -298,103 +306,3 @@ After structure approval:
 2. **Be Interactive**:
    - Don't write the full plan in one shot
    - Get buy-in at each major step
-   - Allow course corrections
-   - Work collaboratively
-
-3. **Be Thorough**:
-   - Read all context files COMPLETELY before planning
-   - Research actual code patterns using parallel sub-tasks
-   - Include specific file paths and line numbers
-   - Write measurable success criteria with clear automated vs manual distinction
-   - Prefer `make` targets when available; otherwise use the project's actual test/lint commands
-
-4. **Be Practical**:
-   - Focus on incremental, testable changes
-   - Consider migration and rollback
-   - Think about edge cases
-   - Include "what we're NOT doing"
-
-5. **Track Progress**:
-   - Use TodoWrite to track planning tasks
-   - Update todos as you complete research
-   - Mark planning tasks complete when done
-
-6. **No Open Questions in Final Plan**:
-   - If you encounter open questions during planning, STOP
-   - Research or ask for clarification immediately
-   - Do NOT write the plan with unresolved questions
-   - The implementation plan must be complete and actionable
-   - Every decision must be made before finalizing the plan
-
-## Success Criteria Guidelines
-
-**Always separate success criteria into two categories:**
-
-1. **Automated Verification** (can be run by execution agents):
-   - Commands that can be run: `make test`, `npm run lint`, etc.
-   - Specific files that should exist
-   - Code compilation/type checking
-   - Automated test suites
-
-2. **Manual Verification** (requires human testing):
-   - UI/UX functionality
-   - Performance under real conditions
-   - Edge cases that are hard to automate
-   - User acceptance criteria
-
-**Format example:**
-```markdown
-### Success Criteria:
-
-#### Automated Verification:
-- [ ] All unit tests pass: `go test ./...`
-- [ ] No linting errors: `golangci-lint run`
-- [ ] API endpoint returns 200: `curl localhost:8080/api/new-endpoint`
-
-#### Manual Verification:
-- [ ] New feature appears correctly in the UI
-- [ ] Performance is acceptable with 1000+ items
-- [ ] Error messages are user-friendly
-```
-
-## Common Patterns
-
-### For Database Changes:
-- Start with schema/migration
-- Add store methods
-- Update business logic
-- Expose via API
-- Update clients
-
-### For New Features:
-- Research existing patterns first
-- Start with data model
-- Build backend logic
-- Add API endpoints
-- Implement UI last
-
-### For Refactoring:
-- Document current behavior
-- Plan incremental changes
-- Maintain backwards compatibility
-- Include migration strategy
-
-## Sub-task Spawning Best Practices
-
-When spawning research sub-tasks:
-
-1. **Spawn multiple tasks in parallel** for efficiency
-2. **Each task should be focused** on a specific area
-3. **Provide detailed instructions** including:
-   - Exactly what to search for
-   - Which directories to focus on
-   - What information to extract
-   - Expected output format
-4. **Be specific about directories** — never use generic terms when you can name the actual path
-5. **Specify read-only tools** to use
-6. **Request specific file:line references** in responses
-7. **Wait for all tasks to complete** before synthesizing
-8. **Verify sub-task results**:
-   - If a sub-task returns unexpected results, spawn follow-up tasks
-   - Cross-check findings against the actual codebase
-   - Don't accept results that seem incorrect

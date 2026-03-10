@@ -1,13 +1,12 @@
 # Research Index
 
-Use this file to track reusable research artifacts so future work can find them without re-reading everything.
+Use this file as a shared compatibility document, not the live per-project runtime research index source.
+
+Per-project runtime research now lives at `[project root]/.agents/contexts/research-index.md`.
+Use this global file only for shared or legacy notes that are not specific to a single repo.
 
 ## Entries
-- Topic: external workflow repo comparison for SSOT upgrade
-  Date: 2026-03-02
-  Source files: local `/Users/isaiahrivera/.agents/*`, external `everything-claude-code`
-  Artifact path: conversation plan and implemented SSOT workflow upgrade
-  Summary: Compared the current provider-agnostic agent architecture with a Claude-first workflow repo, then adopted explicit contexts, reusable rule cards, adapter isolation, and validation scripts.
+- No shared research entries recorded.
 
 ## Entry Template
 - Topic:

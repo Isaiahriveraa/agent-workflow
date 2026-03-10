@@ -12,9 +12,13 @@ Prefer explicit artifact selection over broad context loading.
 - `contexts/session-index.md`
 - `contexts/research-index.md`
 - `thoughts/plans/`
-- `thoughts/research/`
-- `thoughts/sessions/`
-- `thoughts/handoffs/`
+- `.planning/research/`
+- `.agents/sessions/`
+- `thoughts/shared/handoffs/`
+
+## Notes
+- Canonical plans live under `thoughts/plans/`.
+- Legacy repo-local `.planning/plans/` references remain readable during migration.
 
 ## Usage
 - `node ./scripts/artifact-tools.mjs suggest`

@@ -1,24 +1,153 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync, spawnSync } from 'node:child_process';
 
-const root = '/Users/isaiahrivera/.agents';
-const read = (relativePath) => fs.readFileSync(`${root}/${relativePath}`, 'utf8');
+const root = path.resolve(new URL('..', import.meta.url).pathname);
+const createFixtureRepo = (baseDir, name) => {
+  const repoRoot = path.join(baseDir, name);
+  fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
+  return repoRoot;
+};
+const fixtureRepoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-fixture-')), 'openclaw');
+const runProjectContext = (repoRoot = fixtureRepoRoot, extraEnv = {}) =>
+  JSON.parse(execFileSync('node', ['scripts/project-context.mjs', 'current'], {
+    cwd: root,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      AGENTS_PROJECT_ROOT: repoRoot,
+      ...extraEnv
+    }
+  }));
+const execArtifactTool = (args, repoRoot = fixtureRepoRoot, extraEnv = {}) =>
+  execFileSync('node', ['scripts/artifact-tools.mjs', ...args], {
+    cwd: root,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      AGENTS_PROJECT_ROOT: repoRoot,
+      ...extraEnv
+    }
+  });
+const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
+const setWorkingSet = (stateContent, lines) =>
+  stateContent.replace(
+    /## Active Artifact Working Set\n[\s\S]*$/m,
+    `## Active Artifact Working Set\n${lines.trimEnd()}\n`
+  );
+const readyResearchArtifact = `---
+artifact_type: research
+substantial: true
+critique_completed: true
+critique_cycles: 1
+refinement_cycles: 1
+critique_artifacts: ["/tmp/research-critique.md"]
+blocking_unknown_count: 0
+evidence_level: strong
+research_ready_for_planning: true
+related_intake: /tmp/intake.md
+last_validated: 2026-03-09T04:00:00.000Z
+---
+
+# Research Artifact
+
+## Findings
+- Existing workflow routing is shallow.
+
+## Implementation Implications
+- Add parser-backed readiness checks.
+
+## Interfaces and Contracts
+- workflow-router-tools.mjs stays intake-focused.
+
+## Verification Implications
+- Add contract tests and parser tests.
+
+## Critique
+- Initial draft missed fail-closed enforcement.
+
+## Blocker Resolution
+- Resolved the unknown by defining the blocker taxonomy.
+`;
+const weakResearchArtifact = `---
+artifact_type: research
+substantial: true
+critique_completed: true
+critique_cycles: 1
+refinement_cycles: 1
+blocking_unknown_count: 0
+evidence_level: weak
+research_ready_for_planning: true
+related_intake: /tmp/intake.md
+last_validated: 2026-03-09T04:00:00.000Z
+---
+
+# Weak Research
+
+## Findings
+- Existing workflow routing is shallow.
+
+## Implementation Implications
+- Add parser-backed readiness checks.
+
+## Interfaces and Contracts
+- workflow-router-tools.mjs stays intake-focused.
+
+## Verification Implications
+- Add contract tests and parser tests.
+
+## Critique
+- Initial draft missed fail-closed enforcement.
+
+## Blocker Resolution
+- Resolved the unknown by defining the blocker taxonomy.
+`;
+const withSeededArtifacts = (repoRoot, fn) => {
+  const seedId = `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+  const intakePath = path.join(repoRoot, '.planning', 'intake', `${seedId}-intake.md`);
+  const canonicalPlanPath = path.join(root, 'thoughts', 'plans', `${seedId}-plan.md`);
+  const legacyPlanPath = path.join(repoRoot, '.planning', 'plans', `${seedId}-legacy-plan.md`);
+  const researchPath = path.join(repoRoot, '.planning', 'research', `${seedId}-research.md`);
+  const handoffPath = path.join(root, 'thoughts', 'shared', 'handoffs', 'ENG-general', `${seedId}-handoff.md`);
+
+  fs.mkdirSync(path.dirname(intakePath), { recursive: true });
+  fs.mkdirSync(path.dirname(canonicalPlanPath), { recursive: true });
+  fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
+  fs.mkdirSync(path.dirname(researchPath), { recursive: true });
+  fs.mkdirSync(path.dirname(handoffPath), { recursive: true });
+  fs.writeFileSync(intakePath, '# Intake\n');
+  fs.writeFileSync(canonicalPlanPath, '# Plan\n');
+  fs.writeFileSync(legacyPlanPath, '# Legacy Plan\n');
+  fs.writeFileSync(researchPath, '# Research\n');
+  fs.writeFileSync(handoffPath, '# Handoff\n');
+
+  try {
+    return fn({ intakePath, canonicalPlanPath, legacyPlanPath, researchPath, handoffPath });
+  } finally {
+    fs.rmSync(intakePath, { force: true });
+    fs.rmSync(canonicalPlanPath, { force: true });
+    fs.rmSync(legacyPlanPath, { force: true });
+    fs.rmSync(researchPath, { force: true });
+    fs.rmSync(handoffPath, { force: true });
+  }
+};
 
 test('artifact retrieval context exists with required sections', () => {
-  const content = read('contexts/artifacts.md');
+  const content = readFile(runProjectContext(fixtureRepoRoot).contextPaths.artifacts);
   assert.match(content, /## Sources/);
   assert.match(content, /## Preferred Retrieval Order/);
+  assert.match(content, /handoffs: `~\/\.agents\/thoughts\/shared\/handoffs`/);
+  assert.match(content, /Lightweight continuity artifacts are project-local runtime files/);
 });
 
 test('artifact suggestion returns known categories', () => {
-  const output = execFileSync('node', ['scripts/artifact-tools.mjs', 'suggest'], {
-    cwd: root,
-    encoding: 'utf8'
-  });
+  const output = execArtifactTool(['suggest'], fixtureRepoRoot);
   const parsed = JSON.parse(output);
 
+  assert.ok(Object.hasOwn(parsed, 'intake'));
   assert.ok(Object.hasOwn(parsed, 'plan'));
   assert.ok(Object.hasOwn(parsed, 'research'));
   assert.ok(Object.hasOwn(parsed, 'session'));
@@ -27,73 +156,460 @@ test('artifact suggestion returns known categories', () => {
   assert.ok(Object.hasOwn(parsed, 'suggested'));
 });
 
-test('artifact related command returns latest matching markdown artifacts', () => {
-  const output = execFileSync('node', ['scripts/artifact-tools.mjs', 'related'], {
-    cwd: root,
-    encoding: 'utf8'
-  });
-  const parsed = JSON.parse(output);
+test('artifact related command returns shared durable artifacts plus project sessions', () => {
+  withSeededArtifacts(fixtureRepoRoot, () => {
+    const output = execArtifactTool(['related'], fixtureRepoRoot);
+    const parsed = JSON.parse(output);
 
-  assert.match(parsed.plans ?? '', /thoughts\/plans\//);
-  assert.match(parsed.research ?? '', /thoughts\/research\//);
-  assert.match(parsed.handoffs ?? '', /thoughts\/handoffs\//);
+    assert.match(parsed.intake ?? '', /\/\.planning\/intake\//);
+    assert.match(parsed.plans ?? '', /\/thoughts\/plans\//);
+    assert.match(parsed.research ?? '', /\/\.planning\/research\//);
+    assert.match(parsed.handoffs ?? '', /thoughts\/shared\/handoffs\//);
+  });
 });
 
-test('artifact state exposes an active working set section', () => {
-  const content = read('contexts/state.md');
+test('artifact state exposes an active working set section in project-local state', () => {
+  const content = readFile(runProjectContext(fixtureRepoRoot).contextPaths.state);
   assert.match(content, /## Active Artifact Working Set/);
   assert.match(content, /### Selected By Category/);
   assert.match(content, /### Ordered Artifacts/);
 });
 
-test('artifact persistence writes and reads the active working set', () => {
-  const originalState = read('contexts/state.md');
-  const planPath = `${root}/thoughts/plans/2026-02-24-interfaceview-border-fix.md`;
-  const researchPath = `${root}/thoughts/research/2026-02-26-interface-trigger-recording-flow.md`;
-  const handoffPath = `${root}/thoughts/handoffs/general/2026-02-17_13-28-30_rpi-workflow-integration.md`;
+test('artifact suggestion uses canonical shared artifacts only when they outrank repo-local fallback', () => {
+  withSeededArtifacts(fixtureRepoRoot, () => {
+      const project = runProjectContext(fixtureRepoRoot);
+      const projectStatePath = project.contextPaths.state;
+      const originalState = readFile(projectStatePath);
+      const emptyState = originalState
+        .replace(/- intake: .*/g, '- intake: none')
+        .replace(/- plan: .*/g, '- plan: none')
+        .replace(/- research: .*/g, '- research: none')
+        .replace(/- session: .*/g, '- session: none')
+        .replace(/- handoff: .*/g, '- handoff: none')
+        .replace(/### Ordered Artifacts\n[\s\S]*$/m, '### Ordered Artifacts\n1. none\n');
+
+      try {
+        fs.writeFileSync(projectStatePath, emptyState);
+
+        const parsed = JSON.parse(execArtifactTool(['suggest'], fixtureRepoRoot));
+        assert.match(parsed.suggested.intake ?? '', /\/\.planning\/intake\//);
+        assert.match(parsed.suggested.plan ?? '', /\/\.planning\/plans\//);
+        assert.match(parsed.suggested.research ?? '', /\/\.planning\/research\//);
+        assert.match(parsed.suggested.handoff ?? '', /thoughts\/shared\/handoffs\//);
+      } finally {
+        fs.writeFileSync(projectStatePath, originalState);
+      }
+  });
+});
+
+test('artifact suggestion falls back to legacy repo-local plans when no canonical thought plan exists', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-legacy-')), 'legacy-only');
+  const legacyPlanPath = path.join(repoRoot, '.planning', 'plans', 'legacy-plan.md');
+  const researchPath = path.join(repoRoot, '.planning', 'research', 'legacy-research.md');
+
+  fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
+  fs.mkdirSync(path.dirname(researchPath), { recursive: true });
+  fs.writeFileSync(legacyPlanPath, '# Legacy Plan\n');
+  fs.writeFileSync(researchPath, '# Legacy Research\n');
 
   try {
-    const output = execFileSync('node', [
-      'scripts/artifact-tools.mjs',
-      'persist',
-      '--plan',
-      planPath,
-      '--research',
-      researchPath,
-      '--handoff',
-      handoffPath,
-      '--source',
-      'test-suite',
-      '--focus',
-      'artifact continuity'
-    ], {
-      cwd: root,
-      encoding: 'utf8'
-    });
-
-    const persisted = JSON.parse(output);
-    assert.equal(persisted.source, 'test-suite');
-    assert.equal(persisted.focus, 'artifact continuity');
-    assert.equal(persisted.selected.plan, planPath);
-    assert.equal(persisted.selected.research, researchPath);
-    assert.equal(persisted.selected.handoff, handoffPath);
-    assert.ok(Array.isArray(persisted.ordered));
-    assert.ok(persisted.ordered.includes(planPath));
-
-    const active = JSON.parse(execFileSync('node', ['scripts/artifact-tools.mjs', 'active'], {
-      cwd: root,
-      encoding: 'utf8'
-    }));
-
-    assert.equal(active.source, 'test-suite');
-    assert.equal(active.focus, 'artifact continuity');
-    assert.equal(active.selected.plan, planPath);
-
-    const stateContent = read('contexts/state.md');
-    assert.match(stateContent, /- Source: test-suite/);
-    assert.match(stateContent, /- Focus: artifact continuity/);
-    assert.match(stateContent, new RegExp(`- plan: ${planPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+    const parsed = JSON.parse(execArtifactTool(['suggest'], repoRoot));
+    assert.equal(parsed.suggested.plan, legacyPlanPath);
   } finally {
-    fs.writeFileSync(`${root}/contexts/state.md`, originalState);
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
+});
+
+test('artifact persistence writes the active working set to project-local state only', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, canonicalPlanPath, researchPath, handoffPath }) => {
+      const project = runProjectContext(fixtureRepoRoot);
+      const projectStatePath = project.contextPaths.state;
+      const globalStatePath = `${root}/contexts/state.md`;
+      const originalProjectState = readFile(projectStatePath);
+      const originalGlobalState = readFile(globalStatePath);
+
+      try {
+        const output = execArtifactTool([
+          'persist',
+          '--intake',
+          intakePath,
+          '--plan',
+          canonicalPlanPath,
+          '--research',
+          researchPath,
+          '--handoff',
+          handoffPath,
+          '--source',
+          'test-suite',
+          '--focus',
+          'artifact continuity'
+        ], fixtureRepoRoot);
+
+        const persisted = JSON.parse(output);
+        assert.equal(persisted.source, 'test-suite');
+        assert.equal(persisted.focus, 'artifact continuity');
+        assert.equal(persisted.selected.intake, intakePath);
+        assert.equal(persisted.selected.plan, canonicalPlanPath);
+        assert.equal(persisted.selected.research, researchPath);
+        assert.equal(persisted.selected.handoff, handoffPath);
+        assert.ok(Array.isArray(persisted.ordered));
+        assert.ok(persisted.ordered.includes(canonicalPlanPath));
+
+        const active = JSON.parse(execArtifactTool(['active'], fixtureRepoRoot));
+
+        assert.equal(active.source, 'test-suite');
+        assert.equal(active.focus, 'artifact continuity');
+        assert.equal(active.selected.intake, intakePath);
+        assert.equal(active.selected.plan, canonicalPlanPath);
+
+        const stateContent = readFile(projectStatePath);
+        assert.match(stateContent, /- Source: test-suite/);
+        assert.match(stateContent, /- Focus: artifact continuity/);
+        assert.match(stateContent, new RegExp(`- intake: ${intakePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+        assert.match(stateContent, new RegExp(`- plan: ${canonicalPlanPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+        assert.equal(readFile(globalStatePath), originalGlobalState);
+      } finally {
+        fs.writeFileSync(projectStatePath, originalProjectState);
+      }
+  });
+});
+
+test('artifact persistence remains normalized across repeated writes', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
+      const project = runProjectContext(fixtureRepoRoot);
+      const projectStatePath = project.contextPaths.state;
+      const originalProjectState = readFile(projectStatePath);
+
+      try {
+        execArtifactTool([
+          'persist',
+          '--plan',
+          canonicalPlanPath,
+          '--research',
+          researchPath,
+          '--source',
+          'first-pass',
+          '--focus',
+          'normalization'
+        ], fixtureRepoRoot);
+
+        execArtifactTool([
+          'persist',
+          '--plan',
+          canonicalPlanPath,
+          '--research',
+          researchPath,
+          '--handoff',
+          handoffPath,
+          '--source',
+          'second-pass',
+          '--focus',
+          'normalization'
+        ], fixtureRepoRoot);
+
+        const stateContent = readFile(projectStatePath);
+        const sectionMatches = stateContent.match(/^## Active Artifact Working Set$/gm) ?? [];
+
+        assert.equal(sectionMatches.length, 1);
+        assert.match(stateContent, /- Source: second-pass/);
+        assert.match(stateContent, new RegExp(`- handoff: ${handoffPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+      } finally {
+        fs.writeFileSync(projectStatePath, originalProjectState);
+      }
+  });
+});
+
+test('artifact persistence rewrites the entire working-set section when stale trailing content exists', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
+      const project = runProjectContext(fixtureRepoRoot);
+      const projectStatePath = project.contextPaths.state;
+      const originalState = readFile(projectStatePath);
+      const malformedState = `${originalState.trimEnd()}\n\n- Source: stale-write\n- Focus: stale-write\n\n### Selected By Category\n- plan: /tmp/stale-plan.md\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. /tmp/stale-plan.md\n`;
+
+      try {
+        fs.writeFileSync(projectStatePath, malformedState);
+
+        execArtifactTool([
+          'persist',
+          '--plan',
+          canonicalPlanPath,
+          '--research',
+          researchPath,
+          '--handoff',
+          handoffPath,
+          '--source',
+          'repair-pass',
+          '--focus',
+          'repair malformed state'
+        ], fixtureRepoRoot);
+
+        const stateContent = readFile(projectStatePath);
+        const sectionMatches = stateContent.match(/^## Active Artifact Working Set$/gm) ?? [];
+
+        assert.equal(sectionMatches.length, 1);
+        assert.match(stateContent, /- Source: repair-pass/);
+        assert.doesNotMatch(stateContent, /stale-write/);
+        assert.doesNotMatch(stateContent, /\/tmp\/stale-plan\.md/);
+        assert.match(stateContent, new RegExp(`- handoff: ${handoffPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+      } finally {
+        fs.writeFileSync(projectStatePath, originalState);
+      }
+  });
+});
+
+test('artifact tools reject duplicate working set sections in project-local state', () => {
+    const project = runProjectContext(fixtureRepoRoot);
+    const projectStatePath = project.contextPaths.state;
+    const originalState = readFile(projectStatePath);
+    const duplicatedState = `${originalState.trimEnd()}\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- intake: none\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`;
+
+    try {
+      fs.writeFileSync(projectStatePath, duplicatedState);
+
+      const result = spawnSync('node', ['scripts/artifact-tools.mjs', 'active'], {
+        cwd: root,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          AGENTS_PROJECT_ROOT: fixtureRepoRoot
+        }
+      });
+
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /Duplicate "## Active Artifact Working Set" sections found in contexts\/state\.md/);
+    } finally {
+      fs.writeFileSync(projectStatePath, originalState);
+    }
+});
+
+test('artifact suggestion prefers persisted selections over heuristics', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, canonicalPlanPath, researchPath, handoffPath }) => {
+      const project = runProjectContext(fixtureRepoRoot);
+      const projectStatePath = project.contextPaths.state;
+      const originalState = readFile(projectStatePath);
+
+      try {
+        const seededState = setWorkingSet(originalState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: persisted wins
+
+### Selected By Category
+- intake: ${intakePath}
+- plan: ${canonicalPlanPath}
+- research: ${researchPath}
+- session: none
+- handoff: ${handoffPath}
+
+### Ordered Artifacts
+1. ${canonicalPlanPath}
+2. ${researchPath}
+3. ${handoffPath}
+`);
+
+        fs.writeFileSync(projectStatePath, seededState);
+
+        const parsed = JSON.parse(execArtifactTool(['suggest'], fixtureRepoRoot));
+
+        assert.equal(parsed.intake, intakePath);
+        assert.equal(parsed.plan, canonicalPlanPath);
+        assert.equal(parsed.research, researchPath);
+        assert.equal(parsed.handoff, handoffPath);
+        assert.equal(parsed.active.selected.plan, canonicalPlanPath);
+      } finally {
+        fs.writeFileSync(projectStatePath, originalState);
+      }
+  });
+});
+
+test('artifact suggestion prefers explicit session-index artifacts over latest session heuristic', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
+      const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-session-')), 'resume-target');
+      const project = runProjectContext(repoRoot);
+      const sessionDir = project.thoughtPaths.sessions;
+      const explicitSession = path.join(sessionDir, '2026-03-06_10-00-00_explicit.md');
+      const newerFallbackSession = path.join(sessionDir, '2026-03-06_11-00-00_fallback.md');
+      const originalState = readFile(project.contextPaths.state);
+      const originalSessionIndex = readFile(project.contextPaths.sessionIndex);
+
+      try {
+        fs.mkdirSync(sessionDir, { recursive: true });
+        fs.writeFileSync(explicitSession, '# explicit session\n');
+        fs.writeFileSync(newerFallbackSession, '# fallback session\n');
+        fs.writeFileSync(project.contextPaths.sessionIndex, `# Session Index
+
+## Active Sessions
+- Session ID: current
+- Date: 2026-03-06
+- Topic: continuity
+- Status: active
+- Artifact path: ${explicitSession}
+- Related plan: ${canonicalPlanPath}
+- Next command: /resume-session
+- Summary: explicit session index entry
+
+## Recent Sessions
+- No recent sessions recorded.
+
+## Entry Template
+- Session ID:
+- Date:
+- Topic:
+- Status:
+- Artifact path:
+- Related plan:
+- Next command:
+- Summary:
+`);
+
+      const seededState = setWorkingSet(originalState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: session precedence
+
+### Selected By Category
+- intake: none
+- plan: none
+- research: ${researchPath}
+- session: none
+- handoff: ${handoffPath}
+
+### Ordered Artifacts
+1. ${researchPath}
+2. ${handoffPath}
+`);
+        fs.writeFileSync(project.contextPaths.state, seededState);
+
+        const parsed = JSON.parse(execArtifactTool(['suggest'], repoRoot));
+
+        assert.equal(parsed.session, explicitSession);
+        assert.equal(parsed.suggested.session, explicitSession);
+        assert.equal(parsed.research, researchPath);
+      } finally {
+        fs.writeFileSync(project.contextPaths.state, originalState);
+        fs.writeFileSync(project.contextPaths.sessionIndex, originalSessionIndex);
+        fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+      }
+  });
+});
+
+test('artifact working sets remain isolated across two repos', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath }) => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-isolation-'));
+      const repoA = createFixtureRepo(path.join(tmpDir, 'one'), 'shared-name');
+      const repoB = createFixtureRepo(path.join(tmpDir, 'two'), 'shared-name');
+
+      try {
+        const projectA = runProjectContext(repoA);
+        const projectB = runProjectContext(repoB);
+        const originalA = readFile(projectA.contextPaths.state);
+        const originalB = readFile(projectB.contextPaths.state);
+
+        execArtifactTool([
+          'persist',
+          '--plan',
+          canonicalPlanPath,
+          '--source',
+          'repo-a-test',
+          '--focus',
+          'isolation'
+        ], repoA);
+
+        const activeA = JSON.parse(execArtifactTool(['active'], repoA));
+        const activeB = JSON.parse(execArtifactTool(['active'], repoB));
+
+        assert.equal(activeA.source, 'repo-a-test');
+        assert.equal(activeA.selected.plan, canonicalPlanPath);
+        assert.equal(activeB.source, 'none');
+        assert.equal(activeB.selected.plan, null);
+
+        fs.writeFileSync(projectA.contextPaths.state, originalA);
+        fs.writeFileSync(projectB.contextPaths.state, originalB);
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+  });
+});
+
+test('artifact suggestion prefers ready research over a newer non-ready artifact', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-readiness-')), 'ready-beats-newer');
+  const readyPath = path.join(repoRoot, '.planning', 'research', '2026-03-08-ready.md');
+  const weakPath = path.join(repoRoot, '.planning', 'research', '2026-03-09-weak.md');
+
+  fs.mkdirSync(path.dirname(readyPath), { recursive: true });
+  fs.writeFileSync(readyPath, readyResearchArtifact);
+  fs.writeFileSync(weakPath, weakResearchArtifact);
+  const older = new Date('2026-03-08T00:00:00Z');
+  const newer = new Date('2026-03-09T00:00:00Z');
+  fs.utimesSync(readyPath, older, older);
+  fs.utimesSync(weakPath, newer, newer);
+
+  try {
+    const parsed = JSON.parse(execArtifactTool(['suggest'], repoRoot));
+
+    assert.equal(parsed.suggested.research, readyPath);
+    assert.equal(parsed.research, readyPath);
+    assert.equal(parsed.readiness.research.status, 'ready');
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
+});
+
+test('artifact suggestion reports legacy substantial plans as inspectable but blocked for implementation', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-legacy-block-')), 'legacy-block');
+  const legacyPlanPath = path.join(root, 'thoughts', 'plans', `${Date.now()}-legacy-substantial-plan.md`);
+
+  fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
+  fs.writeFileSync(legacyPlanPath, `# Legacy Plan
+
+## Overview
+
+Legacy plan without readiness frontmatter.
+
+## Implementation Approach
+
+- Introduce a parser-backed helper.
+
+## Phase 1
+
+- Add tests and integration hooks.
+
+## Testing Strategy
+
+- Run workflow contract tests.
+`);
+
+  try {
+    const project = runProjectContext(repoRoot);
+    const statePath = project.contextPaths.state;
+    const originalState = readFile(statePath);
+    const seededState = setWorkingSet(originalState, `
+- Last updated: 2026-03-09T00:00:00Z
+- Source: manual
+- Focus: legacy plan block
+
+### Selected By Category
+- intake: none
+- plan: none
+- research: none
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. none
+`);
+
+    fs.writeFileSync(statePath, seededState);
+
+    const parsed = JSON.parse(execArtifactTool(['suggest'], repoRoot));
+
+    assert.equal(parsed.suggested.plan, legacyPlanPath);
+    assert.equal(parsed.plan, legacyPlanPath);
+    assert.equal(parsed.readiness.plan.status, 'legacy_substantial');
+    assert.equal(parsed.readiness.plan.legacySubstantial, true);
+    assert.deepEqual(parsed.readiness.plan.blockedCommands, ['/implement_plan', '/resume-session']);
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    fs.rmSync(legacyPlanPath, { force: true });
   }
 });

@@ -8,11 +8,12 @@ Create a lightweight resumable checkpoint without requiring a full handoff.
 
 ## Process
 
-1. Read `~/.agents/contexts/decisions.md`.
-2. Read `~/.agents/contexts/state.md`.
-3. Read `~/.agents/contexts/session-index.md`.
-4. Read any directly relevant plan, research, or validation artifact referenced in `contexts/state.md`.
-5. Write a session artifact under `~/.agents/thoughts/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md`.
+1. Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`.
+2. Read `~/.agents/contexts/decisions.md`.
+3. Read the current project's `state.md`.
+4. Read the current project's `session-index.md`.
+5. Read any directly relevant plan, research, or validation artifact referenced in the current project's `state.md`.
+6. Write a session artifact under the current project's `.agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md`.
 
 ## Required Sections
 
@@ -27,10 +28,12 @@ Create a lightweight resumable checkpoint without requiring a full handoff.
 ## Updates
 
 After writing the session artifact:
-- Mark the session as active in `~/.agents/contexts/session-index.md`
-- Update `~/.agents/contexts/state.md` with the paused workflow position
+- Mark the session as active in the current project's `session-index.md`
+- Update the current project's `state.md` with the paused workflow position
 - Preserve `## Related Plan`
 - Preserve the active artifact working set so resume flows do not re-guess context
+- Prefer the shared continuity helper when available:
+  - `node ./scripts/continuity-tools.mjs checkpoint --source pause-session --focus "[workflow focus]"`
 
 ## Escalation
 

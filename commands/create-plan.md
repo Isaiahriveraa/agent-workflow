@@ -26,7 +26,7 @@ Please provide:
 
 I'll analyze this information and work with you to create a comprehensive plan.
 
-Tip: You can invoke this command with a file directly: `/create-plan ~/.agents/thoughts/research/2026-02-17-my-research.md`
+Tip: You can invoke this command with a file directly: `/create-plan /absolute/path/to/project/.planning/research/2026-02-17-my-research.md`
 ```
 
 Then wait for the user's input.
@@ -37,9 +37,21 @@ Then wait for the user's input.
 
 0. **Load canonical context before planning:**
    - Read `~/.agents/contexts/decisions.md`
-   - Read `~/.agents/contexts/research-index.md` if prior research exists
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+   - Read the current project's runtime `research-index.md` if prior research exists
+   - Read the current project's runtime `state.md` when the existing workflow position matters
+   - Read `~/.agents/contexts/failure-patterns.md` and `~/.agents/contexts/lessons-learned.md` when the task class is likely to benefit from prior mistakes
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
+   - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
+   - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
+   - For substantial requests backed by research, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
+   - After canonical context is loaded and before plan drafting, call `scripts/memory-sidecar-adapter.mjs` for workflow stage `create-plan` only when advisory memory is enabled
+   - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
+   - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold
+   - Treat advisory recall as optional input only: empty recall is success, and explicit research, decisions, and selected artifacts remain authoritative
+   - Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections
+   - Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; artifact grading stays bound to canonical files only
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -71,7 +83,10 @@ Then wait for the user's input.
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
+   - Identify whether capsule-specific context, references, anti-patterns, or grading criteria are still missing
    - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
+   - Score readiness with `node ./scripts/workflow-router-tools.mjs score`
+   - If readiness is below threshold, do more research or ask focused questions before writing the plan
 
 5. **Present informed understanding and focused questions**:
    ```
@@ -143,6 +158,15 @@ After getting initial clarifications:
    Which approach aligns best with your vision?
    ```
 
+5. **Readiness gate before plan writing**:
+   - Do not write the implementation plan until the readiness gate passes
+   - Default thresholds:
+     - total `>= 70/100`
+     - clarity `>= 15/25`
+     - codebase coverage `>= 15/25`
+   - If the gate fails, keep researching or ask targeted questions instead of drafting implementation steps
+   - For substantial workflows, do not treat prose alone as sufficient: require parser-backed research readiness before finalizing the plan
+
 ### Step 3: Plan Structure Development
 
 Once aligned on approach:
@@ -169,12 +193,13 @@ Once aligned on approach:
 After structure approval:
 
 1. **Write the plan** to `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
+   - In all user-facing responses, include the final plan location as an absolute filesystem path
    - Format: `YYYY-MM-DD-description.md` where:
      - YYYY-MM-DD is today's date (get it via `date +%Y-%m-%d`)
      - description is a brief kebab-case description
    - Examples:
-     - `2026-02-17-improve-error-handling.md`
-     - `2026-02-17-rpi-workflow-integration.md`
+     - `/absolute/path/to/.agents/thoughts/plans/2026-02-17-improve-error-handling.md`
+     - `/absolute/path/to/.agents/thoughts/plans/2026-02-17-rpi-workflow-integration.md`
 
 2. **Use this template structure**:
 
@@ -257,6 +282,12 @@ After structure approval:
 2. [Another verification step]
 3. [Edge case to test manually]
 
+## Learning Loop Hooks
+
+- What failure signals should trigger diagnosis during implementation
+- Which learning contexts or lesson artifacts may be updated if a verified miss occurs
+- What workflow improvements should be suggested to the user instead of silently applied
+
 ## Performance Considerations
 
 [Any performance implications or optimizations needed]
@@ -267,9 +298,55 @@ After structure approval:
 
 ## References
 
-- Related research: `~/.agents/thoughts/research/[relevant].md`
+- Related research: `[project root]/.planning/research/[relevant].md`
 - Similar implementation: `[file:line]`
 ````
+
+For substantial plans, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-plan`.
+Do not mark the plan ready or hand it to implementation unless parser-backed output proves `plan_ready_for_implementation: true`.
+
+### Step 4.5: Adversarial Critique (substantial plans only)
+
+For plans where `substantial: true` (classified by `node ./scripts/workflow-router-tools.mjs classify`):
+
+1. **Spawn `rpi-critic` agent** with the draft plan path:
+   ```
+   Task(
+     prompt="Critique the plan at [plan_path]. artifact_type: plan",
+     subagent_type="rpi-critic",
+     description="Critique plan draft"
+   )
+   ```
+
+2. **Wait for the critic to complete**. The critic writes a critique document to
+   `.planning/critique/YYYY-MM-DD-HHMMSS-[slug]-critique.md` and returns a structured verdict.
+
+3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
+   - Read the critique document fully
+   - Spawn `critique-responder` to revise the plan against the critique findings
+   - Update plan frontmatter: increment `critique_cycles`, add critique document path to `critique_artifacts` (single-line array only)
+   - Re-spawn the critic (max 2 revision cycles total — 3 runs)
+   - If still blocking after 2 revisions: surface the blocking issues to the user and ask for guidance; do NOT proceed to Step 5
+
+4. **If `## CRITIQUE: WARNINGS ONLY`:**
+   - Read the critique document
+   - Use `critique-responder` for any warning-driven revisions that materially affect the plan
+   - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Use `artifact-gatekeeper` if critique evidence and parser-backed grade results point in different directions
+   - Proceed to Step 5
+
+5. **If `## CRITIQUE: ADVISORY`:**
+   - Optionally address advisory suggestions
+   - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Use `artifact-gatekeeper` when advancement readiness is still unclear
+   - Proceed to Step 5
+
+6. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**
+   - Present the blocking issues to the user
+   - Wait for guidance before proceeding
+
+**Skip condition**: If `substantial: false` from the classifier, skip this step and note in the plan
+frontmatter: `critique_completed: false`, `critique_cycles: 0`.
 
 ### Step 5: Review
 
@@ -283,6 +360,13 @@ After structure approval:
    - Are the success criteria specific enough?
    - Any technical details that need adjustment?
    - Missing edge cases or considerations?
+   ```
+   For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
+   Then end the response with this exact standalone block using the saved plan path:
+   ```text
+   Next step
+
+   /implement_plan /absolute/path/to/.agents/thoughts/plans/YYYY-MM-DD-description.md
    ```
 
 2. **Iterate based on feedback** - be ready to:
@@ -415,11 +499,12 @@ When writing `Automated Verification` sections:
 ## Workflow State Integration
 
 After writing the final plan:
-- Update `~/.agents/contexts/state.md`
+- Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+- Update the current project's runtime `state.md`
 - Set `## Current Workflow` to `planning`
 - Set `## Current Phase` to `plan created`
 - Set `## Next Step` to the recommended execution entry point
 - Set `## Related Plan` to the plan path you created
 
 If the plan used new or existing research artifacts:
-- Add or update the matching entry in `~/.agents/contexts/research-index.md`
+- Add or update the matching entry in the current project's runtime `research-index.md`

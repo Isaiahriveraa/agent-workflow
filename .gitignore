@@ -1,4 +1,15 @@
 .DS_Store
 thoughts/
+.planning/
+sessions/
+projects/**
+/.agents/contexts/
+/.agents/sessions/
 __pycache__/
 *.pyc
+node_modules/
+.env
+.env.local
+.agents-memory/
+memory.db
+!projects/.gitkeep

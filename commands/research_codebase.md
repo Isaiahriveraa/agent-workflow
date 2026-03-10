@@ -28,8 +28,13 @@ Then wait for the user's research query.
 
 0. **Load canonical context before research:**
    - Read `~/.agents/contexts/decisions.md`
-   - Read `~/.agents/contexts/research-index.md`
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+   - Read the current project's `research-index.md`
+   - Read the current project's `state.md` if you need the current runtime workflow position
    - Load `~/.agents/rules/common/search-first.md`
+   - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
+   - If this research is the first step of a substantial request, capture the normalized intake artifact with `node ./scripts/workflow-router-tools.mjs capture`
+   - For substantial requests, require at least one critique/refinement cycle before handoff
 
 1. **Read any directly mentioned files first:**
    - If the user mentions specific files (tickets, docs, JSON), read them FULLY first
@@ -84,7 +89,8 @@ Then wait for the user's research query.
 5. **Gather metadata for the research document:**
    - Get today's date: `date +%Y-%m-%d`
    - If inside a git repo, get branch and commit: `git branch --show-current` and `git rev-parse --short HEAD`
-   - Filename: `~/.agents/thoughts/research/YYYY-MM-DD-description.md`
+   - Filename: `[project root]/.planning/research/YYYY-MM-DD-description.md`
+     - In all user-facing responses, report the research artifact using its absolute filesystem path
      - Format: `YYYY-MM-DD-description.md` where:
        - YYYY-MM-DD is today's date
        - description is a brief kebab-case description of the research topic
@@ -139,14 +145,53 @@ Then wait for the user's research query.
 
      ## Historical Context (from thoughts/)
      [Relevant insights from thoughts/ directory with references]
-     - `~/.agents/thoughts/research/something.md` - Historical decision about X
+     - `[project root]/.planning/research/something.md` - Historical decision about X
 
      ## Related Research
-     [Links to other research documents in ~/.agents/thoughts/research/ and entries referenced from `~/.agents/contexts/research-index.md`]
+     [Links to other research documents in the current project's `.planning/research/` and entries referenced from the current project's `.agents/contexts/research-index.md`]
 
      ## Open Questions
      [Any areas that need further investigation]
      ```
+
+     For substantial research intended to drive implementation planning, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-research`.
+     Do not hand off to planning unless parser-backed output proves `research_ready_for_planning: true`.
+
+#### Step 6.5: Adversarial Critique (substantial research only)
+
+For substantial research intended to drive implementation planning:
+
+1. **Spawn `rpi-critic` agent** with the research document path:
+   ```
+   Task(
+     prompt="Critique the research at [research_path]. artifact_type: research",
+     subagent_type="rpi-critic",
+     description="Critique research document"
+   )
+   ```
+
+2. **Wait for completion**. The critic writes to `.planning/critique/YYYY-MM-DD-HHMMSS-[slug]-critique.md`
+   and returns a structured verdict.
+
+3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
+   - Read the critique document fully
+   - Spawn `critique-responder` to revise the research document against the critique findings (re-run research sub-agents if needed)
+   - Update frontmatter: increment `critique_cycles`, add critique path to `critique_artifacts` (single-line array only)
+   - Re-spawn the critic (max 2 revision cycles total — 3 runs)
+   - If still blocking after 2 revisions: surface issues to the user; do NOT hand off to planning
+
+4. **If `## CRITIQUE: WARNINGS ONLY` or `## CRITIQUE: ADVISORY`:**
+   - Use `critique-responder` for any material warning-driven revisions
+   - Update frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
+   - Before handoff, use `artifact-gatekeeper` when readiness is ambiguous or the critique/grade signals conflict
+   - Proceed to `grade-research`
+
+5. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**
+   - Present the blocking issues to the user
+   - Wait for guidance before handing off to planning
+
+**Skip condition**: Skip if this research is non-substantial (exploratory, not intended to drive a plan).
+Note frontmatter: `critique_completed: false`, `critique_cycles: 0`.
 
 7. **Add GitHub permalinks (if applicable):**
    - Check if inside a git repo with a remote: `git remote get-url origin 2>/dev/null`
@@ -158,8 +203,16 @@ Then wait for the user's research query.
 8. **Present findings:**
    - Present a concise summary of findings to the user
    - Include key file references for easy navigation
-   - State where the research document was saved
-   - Add or update an entry in `~/.agents/contexts/research-index.md` with the topic, date, source files, artifact path, and summary
+   - State where the research document was saved using the absolute filesystem path
+   - If an intake artifact was captured for this workflow, persist it into the current project's working set alongside the selected research artifact
+   - For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [absolute research path]` and refuse the planning handoff if it does not pass
+   - If the research artifact is intended to drive implementation planning, end the response with this exact standalone block using the saved artifact path:
+     ```text
+     Next step
+
+     /create-plan /absolute/path/to/research.md
+     ```
+   - Add or update an entry in the current project's `research-index.md` with the topic, date, source files, artifact path, and summary
    - Ask if they have follow-up questions or need clarification
 
 9. **Handle follow-up questions:**

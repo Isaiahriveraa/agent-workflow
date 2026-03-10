@@ -12,7 +12,8 @@ When invoked:
 1. **Determine context** - Are you in an existing conversation or starting fresh?
    - If existing: Review what was implemented in this session
    - If fresh: Need to discover what was done through git and codebase analysis
-   - Read `~/.agents/contexts/state.md` and `~/.agents/contexts/decisions.md` before forming conclusions
+   - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+   - Read the current project's `state.md` and `~/.agents/contexts/decisions.md` before forming conclusions
 
 2. **Locate the plan**:
    - If plan path provided, use it
@@ -20,6 +21,7 @@ When invoked:
 
 3. **Gather implementation evidence**:
    - Read `~/.agents/contexts/verification.md` before selecting automated checks
+   - Read `~/.agents/contexts/lessons-learned.md` and `~/.agents/contexts/failure-patterns.md` when the work involved failures, retries, or corrections
    ```bash
    # Check recent commits
    git log --oneline -n 20
@@ -83,8 +85,12 @@ For each phase in the plan:
 
 5. **Check workflow contract fidelity**:
    - Did the implementation honor locked decisions from `~/.agents/contexts/decisions.md`?
-   - Did the execution update `~/.agents/contexts/state.md` consistently?
-   - If reusable research was produced or consumed, does `~/.agents/contexts/research-index.md` reflect it?
+   - Did the execution update the current project's `state.md` consistently?
+   - If reusable research was produced or consumed, does the current project's `research-index.md` reflect it?
+   - For substantial workflows, did the related research and plan artifacts pass `node ./scripts/workflow-artifact-tools.mjs grade-research` and `node ./scripts/workflow-artifact-tools.mjs grade-plan` before implementation began?
+   - If readiness failed or a new blocker emerged mid-flight, did execution stop and route back through critique/refinement or `/iterate_plan`?
+   - For workflow-system changes, is there trace evidence that delegation, handoffs, and tool use were sane enough to pass `trace-grader` review?
+   - If the implementation hit verified failures or explicit corrections, did it capture a durable lesson with `node ./scripts/lesson-tools.mjs capture ...` or explain why no lesson was promoted?
 
 ### Step 3: Generate Validation Report
 
@@ -168,6 +174,8 @@ Recommended workflow:
 2. `/commit` - Create atomic commits for changes
 3. `/validate_plan` - Verify implementation correctness
 4. `/describe_pr` - Generate PR description
+
+Do not emit a standalone `Next step` command block from this command unless the user explicitly asks for a specific follow-up command. Validation may end in multiple valid next actions, so a canonical yank target is not guaranteed here.
 
 The validation works best after commits are made, as it can analyze the git history to understand what was implemented.
 

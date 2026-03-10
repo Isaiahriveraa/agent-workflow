@@ -8,16 +8,21 @@ You are tasked with writing a handoff document to hand off your work to another 
 
 Use `/pause-session` for normal pause/resume continuity. Use this command when the work needs a richer transfer artifact for another agent or a deliberate context compaction.
 
-
 ## Process
 ### 1. Filepath & Metadata
 Use the following information to understand how to create your document:
-    - create your file under `thoughts/shared/handoffs/ENG-XXXX/YYYY-MM-DD_HH-MM-SS_ENG-ZZZZ_description.md`, where:
+    - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
+    - Read `~/.agents/contexts/decisions.md`
+    - Read the current project's `state.md`
+    - Read the current project's `session-index.md`
+    - Read any directly relevant plan, research, validation, or prior handoff artifact referenced by the current project's `state.md`
+    - create your file under the shared/global handoff directory `~/.agents/thoughts/shared/handoffs/ENG-XXXX/YYYY-MM-DD_HH-MM-SS_ENG-ZZZZ_description.md`, where:
         - YYYY-MM-DD is today's date
         - HH-MM-SS is the hours, minutes and seconds based on the current time, in 24-hour format (i.e. use `13:00` for `1:00 pm`)
         - ENG-XXXX is the ticket number (replace with `general` if no ticket)
         - ENG-ZZZZ is the ticket number (omit if no ticket)
         - description is a brief kebab-case description
+    - if the shared handoff directory does not exist yet, create it before writing the handoff
     - Gather metadata by running: `git rev-parse HEAD` (commit hash), `git rev-parse --abbrev-ref HEAD` (branch), and `date` (current time)
     - Examples:
         - With ticket: `2025-01-08_13-55-22_ENG-2166_create-context-compaction.md`
@@ -65,28 +70,44 @@ type: implementation_strategy
 ## Other Notes
 { other notes, references, or useful information - e.g. where relevant sections of the codebase are, where relevant documents are, or other important things you leanrned that you want to pass on but that don't fall into the above categories}
 ```
+
+### 3. Runtime state sync
+After writing the handoff document:
+  - Update the current project's `state.md` so the workflow position, next step, blockers, and last-verified timestamp reflect the handoff point
+  - Preserve `## Related Plan`
+  - Update the current project's `session-index.md` so the latest transfer point is discoverable from normal resume flows
+  - Run `node ./scripts/artifact-tools.mjs persist --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]` and include any relevant `--plan`, `--research`, or `--session` overrides needed to preserve the active artifact working set in the current project's `state.md`
+  - Prefer the shared continuity helper to keep runtime-state updates aligned when helper-backed flows exist:
+    - `node ./scripts/continuity-tools.mjs handoff --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]`
+  - Keep the handoff itself under `~/.agents/thoughts/shared/handoffs/`; only runtime state is project-scoped
 ---
 
-### 3. Confirm
-Confirm the handoff document was written successfully.
+### 4. Confirm
+Confirm the handoff document was written successfully. Always report the handoff location as an absolute filesystem path.
 
 Once this is completed, you should respond to the user with the template between <template_response></template_response> XML tags. do NOT include the tags in your response.
 
 <template_response>
-Handoff created and synced! You can resume from this handoff in a new session with the following command:
+Handoff created and synced!
+
+Next step
 
 ```bash
 /resume_handoff path/to/handoff.md
 ```
 </template_response>
 
+Use the exact absolute handoff path written in the current run. Do not replace it with a placeholder in the actual user-facing response.
+
 for example (between <example_response></example_response> XML tags - do NOT include these tags in your actual response to the user)
 
 <example_response>
-Handoff created and synced! You can resume from this handoff in a new session with the following command:
+Handoff created and synced!
+
+Next step
 
 ```bash
-/resume_handoff thoughts/shared/handoffs/ENG-2166/2025-01-08_13-44-55_ENG-2166_create-context-compaction.md
+/resume_handoff ~/.agents/thoughts/shared/handoffs/ENG-2166/2025-01-08_13-44-55_ENG-2166_create-context-compaction.md
 ```
 </example_response>
 

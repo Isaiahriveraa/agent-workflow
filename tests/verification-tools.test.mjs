@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const root = '/Users/isaiahrivera/.agents';
+const root = path.resolve(new URL('..', import.meta.url).pathname);
 const read = (relativePath) => fs.readFileSync(`${root}/${relativePath}`, 'utf8');
 
 test('verification context exists with required sections', () => {
@@ -11,6 +12,7 @@ test('verification context exists with required sections', () => {
   assert.match(content, /## Available Checks/);
   assert.match(content, /## Preferred Order/);
   assert.match(content, /## Command Source/);
+  assert.match(content, /learning-loop contracts/);
 });
 
 test('verification detector reports available verification scripts', () => {

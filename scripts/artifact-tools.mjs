@@ -1,26 +1,48 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ensureProjectContext } from './project-context.mjs';
+import { assertSingleHeading, writeProjectStateSections } from './runtime-state-tools.mjs';
+import { gradePlanArtifact, gradeResearchArtifact } from './workflow-artifact-tools.mjs';
 
-const root = '/Users/isaiahrivera/.agents';
-const thoughtsRoot = path.join(root, 'thoughts');
-const statePath = path.join(root, 'contexts/state.md');
-
+const root = process.env.AGENTS_ROOT
+  ? path.resolve(process.env.AGENTS_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const project = ensureProjectContext();
+const statePath = project.contextPaths.state;
+const researchIndexPath = project.contextPaths.researchIndex;
+const repoLocalArtifactRoots = {
+  intake: project.thoughtPaths.intake,
+  research: project.thoughtPaths.research
+};
+const canonicalPlanRoot = project.thoughtPaths.plans;
+const legacyPlanRoot = path.join(project.planningDir, 'plans');
+const sharedArtifactRoots = {
+  plans: canonicalPlanRoot,
+  handoffs: project.thoughtPaths.handoffs
+};
+const projectRuntimeArtifactRoots = {
+  sessions: project.thoughtPaths.sessions
+};
 const categories = {
-  plans: path.join(thoughtsRoot, 'plans'),
-  research: path.join(thoughtsRoot, 'research'),
-  sessions: path.join(thoughtsRoot, 'sessions'),
-  handoffs: path.join(thoughtsRoot, 'handoffs')
+  ...repoLocalArtifactRoots,
+  ...sharedArtifactRoots,
+  ...projectRuntimeArtifactRoots
 };
 
-const readFile = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
 const readState = () => fs.readFileSync(statePath, 'utf8');
-
-const replaceSection = (content, heading, replacement) => {
-  const pattern = new RegExp(`(^${heading}\\n)([\\s\\S]*?)(?=\\n## |\\s*$)`, 'm');
-  if (!pattern.test(content)) {
-    return `${content.trimEnd()}\n\n${heading}\n${replacement.trimEnd()}\n`;
+const workingSetHeading = '## Active Artifact Working Set';
+const safeStat = (filePath) => {
+  try {
+    return fs.statSync(filePath);
+  } catch {
+    return null;
   }
-  return content.replace(pattern, `$1${replacement.trimEnd()}\n`);
+};
+
+const assertSingleWorkingSetSection = (state) => {
+  assertSingleHeading(state, workingSetHeading);
 };
 
 const listFiles = (dir) => {
@@ -33,11 +55,19 @@ const listFiles = (dir) => {
     if (entry.isDirectory()) {
       files.push(...listFiles(fullPath));
     } else if (entry.isFile() && entry.name.endsWith('.md') && entry.name !== '.gitkeep') {
-      files.push(fullPath);
+      if (safeStat(fullPath)) {
+        files.push(fullPath);
+      }
     }
   }
 
-  return files.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  return files.sort((a, b) => (safeStat(b)?.mtimeMs ?? 0) - (safeStat(a)?.mtimeMs ?? 0));
+};
+
+const listPlanFiles = () => {
+  const canonical = listFiles(canonicalPlanRoot);
+  if (canonical.length > 0) return canonical;
+  return listFiles(legacyPlanRoot);
 };
 
 const parseBullets = (content, heading) => {
@@ -66,8 +96,89 @@ const parseOrderedArtifacts = (section) => {
     .filter((line) => line && line !== 'none');
 };
 
+const safeReadFile = (filePath) => {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+};
+
+const looksSubstantial = (content) => {
+  if (!content) return false;
+  return (
+    /^##\s+Phase\s+\d+/im.test(content) ||
+    /^##\s+Implementation Approach$/im.test(content) ||
+    /^##\s+Detailed Findings$/im.test(content) ||
+    /^##\s+Testing Strategy$/im.test(content)
+  );
+};
+
+const classifyArtifactReadiness = (category, filePath) => {
+  if (!filePath) {
+    return {
+      status: 'missing',
+      ready: false,
+      legacySubstantial: false,
+      blockedCommands: []
+    };
+  }
+
+  if (category !== 'plan' && category !== 'research') {
+    return {
+      status: 'not_applicable',
+      ready: false,
+      legacySubstantial: false,
+      blockedCommands: []
+    };
+  }
+
+  const content = safeReadFile(filePath);
+  if (!content) {
+    return {
+      status: 'unreadable',
+      ready: false,
+      legacySubstantial: false,
+      blockedCommands: []
+    };
+  }
+
+  try {
+    const grade = category === 'plan'
+      ? gradePlanArtifact({ filePath, content })
+      : gradeResearchArtifact({ filePath, content });
+
+    return {
+      status: grade.passes ? 'ready' : 'not_ready',
+      ready: grade.passes,
+      legacySubstantial: false,
+      blockedCommands: grade.passes
+        ? []
+        : category === 'plan'
+          ? ['/implement_plan', '/resume-session']
+          : ['/create-plan'],
+      blockers: grade.blockers,
+      readinessField: grade.readinessField
+    };
+  } catch (error) {
+    const legacySubstantial = looksSubstantial(content);
+    return {
+      status: legacySubstantial ? 'legacy_substantial' : 'legacy_nonready',
+      ready: false,
+      legacySubstantial,
+      blockedCommands: legacySubstantial
+        ? category === 'plan'
+          ? ['/implement_plan', '/resume-session']
+          : ['/create-plan']
+        : [],
+      warning: error.message
+    };
+  }
+};
+
 const readPersistedWorkingSet = () => {
   const state = readState();
+  assertSingleWorkingSetSection(state);
   const sectionMatch = state.match(/## Active Artifact Working Set\n([\s\S]*?)(?=\n## |\s*$)/);
   if (!sectionMatch) {
     return {
@@ -75,6 +186,7 @@ const readPersistedWorkingSet = () => {
       source: 'none',
       focus: 'none',
       selected: {
+        intake: null,
         plan: null,
         research: null,
         session: null,
@@ -89,6 +201,7 @@ const readPersistedWorkingSet = () => {
   const selectedSection = selectedMatch ? selectedMatch[1] : '';
 
   const selected = {
+    intake: parseStateField(selectedSection, 'intake'),
     plan: parseStateField(selectedSection, 'plan'),
     research: parseStateField(selectedSection, 'research'),
     session: parseStateField(selectedSection, 'session'),
@@ -119,7 +232,7 @@ const normalizeArtifactPath = (value) => {
 
 const buildOrderedArtifacts = (selected) => {
   const ordered = [];
-  for (const key of ['plan', 'research', 'session', 'handoff']) {
+  for (const key of ['intake', 'plan', 'research', 'session', 'handoff']) {
     const value = selected[key];
     if (value && !ordered.includes(value)) {
       ordered.push(value);
@@ -136,6 +249,7 @@ const renderWorkingSetSection = (workingSet) => {
     `- Focus: ${workingSet.focus}`,
     '',
     '### Selected By Category',
+    `- intake: ${workingSet.selected.intake ?? 'none'}`,
     `- plan: ${workingSet.selected.plan ?? 'none'}`,
     `- research: ${workingSet.selected.research ?? 'none'}`,
     `- session: ${workingSet.selected.session ?? 'none'}`,
@@ -148,14 +262,25 @@ const renderWorkingSetSection = (workingSet) => {
 
 const persistWorkingSet = (workingSet) => {
   const state = readState();
-  const updated = replaceSection(state, '## Active Artifact Working Set', renderWorkingSetSection(workingSet));
-  fs.writeFileSync(statePath, updated);
+  assertSingleWorkingSetSection(state);
+  writeProjectStateSections({
+    statePath,
+    sections: [
+      {
+        heading: workingSetHeading,
+        replacement: renderWorkingSetSection(workingSet)
+      }
+    ]
+  });
   return workingSet;
 };
 
+export const persistWorkingSetSelection = ({ overrides = {}, metadata = {} } = {}) =>
+  persistWorkingSet(resolvedWorkingSet(overrides, metadata));
+
 const state = readState();
-const sessionIndex = readFile('contexts/session-index.md');
-const researchIndex = readFile('contexts/research-index.md');
+const sessionIndex = readFile(project.contextPaths.sessionIndex);
+const researchIndex = readFile(researchIndexPath);
 const persistedWorkingSet = readPersistedWorkingSet();
 
 const tokenize = (value) =>
@@ -172,6 +297,19 @@ const stateTerms = new Set([
 ]);
 
 const explicitRelatedPlan = parseBullets(state, '## Related Plan').find((line) => line && line !== 'none');
+const canonicalLatestPlan = () => listFiles(canonicalPlanRoot)[0] ?? null;
+const legacyLatestPlan = () => listFiles(legacyPlanRoot)[0] ?? null;
+const defaultPlanSuggestion = () => {
+  if (explicitRelatedPlan && explicitRelatedPlan !== 'workflow upgrade from external repo comparison and SSOT integration') {
+    return explicitRelatedPlan;
+  }
+
+  if (project.projectRoot !== root) {
+    return legacyLatestPlan() ?? canonicalLatestPlan();
+  }
+
+  return canonicalLatestPlan() ?? legacyLatestPlan();
+};
 
 const scoreFile = (filePath) => {
   const base = path.basename(filePath).toLowerCase();
@@ -179,19 +317,41 @@ const scoreFile = (filePath) => {
   for (const term of stateTerms) {
     if (base.includes(term)) score += 3;
   }
-  const stat = fs.statSync(filePath);
+  const stat = safeStat(filePath);
+  if (!stat) return score;
   score += Math.min(5, Math.round((Date.now() - stat.mtimeMs < 7 * 24 * 60 * 60 * 1000) ? 5 : 1));
   return score;
 };
 
-const pickLatest = (category) => listFiles(categories[category])[0] ?? null;
+const readinessRank = (category, filePath) => {
+  const readiness = classifyArtifactReadiness(category, filePath);
+  if (readiness.ready) return 3;
+  if (!readiness.legacySubstantial && readiness.status === 'not_ready') return 2;
+  if (readiness.legacySubstantial) return 0;
+  return 1;
+};
+
+const pickLatest = (category) => (
+  category === 'plans'
+    ? listPlanFiles()[0] ?? null
+    : listFiles(categories[category])[0] ?? null
+);
 
 const pickRelated = (category) => {
-  const files = listFiles(categories[category]);
+  const files = category === 'plans' ? listPlanFiles() : listFiles(categories[category]);
   if (files.length === 0) return null;
+  const readinessCategory = category === 'plans' ? 'plan' : category === 'research' ? 'research' : null;
   return files
-    .map((filePath) => ({ filePath, score: scoreFile(filePath) }))
-    .sort((a, b) => b.score - a.score || fs.statSync(b.filePath).mtimeMs - fs.statSync(a.filePath).mtimeMs)[0]?.filePath ?? null;
+    .map((filePath) => ({
+      filePath,
+      score: scoreFile(filePath),
+      readiness: readinessCategory ? readinessRank(readinessCategory, filePath) : -1
+    }))
+    .sort((a, b) =>
+      b.readiness - a.readiness ||
+      b.score - a.score ||
+      (safeStat(b.filePath)?.mtimeMs ?? 0) - (safeStat(a.filePath)?.mtimeMs ?? 0)
+    )[0]?.filePath ?? null;
 };
 
 const latestSessionFromIndex = () => {
@@ -210,10 +370,9 @@ const researchFromIndex = () => {
 };
 
 const heuristicSuggestions = () => ({
-  plan: explicitRelatedPlan && explicitRelatedPlan !== 'workflow upgrade from external repo comparison and SSOT integration'
-    ? explicitRelatedPlan
-    : pickRelated('plans'),
-  research: researchFromIndex() ?? pickRelated('research'),
+  intake: pickRelated('intake'),
+  plan: defaultPlanSuggestion(),
+  research: pickRelated('research') ?? researchFromIndex(),
   session: latestSessionFromIndex(),
   handoff: pickRelated('handoffs')
 });
@@ -221,6 +380,7 @@ const heuristicSuggestions = () => ({
 const resolvedWorkingSet = (overrides = {}, metadata = {}) => {
   const suggested = heuristicSuggestions();
   const selected = {
+    intake: normalizeArtifactPath(overrides.intake ?? persistedWorkingSet.selected.intake ?? suggested.intake ?? 'none'),
     plan: normalizeArtifactPath(overrides.plan ?? persistedWorkingSet.selected.plan ?? suggested.plan ?? 'none'),
     research: normalizeArtifactPath(overrides.research ?? persistedWorkingSet.selected.research ?? suggested.research ?? 'none'),
     session: normalizeArtifactPath(overrides.session ?? persistedWorkingSet.selected.session ?? suggested.session ?? 'none'),
@@ -245,10 +405,15 @@ const suggest = () => {
   });
 
   return {
+    intake: workingSet.selected.intake,
     plan: workingSet.selected.plan,
     research: workingSet.selected.research,
     session: workingSet.selected.session,
     handoff: workingSet.selected.handoff,
+    readiness: {
+      plan: classifyArtifactReadiness('plan', workingSet.selected.plan),
+      research: classifyArtifactReadiness('research', workingSet.selected.research)
+    },
     active: workingSet,
     suggested
   };
@@ -267,54 +432,60 @@ const parseArgs = (args) => {
   return parsed;
 };
 
-const command = process.argv[2];
+if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta.url) === process.argv[1]) {
+  const command = process.argv[2];
 
-try {
-  switch (command) {
-    case 'latest': {
-      const category = process.argv[3];
-      if (!categories[category]) {
-        console.error('Usage: node scripts/artifact-tools.mjs latest <plans|research|sessions|handoffs>');
-        process.exitCode = 1;
+  try {
+    switch (command) {
+      case 'latest': {
+        const category = process.argv[3];
+        if (!categories[category]) {
+          console.error('Usage: node scripts/artifact-tools.mjs latest <plans|research|sessions|handoffs>');
+          process.exitCode = 1;
+          break;
+        }
+        console.log(pickLatest(category) ?? '');
         break;
       }
-      console.log(pickLatest(category) ?? '');
-      break;
+      case 'related':
+        console.log(JSON.stringify({
+          intake: pickRelated('intake'),
+          plans: pickRelated('plans'),
+          research: pickRelated('research'),
+          sessions: pickRelated('sessions'),
+          handoffs: pickRelated('handoffs')
+        }, null, 2));
+        break;
+      case 'active':
+        console.log(JSON.stringify(readPersistedWorkingSet(), null, 2));
+        break;
+      case 'persist': {
+        const args = parseArgs(process.argv.slice(3));
+        console.log(JSON.stringify(persistWorkingSetSelection({
+          overrides: {
+            intake: args.intake,
+            plan: args.plan,
+            research: args.research,
+            session: args.session,
+            handoff: args.handoff
+          },
+          metadata: {
+            lastUpdated: new Date().toISOString(),
+            source: args.source ?? 'manual',
+            focus: args.focus ?? persistedWorkingSet.focus ?? 'none'
+          }
+        }), null, 2));
+        break;
+      }
+      case 'suggest':
+        console.log(JSON.stringify(suggest(), null, 2));
+        break;
+      default:
+        console.error('Usage: node scripts/artifact-tools.mjs <suggest|related|latest|active|persist>');
+        process.exitCode = 1;
     }
-    case 'related':
-      console.log(JSON.stringify({
-        plans: pickRelated('plans'),
-        research: pickRelated('research'),
-        sessions: pickRelated('sessions'),
-        handoffs: pickRelated('handoffs')
-      }, null, 2));
-      break;
-    case 'active':
-      console.log(JSON.stringify(readPersistedWorkingSet(), null, 2));
-      break;
-    case 'persist': {
-      const args = parseArgs(process.argv.slice(3));
-      const workingSet = resolvedWorkingSet({
-        plan: args.plan,
-        research: args.research,
-        session: args.session,
-        handoff: args.handoff
-      }, {
-        lastUpdated: new Date().toISOString(),
-        source: args.source ?? 'manual',
-        focus: args.focus ?? persistedWorkingSet.focus ?? 'none'
-      });
-      console.log(JSON.stringify(persistWorkingSet(workingSet), null, 2));
-      break;
-    }
-    case 'suggest':
-      console.log(JSON.stringify(suggest(), null, 2));
-      break;
-    default:
-      console.error('Usage: node scripts/artifact-tools.mjs <suggest|related|latest|active|persist>');
-      process.exitCode = 1;
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
   }
-} catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
 }

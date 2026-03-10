@@ -1,47 +1,39 @@
 # Workflow State
 
-Use this file as the canonical resumable state for in-flight work.
+Use this file as a shared compatibility document, not the live per-project runtime state source.
+
+Per-project runtime workflow state now lives at `[project root]/.agents/contexts/state.md`.
+Use this global file only for legacy/shared notes that are not specific to a single repo.
 
 ## Current Workflow
-- workflow-artifact-continuity-upgrade
+- Not set.
 
 ## Current Phase
-- artifact working set persistence implemented and verified
+- Not set.
 
 ## Next Step
-- Decide whether to implement command templating so plans and runbooks emit package-manager-aware and verification-aware commands automatically.
+- Not set.
 
 ## Blockers
-- None.
+- None recorded at the shared/global level.
 
 ## Last Verified At
-- 2026-03-02T07:00:00Z
+- Not set.
 
 ## Related Plan
-- workflow upgrade from external repo comparison and SSOT integration
+- Not set.
 
 ## Active Artifact Working Set
-- Last updated: 2026-03-02T07:00:29.026Z
-- Source: resume-handoff
-- Focus: agent workflow automation upgrade
+- Last updated: not set
+- Source: not set
+- Focus: not set
 
 ### Selected By Category
-- plan: none
-- research: none
-- session: none
-- handoff: /Users/isaiahrivera/.agents/thoughts/shared/handoffs/ENG-general/2026-03-01_22-53-44_agent-workflow-automation-upgrade.md
+- intake: not set
+- plan: not set
+- research: not set
+- session: not set
+- handoff: not set
 
 ### Ordered Artifacts
-1. /Users/isaiahrivera/.agents/thoughts/shared/handoffs/ENG-general/2026-03-01_22-53-44_agent-workflow-automation-upgrade.md
-
-- Source: none
-- Focus: none
-
-### Selected By Category
-- plan: none
-- research: none
-- session: none
-- handoff: none
-
-### Ordered Artifacts
-1. none
+1. not set
