@@ -127,7 +127,7 @@ const handoffContracts = new Map([
 
 const explicitOutputContracts = new Map([
   ['commands/research_codebase.md', ['/create-plan /absolute/path/to/research.md']],
-  ['commands/create-plan.md', ['Next step', '/implement_plan /Users/isaiahrivera/.agents/thoughts/plans/YYYY-MM-DD-description.md']],
+  ['commands/create-plan.md', ['Next step', '/implement_plan /absolute/path/to/.agents/thoughts/plans/YYYY-MM-DD-description.md']],
   ['commands/create-handoff.md', ['Use the exact absolute handoff path written in the current run.', 'Next step', '/resume_handoff path/to/handoff.md']],
   ['commands/implement_plan.md', ['Next step', '/validate_plan /absolute/path/to/plan.md']],
   ['commands/validate_plan.md', ['Do not emit a standalone `Next step` command block from this command unless the user explicitly asks for a specific follow-up command.']]

@@ -27,7 +27,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 12. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
-   Example: /Users/isaiahrivera/.agents/thoughts/plans/2026-02-17-my-feature.md
+   Example: /absolute/path/to/.agents/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 

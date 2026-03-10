@@ -38,6 +38,7 @@ test('handoff tool resolves an explicit absolute path', () => {
   withTempProjectsRoot((env) => {
     const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-handoff-')), 'repo');
     const handoffPath = path.join(root, 'thoughts', 'shared', 'handoffs', 'general', '2026-03-06_20-30-00_explicit.md');
+    fs.mkdirSync(path.dirname(handoffPath), { recursive: true });
     fs.writeFileSync(handoffPath, '# handoff\n');
 
     try {
