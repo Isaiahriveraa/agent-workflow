@@ -31,23 +31,31 @@ test('sync migrate generates adapter outputs for opencode, antigravity, and open
 
   try {
     const opencodeAgent = path.join(home, '.config/opencode/agents/analyst.md');
-    const antigravityCommand = path.join(home, '.gemini/commands/implement_plan.toml');
+    const antigravityCommand = path.join(home, '.gemini/commands/gsd/help.toml');
     const antigravityAgent = path.join(home, '.gemini/agents/analyst.md');
-    const antigravityGsd = path.join(home, '.gemini/get-shit-done/VERSION');
+    const antigravityEntrypoint = path.join(home, '.gemini/GEMINI.md');
+    const antigravityGsd = path.join(home, '.gemini/get-shit-done');
     const openclawAgents = path.join(home, '.openclaw/workspace/AGENTS.md');
     const openclawSoul = path.join(home, '.openclaw/workspace/SOUL.md');
 
     assert.ok(fs.existsSync(opencodeAgent));
     assert.ok(fs.existsSync(antigravityCommand));
     assert.ok(fs.existsSync(antigravityAgent));
+    assert.ok(fs.existsSync(antigravityEntrypoint));
     assert.ok(fs.existsSync(antigravityGsd));
     assert.ok(fs.existsSync(openclawAgents));
     assert.ok(fs.existsSync(openclawSoul));
 
     assert.match(fs.readFileSync(opencodeAgent, 'utf8'), /^---\nname: analyst\n/m);
     assert.match(fs.readFileSync(antigravityCommand, 'utf8'), /^description = /m);
-    assert.match(fs.readFileSync(antigravityAgent, 'utf8'), /^---\n/m);
-    assert.equal(fs.readFileSync(antigravityGsd, 'utf8').trim().length > 0, true);
+    assert.match(fs.readFileSync(antigravityCommand, 'utf8'), /~\/\.gemini\/get-shit-done/);
+    assert.match(fs.readFileSync(antigravityAgent, 'utf8'), /^---\nkind: local\nname: "analyst"/m);
+    assert.match(fs.readFileSync(antigravityAgent, 'utf8'), /tools:\n(?:  - .+\n)+/m);
+    assert.match(fs.readFileSync(antigravityAgent, 'utf8'), /read_file/);
+    assert.match(fs.readFileSync(antigravityEntrypoint, 'utf8'), /# Gemini Workflow Wrapper/);
+    assert.equal(fs.lstatSync(antigravityGsd).isSymbolicLink(), true);
+    assert.equal(fs.realpathSync(antigravityGsd), path.join(root, 'get-shit-done'));
+    assert.equal(fs.existsSync(path.join(home, '.gemini/skills')), false);
 
     const openclawAgentsContent = fs.readFileSync(openclawAgents, 'utf8');
     const openclawSoulContent = fs.readFileSync(openclawSoul, 'utf8');

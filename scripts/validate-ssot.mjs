@@ -57,6 +57,7 @@ const requiredFiles = [
   'adapters/codex-cli/README.md',
   'adapters/opencode/README.md',
   'adapters/antigravity/README.md',
+  'adapters/antigravity/GEMINI.md',
   'adapters/openclaw/README.md',
   'adapters/openclaw/templates/AGENTS.md',
   'adapters/openclaw/templates/SOUL.md',
