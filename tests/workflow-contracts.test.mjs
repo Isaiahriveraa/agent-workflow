@@ -129,17 +129,20 @@ test('workflow commands reference explicit context files', () => {
   assert.match(research, /workflow-router-tools\.mjs capture/);
   assert.match(research, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(research, /research_ready_for_planning/);
+  assert.match(research, /artifact-tools\.mjs sync-research/);
   assert.match(sessionStart, /current project's `session-index\.md`/);
   assert.match(sessionStart, /ordinary pause\/resume continuity/);
   assert.match(pauseSession, /current project's `session-index\.md`/);
   assert.match(resumeSession, /current project's `session-index\.md`/);
   assert.match(resumeSession, /current project's `research-index\.md`/);
   assert.match(resumeSession, /project-local session artifacts/);
+  assert.match(resumeSession, /helper-backed freshness model/);
   assert.match(projectTooling, /contexts\/tooling\.md/);
   assert.match(projectVerification, /contexts\/verification\.md/);
   assert.match(projectArtifacts, /current project's `artifacts\.md`/);
   assert.match(projectArtifacts, /current project's `research-index\.md`/);
   assert.match(projectArtifacts, /handoffs remain shared\/global transfer artifacts/);
+  assert.match(projectArtifacts, /helper-backed freshness model/);
 });
 
 test('handoff commands keep handoffs global while runtime state can be project-scoped', () => {
@@ -150,6 +153,7 @@ test('handoff commands keep handoffs global while runtime state can be project-s
   assert.match(createHandoff, /current project's `state\.md`/);
   assert.match(createHandoff, /current project's `session-index\.md`/);
   assert.match(createHandoff, /artifact-tools\.mjs persist/);
+  assert.match(createHandoff, /helper-backed freshness model/);
   assert.doesNotMatch(createHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
   assert.match(resumeHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\/ENG-XXXX/);
   assert.match(resumeHandoff, /~\/\.agents\/thoughts\/plans/);

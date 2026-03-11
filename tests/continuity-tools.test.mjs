@@ -35,6 +35,12 @@ const runContinuityTool = (args, repoRoot, extraEnv = {}) =>
     }
   }));
 
+const setWorkingSet = (stateContent, lines) =>
+  stateContent.replace(
+    /## Active Artifact Working Set\n[\s\S]*$/m,
+    `## Active Artifact Working Set\n${lines.trimEnd()}\n`
+  );
+
 test('continuity checkpoint creates a project-local session artifact and updates runtime state', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'checkpoint');
   const context = runProjectContext(repoRoot);
@@ -146,5 +152,68 @@ test('continuity handoff preserves authored handoff content and syncs project-lo
     fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
     fs.rmSync(planPath, { force: true });
     fs.rmSync(handoffPath, { force: true });
+  }
+});
+
+test('continuity checkpoint refreshes stale intake selections through helper-backed persistence', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'refresh');
+  const context = runProjectContext(repoRoot);
+  const planPath = path.join(root, 'thoughts', 'plans', 'continuity-refresh-plan.md');
+  const researchPath = path.join(repoRoot, '.planning', 'research', 'continuity-refresh-research.md');
+  const oldIntakePath = path.join(repoRoot, '.planning', 'intake', 'old-intake.md');
+  const suggestedIntakePath = path.join(repoRoot, '.planning', 'intake', 'checkpoint-focus-intake.md');
+  const originalState = fs.readFileSync(context.contextPaths.state, 'utf8');
+
+  fs.mkdirSync(path.dirname(planPath), { recursive: true });
+  fs.mkdirSync(path.dirname(researchPath), { recursive: true });
+  fs.mkdirSync(path.dirname(oldIntakePath), { recursive: true });
+  fs.writeFileSync(planPath, '# plan\n');
+  fs.writeFileSync(researchPath, '# research\n');
+  fs.writeFileSync(oldIntakePath, '# old intake\n');
+  fs.writeFileSync(suggestedIntakePath, '# checkpoint intake\n');
+
+  try {
+    const workflowState = originalState
+      .replace(/## Current Workflow\n- .*/m, '## Current Workflow\n- checkpoint focus')
+      .replace(/## Current Phase\n- .*/m, '## Current Phase\n- refresh');
+    const seededState = setWorkingSet(workflowState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: previous continuity focus
+
+### Selected By Category
+- intake: ${oldIntakePath}
+- plan: ${planPath}
+- research: ${researchPath}
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. ${oldIntakePath}
+2. ${planPath}
+3. ${researchPath}
+`);
+    fs.writeFileSync(context.contextPaths.state, seededState);
+
+    runContinuityTool([
+      'checkpoint',
+      '--source', 'test-suite',
+      '--focus', 'checkpoint focus',
+      '--topic', 'Checkpoint Refresh',
+      '--workflow', 'implementation',
+      '--phase', 'refresh phase',
+      '--next-step', 'Continue',
+      '--next-command', '/resume-session',
+      '--plan', planPath,
+      '--research', researchPath
+    ], repoRoot);
+
+    const state = fs.readFileSync(context.contextPaths.state, 'utf8');
+    assert.match(state, new RegExp(`- intake: ${suggestedIntakePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+    assert.doesNotMatch(state, new RegExp(`- intake: ${oldIntakePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  } finally {
+    fs.writeFileSync(context.contextPaths.state, originalState);
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    fs.rmSync(planPath, { force: true });
   }
 });
