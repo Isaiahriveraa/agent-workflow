@@ -87,6 +87,7 @@ test('workflow commands reference explicit context files', () => {
   const projectTooling = read('commands/project-tooling.md');
   const projectVerification = read('commands/project-verification.md');
   const projectArtifacts = read('commands/project-artifacts.md');
+  const pr = read('commands/pr.md');
 
   assert.match(createPlan, /contexts\/decisions\.md/);
   assert.match(createPlan, /current project's runtime `research-index\.md`/);
@@ -143,6 +144,11 @@ test('workflow commands reference explicit context files', () => {
   assert.match(projectArtifacts, /current project's `research-index\.md`/);
   assert.match(projectArtifacts, /handoffs remain shared\/global transfer artifacts/);
   assert.match(projectArtifacts, /helper-backed freshness model/);
+  assert.match(pr, /Describe only what is actually in the committed branch diff against the base branch/);
+  assert.match(pr, /Do not invent provenance from the conversation/);
+  assert.match(pr, /no machine-specific absolute filesystem paths/);
+  assert.match(pr, /If `\.planning\/research\/`, `thoughts\/`, or other artifact directories are not part of the committed diff, do not mention them in the PR body/);
+  assert.match(pr, /No references to `\.planning\/research` or `thoughts\/` unless those paths are committed and reviewer-relevant in this PR/);
 });
 
 test('handoff commands keep handoffs global while runtime state can be project-scoped', () => {
