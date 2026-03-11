@@ -39,19 +39,15 @@ test('AGENTS declares contexts, rules, and adapters as canonical layers', () => 
   assert.doesNotMatch(content, /Use `thoughts\/sessions\/` for ordinary workflow continuity/);
 });
 
-test('system prompt documents context discipline and ui routing', () => {
+test('system prompt documents enforcement-first router authority and stage contracts', () => {
   const content = read('prompts/system.md');
-  assert.match(content, /## Canonical Workflow Layers/);
-  assert.match(content, /## Context Discipline/);
-  assert.match(content, /## Capsule Routing/);
-  assert.match(content, /## Learning Loop/);
-  assert.match(content, /## UI\/UX Routing/);
-  assert.match(content, /## Tooling Automation/);
-  assert.match(content, /## Verification Automation/);
-  assert.match(content, /## Artifact Retrieval/);
-  assert.match(content, /## Simple Response Contract/);
-  assert.match(content, /What I changed/);
-  assert.match(content, /How it connects to the bigger picture/);
+  assert.match(content, /<role>Enforcement-First Pair Engineering<\/role>/);
+  assert.match(content, /workflow-router-tools\.mjs activate/);
+  assert.match(content, /router remains the activation spine/);
+  assert.match(content, /Memory is advisory but mandatory to attempt for `create-plan` and `implement-plan` stages/);
+  assert.match(content, /If router activation requires the task to be substantial, run prompt optimization first/);
+  assert.match(content, /That explanation must separate: what the codebase proves, what memory suggests, what is inferred, and what is newly proposed/);
+  assert.match(content, /Do not implement until the user explicitly approves the plan/);
 });
 
 test('global workflow state is a compatibility document with runtime-state pointer', () => {

@@ -264,6 +264,7 @@ test('lesson capture mirrors curated memories after canonical writes when memory
 
       assert.equal(createPlanRecall.items.some((item) => item.memory_kind === 'lesson'), true);
       assert.equal(createPlanRecall.items.some((item) => item.memory_kind === 'user_preference'), true);
+      assert.equal(implementRecall.items.some((item) => item.memory_kind === 'lesson'), true);
       assert.equal(implementRecall.items.some((item) => item.memory_kind === 'failure_pattern'), true);
     });
   } finally {
@@ -347,7 +348,11 @@ test('lesson capture is a no-op for memory mirroring when memory is disabled', a
 
       assert.equal(fs.existsSync(result.artifactPath), true);
       assert.equal(result.memoryMirror.results.every((item) => item.recorded === false), true);
+      assert.equal(result.memoryMirror.warnings.length, 0);
       assert.equal(backend.records.length, 0);
+
+      const lessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
+      assert.match(lessons, /Disabled memory must leave canonical lesson writes unchanged\./);
     });
   } finally {
     cleanupLessonArtifacts('api-workflow-disabled-mirror');

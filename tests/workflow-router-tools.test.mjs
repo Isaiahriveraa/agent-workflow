@@ -35,6 +35,54 @@ test('workflow router classifies substantial workflow requests', () => {
 
     assert.equal(parsed.substantial, true);
     assert.ok(parsed.reasons.length > 0);
+    assert.equal(parsed.activation.strictWorkflowRequired, true);
+    assert.equal(parsed.activation.recommendedNextAction, 'optimize-prompt');
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
+});
+
+test('workflow router derives strict activation reasons for substantial requests', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-router-')), 'activate-substantial');
+
+  try {
+    const parsed = JSON.parse(execWorkflowRouter([
+      'activate',
+      '--input',
+      'This cross-provider workflow refactor needs research, planning, delegation, and will touch 4 files.'
+    ], repoRoot));
+
+    assert.equal(parsed.strictWorkflowRequired, true);
+    assert.equal(parsed.taskSize, 'substantial');
+    assert.equal(parsed.recommendedNextAction, 'optimize-prompt');
+    assert.equal(parsed.explicitFileCount, 4);
+    assert.deepEqual(
+      parsed.reasons.map((item) => item.id),
+      [
+        'workflow_or_planning_change',
+        'cross_subsystem_scope',
+        'touches_three_or_more_files'
+      ]
+    );
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
+});
+
+test('workflow router keeps narrow requests on the lightweight path', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-router-')), 'activate-lightweight');
+
+  try {
+    const parsed = JSON.parse(execWorkflowRouter([
+      'activate',
+      '--input',
+      'Rename one test file to match the existing naming convention.'
+    ], repoRoot));
+
+    assert.equal(parsed.strictWorkflowRequired, false);
+    assert.equal(parsed.taskSize, 'lightweight');
+    assert.equal(parsed.recommendedNextAction, 'proceed-lightweight');
+    assert.deepEqual(parsed.reasons, []);
   } finally {
     fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
   }
@@ -66,6 +114,7 @@ test('workflow router score enforces readiness thresholds', () => {
     assert.equal(passing.total, 71);
     assert.equal(passing.passes, true);
     assert.equal(passing.nextAction, 'create-plan');
+    assert.equal(passing.recommendedNextAction, 'create-plan');
   } finally {
     fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
   }
