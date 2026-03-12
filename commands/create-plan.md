@@ -510,4 +510,4 @@ After writing the final plan:
 - Set `## Related Plan` to the plan path you created
 
 If the plan used new or existing research artifacts:
- - Add or update the matching entry in the current project's runtime `research-index.md` with the helper-backed path in `scripts/artifact-tools.mjs` instead of freeform manual editing
+- Add or update the matching entry in the current project's runtime `research-index.md` with the helper-backed path in `scripts/artifact-tools.mjs` instead of freeform manual editing
