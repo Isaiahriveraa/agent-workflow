@@ -89,7 +89,7 @@ const collectActivationReasons = (input, explicitFileCount) => {
 };
 
 const deriveActivationDecision = (input) => {
-  const fileEstimate = input.match(/\b(\d+)\s*files?\b/i);
+  const fileEstimate = input.match(/\b(\d+)\s*\+?\s*files?\b/i);
   const explicitFileCount = fileEstimate ? Number.parseInt(fileEstimate[1], 10) : null;
   const reasons = collectActivationReasons(input, explicitFileCount);
   const substantial = reasons.length > 0;

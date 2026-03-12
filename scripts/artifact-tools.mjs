@@ -373,9 +373,10 @@ const latestSessionFromIndex = () => {
 };
 
 const researchFromIndex = () => {
-  const entries = parseBullets(researchIndex, '## Entries');
-  const artifactLine = entries.find((line) => line.toLowerCase().includes('artifact path:'));
-  return artifactLine ? artifactLine.replace(/artifact path:/i, '').trim() : null;
+  const content = safeReadFile(researchIndexPath);
+  if (!content) return null;
+  const entries = parseResearchIndexEntries(content);
+  return entries.length > 0 ? entries[0].artifactPath : null;
 };
 
 const parseResearchIndexEntries = (content) => {
@@ -390,8 +391,8 @@ const parseResearchIndexEntries = (content) => {
       const topic = entry.match(/^- Topic:\s*(.*)$/m)?.[1]?.trim() ?? 'Untitled research';
       const date = entry.match(/^- Date:\s*(.*)$/m)?.[1]?.trim() ?? 'unknown';
       const artifactPath = entry.match(/^- Artifact path:\s*\n\s*-\s+(.*)$/m)?.[1]?.trim() ?? 'none';
-      const sourceSection = entry.match(/^- Source files:\s*\n([\s\S]*?)(?=^- Artifact path:|^- Summary:|$)/m)?.[1] ?? '';
-      const summarySection = entry.match(/^- Summary:\s*\n([\s\S]*?)$/m)?.[1] ?? '';
+      const sourceSection = entry.match(/^- Source files:\s*\n([\s\S]*?)(?=^- Artifact path:|^- Summary:|(?![\s\S]))/m)?.[1] ?? '';
+      const summarySection = entry.match(/^- Summary:\s*\n([\s\S]*?)(?![\s\S])/m)?.[1] ?? '';
 
       return {
         topic,
