@@ -33,6 +33,7 @@ const execArtifactTool = (args, repoRoot = fixtureRepoRoot, extraEnv = {}) =>
     }
   });
 const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const setWorkingSet = (stateContent, lines) =>
   stateContent.replace(
     /## Active Artifact Working Set\n[\s\S]*$/m,
@@ -420,6 +421,162 @@ test('artifact suggestion prefers persisted selections over heuristics', () => {
         fs.writeFileSync(projectStatePath, originalState);
       }
   });
+});
+
+test('artifact persistence refreshes stale intake selections when workflow focus changes', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath }) => {
+      const project = runProjectContext(fixtureRepoRoot);
+      const projectStatePath = project.contextPaths.state;
+      const oldIntakePath = path.join(fixtureRepoRoot, '.planning', 'intake', 'old-intake.md');
+      const suggestedIntakePath = path.join(fixtureRepoRoot, '.planning', 'intake', 'target-workflow-intake.md');
+      const originalState = readFile(projectStatePath);
+
+      fs.mkdirSync(path.dirname(oldIntakePath), { recursive: true });
+      fs.writeFileSync(oldIntakePath, '# Old Intake\n');
+      fs.writeFileSync(suggestedIntakePath, '# Target Workflow Intake\n');
+
+      try {
+        const workflowState = originalState
+          .replace(/## Current Workflow\n- .*/m, '## Current Workflow\n- target workflow')
+          .replace(/## Current Phase\n- .*/m, '## Current Phase\n- target phase');
+        const seededState = setWorkingSet(workflowState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: previous workflow focus
+
+### Selected By Category
+- intake: ${oldIntakePath}
+- plan: ${canonicalPlanPath}
+- research: ${researchPath}
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. ${oldIntakePath}
+2. ${canonicalPlanPath}
+3. ${researchPath}
+`);
+
+        fs.writeFileSync(projectStatePath, seededState);
+
+        const persisted = JSON.parse(execArtifactTool([
+          'persist',
+          '--source',
+          'resume-session',
+          '--focus',
+          'new workflow focus'
+        ], fixtureRepoRoot));
+
+        assert.equal(persisted.selected.intake, suggestedIntakePath);
+        assert.equal(persisted.selected.plan, canonicalPlanPath);
+        assert.equal(persisted.selected.research, researchPath);
+      } finally {
+        fs.writeFileSync(projectStatePath, originalState);
+        fs.rmSync(oldIntakePath, { force: true });
+        fs.rmSync(suggestedIntakePath, { force: true });
+      }
+  });
+});
+
+test('artifact persistence allows explicit none overrides to clear a persisted category', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, canonicalPlanPath, researchPath }) => {
+      const project = runProjectContext(fixtureRepoRoot);
+      const projectStatePath = project.contextPaths.state;
+      const originalState = readFile(projectStatePath);
+
+      try {
+        const seededState = setWorkingSet(originalState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: persisted wins
+
+### Selected By Category
+- intake: ${intakePath}
+- plan: ${canonicalPlanPath}
+- research: ${researchPath}
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. ${intakePath}
+2. ${canonicalPlanPath}
+3. ${researchPath}
+`);
+
+        fs.writeFileSync(projectStatePath, seededState);
+
+        const persisted = JSON.parse(execArtifactTool([
+          'persist',
+          '--intake',
+          'none',
+          '--source',
+          'clear-intake',
+          '--focus',
+          'override clear'
+        ], fixtureRepoRoot));
+
+        assert.equal(persisted.selected.intake, null);
+      } finally {
+        fs.writeFileSync(projectStatePath, originalState);
+      }
+  });
+});
+
+test('artifact tools sync research-index entries by artifact path without duplication', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-research-index-')), 'research-index');
+  const context = runProjectContext(repoRoot);
+  const researchPath = path.join(repoRoot, '.planning', 'research', 'continuity-repair.md');
+
+  fs.mkdirSync(path.dirname(researchPath), { recursive: true });
+  fs.writeFileSync(researchPath, '# Research\n');
+
+  try {
+    const first = JSON.parse(execArtifactTool([
+      'sync-research',
+      '--topic',
+      'Continuity drift repair',
+      '--date',
+      '2026-03-10',
+      '--artifact',
+      researchPath,
+      '--summary',
+      'First summary',
+      '--source-file',
+      path.join(root, 'scripts', 'artifact-tools.mjs'),
+      '--source-file-2',
+      path.join(root, 'scripts', 'continuity-tools.mjs')
+    ], repoRoot));
+
+    assert.equal(first.artifactPath, researchPath);
+    assert.equal(first.summaryLines[0], 'First summary');
+
+    const second = JSON.parse(execArtifactTool([
+      'sync-research',
+      '--topic',
+      'Continuity drift repair',
+      '--date',
+      '2026-03-11',
+      '--artifact',
+      researchPath,
+      '--summary',
+      'Updated summary',
+      '--source-file',
+      path.join(root, 'scripts', 'artifact-tools.mjs')
+    ], repoRoot));
+
+    assert.equal(second.artifactPath, researchPath);
+    assert.equal(second.summaryLines[0], 'Updated summary');
+
+    const researchIndex = readFile(context.contextPaths.researchIndex);
+    const artifactMatches = researchIndex.match(new RegExp(escapeRegExp(researchPath), 'g')) ?? [];
+
+    assert.equal(artifactMatches.length, 1);
+    assert.match(researchIndex, /- Topic: Continuity drift repair/);
+    assert.match(researchIndex, /- Date: 2026-03-11/);
+    assert.match(researchIndex, /Updated summary/);
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
 });
 
 test('artifact suggestion prefers explicit session-index artifacts over latest session heuristic', () => {

@@ -18,10 +18,11 @@ This command resumes from the current project's project-local session artifacts.
 6. Read the current project's `research-index.md`.
 7. Read the current project's `artifacts.md`.
 8. Run `node ./scripts/artifact-tools.mjs suggest`.
-9. If the active artifact working set is missing or stale, run `node ./scripts/artifact-tools.mjs persist --source resume-session --focus "[workflow focus]"` with any category overrides needed to lock the resumed working set into the current project's `state.md`.
+9. If the active artifact working set needs refresh, run `node ./scripts/artifact-tools.mjs persist --source resume-session --focus "[workflow focus]"` with any category overrides needed to lock the resumed working set into the current project's `state.md`.
+   - Treat freshness with the helper-backed model: explicit overrides win, but stale persisted intake/session/handoff selections may yield to stronger current-workflow suggestions.
 10. Read any plan or research artifacts referenced by the session, plus the active working set artifacts that are still relevant.
 11. Prefer the persisted working set over fresh heuristics when reporting current context.
-12. If the current position came from a helper-backed checkpoint, preserve that persisted working set unless the operator explicitly overrides it.
+12. If the current position came from a helper-backed checkpoint, preserve that persisted working set unless the helper-backed freshness model or an explicit operator override says it should be refreshed.
 13. Present:
    - current position
    - active artifacts

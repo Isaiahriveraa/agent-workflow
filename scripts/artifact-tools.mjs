@@ -33,6 +33,8 @@ const categories = {
 const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
 const readState = () => fs.readFileSync(statePath, 'utf8');
 const workingSetHeading = '## Active Artifact Working Set';
+const researchEntriesHeading = '## Entries';
+const refreshableCategories = new Set(['intake', 'session', 'handoff']);
 const safeStat = (filePath) => {
   try {
     return fs.statSync(filePath);
@@ -44,6 +46,8 @@ const safeStat = (filePath) => {
 const assertSingleWorkingSetSection = (state) => {
   assertSingleHeading(state, workingSetHeading);
 };
+
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const listFiles = (dir) => {
   if (!fs.existsSync(dir)) return [];
@@ -94,6 +98,11 @@ const parseOrderedArtifacts = (section) => {
     .filter((line) => /^\d+\.\s+/.test(line))
     .map((line) => line.replace(/^\d+\.\s+/, '').trim())
     .filter((line) => line && line !== 'none');
+};
+
+const readMarkdownSection = (content, heading) => {
+  const match = content.match(new RegExp(`^${escapeRegExp(heading)}\\n([\\s\\S]*?)(?=\\n## |\\s*$)`, 'm'));
+  return match ? match[1].trim() : '';
 };
 
 const safeReadFile = (filePath) => {
@@ -364,9 +373,97 @@ const latestSessionFromIndex = () => {
 };
 
 const researchFromIndex = () => {
-  const entries = parseBullets(researchIndex, '## Entries');
-  const artifactLine = entries.find((line) => line.toLowerCase().includes('artifact path:'));
-  return artifactLine ? artifactLine.replace(/artifact path:/i, '').trim() : null;
+  const content = safeReadFile(researchIndexPath);
+  if (!content) return null;
+  const entries = parseResearchIndexEntries(content);
+  return entries.length > 0 ? entries[0].artifactPath : null;
+};
+
+const parseResearchIndexEntries = (content) => {
+  const section = readMarkdownSection(content, researchEntriesHeading);
+  if (!section || /^- No .* recorded\.$/m.test(section)) return [];
+
+  return section
+    .split(/(?=^- Topic: )/m)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const topic = entry.match(/^- Topic:\s*(.*)$/m)?.[1]?.trim() ?? 'Untitled research';
+      const date = entry.match(/^- Date:\s*(.*)$/m)?.[1]?.trim() ?? 'unknown';
+      const artifactPath = entry.match(/^- Artifact path:\s*\n\s*-\s+(.*)$/m)?.[1]?.trim() ?? 'none';
+      const sourceSection = entry.match(/^- Source files:\s*\n([\s\S]*?)(?=^- Artifact path:|^- Summary:|(?![\s\S]))/m)?.[1] ?? '';
+      const summarySection = entry.match(/^- Summary:\s*\n([\s\S]*?)(?![\s\S])/m)?.[1] ?? '';
+
+      return {
+        topic,
+        date,
+        artifactPath,
+        sourceFiles: sourceSection
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.startsWith('- '))
+          .map((line) => line.slice(2).trim()),
+        summaryLines: summarySection
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.startsWith('- '))
+          .map((line) => line.slice(2).trim())
+      };
+    });
+};
+
+const renderResearchIndexEntries = (entries) => {
+  if (entries.length === 0) {
+    return '- No project-local research artifacts recorded yet.';
+  }
+
+  return entries.map((entry) => [
+    `- Topic: ${entry.topic}`,
+    `- Date: ${entry.date}`,
+    '- Source files:',
+    ...(entry.sourceFiles.length > 0 ? entry.sourceFiles : ['none']).map((filePath) => `  - ${filePath}`),
+    '- Artifact path:',
+    `  - ${entry.artifactPath}`,
+    '- Summary:',
+    ...(entry.summaryLines.length > 0 ? entry.summaryLines : ['No summary recorded.']).map((line) => `  - ${line}`)
+  ].join('\n')).join('\n');
+};
+
+export const upsertResearchIndexEntry = ({
+  topic,
+  date,
+  artifactPath,
+  sourceFiles = [],
+  summary
+}) => {
+  const normalizedArtifactPath = normalizeArtifactPath(artifactPath);
+  const content = readFile(researchIndexPath);
+  const entries = parseResearchIndexEntries(content)
+    .filter((entry) => entry.artifactPath !== normalizedArtifactPath);
+  const summaryLines = Array.isArray(summary)
+    ? summary.map((line) => String(line).trim()).filter(Boolean)
+    : [String(summary ?? '').trim()].filter(Boolean);
+  const normalizedSourceFiles = [...new Set(sourceFiles.map((filePath) => String(filePath).trim()).filter(Boolean))];
+
+  entries.unshift({
+    topic: String(topic ?? path.basename(normalizedArtifactPath, '.md')).trim(),
+    date: String(date ?? new Date().toISOString().slice(0, 10)).trim(),
+    artifactPath: normalizedArtifactPath,
+    sourceFiles: normalizedSourceFiles,
+    summaryLines
+  });
+
+  writeProjectStateSections({
+    statePath: researchIndexPath,
+    sections: [
+      {
+        heading: researchEntriesHeading,
+        replacement: renderResearchIndexEntries(entries)
+      }
+    ]
+  });
+
+  return entries[0];
 };
 
 const heuristicSuggestions = () => ({
@@ -377,14 +474,54 @@ const heuristicSuggestions = () => ({
   handoff: pickRelated('handoffs')
 });
 
+const shouldRefreshPersistedSelection = ({ category, persistedPath, suggestedPath, metadata = {} }) => {
+  if (!refreshableCategories.has(category)) return false;
+  if (!persistedPath || !suggestedPath || persistedPath === suggestedPath) return false;
+
+  const persistedScore = scoreFile(persistedPath);
+  const suggestedScore = scoreFile(suggestedPath);
+  const focusChanged =
+    metadata.focus &&
+    metadata.focus !== 'none' &&
+    persistedWorkingSet.focus &&
+    persistedWorkingSet.focus !== 'none' &&
+    metadata.focus !== persistedWorkingSet.focus;
+
+  if (focusChanged && suggestedScore >= persistedScore) {
+    return true;
+  }
+
+  return suggestedScore >= persistedScore + 3;
+};
+
 const resolvedWorkingSet = (overrides = {}, metadata = {}) => {
   const suggested = heuristicSuggestions();
+  const resolveCategory = (category) => {
+    if (Object.hasOwn(overrides, category) && overrides[category] !== undefined) {
+      return normalizeArtifactPath(overrides[category] ?? 'none');
+    }
+
+    const persisted = normalizeArtifactPath(persistedWorkingSet.selected[category] ?? 'none');
+    const suggestedValue = normalizeArtifactPath(suggested[category] ?? 'none');
+
+    if (persisted && !shouldRefreshPersistedSelection({
+      category,
+      persistedPath: persisted,
+      suggestedPath: suggestedValue,
+      metadata
+    })) {
+      return persisted;
+    }
+
+    return suggestedValue;
+  };
+
   const selected = {
-    intake: normalizeArtifactPath(overrides.intake ?? persistedWorkingSet.selected.intake ?? suggested.intake ?? 'none'),
-    plan: normalizeArtifactPath(overrides.plan ?? persistedWorkingSet.selected.plan ?? suggested.plan ?? 'none'),
-    research: normalizeArtifactPath(overrides.research ?? persistedWorkingSet.selected.research ?? suggested.research ?? 'none'),
-    session: normalizeArtifactPath(overrides.session ?? persistedWorkingSet.selected.session ?? suggested.session ?? 'none'),
-    handoff: normalizeArtifactPath(overrides.handoff ?? persistedWorkingSet.selected.handoff ?? suggested.handoff ?? 'none')
+    intake: resolveCategory('intake'),
+    plan: resolveCategory('plan'),
+    research: resolveCategory('research'),
+    session: resolveCategory('session'),
+    handoff: resolveCategory('handoff')
   };
 
   return {
@@ -477,11 +614,28 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
         }), null, 2));
         break;
       }
+      case 'sync-research': {
+        const args = parseArgs(process.argv.slice(3));
+        const sourceFiles = [];
+        for (const key of Object.keys(args)) {
+          if (key === 'source-file' || key.startsWith('source-file-')) {
+            sourceFiles.push(args[key]);
+          }
+        }
+        console.log(JSON.stringify(upsertResearchIndexEntry({
+          topic: args.topic,
+          date: args.date,
+          artifactPath: args.artifact,
+          sourceFiles,
+          summary: args.summary
+        }), null, 2));
+        break;
+      }
       case 'suggest':
         console.log(JSON.stringify(suggest(), null, 2));
         break;
       default:
-        console.error('Usage: node scripts/artifact-tools.mjs <suggest|related|latest|active|persist>');
+        console.error('Usage: node scripts/artifact-tools.mjs <suggest|related|latest|active|persist|sync-research>');
         process.exitCode = 1;
     }
   } catch (error) {

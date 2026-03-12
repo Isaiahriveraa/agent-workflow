@@ -212,7 +212,7 @@ Note frontmatter: `critique_completed: false`, `critique_cycles: 0`.
 
      /create-plan /absolute/path/to/research.md
      ```
-   - Add or update an entry in the current project's `research-index.md` with the topic, date, source files, artifact path, and summary
+   - Add or update the matching entry in the current project's `research-index.md` through the helper-backed path: `node ./scripts/artifact-tools.mjs sync-research --artifact [absolute research path] --topic "[topic]" --date [YYYY-MM-DD] --summary "[summary]" --source-file [absolute path]`
    - Ask if they have follow-up questions or need clarification
 
 9. **Handle follow-up questions:**

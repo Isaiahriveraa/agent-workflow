@@ -14,13 +14,13 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 4. **Load `~/.agents/rules/common/workflow-router.md` before starting work.**
 5. **If the task class calls for a capsule, load it before starting work and honor its critic, grader, and memory-policy files.**
 6. **For substantial plans, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
-7. **After canonical plan/state/decision context is loaded and before phase execution begins, call `scripts/memory-sidecar-adapter.mjs` for workflow stage `implement-plan` only when advisory memory is enabled.**
+7. **After canonical plan/state/decision context is loaded and before phase execution begins, attempt `scripts/memory-sidecar-adapter.mjs` for workflow stage `implement-plan`; this recall attempt is mandatory for implementation entry even when advisory memory is disabled, unavailable, or returns zero items.**
 8. **Use the same precedence rule during implementation entry:**
    1. active runtime state and selected artifacts
    2. explicit decisions and active research/plan
    3. advisory memory recall
    4. no recall when relevance is weak
-9. **Treat advisory implementation recall as optional input only: disabled mode must preserve current behavior, empty recall is success, and explicit artifacts stay authoritative when advisory memory disagrees.**
+9. **Treat advisory implementation recall as optional input only: disabled mode must preserve current behavior, disabled or unavailable recall still counts as a successful attempt, empty recall is success, and explicit artifacts stay authoritative when advisory memory disagrees.**
 10. **Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections.**
 11. **Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; plan grading and readiness remain bound to canonical artifacts only.**
 
@@ -57,6 +57,7 @@ State clearly:
 
 Before editing:
 - Update the current project's `state.md` with the active workflow, phase name, next step, and related plan path
+- Treat router activation and parser-backed plan readiness as the only authority for whether strict workflow enforcement can be bypassed
 - Refuse to begin if the substantial-task workflow gate was bypassed and there is no decision-complete plan
 - For substantial plans, refuse to begin unless parser-backed output proves `plan_ready_for_implementation: true`
 
@@ -87,6 +88,7 @@ If the plan has no automated verification commands for a phase, note this and mo
 
 If a check fails, a critic rejects the output, or the user corrects the implementation during the phase:
 - Run the learning loop before retrying blindly
+- Do not resume the phase until the learning loop or lesson capture step has completed when the miss is evidence-backed
 - Classify the miss
 - State the likely cause
 - Apply the smallest fix

@@ -43,13 +43,14 @@ Then wait for the user's input.
    - Read `~/.agents/contexts/failure-patterns.md` and `~/.agents/contexts/lessons-learned.md` when the task class is likely to benefit from prior mistakes
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
+   - Determine strict-workflow activation with `node ./scripts/workflow-router-tools.mjs activate` when the task shape is not already proven by a graded substantial research artifact
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
    - For substantial requests backed by research, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
-   - After canonical context is loaded and before plan drafting, call `scripts/memory-sidecar-adapter.mjs` for workflow stage `create-plan` only when advisory memory is enabled
+   - After canonical context is loaded and before plan drafting, attempt `scripts/memory-sidecar-adapter.mjs` for workflow stage `create-plan`; this recall attempt is mandatory for command entry even when advisory memory is disabled, unavailable, or returns zero items
    - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
    - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold
-   - Treat advisory recall as optional input only: empty recall is success, and explicit research, decisions, and selected artifacts remain authoritative
+   - Treat advisory recall as optional input only: empty recall is success, disabled or unavailable recall is still a successful attempt, and explicit research, decisions, and selected artifacts remain authoritative
    - Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections
    - Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; artifact grading stays bound to canonical files only
 
@@ -85,6 +86,7 @@ Then wait for the user's input.
    - Determine true scope based on codebase reality
    - Identify whether capsule-specific context, references, anti-patterns, or grading criteria are still missing
    - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
+   - Use router activation as the authority for whether substantial-task routing is required; do not treat the RPI path as discretionary when the router says the task is substantial
    - Score readiness with `node ./scripts/workflow-router-tools.mjs score`
    - If readiness is below threshold, do more research or ask focused questions before writing the plan
 
@@ -307,7 +309,7 @@ Do not mark the plan ready or hand it to implementation unless parser-backed out
 
 ### Step 4.5: Adversarial Critique (substantial plans only)
 
-For plans where `substantial: true` (classified by `node ./scripts/workflow-router-tools.mjs classify`):
+For plans where `substantial: true` (classified by `node ./scripts/workflow-router-tools.mjs classify` or activated by `node ./scripts/workflow-router-tools.mjs activate`):
 
 1. **Spawn `rpi-critic` agent** with the draft plan path:
    ```
@@ -361,6 +363,7 @@ frontmatter: `critique_completed: false`, `critique_cycles: 0`.
    - Any technical details that need adjustment?
    - Missing edge cases or considerations?
    ```
+   When presenting the plan, separate what the codebase proves, what advisory memory suggests, what is inferred, and what is newly proposed.
    For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
    Then end the response with this exact standalone block using the saved plan path:
    ```text
@@ -507,4 +510,4 @@ After writing the final plan:
 - Set `## Related Plan` to the plan path you created
 
 If the plan used new or existing research artifacts:
-- Add or update the matching entry in the current project's runtime `research-index.md`
+- Add or update the matching entry in the current project's runtime `research-index.md` with the helper-backed path in `scripts/artifact-tools.mjs` instead of freeform manual editing

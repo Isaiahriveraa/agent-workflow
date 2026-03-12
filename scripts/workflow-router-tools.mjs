@@ -10,18 +10,38 @@ const root = process.env.AGENTS_ROOT
 const project = ensureProjectContext();
 const intakeDir = path.join(project.planningDir, 'intake');
 
-const substantialSignals = [
-  /ambiguous/i,
-  /multi-step/i,
-  /\bworkflow\b/i,
-  /\bhandoff\b/i,
-  /\bplan\b/i,
-  /\bresearch\b/i,
-  /\barchitecture\b/i,
-  /\bshared\b/i,
-  /\b3\+\s*files\b/i,
-  /\bmultiple subsystems\b/i
-];
+const strictWorkflowSignals = Object.freeze([
+  {
+    id: 'vague_or_under_specified',
+    reason: 'request is vague or under-specified',
+    patterns: [/\bambiguous\b/i, /\bvague\b/i, /\bunderspecified\b/i, /\bunder-specified\b/i]
+  },
+  {
+    id: 'multi_step_or_execution_heavy',
+    reason: 'task is multi-step or implementation-heavy',
+    patterns: [/\bmulti-step\b/i, /\bimplementation-heavy\b/i, /\bphase(?:d)?\b/i]
+  },
+  {
+    id: 'workflow_or_planning_change',
+    reason: 'task changes workflow behavior or requires planning',
+    patterns: [/\bworkflow\b/i, /\bplan(?:ning)?\b/i, /\bresearch\b/i, /\bhandoff\b/i, /\bdelegat(?:e|ion)\b/i]
+  },
+  {
+    id: 'shared_behavior_change',
+    reason: 'task changes shared prompts, rules, adapters, or continuity behavior',
+    patterns: [/\bshared\b/i, /\bprompts?\b/i, /\brules?\b/i, /\badapters?\b/i, /\bcontinuity\b/i]
+  },
+  {
+    id: 'cross_subsystem_scope',
+    reason: 'task spans multiple subsystems or architectural boundaries',
+    patterns: [/\barchitecture\b/i, /\bmultiple subsystems\b/i, /\bcross-layer\b/i, /\bcross-provider\b/i]
+  },
+  {
+    id: 'long_running_scope',
+    reason: 'task is likely to take more than 30 minutes',
+    patterns: [/\b30\+?\s*minutes?\b/i, /\bmore than 30 minutes\b/i, /\bhalf[- ]day\b/i, /\blarge refactor\b/i]
+  }
+]);
 
 const parseArgs = (args) => {
   const parsed = {};
@@ -51,16 +71,45 @@ const readInput = (args) => {
   return args.input ?? '';
 };
 
-const classifyTask = (input) => {
-  const matches = substantialSignals.filter((pattern) => pattern.test(input));
-  const fileEstimate = input.match(/\b(\d+)\s*files?\b/i);
+const collectActivationReasons = (input, explicitFileCount) => {
+  const reasons = strictWorkflowSignals.flatMap((signal) =>
+    signal.patterns.some((pattern) => pattern.test(input))
+      ? [{ id: signal.id, reason: signal.reason }]
+      : []
+  );
+
+  if (explicitFileCount !== null && explicitFileCount >= 3) {
+    reasons.push({
+      id: 'touches_three_or_more_files',
+      reason: 'task is likely to touch 3 or more files'
+    });
+  }
+
+  return reasons;
+};
+
+const deriveActivationDecision = (input) => {
+  const fileEstimate = input.match(/\b(\d+)\s*\+?\s*files?\b/i);
   const explicitFileCount = fileEstimate ? Number.parseInt(fileEstimate[1], 10) : null;
-  const substantial = matches.length > 0 || (explicitFileCount !== null && explicitFileCount >= 3);
+  const reasons = collectActivationReasons(input, explicitFileCount);
+  const substantial = reasons.length > 0;
 
   return {
-    substantial,
-    reasons: matches.map((pattern) => pattern.source),
-    explicitFileCount
+    strictWorkflowRequired: substantial,
+    taskSize: substantial ? 'substantial' : 'lightweight',
+    reasons,
+    explicitFileCount,
+    recommendedNextAction: substantial ? 'optimize-prompt' : 'proceed-lightweight'
+  };
+};
+
+const classifyTask = (input) => {
+  const activation = deriveActivationDecision(input);
+  return {
+    substantial: activation.strictWorkflowRequired,
+    reasons: activation.reasons.map((item) => item.id),
+    explicitFileCount: activation.explicitFileCount,
+    activation
   };
 };
 
@@ -99,7 +148,17 @@ const scoreReadiness = (args) => {
     passes,
     nextAction: passes
       ? 'create-plan'
-      : 'continue research or ask focused questions'
+      : 'continue research or ask focused questions',
+    recommendedNextAction: passes
+      ? 'create-plan'
+      : 'continue-research',
+    reasons: passes
+      ? ['readiness gate passed']
+      : [
+        total < 70 ? 'total score below 70' : null,
+        scorecard.clarity < 15 ? 'clarity below 15' : null,
+        scorecard.codebaseCoverage < 15 ? 'codebase coverage below 15' : null
+      ].filter(Boolean)
   };
 };
 
@@ -147,6 +206,9 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
       case 'classify':
         console.log(JSON.stringify(classifyTask(readInput(args)), null, 2));
         break;
+      case 'activate':
+        console.log(JSON.stringify(deriveActivationDecision(readInput(args)), null, 2));
+        break;
       case 'score':
         console.log(JSON.stringify(scoreReadiness(args), null, 2));
         break;
@@ -154,7 +216,7 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
         console.log(JSON.stringify(writeIntakeArtifact(args), null, 2));
         break;
       default:
-        console.error('Usage: node scripts/workflow-router-tools.mjs <classify|score|capture> [--key value]');
+        console.error('Usage: node scripts/workflow-router-tools.mjs <activate|classify|score|capture> [--key value]');
         process.exitCode = 1;
     }
   } catch (error) {

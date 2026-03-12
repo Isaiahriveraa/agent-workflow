@@ -120,6 +120,8 @@ test('getRelevantMemories is a no-op when memory is disabled', async () => {
     assert.equal(result.enabled, false);
     assert.equal(result.workflow_stage, 'create-plan');
     assert.match(result.project_id, /^disabled-[0-9a-f]{8}$/);
+    assert.equal(result.source, 'mem0');
+    assert.ok(result.limits);
     assert.deepEqual(result.items, []);
     assert.deepEqual(result.warnings, []);
   } finally {
@@ -211,6 +213,9 @@ test('enabled mode warns and returns empty recall when no backend is available',
     });
 
     assert.equal(result.enabled, true);
+    assert.equal(result.workflow_stage, 'implement-plan');
+    assert.match(result.project_id, /^warning-[0-9a-f]{8}$/);
+    assert.equal(result.source, 'mem0');
     assert.deepEqual(result.items, []);
     assert.equal(result.warnings.length, 1);
     assert.match(result.warnings[0], /missing required credentials/);
@@ -236,6 +241,9 @@ test('mem0 oss mode warns and returns empty recall with the deprecation message'
     });
 
     assert.equal(result.enabled, true);
+    assert.equal(result.workflow_stage, 'implement-plan');
+    assert.match(result.project_id, /^oss-warning-[0-9a-f]{8}$/);
+    assert.equal(result.source, 'mem0-oss');
     assert.deepEqual(result.items, []);
     assert.equal(result.warnings.length, 1);
     assert.match(result.warnings[0], /AGENTS_MEMORY_BACKEND=mem0-lancedb/);
@@ -263,6 +271,9 @@ test('deprecated mem0 oss backend returns a migration warning instead of resolvi
 
     assert.deepEqual(backend, { deprecated: true });
     assert.equal(result.enabled, true);
+    assert.equal(result.workflow_stage, 'implement-plan');
+    assert.match(result.project_id, /^oss-deprecated-[0-9a-f]{8}$/);
+    assert.equal(result.source, 'mem0-oss');
     assert.deepEqual(result.items, []);
     assert.equal(result.warnings.length, 1);
     assert.match(result.warnings[0], /AGENTS_MEMORY_BACKEND=mem0-lancedb/);
