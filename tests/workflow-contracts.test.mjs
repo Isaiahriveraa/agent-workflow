@@ -99,7 +99,11 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(createPlan, /scripts\/memory-sidecar-adapter\.mjs/);
+  assert.match(createPlan, /scripts\/workflow-command-decision\.mjs evaluate/);
   assert.match(createPlan, /workflow stage `create-plan`/);
+  assert.match(createPlan, /do_more_research/);
+  assert.match(createPlan, /run_critic/);
+  assert.match(createPlan, /request_user_decision/);
   assert.match(createPlan, /Do not write advisory recall into the current project's runtime `state\.md`, `research-index\.md`, or active artifact selections/);
   assert.match(createPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
   assert.match(implementPlan, /current project's `state\.md`/);
@@ -109,10 +113,14 @@ test('workflow commands reference explicit context files', () => {
   assert.match(implementPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(implementPlan, /plan_ready_for_implementation/);
   assert.match(implementPlan, /scripts\/memory-sidecar-adapter\.mjs/);
+  assert.match(implementPlan, /scripts\/workflow-command-decision\.mjs evaluate/);
   assert.match(implementPlan, /workflow stage `implement-plan`/);
   assert.match(implementPlan, /active runtime state and selected artifacts/);
   assert.match(implementPlan, /advisory memory recall/);
   assert.match(implementPlan, /disabled mode must preserve current behavior/);
+  assert.match(implementPlan, /replan/);
+  assert.match(implementPlan, /capture_lesson/);
+  assert.match(implementPlan, /request_user_decision/);
   assert.match(implementPlan, /Do not write advisory recall into the current project's `state\.md`, `research-index\.md`, session continuity artifacts, or active artifact selections/);
   assert.match(implementPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
   assert.match(implementPlan, /Never retry blindly after a verified miss/);
@@ -123,6 +131,9 @@ test('workflow commands reference explicit context files', () => {
   assert.match(validatePlan, /current project's `research-index\.md`/);
   assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-plan/);
+  assert.match(validatePlan, /scripts\/workflow-command-decision\.mjs evaluate/);
+  assert.match(validatePlan, /request_user_decision/);
+  assert.match(validatePlan, /capture_lesson/);
   assert.match(validatePlan, /lesson-tools\.mjs capture/);
   assert.match(optimizePrompt, /Capsule:/);
   assert.match(research, /current project's `research-index\.md`/);
