@@ -53,6 +53,8 @@ Then wait for the user's input.
    - Treat advisory recall as optional input only: empty recall is success, disabled or unavailable recall is still a successful attempt, and explicit research, decisions, and selected artifacts remain authoritative
    - Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections
    - Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; artifact grading stays bound to canonical files only
+   - After readiness scoring, research grading, and the mandatory recall attempt, run `node ./scripts/workflow-command-decision.mjs evaluate --input ...` to convert that evidence into one command strategy before drafting or finalizing the plan
+   - Obey the helper-backed strategy: `continue` may draft/finalize the plan, `do_more_research` must continue research, `run_critic` must complete critique/refinement before the plan is treated as ready, and `request_user_decision` must stop for the blocking decision
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -365,6 +367,7 @@ frontmatter: `critique_completed: false`, `critique_cycles: 0`.
    ```
    When presenting the plan, separate what the codebase proves, what advisory memory suggests, what is inferred, and what is newly proposed.
    For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
+   If a graded draft still fails because critique/refinement evidence is missing, rerun `node ./scripts/workflow-command-decision.mjs evaluate --input ...` and route the outcome to `run_critic` instead of presenting the draft as ready.
    Then end the response with this exact standalone block using the saved plan path:
    ```text
    Next step

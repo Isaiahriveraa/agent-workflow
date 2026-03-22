@@ -180,6 +180,9 @@ export const getProjectContext = (options = {}) => {
       plans: path.join(agentsRoot, 'thoughts', 'plans'),
       research: path.join(planningDir, 'research'),
       lessons: path.join(agentsRoot, 'thoughts', 'lessons'),
+      traces: path.join(agentsRoot, 'thoughts', 'traces'),
+      evaluations: path.join(agentsRoot, 'thoughts', 'evaluations'),
+      strategies: path.join(agentsRoot, 'thoughts', 'strategies'),
       sessions: sessionsDir,
       handoffs: path.join(agentsRoot, 'thoughts', 'shared', 'handoffs')
     }
