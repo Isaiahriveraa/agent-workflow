@@ -22,6 +22,7 @@ This directory contains Claude Code-specific operational assets.
 
 ## Canonical Boundary
 - Workflow policy lives in `prompts/`, `commands/`, `contexts/`, and `rules/common/`.
+- Claude is the strongest repo-managed adapter boundary in this repo: native commands, native agents, native hooks, and validated local settings.
 - Files in this adapter may improve Claude Code ergonomics, but they must not become the source of truth for workflow behavior.
 - `~/.claude/settings.json` remains Claude-local configuration, but required `~/.agents` access fields are part of the validated adapter contract.
 

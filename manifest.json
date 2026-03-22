@@ -117,8 +117,8 @@
         "additionalDirectories includes ~/.agents",
         "permissions.allow includes Read(~/.agents/**)",
         "env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1",
-        "hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.js",
-        "hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.js"
+        "hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs",
+        "hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs"
       ],
       "note": "Claude settings stay hand-managed, but these access fields are validated as part of the adapter contract."
     }
@@ -166,7 +166,7 @@
     "codex-cli": {
       "commands": {
         "status": "unsupported",
-        "contract": "No hub-managed Codex-native command bridge in this repo"
+        "contract": "No hub-managed Codex-native slash-command bridge; rely on shared AGENTS command routing for documented command names and namespaces such as gsd"
       },
       "agents": {
         "status": "bridged",
@@ -174,7 +174,7 @@
       },
       "hooks": {
         "status": "unsupported",
-        "contract": "No hub-managed Codex hook bridge"
+        "contract": "No repo-managed native hook bridge in Codex; explicit memory bridge usage stays manual via ~/.agents/scripts/memory-sync-bridge.mjs, with ~/.agents/scripts/codex-memory-bridge.mjs kept as a compatibility alias"
       },
       "mcp": {
         "status": "native",
@@ -187,6 +187,10 @@
       "session_continuity": {
         "status": "bridged",
         "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      },
+      "memory": {
+        "status": "bridged-explicit",
+        "contract": "Explicit memory bridge parity only: ~/.agents/scripts/memory-sync-bridge.mjs provides status, recall, and flush, ~/.agents/scripts/codex-memory-bridge.mjs remains a compatibility alias, and automatic lesson flush is not repo-managed through native hooks"
       }
     },
     "opencode": {
@@ -200,7 +204,7 @@
       },
       "hooks": {
         "status": "unsupported",
-        "contract": "No hub-managed OpenCode hook bridge"
+        "contract": "OpenCode upstream supports plugin event hooks, but this repo does not manage an OpenCode hook bridge yet"
       },
       "mcp": {
         "status": "native",
@@ -213,6 +217,10 @@
       "session_continuity": {
         "status": "bridged",
         "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      },
+      "memory": {
+        "status": "bridged-explicit",
+        "contract": "Explicit memory bridge parity only: use gsd memory-sync from the bridged command surface or run ~/.agents/scripts/memory-sync-bridge.mjs directly for status, recall, and flush"
       }
     },
     "antigravity": {
@@ -234,11 +242,11 @@
       },
       "hooks": {
         "status": "unsupported",
-        "contract": "No hub-managed Antigravity hook bridge"
+        "contract": "Gemini CLI upstream supports extensions and hook-like automation surfaces, but this repo does not manage an Antigravity hook bridge yet"
       },
       "mcp": {
         "status": "unsupported",
-        "contract": "No hub-managed Antigravity MCP contract in this repo"
+        "contract": "Gemini CLI upstream supports MCP, but this repo does not manage an Antigravity MCP contract yet"
       },
       "approvals": {
         "status": "native",
@@ -247,12 +255,16 @@
       "session_continuity": {
         "status": "bridged",
         "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      },
+      "memory": {
+        "status": "bridged-explicit",
+        "contract": "Explicit memory bridge parity only: use gsd memory-sync from the generated command surface or run ~/.agents/scripts/memory-sync-bridge.mjs directly for status, recall, and flush"
       }
     },
     "openclaw": {
       "commands": {
         "status": "unsupported",
-        "contract": "No hub-managed OpenClaw-native command bridge in this repo"
+        "contract": "OpenClaw upstream supports slash commands and plugin-provided commands, but this repo does not manage an OpenClaw-native command bridge yet"
       },
       "agents": {
         "status": "unsupported",
@@ -260,7 +272,7 @@
       },
       "hooks": {
         "status": "unsupported",
-        "contract": "No hub-managed OpenClaw hook bridge"
+        "contract": "OpenClaw upstream supports hooks, but this repo does not manage an OpenClaw hook bridge yet"
       },
       "mcp": {
         "status": "unsupported",
@@ -273,6 +285,10 @@
       "session_continuity": {
         "status": "bridged",
         "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+      },
+      "memory": {
+        "status": "bridged-explicit",
+        "contract": "Explicit memory bridge parity only: use ~/.agents/scripts/memory-sync-bridge.mjs directly for status, recall, and flush because this repo does not bridge OpenClaw commands"
       },
       "workspace_wrappers": {
         "status": "bridged",
