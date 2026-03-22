@@ -1,6 +1,6 @@
 ---
-name: code-review
-description: Review code against SOLID principles, DRY, and quality standards. Use when reviewing code, before commits, or validating implementation quality.
+name: code-review-basics
+description: Review code for SOLID, DRY, type safety, error handling, and readability. Use when you need a local review rubric or a lightweight fallback review skill.
 ---
 
 # Code Review (SOLID + Quality)
