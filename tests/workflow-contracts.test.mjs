@@ -36,7 +36,36 @@ test('AGENTS declares contexts, rules, and adapters as canonical layers', () => 
   assert.match(content, /expert-agent-routing-tools\.mjs route/);
   assert.match(content, /project-local `\.agents\/sessions\/`/);
   assert.match(content, /thoughts\/shared\/handoffs\//);
+  assert.match(content, /commands\/\*\*\/\*\.md/);
+  assert.match(content, /commands\/gsd\/\*\.md/);
+  assert.match(content, /\/gsd:help/);
+  assert.match(content, /gsd <subcommand>/);
+  assert.match(content, /underscore and hyphen variants of the same slash-style workflow command as equivalent/);
   assert.doesNotMatch(content, /Use `thoughts\/sessions\/` for ordinary workflow continuity/);
+});
+
+test('gsd namespace is first-class in the shared command contract and codex adapter', () => {
+  const agentsXml = read('AGENTS.xml');
+  const codexAdapter = read('adapters/codex-cli/README.md');
+  const manifest = readJson('manifest.json');
+
+  assert.match(agentsXml, /commands\/\*\*\/\*\.md/);
+  assert.match(agentsXml, /commands\/gsd\/\*\.md/);
+  assert.match(agentsXml, /\/gsd:help/);
+  assert.match(agentsXml, /gsd-&lt;subcommand&gt;/);
+  assert.match(codexAdapter, /gsd <subcommand>/);
+  assert.match(codexAdapter, /\/gsd:<subcommand>/);
+  assert.match(codexAdapter, /gsd memory-sync/);
+  assert.match(codexAdapter, /\/gsd:memory-sync/);
+  assert.match(codexAdapter, /recall <create-plan\|implement-plan>/);
+  assert.match(codexAdapter, /Explicit memory bridge parity only/);
+  assert.match(codexAdapter, /memory-sync-bridge\.mjs <status\|recall\|flush>/);
+  assert.match(codexAdapter, /codex-memory-bridge\.mjs <status\|recall\|flush>/);
+  assert.match(manifest.capabilities['codex-cli'].commands.contract, /gsd/);
+  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /No repo-managed native hook bridge/);
+  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /memory-sync-bridge\.mjs/);
+  assert.match(manifest.capabilities['codex-cli'].memory.contract, /Explicit memory bridge parity only/);
+  assert.match(manifest.capabilities['codex-cli'].memory.contract, /codex-memory-bridge\.mjs/);
 });
 
 test('system prompt documents enforcement-first router authority and stage contracts', () => {
@@ -96,10 +125,16 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /select and load the relevant capsule/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
+  assert.match(createPlan, /workflow-plan-tools\.mjs sync-child-plans/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(createPlan, /scripts\/memory-sidecar-adapter\.mjs/);
   assert.match(createPlan, /scripts\/workflow-command-decision\.mjs evaluate/);
+  assert.match(createPlan, /Original Prompt Alignment/);
+  assert.match(createPlan, /Research Sufficiency/);
+  assert.match(createPlan, /Phase Plan Index/);
+  assert.match(createPlan, /one child plan per implementation phase/);
+  assert.match(createPlan, /before critique/);
   assert.match(createPlan, /workflow stage `create-plan`/);
   assert.match(createPlan, /do_more_research/);
   assert.match(createPlan, /run_critic/);
@@ -118,6 +153,9 @@ test('workflow commands reference explicit context files', () => {
   assert.match(implementPlan, /active runtime state and selected artifacts/);
   assert.match(implementPlan, /advisory memory recall/);
   assert.match(implementPlan, /disabled mode must preserve current behavior/);
+  assert.match(implementPlan, /Phase Plan Index/);
+  assert.match(implementPlan, /one linked child phase plan per explicit implementation phase/);
+  assert.match(implementPlan, /read the linked child phase plan for that phase before editing/);
   assert.match(implementPlan, /replan/);
   assert.match(implementPlan, /capture_lesson/);
   assert.match(implementPlan, /request_user_decision/);
@@ -148,13 +186,13 @@ test('workflow commands reference explicit context files', () => {
   assert.match(resumeSession, /current project's `session-index\.md`/);
   assert.match(resumeSession, /current project's `research-index\.md`/);
   assert.match(resumeSession, /project-local session artifacts/);
-  assert.match(resumeSession, /helper-backed freshness model/);
+  assert.match(resumeSession, /continuity-authoritative/);
   assert.match(projectTooling, /contexts\/tooling\.md/);
   assert.match(projectVerification, /contexts\/verification\.md/);
   assert.match(projectArtifacts, /current project's `artifacts\.md`/);
   assert.match(projectArtifacts, /current project's `research-index\.md`/);
   assert.match(projectArtifacts, /handoffs remain shared\/global transfer artifacts/);
-  assert.match(projectArtifacts, /helper-backed freshness model/);
+  assert.match(projectArtifacts, /--mode refresh/);
   assert.match(pr, /Describe only what is actually in the committed branch diff against the base branch/);
   assert.match(pr, /Do not invent provenance from the conversation/);
   assert.match(pr, /no machine-specific absolute filesystem paths/);
@@ -165,17 +203,20 @@ test('workflow commands reference explicit context files', () => {
 test('handoff commands keep handoffs global while runtime state can be project-scoped', () => {
   const createHandoff = read('commands/create-handoff.md');
   const resumeHandoff = read('commands/resume-handoff.md');
+  const gsd = read('commands/gsd.md');
 
   assert.match(createHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\//);
   assert.match(createHandoff, /current project's `state\.md`/);
   assert.match(createHandoff, /current project's `session-index\.md`/);
   assert.match(createHandoff, /artifact-tools\.mjs persist/);
-  assert.match(createHandoff, /helper-backed freshness model/);
+  assert.match(createHandoff, /continuity-authoritative/);
   assert.doesNotMatch(createHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
   assert.match(resumeHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\/ENG-XXXX/);
+  assert.match(resumeHandoff, /\/resume-handoff` resolves to the same command file/);
   assert.match(resumeHandoff, /~\/\.agents\/thoughts\/plans/);
   assert.match(resumeHandoff, /\.planning\/research/);
   assert.doesNotMatch(resumeHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
+  assert.match(gsd, /shared workflow resolver also accepts underscore and hyphen variants/);
 });
 
 test('artifact-producing workflow docs require exact next-command output', () => {
@@ -340,6 +381,48 @@ test('ssot validation fails when Claude settings lose required hub access fields
   }
 });
 
+test('ssot validation fails when Claude get-shit-done drifts into a local directory instead of a hub symlink', () => {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-validate-ssot-'));
+  const home = path.join(fixtureRoot, 'home');
+
+  try {
+    fs.cpSync(root, fixtureRoot, {
+      recursive: true,
+      filter: copyFilter
+    });
+
+    fs.mkdirSync(path.join(home, '.claude', 'get-shit-done'), { recursive: true });
+    fs.mkdirSync(path.join(home, '.claude', 'hooks'), { recursive: true });
+    fs.symlinkSync(path.join(fixtureRoot, 'adapters/claude-code/CLAUDE.md'), path.join(home, '.claude/CLAUDE.md'));
+    fs.writeFileSync(path.join(home, '.claude/settings.json'), JSON.stringify({
+      additionalDirectories: [path.join(home, '.agents')],
+      permissions: { allow: [`Read(${path.join(home, '.agents')}/**)`] },
+      env: { CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: '1' },
+      hooks: {
+        Stop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"` }] }],
+        SubagentStop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"` }] }]
+      }
+    }, null, 2));
+
+    fs.symlinkSync(fixtureRoot, path.join(home, '.agents'));
+
+    const result = spawnSync('node', ['scripts/validate-ssot.mjs'], {
+      cwd: fixtureRoot,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        AGENTS_ROOT: fixtureRoot,
+        HOME: home
+      }
+    });
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Claude get-shit-done surface must be a symlink/);
+  } finally {
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
 test('manifest points Codex CLI at the shared AGENTS contract', () => {
   const manifest = readJson('manifest.json');
   const codexLink = manifest.symlinks.find((entry) => entry.tool === 'codex-cli');
@@ -355,6 +438,8 @@ test('learning contexts, quality gate rules, and capsules exist with expected se
   const failurePatterns = read('contexts/failure-patterns.md');
   const referenceLibrary = read('contexts/reference-library.md');
   const lessons = read('contexts/lessons-learned.md');
+  const uiUxBrief = read('contexts/ui-ux.md');
+  const uiUxRouting = read('rules/common/ui-ux-routing.md');
   const learningLoop = read('rules/common/learning-loop.md');
   const qualityGate = read('rules/common/output-quality-gate.md');
   const creativeAssembly = read('capsules/creative-redesign/assembly.md');
@@ -367,6 +452,8 @@ test('learning contexts, quality gate rules, and capsules exist with expected se
   assert.match(referenceLibrary, /## Approved Sources/);
   assert.match(lessons, /## Writeback Policy/);
   assert.match(lessons, /## Recent Artifacts/);
+  assert.match(uiUxBrief, /Placeholder values such as/);
+  assert.match(uiUxRouting, /Placeholder content such as `Not set`/);
   assert.match(learningLoop, /## Required Flow/);
   assert.match(learningLoop, /lesson-tools\.mjs capture/);
   assert.match(qualityGate, /## Minimum Creative Gate/);
@@ -405,10 +492,14 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   assert.equal(capabilities['claude-code'].commands.status, 'native');
   assert.equal(capabilities['claude-code'].settings.status, 'validated-local');
   assert.equal(capabilities['codex-cli'].commands.status, 'unsupported');
+  assert.equal(capabilities['codex-cli'].memory.status, 'bridged-explicit');
+  assert.equal(capabilities.opencode.memory.status, 'bridged-explicit');
   assert.equal(capabilities.opencode.agents.status, 'bridged');
   assert.equal(capabilities.antigravity.entrypoint.status, 'bridged');
   assert.equal(capabilities.antigravity.skills.status, 'native');
   assert.equal(capabilities.antigravity.commands.status, 'bridged');
+  assert.equal(capabilities.antigravity.memory.status, 'bridged-explicit');
+  assert.equal(capabilities.openclaw.memory.status, 'bridged-explicit');
   assert.equal(capabilities.openclaw.workspace_wrappers.status, 'bridged');
 
   assert.deepEqual(
@@ -440,21 +531,37 @@ test('adapter directories document non-claude parity boundaries', () => {
   assert.match(claude, /## Managed Surfaces/);
   assert.match(claude, /## Capability Profile/);
   assert.match(claude, /Claude-local but contract-validated: `~\/\.claude\/settings\.json`/);
+  assert.match(claude, /strongest repo-managed adapter boundary/);
   assert.match(claude, /additionalDirectories/);
   assert.match(claude, /CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1/);
   assert.match(codex, /~\/\.codex\/AGENTS\.md/);
   assert.match(codex, /commands: `unsupported`/);
+  assert.match(codex, /what the hub currently manages for Codex/);
+  assert.match(codex, /AGENTS-routing compatibility/);
+  assert.match(codex, /Explicit memory bridge parity only/);
+  assert.match(codex, /native hook writeback bridge/);
   assert.match(opencode, /gen-opencode-agents/);
   assert.match(opencode, /agents: `bridged`/);
+  assert.match(opencode, /OpenCode upstream supports command files and plugin event hooks/);
+  assert.match(opencode, /gsd memory-sync/);
+  assert.match(opencode, /memory-sync-bridge\.mjs/);
+  assert.match(opencode, /Explicit memory bridge parity only/);
   assert.match(antigravity, /~\/\.gemini\/GEMINI\.md/);
   assert.match(antigravity, /skills: `native` through Gemini's `~\/\.agents\/skills` user-scope alias/);
   assert.match(antigravity, /~\/\.gemini\/get-shit-done -> ~\/\.agents\/get-shit-done/);
   assert.match(antigravity, /commands: `bridged`/);
   assert.match(antigravity, /agents: `bridged` through generated Gemini-schema agent files/);
+  assert.match(antigravity, /Gemini CLI upstream supports custom commands, extensions, MCP, and native memory/);
+  assert.match(antigravity, /gsd memory-sync/);
+  assert.match(antigravity, /memory-sync-bridge\.mjs/);
+  assert.match(antigravity, /Explicit memory bridge parity only/);
   assert.match(geminiWrapper, /# Gemini Workflow Wrapper/);
   assert.match(geminiWrapper, /@~\/\.agents\/prompts\/system\.md/);
   assert.match(openclaw, /Generated workspace wrappers/);
   assert.match(openclaw, /workspace wrappers: `bridged`/);
+  assert.match(openclaw, /OpenClaw upstream documents slash commands, plugins, hooks, and built-in memory/);
+  assert.match(openclaw, /memory-sync-bridge\.mjs/);
+  assert.match(openclaw, /Explicit memory bridge parity only/);
   assert.match(openclawAgentsTemplate, /\{\{HUB\}\}\/AGENTS\.md/);
 });
 
@@ -473,27 +580,44 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
     'additionalDirectories includes ~/.agents',
     'permissions.allow includes Read(~/.agents/**)',
     'env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1',
-    'hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.js',
-    'hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.js'
+    'hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs',
+    'hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs'
   ]);
   assert.ok(settings.additionalDirectories.includes(agentsDir));
   assert.ok(settings.permissions.allow.includes(`Read(${agentsDir}/**)`));
   assert.equal(settings.env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD, '1');
   assert.equal(
     settings.hooks.SessionStart[0].hooks[0].command,
-    `node "${path.join(claudeDir, 'hooks/gsd-check-update.js')}"`
+    `node "${path.join(claudeDir, 'hooks/gsd-check-update.cjs')}"`
   );
   assert.equal(
     settings.hooks.Stop[0].hooks[0].command,
-    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.js')}"`
+    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.cjs')}"`
   );
   assert.equal(
     settings.hooks.SubagentStop[0].hooks[0].command,
-    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.js')}"`
+    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.cjs')}"`
   );
   assert.equal(
     settings.statusLine.command,
     `node "${path.join(claudeDir, 'hooks/gsd-statusline.js')}"`
   );
   assert.equal(settings.enabledPlugins['typescript-lsp@claude-plugins-official'], true);
+});
+
+test('GSD workflow docs use supported gsd-tools commands for Nyquist and validation commits', () => {
+  const validatePhase = read('get-shit-done/workflows/validate-phase.md');
+  const auditMilestone = read('get-shit-done/workflows/audit-milestone.md');
+  const planPhase = read('get-shit-done/workflows/plan-phase.md');
+
+  assert.match(validatePhase, /config-get workflow\.nyquist_validation --raw/);
+  assert.doesNotMatch(validatePhase, /config get workflow\.nyquist_validation/);
+  assert.match(auditMilestone, /config-get workflow\.nyquist_validation --raw/);
+  assert.doesNotMatch(auditMilestone, /config get workflow\.nyquist_validation/);
+
+  assert.match(validatePhase, /gsd-tools\.cjs" commit "docs\(phase-\$\{PHASE\}\): add\/update validation strategy"/);
+  assert.match(validatePhase, /--files "\$\{PHASE_DIR\}\/\$\{PADDED_PHASE\}-VALIDATION\.md"/);
+  assert.match(planPhase, /commit "docs\(phase-\$\{PHASE\}\): add validation strategy" --files "\$\{PHASE_DIR\}\/\$\{PADDED_PHASE\}-VALIDATION\.md"/);
+  assert.doesNotMatch(validatePhase, /commit-docs/);
+  assert.doesNotMatch(planPhase, /commit-docs/);
 });

@@ -10,6 +10,13 @@ test('routes continuity tasks to the continuity manager', () => {
   assert.equal(routed.stayLocal, false);
 });
 
+test('routes underscore command aliases through the same workflow categories', () => {
+  const routed = routeTask('Repair resume_handoff drift and check readiness around implement_plan gating.');
+
+  assert.equal(routed.route, 'workflow-router-auditor');
+  assert.deepEqual(routed.categories, ['continuity', 'workflow_gating']);
+});
+
 test('routes parity tasks to the adapter parity auditor', () => {
   const routed = routeTask('Audit Codex CLI and OpenCode capability parity against the manifest contract.');
 

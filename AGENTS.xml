@@ -1,0 +1,124 @@
+<agents version="1.0" role="global-ssot">
+  <identity>
+    <title>Global Agent Single Source of Truth</title>
+    <summary>This XML document is the optimized source of truth for shared agent behavior across repos.</summary>
+    <compatibility>
+      <markdown-wrapper path="AGENTS.md">Keep AGENTS.md as the compatibility entrypoint for adapters, tests, and tools that still expect Markdown.</markdown-wrapper>
+    </compatibility>
+  </identity>
+
+  <source-paths>
+    <path key="system-prompt">prompts/system.md</path>
+    <path key="contexts">contexts/*.md</path>
+    <path key="capsules">capsules/**</path>
+    <path key="commands">commands/**/*.md</path>
+    <path key="agents">agents/*.md</path>
+    <path key="rules">rules/common/*.md</path>
+    <path key="skills">skills/**/SKILL.md</path>
+    <path key="adapters">adapters/**</path>
+    <path key="hooks">hooks/*</path>
+  </source-paths>
+
+  <load-order>
+    <step index="1">Read prompts/system.md.</step>
+    <step index="2">Read this global AGENTS contract.</step>
+    <step index="3">If the current repo contains .agents/repo.md, read it as the repo-specific supplement.</step>
+    <step index="4">Load only the relevant files from contexts/.</step>
+    <step index="5">Load only the relevant capsule from capsules/ when a task-class operating pack is required.</step>
+    <step index="6">Load any invoked command docs from commands/.</step>
+    <step index="7">Load only the needed reusable rule cards from rules/common/.</step>
+    <step index="8">Load only relevant skill docs from skills/.</step>
+    <step index="9">Load adapter-specific files only when the active toolchain requires them.</step>
+  </load-order>
+
+  <command-rules>
+    <rule>Command definitions in commands/**/*.md are authoritative.</rule>
+    <rule>If a command name exists in commands/, including namespaced command files such as commands/gsd/*.md, follow that file exactly.</rule>
+    <rule>If the user sends a slash-style command such as /cm, /prime, /plan-feature, /execute, /optimize-prompt, or /gsd:help, first look for a matching command document in commands/ before treating it as plain text.</rule>
+    <rule>Treat underscore and hyphen variants of the same slash-style workflow command as equivalent when they resolve to one unambiguous command file. Prefer the on-disk file name as canonical when reporting or persisting command names.</rule>
+    <rule>Treat gsd &lt;subcommand&gt;, gsd-&lt;subcommand&gt;, and /gsd:&lt;subcommand&gt; as equivalent requests for commands/gsd/&lt;subcommand&gt;.md. If the subcommand is omitted, route to commands/gsd/help.md.</rule>
+    <rule>When the intended command name is ambiguous, check commands/ for the closest matching command file and use that as the first resolution step.</rule>
+    <rule>Do not invent command behavior when a command doc exists.</rule>
+  </command-rules>
+
+  <skill-rules>
+    <rule>If a skill is explicitly requested, load its SKILL.md before acting.</rule>
+    <rule>If multiple skills apply, use the minimal set and state the order.</rule>
+  </skill-rules>
+
+  <repo-supplement-rules>
+    <rule>Repo root AGENTS.md may be a symlink to this global file.</rule>
+    <rule>Repo-specific instructions belong in .agents/repo.md inside the repo.</rule>
+    <rule>Repo supplements extend global rules unless they explicitly state otherwise.</rule>
+  </repo-supplement-rules>
+
+  <context-rules>
+    <rule>contexts/ is the canonical workspace state layer for reusable planning and execution context.</rule>
+    <rule>Load only the minimum context files needed for the task instead of bulk-loading the whole directory.</rule>
+    <rule key="decisions">contexts/decisions.md is the source of truth for locked decisions, deferred ideas, and open questions.</rule>
+    <rule key="state">The current project's .agents/contexts/state.md is the live source of truth for resumable workflow state.</rule>
+    <rule key="research-index">The current project's .agents/contexts/research-index.md is the live index for reusable research artifacts.</rule>
+    <rule key="session-index">The current project's .agents/contexts/session-index.md is the live index for resumable work sessions.</rule>
+    <rule>Tracked contexts/state.md, contexts/research-index.md, and contexts/session-index.md in this repo are shared compatibility documents, not live per-project runtime files.</rule>
+    <rule>contexts/tooling.md is the source of truth for detected environment tooling defaults.</rule>
+    <rule>contexts/verification.md is the source of truth for available automated checks and preferred verification order.</rule>
+    <rule>contexts/artifacts.md is the source of truth for resumable artifact retrieval priorities.</rule>
+    <rule>contexts/agent-catalog.md is the source of truth for workflow expert agents, their triggers, and routing boundaries.</rule>
+    <rule>contexts/ui-ux.md is required before substantial design-heavy UI work.</rule>
+    <rule>contexts/user-taste.md is the source of truth for durable user-specific output preferences and dislikes.</rule>
+    <rule>contexts/failure-patterns.md is the source of truth for reusable failure diagnoses and anti-patterns.</rule>
+    <rule>contexts/reference-library.md is the source of truth for approved references, exemplars, and inspiration inputs.</rule>
+    <rule>contexts/lessons-learned.md is the source of truth for reusable lessons promoted from verified failures or corrections.</rule>
+  </context-rules>
+
+  <capsule-rules>
+    <rule>capsules/ contains task-class operating packs that combine context assembly, examples, anti-patterns, critics, graders, and learning policies.</rule>
+    <rule>Use a capsule when the task is substantial enough that better context assembly and critique would materially change the outcome.</rule>
+    <rule>Skills provide reusable know-how; capsules provide reusable execution and learning behavior.</rule>
+    <rule>Load only the capsule required for the task class instead of bulk-loading the entire directory.</rule>
+    <rule>For substantial creative or API workflow tasks, select a capsule before planning or implementation.</rule>
+  </capsule-rules>
+
+  <rule-card-rules>
+    <rule>Reusable workflow policy should live in rules/common/ instead of being duplicated across prompts and commands.</rule>
+    <rule>Rule cards extend the system prompt; they do not replace task-specific command or skill instructions.</rule>
+    <rule>Use the prompt optimization routing rule before ambiguous, multi-step, handoff-oriented, or substantial tasks, especially before defaulting into RPI.</rule>
+    <rule>Use the output-quality gate rule before substantial creative work or API work where specificity and non-generic output matter.</rule>
+    <rule>Use the learning-loop rule after explicit user correction, critic rejection, or eval failure.</rule>
+    <rule>Use the expert-agent routing rule before delegating substantial workflow tasks to specialist agents.</rule>
+    <rule>Use the package-manager detection rule before presenting or running Node package-manager commands in an unknown repo.</rule>
+    <rule>Use the verification automation rule before recommending automated checks in a repo with scripts or build tooling.</rule>
+    <rule>Use the artifact retrieval rule before loading multiple workflow artifacts into context.</rule>
+  </rule-card-rules>
+
+  <adapter-rules>
+    <rule>adapters/ contains provider-specific operational assets such as hooks, statuslines, and settings helpers.</rule>
+    <rule>Provider adapters must not redefine canonical workflow policy that belongs in prompts/, contexts/, commands/, or rules/common/.</rule>
+    <rule>Compatibility wrappers under hooks/ may delegate to adapter files, but adapter files are the maintained implementation.</rule>
+  </adapter-rules>
+
+  <session-rules>
+    <rule>Use project-local .agents/sessions/ for ordinary workflow continuity across sessions.</rule>
+    <rule>Treat the current project's .agents/contexts/state.md and .agents/contexts/session-index.md as the live continuity source of truth.</rule>
+    <rule>Use handoffs when work is being intentionally transferred or compacted for another agent.</rule>
+    <rule>Keep handoffs under thoughts/shared/handoffs/ as shared transfer artifacts, not as the normal session path.</rule>
+    <rule>Session artifacts should summarize current position, active artifacts, blockers, and the next recommended command.</rule>
+  </session-rules>
+
+  <expert-agent-rules>
+    <rule>Prefer narrow workflow experts over broad persona agents when the task is about continuity, parity, workflow gating, eval design, or tool integration.</rule>
+    <rule>Load contexts/agent-catalog.md before introducing or routing to new workflow experts.</rule>
+    <rule>Use the smallest expert set that covers the task cleanly.</rule>
+    <rule>Stay local when the request is a narrow operational fix rather than workflow-system work.</rule>
+    <rule>Prefer subagents and skills for bounded, parallelizable work so the main context window stays focused on the critical path.</rule>
+    <rule>Use node ./scripts/expert-agent-routing-tools.mjs route --input "&lt;task&gt;" when the correct expert is not obvious from the request.</rule>
+  </expert-agent-rules>
+
+  <non-negotiables>
+    <rule>Prefer repo scripts over shell aliases or functions for execution.</rule>
+    <rule>Ask for clarification when intent is ambiguous.</rule>
+    <rule>For risky or destructive actions, require explicit confirmation.</rule>
+    <rule>When reporting artifact locations, generated files, handoffs, plans, research notes, sessions, or workflow outputs to the user, always include the absolute filesystem path.</rule>
+    <rule>Prefer absolute filesystem paths in command outputs, skill outputs, and all research to plan to implement to validate workflow updates.</rule>
+  </non-negotiables>
+</agents>

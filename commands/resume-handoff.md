@@ -40,6 +40,8 @@ Which handoff would you like to resume from?
 Tip: You can invoke this command directly with a handoff path: `/resume_handoff ~/.agents/thoughts/shared/handoffs/ENG-XXXX/YYYY-MM-DD_HH-MM-SS_ENG-XXXX_description.md`
 
 or using a ticket number to resume from the most recent handoff for that ticket: `/resume_handoff ENG-XXXX`
+
+`/resume-handoff` resolves to the same command file through the shared workflow command normalizer.
 ```
 
 Then wait for the user's input.

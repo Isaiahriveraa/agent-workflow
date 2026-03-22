@@ -62,7 +62,8 @@ const requiredFiles = [
   'adapters/openclaw/templates/SOUL.md',
   'adapters/openclaw/templates/USER.md',
   'adapters/openclaw/templates/TOOLS.md',
-  'hooks/gsd-check-update.js',
+  'hooks/gsd-check-update.cjs',
+  'hooks/gsd-stop-lesson-capture.cjs',
   'hooks/gsd-stop-lesson-capture.js',
   'hooks/gsd-statusline.js',
   'adapters/claude-code/hooks/gsd-stop-lesson-capture.js',
@@ -76,6 +77,7 @@ const requiredFiles = [
   'scripts/session-tools.mjs',
   'scripts/package-manager-tools.mjs',
   'scripts/workflow-router-tools.mjs',
+  'scripts/workflow-plan-tools.mjs',
   'scripts/lesson-tools.mjs',
   'scripts/verification-tools.mjs',
   'scripts/artifact-tools.mjs'
@@ -106,8 +108,8 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `create-plan`', "Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'do_more_research', 'run_critic', 'request_user_decision']],
-  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'scripts/workflow-artifact-tools.mjs grade-plan', 'plan_ready_for_implementation', 'load it before starting work and honor its critic, grader, and memory-policy files', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `implement-plan`', 'active runtime state and selected artifacts', 'advisory memory recall', 'disabled mode must preserve current behavior', "Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'replan', 'capture_lesson', 'request_user_decision', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-plan-tools.mjs sync-child-plans', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `create-plan`', "Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'do_more_research', 'run_critic', 'request_user_decision', 'Original Prompt Alignment', 'Research Sufficiency', 'Phase Plan Index', 'one child plan per implementation phase']],
+  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'scripts/workflow-artifact-tools.mjs grade-plan', 'plan_ready_for_implementation', 'load it before starting work and honor its critic, grader, and memory-policy files', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `implement-plan`', 'active runtime state and selected artifacts', 'advisory memory recall', 'disabled mode must preserve current behavior', "Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'replan', 'capture_lesson', 'request_user_decision', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture', 'Phase Plan Index', 'one linked child phase plan per explicit implementation phase', 'read the linked child phase plan for that phase before editing']],
   ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'scripts/workflow-command-decision.mjs evaluate', 'request_user_decision', 'capture_lesson', 'scripts/lesson-tools.mjs capture']],
   ['commands/research_codebase.md', ["current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture', 'scripts/workflow-artifact-tools.mjs grade-research', 'research_ready_for_planning']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
@@ -312,6 +314,9 @@ if (fs.existsSync(manifestPath)) {
   const claudePromptLink = manifest.symlinks?.find((entry) =>
     entry.tool === 'claude-code' && entry.source === '~/.claude/CLAUDE.md'
   );
+  const claudeGsdLink = manifest.symlinks?.find((entry) =>
+    entry.tool === 'claude-code' && entry.source === '~/.claude/get-shit-done'
+  );
 
   if (!claudePromptLink) {
     console.error('Manifest is missing the Claude Code CLAUDE.md symlink contract');
@@ -336,6 +341,35 @@ if (fs.existsSync(manifestPath)) {
         const actualTarget = fs.readlinkSync(claudeEntrypointPath);
         if (actualTarget !== expectedTarget) {
           console.error(`Claude Code entrypoint points to ${actualTarget} but expected ${expectedTarget}`);
+          hasError = true;
+        }
+      }
+    }
+  }
+
+  if (!claudeGsdLink) {
+    console.error('Manifest is missing the Claude get-shit-done symlink contract');
+    hasError = true;
+  } else {
+    if (claudeGsdLink.target !== '~/.agents/get-shit-done') {
+      console.error(`Claude get-shit-done must target ~/.agents/get-shit-done, found ${claudeGsdLink.target}`);
+      hasError = true;
+    }
+
+    const claudeGsdPath = expandHomePath(claudeGsdLink.source);
+    const expectedGsdTarget = expandHomePath(claudeGsdLink.target);
+    if (!fs.existsSync(claudeGsdPath)) {
+      console.error(`Claude get-shit-done surface is missing: ${claudeGsdPath}`);
+      hasError = true;
+    } else {
+      const stats = fs.lstatSync(claudeGsdPath);
+      if (!stats.isSymbolicLink()) {
+        console.error(`Claude get-shit-done surface must be a symlink: ${claudeGsdPath}`);
+        hasError = true;
+      } else {
+        const actualTarget = fs.readlinkSync(claudeGsdPath);
+        if (actualTarget !== expectedGsdTarget) {
+          console.error(`Claude get-shit-done surface points to ${actualTarget} but expected ${expectedGsdTarget}`);
           hasError = true;
         }
       }
@@ -386,20 +420,20 @@ if (fs.existsSync(manifestPath)) {
       const subagentStopHooks = Array.isArray(settings.hooks?.SubagentStop) ? settings.hooks.SubagentStop : [];
       const hasStopHook = stopHooks.some((matcher) =>
         Array.isArray(matcher.hooks) &&
-        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.js')}"`)
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"`)
       );
       const hasSubagentStopHook = subagentStopHooks.some((matcher) =>
         Array.isArray(matcher.hooks) &&
-        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.js')}"`)
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"`)
       );
 
       if (!hasStopHook) {
-        console.error('Claude settings missing Stop hook for gsd-stop-lesson-capture.js');
+        console.error('Claude settings missing Stop hook for gsd-stop-lesson-capture.cjs');
         hasError = true;
       }
 
       if (!hasSubagentStopHook) {
-        console.error('Claude settings missing SubagentStop hook for gsd-stop-lesson-capture.js');
+        console.error('Claude settings missing SubagentStop hook for gsd-stop-lesson-capture.cjs');
         hasError = true;
       }
     } catch (error) {
