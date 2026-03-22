@@ -1,0 +1,37 @@
+{
+  "workflowStage": "implement-plan",
+  "commandName": "implement_plan",
+  "activeArtifacts": {
+    "plan": "/tmp/workflow-command-decision/plan.md"
+  },
+  "artifactGrades": {
+    "plan": {
+      "passes": true,
+      "declaredReady": true,
+      "blockers": [],
+      "reasons": []
+    }
+  },
+  "memoryRecallAttempt": {
+    "attempted": true,
+    "enabled": true,
+    "source": "mem0-lancedb",
+    "items": [],
+    "warnings": []
+  },
+  "verificationSummary": {
+    "automated": {
+      "attempted": true,
+      "passed": false,
+      "failedChecks": [
+        "npm test"
+      ]
+    },
+    "failureSignals": {
+      "durable": true,
+      "repeated": false,
+      "reusable": true,
+      "blockerClasses": []
+    }
+  }
+}

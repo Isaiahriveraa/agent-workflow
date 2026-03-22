@@ -72,6 +72,9 @@ const headingAliases = new Map([
   ['critique', [/^critique$/i, /^critique notes$/i, /^critique summary$/i]],
   ['blocker resolution', [/^blocker resolution$/i, /^blockers resolved$/i, /^blocking unknown resolution$/i]],
   ['implementation phases', [/^implementation approach$/i, /^implementation phases$/i, /^phases$/i]],
+  ['original prompt alignment', [/^original prompt alignment$/i, /^prompt alignment$/i, /^user intent alignment$/i]],
+  ['research sufficiency', [/^research sufficiency$/i, /^research adequacy$/i, /^research readiness$/i]],
+  ['phase plan index', [/^phase plan index$/i, /^phase plans$/i, /^child phase plans$/i, /^planning structure$/i]],
   ['dependencies and sequencing', [/^dependencies and sequencing$/i, /^dependency map$/i, /^dependencies$/i]],
   ['failure modes and edge cases', [/^failure modes(?: and edge cases)?$/i, /^edge cases$/i]],
   ['automated verification', [/^automated verification$/i, /^verification$/i]],
@@ -125,17 +128,36 @@ const parseFrontmatter = (content) => {
   const frontmatterBlock = content.slice(4, endIndex);
   const body = content.slice(endIndex + 5);
   const frontmatter = {};
+  let currentListKey = null;
 
   for (const rawLine of frontmatterBlock.split('\n')) {
     const line = rawLine.trim();
-    if (!line) continue;
+    if (!line) {
+      currentListKey = null;
+      continue;
+    }
+    // YAML list continuation (e.g. "  - /path/to/file.md")
+    if (line.startsWith('-')) {
+      if (currentListKey && Array.isArray(frontmatter[currentListKey])) {
+        const item = line.slice(1).trim();
+        if (item) frontmatter[currentListKey].push(item);
+      }
+      continue;
+    }
+    currentListKey = null;
     const separatorIndex = line.indexOf(':');
     if (separatorIndex === -1) {
       throw new Error(`Invalid frontmatter line: ${rawLine}`);
     }
     const key = line.slice(0, separatorIndex).trim();
-    const value = line.slice(separatorIndex + 1);
-    frontmatter[key] = parseScalar(value);
+    const value = line.slice(separatorIndex + 1).trim();
+    if (value === '') {
+      // Empty value starts a list — initialize as empty array
+      frontmatter[key] = [];
+      currentListKey = key;
+    } else {
+      frontmatter[key] = parseScalar(value);
+    }
   }
 
   return { frontmatter, body };
@@ -244,6 +266,109 @@ const hasBlockerResolutionEvidence = (artifact) => Boolean(findSection(artifact.
 const hasAutomatedVerification = (artifact) => Boolean(findSection(artifact.sections, 'automated verification'));
 const hasManualVerification = (artifact) => Boolean(findSection(artifact.sections, 'manual verification'));
 const hasRolloutEvidence = (artifact) => Boolean(findSection(artifact.sections, 'rollout and compatibility'));
+const hasOriginalPromptAlignment = (artifact) => Boolean(findSection(artifact.sections, 'original prompt alignment'));
+const hasResearchSufficiency = (artifact) => Boolean(findSection(artifact.sections, 'research sufficiency'));
+const getPhasePlanIndexSection = (artifact) => findSection(artifact.sections, 'phase plan index');
+
+const extractIndexedPhasePlanPaths = (artifact) => {
+  const section = getPhasePlanIndexSection(artifact);
+  if (!section?.body) return [];
+
+  const matches = section.body.match(/\/[^\s`]+\.md\b/g) ?? [];
+  return [...new Set(matches.map((item) => path.resolve(item)))];
+};
+
+const parseChildPlan = (filePath) => {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    return parseArtifact({ filePath, content });
+  } catch {
+    return null;
+  }
+};
+
+const childPlanLooksImplementable = (artifact) => {
+  if (!artifact) return false;
+  const hasSummary = Boolean(findSection(artifact.sections, 'summary'));
+  const hasImplementationBody =
+    Boolean(findSection(artifact.sections, 'implementation changes'))
+    || Boolean(findSection(artifact.sections, 'key changes'))
+    || Boolean(findSection(artifact.sections, 'surgical changes'));
+  const hasTests =
+    Boolean(findSection(artifact.sections, 'tests'))
+    || Boolean(findSection(artifact.sections, 'test plan'));
+  const hasAssumptions = Boolean(findSection(artifact.sections, 'assumptions'));
+
+  return hasSummary && hasImplementationBody && hasTests && hasAssumptions;
+};
+
+const extractArtifactTitle = (artifact) => {
+  const match = artifact.body.match(/^#\s+(.+)$/m);
+  return match ? match[1].trim() : '';
+};
+
+const inferCreativePlan = (artifact) =>
+  /\b(redesign|landing page|marketing page|visual direction|design system)\b/i.test(
+    extractArtifactTitle(artifact)
+  );
+
+const placeholderPattern = /^(not set|tbd|todo|to do|placeholder|n\/a|none|replace me)$/i;
+const creativePacketLabels = [
+  'intent',
+  'audience',
+  'visual direction',
+  'constraints',
+  'references',
+  'banned patterns',
+  'differentiation target',
+  'required states',
+  'selected skill',
+  'selected capsule'
+];
+
+const creativePacketKeyByLabel = {
+  intent: 'intent',
+  audience: 'audience',
+  'visual direction': 'visualDirection',
+  constraints: 'constraints',
+  references: 'references',
+  'banned patterns': 'bannedPatterns',
+  'differentiation target': 'differentiationTarget',
+  'required states': 'requiredStates',
+  'selected skill': 'selectedSkill',
+  'selected capsule': 'selectedCapsule'
+};
+
+const sectionHasSubstance = (section) => {
+  if (!section) return false;
+  const body = section.body.trim();
+  if (!body) return false;
+  if (placeholderPattern.test(body)) return false;
+  if (body.length < 20) return false;
+  return true;
+};
+
+const sectionHasValue = (section) => {
+  if (!section) return false;
+  const body = section.body.trim();
+  if (!body) return false;
+  return !placeholderPattern.test(body);
+};
+
+const creativePacketPresent = (artifact) => {
+  return {
+    intent: sectionHasSubstance(findSection(artifact.sections, 'intent')),
+    audience: sectionHasSubstance(findSection(artifact.sections, 'audience')),
+    visualDirection: sectionHasSubstance(findSection(artifact.sections, 'visual direction')),
+    constraints: sectionHasSubstance(findSection(artifact.sections, 'constraints')),
+    references: sectionHasSubstance(findSection(artifact.sections, 'references')),
+    bannedPatterns: sectionHasSubstance(findSection(artifact.sections, 'banned patterns')),
+    differentiationTarget: sectionHasSubstance(findSection(artifact.sections, 'differentiation target')),
+    requiredStates: sectionHasSubstance(findSection(artifact.sections, 'required states')),
+    selectedSkill: sectionHasValue(findSection(artifact.sections, 'selected skill')),
+    selectedCapsule: sectionHasValue(findSection(artifact.sections, 'selected capsule'))
+  };
+};
 
 const classifyValidationIssue = (issue) => {
   if (/verification/i.test(issue)) return 'verification_missing';
@@ -276,12 +401,18 @@ const buildPlanChecks = (artifact) => ({
   blockerResolutionEvidence:
     artifact.frontmatter.blocking_unknown_count > 0 || hasBlockerResolutionEvidence(artifact),
   implementationPhasesSection: Boolean(findSection(artifact.sections, 'implementation phases')),
-  explicitPhaseCount: extractPlanPhaseCount(artifact) > 0,
+  explicitPhaseCount: extractPlanPhaseCount(artifact),
+  originalPromptAlignment: hasOriginalPromptAlignment(artifact),
+  researchSufficiency: hasResearchSufficiency(artifact),
+  phasePlanIndex: Boolean(getPhasePlanIndexSection(artifact)),
+  indexedPhasePlanPaths: extractIndexedPhasePlanPaths(artifact),
   dependenciesAndSequencing: Boolean(findSection(artifact.sections, 'dependencies and sequencing')),
   failureModes: Boolean(findSection(artifact.sections, 'failure modes and edge cases')),
   automatedVerification: hasAutomatedVerification(artifact),
   manualVerification: hasManualVerification(artifact),
-  rolloutEvidence: artifact.frontmatter.rollout_defined !== true || hasRolloutEvidence(artifact)
+  rolloutEvidence: artifact.frontmatter.rollout_defined !== true || hasRolloutEvidence(artifact),
+  creativePlan: inferCreativePlan(artifact),
+  creativePacket: creativePacketPresent(artifact)
 });
 
 const buildGradeResult = (artifact, validation) => {
@@ -309,10 +440,10 @@ const buildGradeResult = (artifact, validation) => {
     ? buildResearchChecks(artifact)
     : buildPlanChecks(artifact);
 
-  if (!checks.critiqueEvidence && artifact.frontmatter.critique_completed === true) {
+  if (!checks.critiqueEvidence) {
     blockers.push({
       class: 'decision_missing',
-      message: 'critique_completed is true but no critique section or critique_artifacts evidence exists'
+      message: 'substantial artifacts require critique evidence (a critique section or critique_artifacts) before readiness'
     });
   }
 
@@ -354,11 +485,51 @@ const buildGradeResult = (artifact, validation) => {
   }
 
   if (artifact.artifactType === 'plan') {
-    if (!checks.explicitPhaseCount) {
+    if (checks.explicitPhaseCount === 0) {
       blockers.push({
         class: 'decision_missing',
         message: 'plan must include explicit Phase headings so sequencing is enforceable'
       });
+    }
+
+    if (artifact.frontmatter.substantial === true && !checks.originalPromptAlignment) {
+      blockers.push({
+        class: 'decision_missing',
+        message: 'substantial plans must include an Original Prompt Alignment section that proves the plan still targets the user request instead of the bare minimum interpretation'
+      });
+    }
+
+    if (artifact.frontmatter.substantial === true && !checks.researchSufficiency) {
+      blockers.push({
+        class: 'evidence_weak',
+        message: 'substantial plans must include a Research Sufficiency section that states whether the research is actually enough to support implementation'
+      });
+    }
+
+    if (artifact.frontmatter.substantial === true) {
+      if (!checks.phasePlanIndex) {
+        blockers.push({
+          class: 'decision_missing',
+          message: 'substantial plans must include a Phase Plan Index that links every implementation phase to a detailed child phase plan'
+        });
+      } else if (checks.indexedPhasePlanPaths.length !== checks.explicitPhaseCount) {
+        blockers.push({
+          class: 'decision_missing',
+          message: 'substantial plans must link one child phase plan per explicit implementation phase'
+        });
+      } else if (artifact.filePath) {
+        const invalidChildPlans = checks.indexedPhasePlanPaths.filter((childPath) => {
+          const childArtifact = parseChildPlan(childPath);
+          return !childPlanLooksImplementable(childArtifact);
+        });
+
+        if (invalidChildPlans.length > 0) {
+          blockers.push({
+            class: 'decision_missing',
+            message: `child phase plans must be implementation-ready and readable before the parent plan can pass: ${invalidChildPlans.join(', ')}`
+          });
+        }
+      }
     }
 
     if (!checks.dependenciesAndSequencing || artifact.frontmatter.dependency_map_present !== true) {
@@ -388,6 +559,18 @@ const buildGradeResult = (artifact, validation) => {
         message: 'rollout_defined is true but no rollout/compatibility section exists'
       });
     }
+
+    if (checks.creativePlan) {
+      const creativeMissing = creativePacketLabels
+        .filter((label) => checks.creativePacket[creativePacketKeyByLabel[label]] !== true);
+
+      if (creativeMissing.length > 0) {
+        blockers.push({
+          class: 'decision_missing',
+          message: `redesign and other creative plans must include the full creative packet before implementation: missing ${creativeMissing.join(', ')}`
+        });
+      }
+    }
   }
 
   reasons.push(...blockers.map((blocker) => blocker.message));
@@ -397,10 +580,12 @@ const buildGradeResult = (artifact, validation) => {
     reasons.push(`${readinessField} is true but structural checks still fail`);
   }
 
+  const critiqueCeilingReached = artifact.frontmatter.critique_cycles >= 3;
   const requiresAnotherPass = blockers.length > 0;
   const needsThirdPass =
     artifact.frontmatter.refinement_cycles >= 1 &&
-    blockers.length > 0;
+    blockers.length > 0 &&
+    !critiqueCeilingReached;
 
   return {
     artifactType: artifact.artifactType,
@@ -410,6 +595,7 @@ const buildGradeResult = (artifact, validation) => {
     declaredReady,
     requiresAnotherPass,
     needsThirdPass,
+    critiqueCeilingReached,
     nextAction: blockers.length === 0
       ? readinessField === 'research_ready_for_planning'
         ? 'create-plan'
