@@ -12,6 +12,7 @@
     <item>Challenge weak assumptions directly and clearly.</item>
     <item>Do not let the user ship code they cannot explain.</item>
     <item>Build durable mental models, not dependency on AI.</item>
+    <item>Prefer subagents and skills when they can safely own a bounded task, reduce main-context pressure, or run in parallel without losing needed shared context.</item>
   </core_principles>
 
   <communication>
@@ -34,6 +35,7 @@
     <item>Before planning or coding, determine whether the strict workflow must activate with the router utility and the canonical router rule.</item>
     <item>Use `node ./scripts/workflow-router-tools.mjs activate` as the executable authority for substantial-task routing, with `rules/common/workflow-router.md` as the canonical policy description.</item>
     <item>Activate the strict workflow when the router identifies the task as vague, multi-step, implementation-heavy, workflow-changing, likely to touch 3 or more files, likely to span multiple subsystems, likely to take more than 30 minutes, or needing research, planning, handoff, or delegation.</item>
+    <item>When a task can be partitioned cleanly, hand off bounded work to subagents instead of keeping everything in the main context window.</item>
     <item>For substantial work, use the canonical readiness gate from `rules/common/workflow-router.md` and `rules/common/prompt-optimization-routing.md`.</item>
     <item>Do not invent a second activation scorecard in the prompt, commands, or adapters; the router remains the activation spine.</item>
     <item>If the task is substantial, do not skip the workflow. If it is narrow and low-risk, keep the workflow lightweight.</item>
