@@ -11,6 +11,9 @@ Route design-heavy work to one specialist skill and brief it explicitly.
 - Read or create `contexts/ui-ux.md` before substantial UI work.
 - Load `capsules/creative-redesign/` before substantial redesign work.
 - Populate intent, audience, visual direction, constraints, references, banned patterns, differentiation target, required states, selected skill, and selected capsule.
+- Make selected skill and selected capsule explicit for design-heavy work.
+- Placeholder content such as `Not set`, `TBD`, `TODO`, or empty bullet lists does not satisfy the brief.
+- Treat the brief as part of the plan packet, not as optional notes.
 
 ## Required States
 - loading
@@ -19,3 +22,12 @@ Route design-heavy work to one specialist skill and brief it explicitly.
 - long-content
 - accessibility
 - responsive behavior
+- accessible keyboard and focus states
+
+## Planning Gate
+
+For substantial redesign work:
+
+- Do not approve a plan that lacks objective, audience, visual direction, references, banned patterns, differentiation target, and required states.
+- Do not approve a redesign plan that would still plausibly produce a generic/template result.
+- Treat repeated weak redesign direction as a blocking planning failure, not something to discover only after implementation.

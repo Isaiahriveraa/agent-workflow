@@ -1,27 +1,28 @@
 # UI/UX Brief
 
-Use this file before substantial design-heavy work so the interaction and visual direction are explicit.
+Use this file before substantial design-heavy work. Replace every field with project-specific content before the plan is graded.
+Placeholder values such as `Not set`, `TBD`, `TODO`, or empty bullet lists are not acceptable for a design-heavy packet.
 
 ## Intent
-- Not set.
+- Define the user-visible outcome in one sentence.
 
 ## Audience
-- Not set.
+- Describe who uses the surface and what they are trying to accomplish.
 
 ## Visual Direction
-- Not set.
+- State the visual language, tone, and any reference directions that should be followed.
 
 ## Constraints
-- Not set.
+- List platform, brand, implementation, accessibility, and performance constraints.
 
 ## References
-- Not set.
+- Link to concrete exemplars, prior work, or source material that should influence the design.
 
 ## Banned Patterns
-- Not set.
+- Call out layouts, interactions, or visual habits that must be avoided.
 
 ## Differentiation Target
-- Not set.
+- Explain how this design should feel materially different from the generic baseline.
 
 ## Required States
 - loading
@@ -32,7 +33,7 @@ Use this file before substantial design-heavy work so the interaction and visual
 - responsive mobile and desktop layouts
 
 ## Selected Skill
-- Not set.
+- Choose the skill that will lead the design work.
 
 ## Selected Capsule
-- Not set.
+- Name the capsule that will supply the critique and grading packet.
