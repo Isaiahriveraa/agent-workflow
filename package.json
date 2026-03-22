@@ -13,7 +13,7 @@
     "test:adapters": "node --test ./tests/adapter-generation.test.mjs ./tests/memory-sidecar-adapter.test.mjs ./tests/memory-health-check.test.mjs",
     "test:hooks": "node --test ./tests/hooks-nonblocking.test.mjs ./tests/gsd-context-monitor.test.mjs",
     "test:sessions": "node --test ./tests/session-tools.test.mjs ./tests/continuity-tools.test.mjs",
-    "test:tooling": "node --test ./tests/package-manager-tools.test.mjs ./tests/workflow-router-tools.test.mjs ./tests/lesson-tools.test.mjs ./tests/memory-sidecar-contract.test.mjs ./tests/autonomy-dispatcher.test.mjs ./tests/workflow-command-resolution.test.mjs ./tests/workflow-command-decision.test.mjs ./tests/workflow-plan-tools.test.mjs",
+    "test:tooling": "node --test ./tests/package-manager-tools.test.mjs ./tests/workflow-router-tools.test.mjs ./tests/lesson-tools.test.mjs ./tests/memory-sidecar-contract.test.mjs ./tests/autonomy-dispatcher.test.mjs ./tests/workflow-command-resolution.test.mjs ./tests/workflow-command-decision.test.mjs ./tests/memory-sync-bridge.test.mjs",
     "test:verification": "node --test ./tests/verification-tools.test.mjs",
     "test:artifacts": "node --test ./tests/artifact-tools.test.mjs ./tests/claude-plan-sync.test.mjs",
     "test:github-pr-proposer": "node --test ./tests/github-pr-proposer.test.mjs",

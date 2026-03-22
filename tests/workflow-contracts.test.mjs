@@ -125,7 +125,6 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /select and load the relevant capsule/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
-  assert.match(createPlan, /workflow-plan-tools\.mjs sync-child-plans/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(createPlan, /scripts\/memory-sidecar-adapter\.mjs/);
