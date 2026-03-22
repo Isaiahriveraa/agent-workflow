@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 import {
   createMem0LanceDbMemoryBackend,
@@ -18,6 +19,8 @@ import {
 } from '../scripts/memory-sidecar-adapter.mjs';
 import { LanceDbLangChainStore } from '../scripts/memory-lancedb-store.mjs';
 import { getProjectContext } from '../scripts/project-context.mjs';
+
+const root = path.resolve(new URL('..', import.meta.url).pathname);
 
 const createRepo = (baseDir, name) => {
   const repoRoot = path.join(baseDir, name);
@@ -374,6 +377,60 @@ test('recordMemory updates an existing Mem0 memory when the idempotency key alre
     assert.equal(calls[1][0], 'update');
     assert.equal(calls[1][1], 'mem-existing-1');
     assert.equal(result.record.id, 'mem-existing-1');
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('memory sidecar exposes a CLI status surface for workflow callers', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-cli-'));
+  const repoRoot = createRepo(tmpDir, 'cli-status');
+
+  try {
+    const output = execFileSync('node', ['scripts/memory-sidecar-adapter.mjs', 'status'], {
+      cwd: root,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        AGENTS_PROJECT_ROOT: repoRoot
+      }
+    });
+
+    const parsed = JSON.parse(output);
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.command, 'status');
+    assert.equal(parsed.project.projectRoot, repoRoot);
+    assert.equal(typeof parsed.memory.enabled, 'boolean');
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('memory sidecar exposes a CLI recall surface for workflow callers', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-memory-cli-'));
+  const repoRoot = createRepo(tmpDir, 'cli-recall');
+
+  try {
+    const output = execFileSync('node', [
+      'scripts/memory-sidecar-adapter.mjs',
+      'recall',
+      '--workflow-stage', 'create-plan',
+      '--query', 'workflow continuity regression'
+    ], {
+      cwd: root,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        AGENTS_PROJECT_ROOT: repoRoot
+      }
+    });
+
+    const parsed = JSON.parse(output);
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.command, 'recall');
+    assert.equal(parsed.result.workflow_stage, 'create-plan');
+    assert.equal(parsed.result.project_id.startsWith('cli-recall-'), true);
+    assert.ok(Array.isArray(parsed.result.items));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }

@@ -944,3 +944,77 @@ export const createMemorySidecarAdapter = ({ config, backend, env } = {}) => {
 };
 
 export { DeterministicMemoryBackend };
+
+const parseCliArgs = (argv) => {
+  const parsed = {};
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const current = argv[index];
+    if (!current.startsWith('--')) continue;
+    parsed[current.slice(2)] = argv[index + 1];
+    index += 1;
+  }
+
+  return parsed;
+};
+
+const buildStatusPayload = ({ cwd, env }) => {
+  const config = resolveMemorySidecarConfig({ env });
+  const projectContext = buildProjectContext({ cwd, projectIdOverride: config.projectIdentity.override });
+
+  return {
+    ok: true,
+    command: 'status',
+    project: {
+      projectRoot: projectContext.projectRoot,
+      projectSlug: deriveMemoryProjectId(projectContext)
+    },
+    memory: {
+      enabled: config.enabled,
+      backend: config.backend,
+      profile: config.profile,
+      readiness: config.readiness
+    }
+  };
+};
+
+const runCli = async ({ argv = process.argv.slice(2), cwd = process.cwd(), env = process.env } = {}) => {
+  const command = argv[0];
+  const args = parseCliArgs(argv.slice(1));
+  const resolvedCwd = env.AGENTS_PROJECT_ROOT?.trim() || cwd;
+
+  if (command === 'status') {
+    console.log(JSON.stringify(buildStatusPayload({ cwd: resolvedCwd, env }), null, 2));
+    return;
+  }
+
+  if (command === 'recall') {
+    const workflowStage = args['workflow-stage']?.trim();
+    if (!workflowStage) {
+      throw new Error('recall requires --workflow-stage <create-plan|implement-plan>');
+    }
+
+    const result = await getRelevantMemories({
+      workflowStage,
+      queryText: args.query?.trim() || null,
+      contextSummary: args['context-summary']?.trim() || null,
+      cwd: resolvedCwd
+    }, { env });
+
+    console.log(JSON.stringify({
+      ok: true,
+      command: 'recall',
+      result
+    }, null, 2));
+    return;
+  }
+
+  throw new Error('Usage: node scripts/memory-sidecar-adapter.mjs <status|recall> [--workflow-stage stage] [--query text] [--context-summary text]');
+};
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runCli().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}
