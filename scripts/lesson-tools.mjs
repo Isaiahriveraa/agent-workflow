@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { dispatchAutonomyEvent } from './autonomy-dispatcher.mjs';
 import { ensureProjectContext } from './project-context.mjs';
 import { createMemorySidecarAdapter } from './memory-sidecar-adapter.mjs';
 import { writeMarkdownSections } from './runtime-state-tools.mjs';
@@ -18,8 +17,7 @@ const contexts = {
   lessonsLearned: path.join(root, 'contexts', 'lessons-learned.md')
 };
 
-const getQueueDir = (projectContext) => path.join(projectContext.thoughtPaths.lessons, 'queue', projectContext.projectSlug);
-const toProcessingPath = (queuePath) => queuePath.replace(/\.json$/, '.processing');
+const getQueueDir = (projectContext) => path.join(projectContext.thoughtPaths.lessons, 'queue');
 
 const parseArgs = (args) => {
   const parsed = {};
@@ -440,99 +438,17 @@ const flushQueue = async (options = {}) => {
 
   for (const entry of queueEntries) {
     const queuePath = path.join(queueDir, entry);
-    const processingPath = toProcessingPath(queuePath);
 
     try {
-      fs.renameSync(queuePath, processingPath);
-    } catch (error) {
-      if (error?.code === 'ENOENT') {
-        continue;
-      }
-
-      failed += 1;
-      results.push({
-        queuePath,
-        status: 'failed',
-        error: error.message
-      });
-      continue;
-    }
-
-    try {
-      const payload = JSON.parse(fs.readFileSync(processingPath, 'utf8'));
-      const dispatched = await dispatchAutonomyEvent({
-        event: 'lesson_flush',
-        provider: 'local',
-        sessionId: projectContext.projectSlug,
-        turnId: payload.queuedAt ?? entry,
-        timestamp: payload.queuedAt,
-        runtimeMode: 'fire_and_forget',
-        scope: 'project',
-        subject: {
-          type: 'lesson_queue_item',
-          id: entry,
-          path: processingPath
-        },
-        metadata: {
-          taskClass: payload.taskClass,
-          failureClass: payload.failureClass
-        }
-      }, {
-        projectContext,
-        handlers: {
-          lesson_flush: async () => {
-            const capture = await applyCapturePayload(payload, options);
-            return {
-              status: 'processed',
-              actionClass: 'enqueue_only',
-              actions: ['capture_lesson', 'mirror_memory'],
-              warnings: [...capture.memoryMirror.warnings],
-              metrics: {
-                processed: 1,
-                mirrored: capture.memoryMirror.results.filter((item) => item.recorded === true).length
-              },
-              evalVerdict: {
-                subjectType: 'lesson_flush',
-                subjectPath: capture.artifactPath,
-                suite: 'lesson-tools',
-                score: capture.memoryMirror.warnings.length > 0 ? 85 : 100,
-                blocking: false,
-                findings: [...capture.memoryMirror.warnings],
-                recommendedNextAction: capture.memoryMirror.warnings.length > 0 ? 'capture_lesson' : 'continue',
-                confidence: 0.85
-              },
-              strategyDecision: {
-                action: capture.memoryMirror.warnings.length > 0 ? 'capture_lesson' : 'continue',
-                rationale: capture.memoryMirror.warnings.length > 0
-                  ? 'Canonical write succeeded but the advisory mirror produced warnings.'
-                  : 'Canonical lesson capture and advisory mirroring succeeded.',
-                confidence: 0.8,
-                dependsOn: [...capture.memoryMirror.warnings]
-              },
-              learningRecords: [
-                {
-                  failureClass: payload.failureClass,
-                  trigger: payload.trigger,
-                  evidence: payload.diagnosis,
-                  correction: payload.fix,
-                  reuseRule: payload.rule,
-                  sourceArtifacts: [payload.sourceArtifact, capture.artifactPath]
-                }
-              ]
-            };
-          }
-        }
-      });
-
-      fs.rmSync(processingPath, { force: true });
+      const payload = JSON.parse(fs.readFileSync(queuePath, 'utf8'));
+      const capture = await applyCapturePayload(payload, options);
+      fs.rmSync(queuePath, { force: true });
       processed += 1;
       results.push({
         queuePath,
         status: 'processed',
-        tracePath: dispatched.tracePath,
-        evalPath: dispatched.evalPath,
-        strategyPath: dispatched.strategyPath,
-        learningRecords: dispatched.learningRecords
+        artifactPath: capture.artifactPath,
+        memoryMirror: capture.memoryMirror
       });
     } catch (error) {
       failed += 1;
@@ -541,8 +457,6 @@ const flushQueue = async (options = {}) => {
         status: 'failed',
         error: error.message
       });
-    } finally {
-      fs.rmSync(processingPath, { force: true });
     }
   }
 

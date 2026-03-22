@@ -23,17 +23,15 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 9. **Treat advisory implementation recall as optional input only: disabled mode must preserve current behavior, disabled or unavailable recall still counts as a successful attempt, empty recall is success, and explicit artifacts stay authoritative when advisory memory disagrees.**
 10. **Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections.**
 11. **Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; plan grading and readiness remain bound to canonical artifacts only.**
-12. **After plan grading, runtime-state loading, and the mandatory recall attempt, run `node ./scripts/workflow-command-decision.mjs evaluate --input ...` to decide whether implementation should `continue`, `replan`, `capture_lesson`, or `request_user_decision`.**
-13. **Use the helper-backed strategy as the implementation entry authority: malformed or non-ready plan grades route to `replan`, durable automated verification misses route to `capture_lesson`, and evidence-backed blockers route to `request_user_decision`.**
 
-14. **If no parameter was provided**, ask:
+12. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
    Example: /absolute/path/to/.agents/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
-15. **Confirm readiness**:
+13. **Confirm readiness**:
    ```
    I've read the plan. It has [N] phases:
    1. [Phase 1 name] — [one-line goal]
@@ -95,7 +93,6 @@ If a check fails, a critic rejects the output, or the user corrects the implemen
 - State the likely cause
 - Apply the smallest fix
 - Record a reusable lesson automatically with `node ./scripts/lesson-tools.mjs capture ...` when the evidence is strong enough
-- If `node ./scripts/workflow-command-decision.mjs evaluate --input ...` recommends `capture_lesson`, complete lesson capture before retrying implementation
 - Surface a workflow suggestion if the miss appears systemic
 
 ### Step 4: Manual Verification Checkpoint
@@ -148,7 +145,6 @@ If this is a long session and you suspect context drift:
   ```
 
 - If newly discovered work maps to `blocking_unknown`, `decision_missing`, `evidence_weak`, `verification_missing`, `dependency_unmodeled`, or `rollout_unspecified`, route it to `/iterate_plan` or full re-planning instead of inventing a new design during implementation.
-- When the helper-backed decision returns `replan`, stop implementation entry and route back through `/iterate_plan` or full replanning instead of beginning edits.
 
 - After explicit user correction or eval-backed failure, update local learning artifacts with `node ./scripts/lesson-tools.mjs capture ...` when the lesson is durable and evidence-backed.
 

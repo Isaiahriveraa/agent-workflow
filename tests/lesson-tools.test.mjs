@@ -61,7 +61,7 @@ const cleanupLessonArtifacts = (needle) => {
   }
 };
 
-test('project context exposes the shared lessons path', { concurrency: false }, () => {
+test('project context exposes the shared lessons path', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-context-'));
   const repoRoot = createRepo(tmpDir, 'lessons');
 
@@ -73,7 +73,7 @@ test('project context exposes the shared lessons path', { concurrency: false }, 
   }
 });
 
-test('lesson capture writes an artifact and updates learning contexts', { concurrency: false }, () => {
+test('lesson capture writes an artifact and updates learning contexts', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'capture');
   const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
@@ -132,7 +132,7 @@ test('lesson capture writes an artifact and updates learning contexts', { concur
   }
 });
 
-test('lesson capture requires an absolute source artifact path', { concurrency: false }, () => {
+test('lesson capture requires an absolute source artifact path', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'errors');
 
@@ -152,7 +152,7 @@ test('lesson capture requires an absolute source artifact path', { concurrency: 
   }
 });
 
-test('lesson queue persists a pending item and flush processes it', { concurrency: false }, () => {
+test('lesson queue persists a pending item and flush processes it', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'queue');
   const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'queued-source.md');
@@ -184,10 +184,6 @@ test('lesson queue persists a pending item and flush processes it', { concurrenc
     assert.equal(flushed.processed, 1);
     assert.equal(flushed.failed, 0);
     assert.equal(fs.existsSync(queued.queuePath), false);
-    assert.equal(fs.existsSync(flushed.results[0].tracePath), true);
-    assert.equal(fs.existsSync(flushed.results[0].evalPath), true);
-    assert.equal(fs.existsSync(flushed.results[0].strategyPath), true);
-    assert.equal(flushed.results[0].learningRecords.length, 1);
 
     const lessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
     const failurePatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
@@ -216,40 +212,7 @@ test('lesson queue persists a pending item and flush processes it', { concurrenc
   }
 });
 
-test('lesson queue flush skips items already claimed by a processing sentinel', { concurrency: false }, () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'queue-processing');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'queued-source.md');
-
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
-  fs.writeFileSync(sourceArtifact, '# Queued Source\n');
-
-  try {
-    const queued = JSON.parse(execLessonTool([
-      'queue',
-      '--task-class', 'api-workflow',
-      '--trigger', 'critic rejection',
-      '--failure-class', 'processing-claim',
-      '--diagnosis', 'Another worker already claimed this item.',
-      '--rule', 'Rename queue entries before processing.',
-      '--fix', 'Skip duplicate claim attempts.',
-      '--source-artifact', sourceArtifact
-    ], repoRoot));
-
-    const processingPath = queued.queuePath.replace(/\.json$/, '.processing');
-    fs.renameSync(queued.queuePath, processingPath);
-
-    const flushed = JSON.parse(execLessonTool(['flush'], repoRoot));
-    assert.equal(flushed.processed, 0);
-    assert.equal(flushed.failed, 0);
-    assert.equal(fs.existsSync(processingPath), true);
-  } finally {
-    cleanupLessonArtifacts('api-workflow-processing-claim');
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-});
-
-test('lesson capture mirrors curated memories after canonical writes when memory is enabled', { concurrency: false }, async () => {
+test('lesson capture mirrors curated memories after canonical writes when memory is enabled', async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'memory-mirror');
   const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
@@ -310,7 +273,7 @@ test('lesson capture mirrors curated memories after canonical writes when memory
   }
 });
 
-test('lesson capture preserves canonical writes when memory mirror fails', { concurrency: false }, async () => {
+test('lesson capture preserves canonical writes when memory mirror fails', async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'mirror-failure');
   const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
@@ -353,7 +316,7 @@ test('lesson capture preserves canonical writes when memory mirror fails', { con
   }
 });
 
-test('lesson capture is a no-op for memory mirroring when memory is disabled', { concurrency: false }, async () => {
+test('lesson capture is a no-op for memory mirroring when memory is disabled', async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'mirror-disabled');
   const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
@@ -397,7 +360,7 @@ test('lesson capture is a no-op for memory mirroring when memory is disabled', {
   }
 });
 
-test('repeated mirrored captures dedupe by idempotency key', { concurrency: false }, async () => {
+test('repeated mirrored captures dedupe by idempotency key', async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'mirror-dedupe');
   const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
