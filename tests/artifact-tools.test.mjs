@@ -247,6 +247,7 @@ test('artifact persistence writes the active working set to project-local state 
         ], fixtureRepoRoot);
 
         const persisted = JSON.parse(output);
+        assert.equal(persisted.mode, 'deterministic');
         assert.equal(persisted.source, 'test-suite');
         assert.equal(persisted.focus, 'artifact continuity');
         assert.equal(persisted.selected.intake, intakePath);
@@ -272,6 +273,116 @@ test('artifact persistence writes the active working set to project-local state 
       } finally {
         fs.writeFileSync(projectStatePath, originalProjectState);
       }
+  });
+});
+
+test('deterministic persistence keeps unspecified categories pinned to the persisted working set', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ intakePath, canonicalPlanPath, researchPath, handoffPath }) => {
+    const project = runProjectContext(fixtureRepoRoot);
+    const projectStatePath = project.contextPaths.state;
+    const originalState = readFile(projectStatePath);
+    const replacementIntakePath = path.join(fixtureRepoRoot, '.planning', 'intake', 'replacement-intake.md');
+
+    fs.mkdirSync(path.dirname(replacementIntakePath), { recursive: true });
+    fs.writeFileSync(replacementIntakePath, '# replacement intake\n');
+
+    try {
+      const seededState = setWorkingSet(originalState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: preserve authored set
+
+### Selected By Category
+- intake: ${intakePath}
+- plan: ${canonicalPlanPath}
+- research: ${researchPath}
+- session: none
+- handoff: ${handoffPath}
+
+### Ordered Artifacts
+1. ${intakePath}
+2. ${canonicalPlanPath}
+3. ${researchPath}
+4. ${handoffPath}
+`);
+
+      fs.writeFileSync(projectStatePath, seededState);
+
+      const persisted = JSON.parse(execArtifactTool([
+        'persist',
+        '--plan',
+        canonicalPlanPath,
+        '--source',
+        'deterministic-test',
+        '--focus',
+        'preserve authored set'
+      ], fixtureRepoRoot));
+
+      assert.equal(persisted.mode, 'deterministic');
+      assert.equal(persisted.selected.intake, intakePath);
+      assert.equal(persisted.selected.research, researchPath);
+      assert.equal(persisted.selected.handoff, handoffPath);
+    } finally {
+      fs.writeFileSync(projectStatePath, originalState);
+      fs.rmSync(replacementIntakePath, { force: true });
+    }
+  });
+});
+
+test('refresh persistence keeps heuristic refresh available when the caller asks for it explicitly', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath }) => {
+    const project = runProjectContext(fixtureRepoRoot);
+    const projectStatePath = project.contextPaths.state;
+    const originalState = readFile(projectStatePath);
+    const oldIntakePath = path.join(fixtureRepoRoot, '.planning', 'intake', 'old-intake.md');
+    const suggestedIntakePath = path.join(fixtureRepoRoot, '.planning', 'intake', 'refresh-focus-intake.md');
+    const workflowState = originalState
+      .replace(/## Current Workflow\n- .*/m, '## Current Workflow\n- refresh focus')
+      .replace(/## Current Phase\n- .*/m, '## Current Phase\n- refresh');
+
+    fs.mkdirSync(path.dirname(oldIntakePath), { recursive: true });
+    fs.writeFileSync(oldIntakePath, '# old intake\n');
+    fs.writeFileSync(suggestedIntakePath, '# refresh intake\n');
+
+    try {
+      const seededState = setWorkingSet(workflowState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: previous focus
+
+### Selected By Category
+- intake: ${oldIntakePath}
+- plan: ${canonicalPlanPath}
+- research: ${researchPath}
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. ${oldIntakePath}
+2. ${canonicalPlanPath}
+3. ${researchPath}
+`);
+      fs.writeFileSync(projectStatePath, seededState);
+
+      const persisted = JSON.parse(execArtifactTool([
+        'persist',
+        '--mode',
+        'refresh',
+        '--plan',
+        canonicalPlanPath,
+        '--research',
+        researchPath,
+        '--source',
+        'refresh-test',
+        '--focus',
+        'refresh focus'
+      ], fixtureRepoRoot));
+
+      assert.equal(persisted.mode, 'refresh');
+      assert.equal(persisted.selected.intake, suggestedIntakePath);
+    } finally {
+      fs.writeFileSync(projectStatePath, originalState);
+    }
   });
 });
 
@@ -423,7 +534,7 @@ test('artifact suggestion prefers persisted selections over heuristics', () => {
   });
 });
 
-test('artifact persistence refreshes stale intake selections when workflow focus changes', () => {
+test('artifact persistence refreshes stale intake selections only when the caller requests refresh mode', () => {
   withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath }) => {
       const project = runProjectContext(fixtureRepoRoot);
       const projectStatePath = project.contextPaths.state;
@@ -461,6 +572,8 @@ test('artifact persistence refreshes stale intake selections when workflow focus
 
         const persisted = JSON.parse(execArtifactTool([
           'persist',
+          '--mode',
+          'refresh',
           '--source',
           'resume-session',
           '--focus',
@@ -519,6 +632,101 @@ test('artifact persistence allows explicit none overrides to clear a persisted c
       } finally {
         fs.writeFileSync(projectStatePath, originalState);
       }
+  });
+});
+
+test('authoritative persistence keeps continuity-critical resume flows from adopting heuristic suggestions', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
+    const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-authoritative-')), 'resume-authority');
+    const project = runProjectContext(repoRoot);
+    const sessionDir = project.thoughtPaths.sessions;
+    const suggestedSessionPath = path.join(sessionDir, '2026-03-06_10-00-00_suggested.md');
+    const suggestedIntakePath = path.join(repoRoot, '.planning', 'intake', 'resume-authority-intake.md');
+    const originalState = readFile(project.contextPaths.state);
+
+    fs.mkdirSync(path.dirname(suggestedIntakePath), { recursive: true });
+    fs.mkdirSync(sessionDir, { recursive: true });
+    fs.writeFileSync(suggestedIntakePath, '# intake\n');
+    fs.writeFileSync(suggestedSessionPath, '# session\n');
+
+    try {
+      const seededState = setWorkingSet(originalState, `
+- Last updated: 2026-03-06T00:00:00Z
+- Source: manual
+- Focus: resume authority
+
+### Selected By Category
+- intake: none
+- plan: none
+- research: none
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. none
+`);
+      fs.writeFileSync(project.contextPaths.state, seededState);
+
+      const persisted = JSON.parse(execArtifactTool([
+        'persist',
+        '--source',
+        'resume-session',
+        '--focus',
+        'resume authority'
+      ], repoRoot));
+
+      assert.equal(persisted.mode, 'authoritative');
+      assert.equal(persisted.selected.intake, null);
+      assert.equal(persisted.selected.plan, null);
+      assert.equal(persisted.selected.research, null);
+      assert.equal(persisted.selected.session, null);
+      assert.equal(persisted.selected.handoff, null);
+      assert.notEqual(canonicalPlanPath, null);
+      assert.notEqual(researchPath, null);
+      assert.notEqual(handoffPath, null);
+    } finally {
+      fs.writeFileSync(project.contextPaths.state, originalState);
+      fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    }
+  });
+});
+
+test('authoritative persistence lets project-artifacts persist only the explicit accepted selection set', () => {
+  withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath }) => {
+    const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-project-select-')), 'project-artifacts');
+    const project = runProjectContext(repoRoot);
+    const originalState = readFile(project.contextPaths.state);
+    const suggestedIntakePath = path.join(repoRoot, '.planning', 'intake', 'project-artifacts-intake.md');
+    const suggestedSessionPath = path.join(project.thoughtPaths.sessions, '2026-03-06_11-00-00_suggested.md');
+
+    fs.mkdirSync(path.dirname(suggestedIntakePath), { recursive: true });
+    fs.mkdirSync(path.dirname(suggestedSessionPath), { recursive: true });
+    fs.writeFileSync(suggestedIntakePath, '# intake\n');
+    fs.writeFileSync(suggestedSessionPath, '# session\n');
+
+    try {
+      const persisted = JSON.parse(execArtifactTool([
+        'persist',
+        '--source',
+        'project-artifacts',
+        '--focus',
+        'accepted selection',
+        '--plan',
+        canonicalPlanPath,
+        '--research',
+        researchPath
+      ], repoRoot));
+
+      assert.equal(persisted.mode, 'authoritative');
+      assert.equal(persisted.selected.plan, canonicalPlanPath);
+      assert.equal(persisted.selected.research, researchPath);
+      assert.equal(persisted.selected.intake, null);
+      assert.equal(persisted.selected.session, null);
+      assert.equal(persisted.selected.handoff, null);
+    } finally {
+      fs.writeFileSync(project.contextPaths.state, originalState);
+      fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    }
   });
 });
 
