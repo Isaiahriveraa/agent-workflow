@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const hookPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../adapters/claude-code/hooks/gsd-stop-lesson-capture.js'
+  './gsd-stop-lesson-capture.cjs'
 );
 
 const child = spawn(process.execPath, [hookPath], {
