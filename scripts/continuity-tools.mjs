@@ -27,8 +27,40 @@ const readFirstBullet = (content, heading) => {
 };
 
 const readSection = (content, heading) => {
-  const match = content.match(new RegExp(`^${heading}\\n([\\s\\S]*?)(?=\\n## |\\s*$)`, 'm'));
-  return match ? match[1].trim() : '';
+  const headingMarker = `${heading}\n`;
+  const headingIndex = content.indexOf(headingMarker);
+  if (headingIndex === -1) {
+    return '';
+  }
+
+  const sectionStart = headingIndex + headingMarker.length;
+  const nextHeadingIndex = content.indexOf('\n## ', sectionStart);
+  const sectionEnd = nextHeadingIndex === -1 ? content.length : nextHeadingIndex;
+  return content.slice(sectionStart, sectionEnd).trim();
+};
+
+const requiredSessionEntryLabels = [
+  'Session ID',
+  'Date',
+  'Topic',
+  'Status',
+  'Artifact path',
+  'Related plan',
+  'Next command',
+  'Summary'
+];
+
+const parseSessionEntryFields = (entry) => Object.fromEntries(
+  entry
+    .split('\n')
+    .map((line) => line.match(/^- ([^:]+):\s*(.*)$/))
+    .filter(Boolean)
+    .map(([, label, value]) => [label.trim(), value.trim()])
+);
+
+const isCompleteSessionEntry = (entry) => {
+  const fields = parseSessionEntryFields(entry);
+  return requiredSessionEntryLabels.every((label) => fields[label] && fields[label] !== '');
 };
 
 const parseSessionEntries = (content, heading) => {
@@ -40,7 +72,8 @@ const parseSessionEntries = (content, heading) => {
   return section
     .split(/(?=^- Session ID: )/m)
     .map((entry) => entry.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(isCompleteSessionEntry);
 };
 
 const buildSessionEntry = ({
@@ -176,21 +209,37 @@ const checkpoint = (args) => {
   const nextAction = args['next-step'] ?? readFirstBullet(state, '## Next Step');
   const relatedPlan = args.plan ?? readFirstBullet(state, '## Related Plan');
   const blockers = args.blockers ?? readFirstBullet(state, '## Blockers');
+  const artifactPath = createPath(topic);
+  const sessionId = path.basename(artifactPath, '.md');
+
+  setStateValues({
+    workflow,
+    phase,
+    nextStep: nextAction,
+    relatedPlan: relatedPlan === 'none' ? null : relatedPlan,
+    verifiedAt: now.iso
+  });
+
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  if (!fs.existsSync(artifactPath)) {
+    fs.writeFileSync(artifactPath, '');
+  }
+
   const artifactState = persistWorkingSetSelection({
     overrides: {
       plan: args.plan,
       research: args.research,
+      session: artifactPath,
       handoff: args.handoff
     },
     metadata: {
       lastUpdated: now.iso,
+      mode: 'refresh',
       source: args.source ?? 'continuity-tools',
       focus: args.focus ?? topic
     }
   });
 
-  const artifactPath = createPath(topic);
-  const sessionId = path.basename(artifactPath, '.md');
   const nextCommand = args['next-command'] ?? '/resume-session';
 
   writeCheckpointArtifact({
@@ -216,20 +265,20 @@ const checkpoint = (args) => {
     nextCommand,
     summary: `Checkpoint created by ${args.source ?? 'continuity-tools'}`
   });
-
-  setStateValues({
-    workflow,
-    phase,
-    nextStep: nextAction,
-    relatedPlan: relatedPlan === 'none' ? null : relatedPlan,
-    verifiedAt: now.iso
-  });
-
   return {
     action: 'checkpoint',
     artifactPath,
     sessionId,
-    workingSet: artifactState
+    workingSet: artifactState,
+    diagnostics: {
+      contract_version: 'continuity-tools.v1',
+      action: 'checkpoint',
+      persistence_mode: artifactState.mode,
+      focus: args.focus ?? topic,
+      selected_categories: Object.fromEntries(
+        Object.entries(artifactState.selected).map(([key, value]) => [key, Boolean(value)])
+      )
+    }
   };
 };
 
@@ -249,39 +298,8 @@ const handoff = (args) => {
   const handoffExists = fs.existsSync(handoffPath);
 
   if (!handoffExists) {
-    fs.mkdirSync(path.dirname(handoffPath), { recursive: true });
-    fs.writeFileSync(handoffPath, [
-      '---',
-      `date: ${now.iso}`,
-      'researcher: Codex',
-      'status: complete',
-      'type: continuity_handoff',
-      '---',
-      '',
-      `# Handoff: ${topic}`,
-      '',
-      '## Current Position',
-      `- Workflow: ${workflow}`,
-      `- Phase: ${phase}`,
-      '',
-      '## Next Action',
-      `- ${nextAction}`
-    ].join('\n') + '\n');
+    throw new Error(`Authored handoff does not exist: ${handoffPath}`);
   }
-
-  const artifactState = persistWorkingSetSelection({
-    overrides: {
-      plan: args.plan,
-      research: args.research,
-      session: args.session,
-      handoff: handoffPath
-    },
-    metadata: {
-      lastUpdated: now.iso,
-      source: args.source ?? 'continuity-tools',
-      focus: args.focus ?? topic
-    }
-  });
 
   setStateValues({
     workflow,
@@ -289,6 +307,21 @@ const handoff = (args) => {
     nextStep: nextAction,
     relatedPlan: relatedPlan === 'none' ? null : relatedPlan,
     verifiedAt: now.iso
+  });
+
+  const artifactState = persistWorkingSetSelection({
+    overrides: {
+      plan: args.plan,
+      research: args.research,
+      session: args.session ?? 'none',
+      handoff: handoffPath
+    },
+    metadata: {
+      lastUpdated: now.iso,
+      mode: 'authoritative',
+      source: args.source ?? 'continuity-tools-handoff',
+      focus: args.focus ?? topic
+    }
   });
 
   setHandoffSessionIndex({
@@ -306,7 +339,16 @@ const handoff = (args) => {
   return {
     action: 'handoff',
     artifactPath: handoffPath,
-    workingSet: artifactState
+    workingSet: artifactState,
+    diagnostics: {
+      contract_version: 'continuity-tools.v1',
+      action: 'handoff',
+      persistence_mode: artifactState.mode,
+      focus: args.focus ?? topic,
+      selected_categories: Object.fromEntries(
+        Object.entries(artifactState.selected).map(([key, value]) => [key, Boolean(value)])
+      )
+    }
   };
 };
 

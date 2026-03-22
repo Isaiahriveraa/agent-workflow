@@ -32,9 +32,17 @@ const categories = {
 
 const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
 const readState = () => fs.readFileSync(statePath, 'utf8');
+const readSessionIndex = () => fs.readFileSync(project.contextPaths.sessionIndex, 'utf8');
+const readResearchIndex = () => safeReadFile(researchIndexPath) ?? '';
 const workingSetHeading = '## Active Artifact Working Set';
 const researchEntriesHeading = '## Entries';
 const refreshableCategories = new Set(['intake', 'session', 'handoff']);
+const authoritativeSources = new Set([
+  'resume-session',
+  'create-handoff',
+  'project-artifacts',
+  'continuity-tools-handoff'
+]);
 const safeStat = (filePath) => {
   try {
     return fs.statSync(filePath);
@@ -285,12 +293,7 @@ const persistWorkingSet = (workingSet) => {
 };
 
 export const persistWorkingSetSelection = ({ overrides = {}, metadata = {} } = {}) =>
-  persistWorkingSet(resolvedWorkingSet(overrides, metadata));
-
-const state = readState();
-const sessionIndex = readFile(project.contextPaths.sessionIndex);
-const researchIndex = readFile(researchIndexPath);
-const persistedWorkingSet = readPersistedWorkingSet();
+  persistWorkingSet(resolvedWorkingSet(overrides, metadata, metadata.mode ?? defaultPersistenceMode(metadata)));
 
 const tokenize = (value) =>
   value
@@ -298,17 +301,17 @@ const tokenize = (value) =>
     .split(/[^a-z0-9]+/)
     .filter((token) => token.length >= 4);
 
-const stateTerms = new Set([
+const buildStateTerms = (state) => new Set([
   ...tokenize(parseBullets(state, '## Current Workflow').join(' ')),
   ...tokenize(parseBullets(state, '## Current Phase').join(' ')),
   ...tokenize(parseBullets(state, '## Next Step').join(' ')),
   ...tokenize(parseBullets(state, '## Related Plan').join(' '))
 ]);
 
-const explicitRelatedPlan = parseBullets(state, '## Related Plan').find((line) => line && line !== 'none');
 const canonicalLatestPlan = () => listFiles(canonicalPlanRoot)[0] ?? null;
 const legacyLatestPlan = () => listFiles(legacyPlanRoot)[0] ?? null;
-const defaultPlanSuggestion = () => {
+const defaultPlanSuggestion = (state) => {
+  const explicitRelatedPlan = parseBullets(state, '## Related Plan').find((line) => line && line !== 'none');
   if (explicitRelatedPlan && explicitRelatedPlan !== 'workflow upgrade from external repo comparison and SSOT integration') {
     return explicitRelatedPlan;
   }
@@ -320,7 +323,7 @@ const defaultPlanSuggestion = () => {
   return canonicalLatestPlan() ?? legacyLatestPlan();
 };
 
-const scoreFile = (filePath) => {
+const scoreFile = (filePath, stateTerms) => {
   const base = path.basename(filePath).toLowerCase();
   let score = 0;
   for (const term of stateTerms) {
@@ -346,14 +349,14 @@ const pickLatest = (category) => (
     : listFiles(categories[category])[0] ?? null
 );
 
-const pickRelated = (category) => {
+const pickRelated = (category, stateTerms) => {
   const files = category === 'plans' ? listPlanFiles() : listFiles(categories[category]);
   if (files.length === 0) return null;
   const readinessCategory = category === 'plans' ? 'plan' : category === 'research' ? 'research' : null;
   return files
     .map((filePath) => ({
       filePath,
-      score: scoreFile(filePath),
+      score: scoreFile(filePath, stateTerms),
       readiness: readinessCategory ? readinessRank(readinessCategory, filePath) : -1
     }))
     .sort((a, b) =>
@@ -363,7 +366,7 @@ const pickRelated = (category) => {
     )[0]?.filePath ?? null;
 };
 
-const latestSessionFromIndex = () => {
+const latestSessionFromIndex = (sessionIndex) => {
   const active = parseBullets(sessionIndex, '## Active Sessions');
   if (active.length > 0 && !active[0].includes('No active sessions')) {
     const artifactLine = active.find((line) => line.includes('Artifact path:'));
@@ -372,10 +375,9 @@ const latestSessionFromIndex = () => {
   return pickLatest('sessions');
 };
 
-const researchFromIndex = () => {
-  const content = safeReadFile(researchIndexPath);
-  if (!content) return null;
-  const entries = parseResearchIndexEntries(content);
+const researchFromIndex = (researchIndex) => {
+  if (!researchIndex) return null;
+  const entries = parseResearchIndexEntries(researchIndex);
   return entries.length > 0 ? entries[0].artifactPath : null;
 };
 
@@ -466,20 +468,27 @@ export const upsertResearchIndexEntry = ({
   return entries[0];
 };
 
-const heuristicSuggestions = () => ({
-  intake: pickRelated('intake'),
-  plan: defaultPlanSuggestion(),
-  research: pickRelated('research') ?? researchFromIndex(),
-  session: latestSessionFromIndex(),
-  handoff: pickRelated('handoffs')
+const heuristicSuggestions = ({ state, sessionIndex, researchIndex, stateTerms }) => ({
+  intake: pickRelated('intake', stateTerms),
+  plan: defaultPlanSuggestion(state),
+  research: pickRelated('research', stateTerms) ?? researchFromIndex(researchIndex),
+  session: latestSessionFromIndex(sessionIndex),
+  handoff: pickRelated('handoffs', stateTerms)
 });
 
-const shouldRefreshPersistedSelection = ({ category, persistedPath, suggestedPath, metadata = {} }) => {
+const shouldRefreshPersistedSelection = ({
+  category,
+  persistedPath,
+  suggestedPath,
+  metadata = {},
+  persistedWorkingSet,
+  stateTerms
+}) => {
   if (!refreshableCategories.has(category)) return false;
   if (!persistedPath || !suggestedPath || persistedPath === suggestedPath) return false;
 
-  const persistedScore = scoreFile(persistedPath);
-  const suggestedScore = scoreFile(suggestedPath);
+  const persistedScore = scoreFile(persistedPath, stateTerms);
+  const suggestedScore = scoreFile(suggestedPath, stateTerms);
   const focusChanged =
     metadata.focus &&
     metadata.focus !== 'none' &&
@@ -494,27 +503,75 @@ const shouldRefreshPersistedSelection = ({ category, persistedPath, suggestedPat
   return suggestedScore >= persistedScore + 3;
 };
 
-const resolvedWorkingSet = (overrides = {}, metadata = {}) => {
-  const suggested = heuristicSuggestions();
-  const resolveCategory = (category) => {
-    if (Object.hasOwn(overrides, category) && overrides[category] !== undefined) {
-      return normalizeArtifactPath(overrides[category] ?? 'none');
-    }
+const resolveDeterministicCategory = (category, overrides = {}, suggested = {}, persistedWorkingSet) => {
+  if (Object.hasOwn(overrides, category) && overrides[category] !== undefined) {
+    return normalizeArtifactPath(overrides[category] ?? 'none');
+  }
 
-    const persisted = normalizeArtifactPath(persistedWorkingSet.selected[category] ?? 'none');
-    const suggestedValue = normalizeArtifactPath(suggested[category] ?? 'none');
+  const persisted = normalizeArtifactPath(persistedWorkingSet.selected[category] ?? 'none');
+  if (persisted) {
+    return persisted;
+  }
 
-    if (persisted && !shouldRefreshPersistedSelection({
-      category,
-      persistedPath: persisted,
-      suggestedPath: suggestedValue,
-      metadata
-    })) {
-      return persisted;
-    }
+  return normalizeArtifactPath(suggested[category] ?? 'none');
+};
 
-    return suggestedValue;
-  };
+const resolveAuthoritativeCategory = (category, overrides = {}, persistedWorkingSet) => {
+  if (Object.hasOwn(overrides, category) && overrides[category] !== undefined) {
+    return normalizeArtifactPath(overrides[category] ?? 'none');
+  }
+
+  return normalizeArtifactPath(persistedWorkingSet.selected[category] ?? 'none');
+};
+
+const resolveRefreshCategory = (
+  category,
+  overrides = {},
+  suggested = {},
+  metadata = {},
+  persistedWorkingSet,
+  stateTerms
+) => {
+  if (Object.hasOwn(overrides, category) && overrides[category] !== undefined) {
+    return normalizeArtifactPath(overrides[category] ?? 'none');
+  }
+
+  const persisted = normalizeArtifactPath(persistedWorkingSet.selected[category] ?? 'none');
+  const suggestedValue = normalizeArtifactPath(suggested[category] ?? 'none');
+
+  if (persisted && !shouldRefreshPersistedSelection({
+    category,
+    persistedPath: persisted,
+    suggestedPath: suggestedValue,
+    metadata,
+    persistedWorkingSet,
+    stateTerms
+  })) {
+    return persisted;
+  }
+
+  return suggestedValue;
+};
+
+const defaultPersistenceMode = (metadata = {}) =>
+  authoritativeSources.has(String(metadata.source ?? '').trim()) ? 'authoritative' : 'deterministic';
+
+const resolvedWorkingSet = (overrides = {}, metadata = {}, mode = 'deterministic') => {
+  if (!['authoritative', 'deterministic', 'refresh'].includes(mode)) {
+    throw new Error(`Unsupported persistence mode: ${mode}`);
+  }
+
+  const state = readState();
+  const sessionIndex = readSessionIndex();
+  const researchIndex = readResearchIndex();
+  const persistedWorkingSet = readPersistedWorkingSet();
+  const stateTerms = buildStateTerms(state);
+  const suggested = heuristicSuggestions({ state, sessionIndex, researchIndex, stateTerms });
+  const resolveCategory = mode === 'refresh'
+    ? (category) => resolveRefreshCategory(category, overrides, suggested, metadata, persistedWorkingSet, stateTerms)
+    : mode === 'authoritative'
+      ? (category) => resolveAuthoritativeCategory(category, overrides, persistedWorkingSet)
+      : (category) => resolveDeterministicCategory(category, overrides, suggested, persistedWorkingSet);
 
   const selected = {
     intake: resolveCategory('intake'),
@@ -526,6 +583,7 @@ const resolvedWorkingSet = (overrides = {}, metadata = {}) => {
 
   return {
     lastUpdated: metadata.lastUpdated ?? persistedWorkingSet.lastUpdated ?? 'none',
+    mode,
     source: metadata.source ?? persistedWorkingSet.source ?? 'none',
     focus: metadata.focus ?? persistedWorkingSet.focus ?? 'none',
     selected,
@@ -534,7 +592,12 @@ const resolvedWorkingSet = (overrides = {}, metadata = {}) => {
 };
 
 const suggest = () => {
-  const suggested = heuristicSuggestions();
+  const state = readState();
+  const sessionIndex = readSessionIndex();
+  const researchIndex = readResearchIndex();
+  const persistedWorkingSet = readPersistedWorkingSet();
+  const stateTerms = buildStateTerms(state);
+  const suggested = heuristicSuggestions({ state, sessionIndex, researchIndex, stateTerms });
   const workingSet = resolvedWorkingSet({}, {
     lastUpdated: persistedWorkingSet.lastUpdated,
     source: persistedWorkingSet.source,
@@ -585,13 +648,16 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
         break;
       }
       case 'related':
+        {
+          const stateTerms = buildStateTerms(readState());
         console.log(JSON.stringify({
-          intake: pickRelated('intake'),
-          plans: pickRelated('plans'),
-          research: pickRelated('research'),
-          sessions: pickRelated('sessions'),
-          handoffs: pickRelated('handoffs')
+          intake: pickRelated('intake', stateTerms),
+          plans: pickRelated('plans', stateTerms),
+          research: pickRelated('research', stateTerms),
+          sessions: pickRelated('sessions', stateTerms),
+          handoffs: pickRelated('handoffs', stateTerms)
         }, null, 2));
+        }
         break;
       case 'active':
         console.log(JSON.stringify(readPersistedWorkingSet(), null, 2));
@@ -608,6 +674,7 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
           },
           metadata: {
             lastUpdated: new Date().toISOString(),
+            mode: args.mode ?? defaultPersistenceMode({ source: args.source }),
             source: args.source ?? 'manual',
             focus: args.focus ?? persistedWorkingSet.focus ?? 'none'
           }
