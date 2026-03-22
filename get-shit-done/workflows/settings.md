@@ -1,5 +1,5 @@
 <purpose>
-Interactive configuration of GSD workflow agents (research, plan_check, verifier) and model profile selection via multi-question prompt. Updates .planning/config.json with user preferences.
+Interactive configuration of GSD workflow agents (research, plan_check, verifier) and model profile selection via multi-question prompt. Updates .planning/config.json with user preferences. Optionally saves settings as global defaults (~/.gsd/defaults.json) for future projects.
 </purpose>
 
 <required_reading>
@@ -12,8 +12,9 @@ Read all files referenced by the invoking prompt's execution_context before star
 Ensure config exists and load current state:
 
 ```bash
-node ~/.claude/get-shit-done/bin/gsd-tools.js config-ensure-section
-INIT=$(node ~/.claude/get-shit-done/bin/gsd-tools.js state load)
+node "/Users/isaiahrivera/.claude/get-shit-done/bin/gsd-tools.cjs" config-ensure-section
+INIT=$(node "/Users/isaiahrivera/.claude/get-shit-done/bin/gsd-tools.cjs" state load)
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
 Creates `.planning/config.json` with defaults if missing and loads current config values.
@@ -28,6 +29,9 @@ Parse current values (default to `true` if not present):
 - `workflow.research` — spawn researcher during plan-phase
 - `workflow.plan_check` — spawn plan checker during plan-phase
 - `workflow.verifier` — spawn verifier during execute-phase
+- `workflow.nyquist_validation` — validation architecture research during plan-phase (default: true if absent)
+- `workflow.ui_phase` — generate UI-SPEC.md design contracts for frontend phases (default: true if absent)
+- `workflow.ui_safety_gate` — prompt to run /gsd:ui-phase before planning frontend phases (default: true if absent)
 - `model_profile` — which model each agent uses (default: `balanced`)
 - `git.branching_strategy` — branching approach (default: `"none"`)
 </step>
@@ -43,8 +47,9 @@ AskUserQuestion([
     multiSelect: false,
     options: [
       { label: "Quality", description: "Opus everywhere except verification (highest cost)" },
-      { label: "Balanced (Recommended)", description: "Opus for planning, Sonnet for execution/verification" },
-      { label: "Budget", description: "Sonnet for writing, Haiku for research/verification (lowest cost)" }
+      { label: "Balanced (Recommended)", description: "Opus for planning, Sonnet for research/execution/verification" },
+      { label: "Budget", description: "Sonnet for writing, Haiku for research/verification (lowest cost)" },
+      { label: "Inherit", description: "Use current session model for all agents (best for OpenCode /model)" }
     ]
   },
   {
@@ -75,6 +80,44 @@ AskUserQuestion([
     ]
   },
   {
+    question: "Auto-advance pipeline? (discuss → plan → execute automatically)",
+    header: "Auto",
+    multiSelect: false,
+    options: [
+      { label: "No (Recommended)", description: "Manual /clear + paste between stages" },
+      { label: "Yes", description: "Chain stages via Task() subagents (same isolation)" }
+    ]
+  },
+  {
+    question: "Enable Nyquist Validation? (researches test coverage during planning)",
+    header: "Nyquist",
+    multiSelect: false,
+    options: [
+      { label: "Yes (Recommended)", description: "Research automated test coverage during plan-phase. Adds validation requirements to plans. Blocks approval if tasks lack automated verify." },
+      { label: "No", description: "Skip validation research. Good for rapid prototyping or no-test phases." }
+    ]
+  },
+  // Note: Nyquist validation depends on research output. If research is disabled,
+  // plan-phase automatically skips Nyquist steps (no RESEARCH.md to extract from).
+  {
+    question: "Enable UI Phase? (generates UI-SPEC.md design contracts for frontend phases)",
+    header: "UI Phase",
+    multiSelect: false,
+    options: [
+      { label: "Yes (Recommended)", description: "Generate UI design contracts before planning frontend phases. Locks spacing, typography, color, and copywriting." },
+      { label: "No", description: "Skip UI-SPEC generation. Good for backend-only projects or API phases." }
+    ]
+  },
+  {
+    question: "Enable UI Safety Gate? (prompts to run /gsd:ui-phase before planning frontend phases)",
+    header: "UI Gate",
+    multiSelect: false,
+    options: [
+      { label: "Yes (Recommended)", description: "plan-phase asks to run /gsd:ui-phase first when frontend indicators detected." },
+      { label: "No", description: "No prompt — plan-phase proceeds without UI-SPEC check." }
+    ]
+  },
+  {
     question: "Git branching strategy?",
     header: "Branching",
     multiSelect: false,
@@ -82,6 +125,15 @@ AskUserQuestion([
       { label: "None (Recommended)", description: "Commit directly to current branch" },
       { label: "Per Phase", description: "Create branch for each phase (gsd/phase-{N}-{name})" },
       { label: "Per Milestone", description: "Create branch for entire milestone (gsd/{version}-{name})" }
+    ]
+  },
+  {
+    question: "Enable context window warnings? (injects advisory messages when context is getting full)",
+    header: "Ctx Warnings",
+    multiSelect: false,
+    options: [
+      { label: "Yes (Recommended)", description: "Warn when context usage exceeds 65%. Helps avoid losing work." },
+      { label: "No", description: "Disable warnings. Allows Claude to reach auto-compact naturally. Good for long unattended runs." }
     ]
   }
 ])
@@ -94,19 +146,71 @@ Merge new settings into existing config.json:
 ```json
 {
   ...existing_config,
-  "model_profile": "quality" | "balanced" | "budget",
+  "model_profile": "quality" | "balanced" | "budget" | "inherit",
   "workflow": {
     "research": true/false,
     "plan_check": true/false,
-    "verifier": true/false
+    "verifier": true/false,
+    "auto_advance": true/false,
+    "nyquist_validation": true/false,
+    "ui_phase": true/false,
+    "ui_safety_gate": true/false
   },
   "git": {
     "branching_strategy": "none" | "phase" | "milestone"
+  },
+  "hooks": {
+    "context_warnings": true/false
   }
 }
 ```
 
 Write updated config to `.planning/config.json`.
+</step>
+
+<step name="save_as_defaults">
+Ask whether to save these settings as global defaults for future projects:
+
+```
+AskUserQuestion([
+  {
+    question: "Save these as default settings for all new projects?",
+    header: "Defaults",
+    multiSelect: false,
+    options: [
+      { label: "Yes", description: "New projects start with these settings (saved to ~/.gsd/defaults.json)" },
+      { label: "No", description: "Only apply to this project" }
+    ]
+  }
+])
+```
+
+If "Yes": write the same config object (minus project-specific fields like `brave_search`) to `~/.gsd/defaults.json`:
+
+```bash
+mkdir -p ~/.gsd
+```
+
+Write `~/.gsd/defaults.json` with:
+```json
+{
+  "mode": <current>,
+  "granularity": <current>,
+  "model_profile": <current>,
+  "commit_docs": <current>,
+  "parallelization": <current>,
+  "branching_strategy": <current>,
+  "workflow": {
+    "research": <current>,
+    "plan_check": <current>,
+    "verifier": <current>,
+    "auto_advance": <current>,
+    "nyquist_validation": <current>,
+    "ui_phase": <current>,
+    "ui_safety_gate": <current>
+  }
+}
+```
 </step>
 
 <step name="confirm">
@@ -119,11 +223,17 @@ Display:
 
 | Setting              | Value |
 |----------------------|-------|
-| Model Profile        | {quality/balanced/budget} |
+| Model Profile        | {quality/balanced/budget/inherit} |
 | Plan Researcher      | {On/Off} |
 | Plan Checker         | {On/Off} |
 | Execution Verifier   | {On/Off} |
+| Auto-Advance         | {On/Off} |
+| Nyquist Validation   | {On/Off} |
+| UI Phase             | {On/Off} |
+| UI Safety Gate       | {On/Off} |
 | Git Branching        | {None/Per Phase/Per Milestone} |
+| Context Warnings     | {On/Off} |
+| Saved as Defaults    | {Yes/No} |
 
 These settings apply to future /gsd:plan-phase and /gsd:execute-phase runs.
 
@@ -139,7 +249,8 @@ Quick commands:
 
 <success_criteria>
 - [ ] Current config read
-- [ ] User presented with 5 settings (profile + 3 workflow toggles + git branching)
+- [ ] User presented with 9 settings (profile + 7 workflow toggles + git branching)
 - [ ] Config updated with model_profile, workflow, and git sections
+- [ ] User offered to save as global defaults (~/.gsd/defaults.json)
 - [ ] Changes confirmed to user
 </success_criteria>

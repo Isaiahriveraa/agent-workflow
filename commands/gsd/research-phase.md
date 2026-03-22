@@ -11,8 +11,6 @@ allowed-tools:
 <objective>
 Research how to implement a phase. Spawns gsd-phase-researcher agent with phase context.
 
-For substantial workflow changes, require critique/refinement and parser-backed research readiness before handing off to planning.
-
 **Note:** This is a standalone research command. For most workflows, use `/gsd:plan-phase` which integrates research automatically.
 
 **Use this command when:**
@@ -36,20 +34,21 @@ Normalize phase input in step 1 before any directory lookups.
 ## 0. Initialize Context
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "$ARGUMENTS")
+INIT=$(node "/Users/isaiahrivera/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "$ARGUMENTS")
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
 Extract from init JSON: `phase_dir`, `phase_number`, `phase_name`, `phase_found`, `commit_docs`, `has_research`, `state_path`, `requirements_path`, `context_path`, `research_path`.
 
 Resolve researcher model:
 ```bash
-RESEARCHER_MODEL=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" resolve-model gsd-phase-researcher --raw)
+RESEARCHER_MODEL=$(node "/Users/isaiahrivera/.claude/get-shit-done/bin/gsd-tools.cjs" resolve-model gsd-phase-researcher --raw)
 ```
 
 ## 1. Validate Phase
 
 ```bash
-PHASE_INFO=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "${phase_number}")
+PHASE_INFO=$(node "/Users/isaiahrivera/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "${phase_number}")
 ```
 
 **If `found` is false:** Error and exit. **If `found` is true:** Extract `phase_number`, `phase_name`, `goal` from JSON.
@@ -137,8 +136,8 @@ Write to: .planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md
 
 ```
 Task(
-  prompt="First, read ~/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + filled_prompt,
-  subagent_type="general-purpose",
+  prompt=filled_prompt,
+  subagent_type="gsd-phase-researcher",
   model="{researcher_model}",
   description="Research Phase {phase}"
 )
@@ -147,7 +146,6 @@ Task(
 ## 5. Handle Agent Return
 
 **`## RESEARCH COMPLETE`:** Display summary, offer: Plan phase, Dig deeper, Review full, Done.
-Before offering planning on substantial work, require `node ./scripts/workflow-artifact-tools.mjs grade-research --file [artifact path]` to pass.
 
 **`## CHECKPOINT REACHED`:** Present to user, get response, spawn continuation.
 
@@ -174,8 +172,8 @@ Continue research for Phase {phase_number}: {phase_name}
 
 ```
 Task(
-  prompt="First, read ~/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + continuation_prompt,
-  subagent_type="general-purpose",
+  prompt=continuation_prompt,
+  subagent_type="gsd-phase-researcher",
   model="{researcher_model}",
   description="Continue research Phase {phase}"
 )
