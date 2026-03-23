@@ -15,6 +15,14 @@ Always route execution behavior through `commands/implement_plan.md`.
 2. If the user does not provide a plan path, ask for one using the same behavior as `/implement_plan`.
 3. Follow `commands/implement_plan.md` as the authoritative execution contract.
 
+## Autonomy Loop Gate
+If you encounter a complex sequence of failures or ambiguous state transitions during execution, do not run blind retries.
+Instead, explicitly consult the deterministic autonomy evaluator:
+```bash
+node $HOME/.agents/scripts/autonomy-tools.mjs evaluate --context "current failure or state"
+```
+Parse the JSON response to determine your `recommended_action` (e.g., continue, replan, capture_lesson).
+
 ## Relationship To Other Commands
 
 - `/prime` — quick repo intake

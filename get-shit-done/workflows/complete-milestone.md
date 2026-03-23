@@ -364,6 +364,18 @@ Update `.planning/ROADMAP.md` — group completed milestone phases:
 
 </step>
 
+<step name="sync_memory">
+
+Explicitly synchronize the project's lessons and planning artifacts to the cognitive index before archiving them:
+
+```bash
+node "$HOME/.agents/scripts/memory-sync-tools.mjs" flush all
+```
+
+Verify: `[Memory Sync] Sync complete` in output.
+
+</step>
+
 <step name="archive_milestone">
 
 **Delegate archival to gsd-tools:**
@@ -762,5 +774,6 @@ Milestone completion is successful when:
 - [ ] RETROSPECTIVE.md updated with milestone section
 - [ ] Cross-milestone trends updated
 - [ ] User knows next step (/gsd:new-milestone)
+- [ ] Memory indices synced via scripts/memory-sync-tools.mjs flush
 
 </success_criteria>
