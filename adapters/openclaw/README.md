@@ -36,3 +36,19 @@ This directory contains OpenClaw-specific wrapper assets.
 - Wrapper templates in `templates/` preserve OpenClaw-local intent without duplicating hub-owned policy.
 - Explicit memory bridge parity only: `~/.agents/scripts/memory-sync-bridge.mjs` supports `status`, `recall`, and `flush`.
 - OpenClaw does not have a hub-managed command bridge in this repo, so the explicit memory bridge is the direct script path.
+
+## Universal Memory Access (agents-memory)
+
+The preferred method for all ZLIs to access memory is through shell wrappers in PATH:
+
+```bash
+# Add to PATH (optional, one-time setup)
+ln -s ~/.agents/bin ~/bin
+
+# Then use from any ZLI
+agents-memory status
+agents-memory recall create-plan --query "planning a feature"
+agents-memory flush
+```
+
+This approach works for any CLI that can execute shell commands, including OpenClaw.

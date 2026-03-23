@@ -47,9 +47,9 @@ Then wait for the user's input.
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
    - For substantial requests backed by research, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
-   - After canonical context is loaded and before plan drafting, run this command to recall relevant memories:
-     `node $HOME/.agents/scripts/memory-sync-bridge.mjs recall --workflow-stage create-plan --query "<brief description of what you're planning>"`
-     This recall attempt is mandatory for command entry. If memory is disabled or returns zero items, that is still a successful attempt — proceed normally. If items are returned, incorporate them as advisory context (lower priority than codebase evidence and explicit decisions).
+- After canonical context is loaded and before plan drafting, run this command to recall relevant memories:
+      `agents-memory recall create-plan --query "<brief description of what you're planning>"`
+      This recall attempt is mandatory for command entry. If memory is disabled or returns zero items, that is still a successful attempt — proceed normally. If items are returned, incorporate them as advisory context (lower priority than codebase evidence and explicit decisions).
    - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
    - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold
    - Treat advisory recall as optional input only: empty recall is success, disabled or unavailable recall is still a successful attempt, and explicit research, decisions, and selected artifacts remain authoritative
