@@ -650,13 +650,13 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
       case 'related':
         {
           const stateTerms = buildStateTerms(readState());
-        console.log(JSON.stringify({
-          intake: pickRelated('intake', stateTerms),
-          plans: pickRelated('plans', stateTerms),
-          research: pickRelated('research', stateTerms),
-          sessions: pickRelated('sessions', stateTerms),
-          handoffs: pickRelated('handoffs', stateTerms)
-        }, null, 2));
+          console.log(JSON.stringify({
+            intake: pickRelated('intake', stateTerms),
+            plans: pickRelated('plans', stateTerms),
+            research: pickRelated('research', stateTerms),
+            sessions: pickRelated('sessions', stateTerms),
+            handoffs: pickRelated('handoffs', stateTerms)
+          }, null, 2));
         }
         break;
       case 'active':
@@ -664,6 +664,7 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
         break;
       case 'persist': {
         const args = parseArgs(process.argv.slice(3));
+        const persistedWorkingSet = readPersistedWorkingSet();
         console.log(JSON.stringify(persistWorkingSetSelection({
           overrides: {
             intake: args.intake,
