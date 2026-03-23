@@ -57,7 +57,7 @@ Always use this structure and only include sections that add signal:
 - 2-4 bullets for `medium` or `large`
 - Focus on user-facing or system-level outcome
 
-### Why
+### Rationale
 - Include only when the reason is not obvious from the summary
 - 1-3 lines max
 
@@ -67,7 +67,7 @@ Always use this structure and only include sections that add signal:
 - `large`: group by area, not by file inventory
 - Mention major behavior changes, new contracts, migrations, generators, tests, or risks
 
-### Validation
+### Tests & Validation
 - List the actual checks that ran
 - Keep it short
 - Include manual validation only if it mattered
@@ -87,7 +87,7 @@ Always use this structure and only include sections that add signal:
 Use:
 - `Title`
 - `Summary`
-- `Validation`
+- `Tests & Validation`
 - `Risks`
 
 Do not add background sections unless they are necessary.
@@ -99,7 +99,7 @@ Use:
 - `Title`
 - `Summary`
 - `Changes`
-- `Validation`
+- `Tests & Validation`
 - `Risks`
 
 Only add `Why` if the motivation is not obvious.
@@ -109,11 +109,10 @@ Only add `Why` if the motivation is not obvious.
 Use:
 - `Title`
 - `Summary`
-- `Why`
+- `Rationale
 - `Changes`
-- `Validation`
+- `Tests & Validation`
 - `Risks`
-- `Review Notes`
 
 Even for large PRs:
 - keep bullets tight
@@ -152,15 +151,14 @@ Use this exact shell for the final PR body, trimming sections that are not neede
 
 [brief summary]
 
-## Why
-
+## Rationale
 [only if needed]
 
 ## Changes
 
 - [change]
 
-## Validation
+## Tests & Validation
 
 - [check]
 
@@ -168,9 +166,6 @@ Use this exact shell for the final PR body, trimming sections that are not neede
 
 [Low or concrete risk note]
 
-## Review Notes
-
-[only if needed]
 ```
 
 **NEVER include:**
