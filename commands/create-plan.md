@@ -337,6 +337,7 @@ For substantial plans, `plan_ready_for_implementation: true` also requires:
 - one linked child phase plan per explicit implementation phase
 
 Steps to take before critique on substantial plans:
+- run `node $HOME/.agents/scripts/workflow-plan-tools.mjs sync-child-plans --parent [absolute parent plan path]` to generate or refresh the child phase-plan set
 - verify the plan produced one child plan per explicit phase
 - treat the parent-plus-child artifact set as the critique packet; do not critique only the parent shell first
 
@@ -344,41 +345,21 @@ Steps to take before critique on substantial plans:
 
 For plans where `substantial: true` (classified by `node $HOME/.agents/scripts/workflow-router-tools.mjs classify` or activated by `node $HOME/.agents/scripts/workflow-router-tools.mjs activate`):
 
-1. **Spawn `rpi-critic` agent** with the draft plan path:
-   ```
-   Task(
-     prompt="Critique the plan at [plan_path]. artifact_type: plan",
-     subagent_type="rpi-critic",
-     description="Critique plan draft"
-   )
-   ```
+1. **Run rpi-critique in-place** on the draft plan:
+   - Use the `/rpi-critique` skill with the draft plan path
+   - The skill runs all critique dimensions silently, revises the artifact directly, and prints a human-readable improvement summary
+   - No separate critique file is written
 
-2. **Wait for the critic to complete**. The critic writes a critique document to
-   `.planning/critique/YYYY-MM-DD-HHMMSS-[slug]-critique.md` and returns a structured verdict.
+2. **After rpi-critique completes**, check the printed summary:
+   - If **BLOCKING issues found**: read the summary, verify the in-place fixes were applied, and re-run `/rpi-critique` if the plan still fails grading (max 2 revision cycles)
+   - If **WARNINGS ONLY**: review the summary; proceed to Step 5
+   - If **ADVISORY**: proceed to Step 5
+   - If **HUMAN JUDGMENT REQUIRED** (blocking after 2 cycles): surface the blocking issues to the user and do NOT proceed to Step 5
 
-3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
-   - Read the critique document fully
-   - Spawn `critique-responder` to revise the plan against the critique findings
-   - Update plan frontmatter: increment `critique_cycles`, add critique document path to `critique_artifacts` (single-line array only)
-   - Re-spawn the critic (max 2 revision cycles total — 3 runs)
-   - If still blocking after 2 revisions: surface the blocking issues to the user and ask for guidance; do NOT proceed to Step 5
-
-4. **If `## CRITIQUE: WARNINGS ONLY`:**
-   - Read the critique document
-   - Use `critique-responder` for any warning-driven revisions that materially affect the plan
-   - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
-   - Use `artifact-gatekeeper` if critique evidence and parser-backed grade results point in different directions
-   - Proceed to Step 5
-
-5. **If `## CRITIQUE: ADVISORY`:**
-   - Optionally address advisory suggestions
-   - Update plan frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
-   - Use `artifact-gatekeeper` when advancement readiness is still unclear
-   - Proceed to Step 5
-
-6. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**
-   - Present the blocking issues to the user
-   - Wait for guidance before proceeding
+3. **After critique**, verify frontmatter updated correctly:
+   - `critique_completed: true`
+   - `critique_cycles: N` (incremented)
+   - `plan_ready_for_implementation: true|false` (re-evaluated)
 
 **Skip condition**: If `substantial: false` from the classifier, skip this step and note in the plan
 frontmatter: `critique_completed: false`, `critique_cycles: 0`.
