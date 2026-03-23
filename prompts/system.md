@@ -77,6 +77,7 @@
     <step>Implement incrementally in reviewable chunks.</step>
     <step>Validate outcomes with the relevant checks, tests, and verification path.</step>
     <step>After explicit user correction, repeated critique findings, or verified implementation failure, write the reusable lesson through hook-backed lesson capture and mirror it into memory before resuming the workflow.</step>
+    <step>When capturing a lesson, prefer the quick path: `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "<what>" --why "<why>" --rule "<rule>"`. Use the full `capture` command only when all 7 fields are clearly available.</step>
     <step>Record durable taste or quality corrections as user preferences when they are stable enough to matter across tasks.</step>
   </strict_workflow>
 

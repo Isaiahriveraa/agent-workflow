@@ -6,10 +6,15 @@ import { dispatchAutonomyEvent } from './autonomy-dispatcher.mjs';
 import { ensureProjectContext } from './project-context.mjs';
 import { createMemorySidecarAdapter } from './memory-sidecar-adapter.mjs';
 import { writeMarkdownSections } from './runtime-state-tools.mjs';
+import { loadDefaultEnvFiles } from './env-file-tools.mjs';
 
 const root = process.env.AGENTS_ROOT
   ? path.resolve(process.env.AGENTS_ROOT)
   : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// Load ~/.agents/.env so hooks and CLI invocations get memory config
+loadDefaultEnvFiles({ cwd: root });
+
 const defaultProject = ensureProjectContext();
 
 const contexts = {
@@ -419,8 +424,58 @@ function optionsProjectContext(options) {
   return options?.projectContext ?? defaultProject;
 }
 
+const flushSingleFile = async ({ filePath, projectContext, options }) => {
+  if (!fs.existsSync(filePath)) {
+    return { filePath, processed: 0, failed: 1, results: [{ filePath, status: 'not_found' }] };
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const frontmatter = {};
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (fmMatch) {
+      for (const line of fmMatch[1].split('\n')) {
+        const [key, ...rest] = line.split(': ');
+        if (key && rest.length) frontmatter[key.trim()] = rest.join(': ').trim();
+      }
+    }
+
+    const payload = {
+      taskClass: frontmatter.task_class || 'unknown',
+      trigger: frontmatter.trigger || 'file-flush',
+      failureClass: frontmatter.failure_class || 'unknown',
+      diagnosis: 'Flushed from lesson artifact file',
+      rule: frontmatter.task_class ? `${frontmatter.task_class} lesson` : 'lesson',
+      fix: 'See lesson artifact',
+      sourceArtifact: filePath,
+      confidence: frontmatter.confidence || 'medium',
+      systemic: frontmatter.systemic === 'true',
+      suggestion: null,
+      preferenceKind: null,
+      preference: null,
+      supersedesMemoryId: null
+    };
+
+    const capture = await applyCapturePayload(payload, { ...options, projectContext });
+    return {
+      filePath,
+      processed: 1,
+      failed: 0,
+      results: [{ filePath, status: 'processed', artifactPath: capture.artifactPath, memoryMirror: capture.memoryMirror }]
+    };
+  } catch (error) {
+    return { filePath, processed: 0, failed: 1, results: [{ filePath, status: 'failed', error: error.message }] };
+  }
+};
+
 const flushQueue = async (options = {}) => {
   const projectContext = optionsProjectContext(options);
+  const filePath = options.filePath || null;
+
+  if (filePath) {
+    return flushSingleFile({ filePath, projectContext, options });
+  }
+
   const queueDir = getQueueDir(projectContext);
   if (!fs.existsSync(queueDir)) {
     return {
@@ -554,11 +609,40 @@ const flushQueue = async (options = {}) => {
   };
 };
 
+const normalizeQuickCapturePayload = (args) => {
+  const what = requiredArg(args, 'what');
+  const why = requiredArg(args, 'why');
+  const rule = requiredArg(args, 'rule');
+  const sourceArtifact = args['source-artifact']?.trim() || process.cwd();
+  const kind = args.kind?.trim() || 'lesson';
+  const confidence = args.confidence?.trim() || 'medium';
+
+  return {
+    taskClass: kind === 'preference' ? 'user-preference' : 'agent-learning',
+    trigger: kind === 'failure' ? 'repeated-failure' : 'correction',
+    failureClass: kind === 'failure' ? what.slice(0, 64) : 'workflow-gap',
+    diagnosis: why,
+    rule,
+    fix: rule,
+    sourceArtifact: path.isAbsolute(sourceArtifact) ? sourceArtifact : path.resolve(sourceArtifact),
+    confidence,
+    systemic: false,
+    suggestion: null,
+    preferenceKind: kind === 'preference' ? 'preferred' : null,
+    preference: kind === 'preference' ? rule : null,
+    supersedesMemoryId: null
+  };
+};
+
+const quickCapture = async (args, options = {}) =>
+  applyCapturePayload(normalizeQuickCapturePayload(args), options);
+
 export {
   applyCapturePayload,
   captureLesson,
   flushQueue,
   normalizeCapturePayload,
+  quickCapture,
   queueLesson
 };
 
@@ -574,11 +658,16 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
       case 'queue':
         console.log(JSON.stringify(queueLesson(args), null, 2));
         break;
-      case 'flush':
-        console.log(JSON.stringify(await flushQueue(), null, 2));
+      case 'flush': {
+        const filePath = args.file?.trim() || null;
+        console.log(JSON.stringify(await flushQueue({ filePath }), null, 2));
+        break;
+      }
+      case 'quick-capture':
+        console.log(JSON.stringify(await quickCapture(args), null, 2));
         break;
       default:
-        console.error('Usage: node scripts/lesson-tools.mjs <capture|queue|flush> [--task-class <value> --trigger <value> --failure-class <value> --diagnosis <value> --rule <value> --fix <value> --source-artifact <absolute path> [--confidence low|medium|high] [--systemic true|false] [--suggestion <text>] [--preference-kind preferred|disliked --preference <text>] [--supersedes-memory-id <id>]]');
+        console.error('Usage: node scripts/lesson-tools.mjs <capture|queue|flush|quick-capture> [--task-class <value> --trigger <value> --failure-class <value> --diagnosis <value> --rule <value> --fix <value> --source-artifact <absolute path> [--confidence low|medium|high] [--systemic true|false] [--suggestion <text>] [--preference-kind preferred|disliked --preference <text>] [--supersedes-memory-id <id>]]');
         process.exitCode = 1;
     }
   };

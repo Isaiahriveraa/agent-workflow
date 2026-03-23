@@ -3,6 +3,10 @@ import path from 'node:path';
 import { flushQueue } from './lesson-tools.mjs';
 import { getRelevantMemories, resolveMemorySidecarConfig } from './memory-sidecar-adapter.mjs';
 import { ensureProjectContext } from './project-context.mjs';
+import { loadDefaultEnvFiles } from './env-file-tools.mjs';
+
+const agentsRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+loadDefaultEnvFiles({ cwd: agentsRoot });
 
 export const buildMemorySyncStatus = ({ env = process.env, projectContext = ensureProjectContext() } = {}) => {
   const config = resolveMemorySidecarConfig({ env });

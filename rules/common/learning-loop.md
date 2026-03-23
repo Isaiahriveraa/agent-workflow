@@ -38,3 +38,18 @@ Do not capture:
 - temporary debugging chatter
 - one-off noise without a clear cause
 - speculative lessons without evidence
+
+## Quick Capture
+
+When you detect a correction or learn something worth preserving, use the simplified capture:
+
+```bash
+node $HOME/.agents/scripts/lesson-tools.mjs quick-capture \
+  --what "description of what happened or was learned" \
+  --why "why this matters for future work" \
+  --rule "the reusable rule to apply next time"
+```
+
+Optional flags: `--kind lesson|preference|failure` (default: lesson), `--confidence low|medium|high`, `--source-artifact /path/to/relevant/file`.
+
+Use this instead of the full `capture` command when you want to record a lesson quickly. The full `capture` command with all 7 required fields is still available for detailed, high-confidence entries.
