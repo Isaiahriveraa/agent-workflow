@@ -68,7 +68,7 @@ process.stdin.on('end', () => {
     }
 
     const remaining = metrics.remaining_percentage;
-    const usedPct = metrics.used_pct;
+    const usedPct = metrics.used_pct ?? (typeof remaining === 'number' ? 100 - remaining : 0);
 
     // No warning needed
     if (remaining > WARNING_THRESHOLD) {

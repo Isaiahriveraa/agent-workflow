@@ -8,8 +8,7 @@ description: Synchronize pending lessons and plans to the long-term memory store
 
 1. **Verify State**:
    - Confirm that there are un-synced lessons in `.planning/lessons/` (if the directory exists).
-   
-// turbo
+
 2. **Execute Synchronous Flush**:
    - Run the explicit sync script:
    `node $HOME/.agents/scripts/memory-sync-tools.mjs flush all`
