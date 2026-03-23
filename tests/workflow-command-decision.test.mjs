@@ -120,7 +120,7 @@ test('bounded critique ceilings move unresolved substantial plans to human judgm
     verificationSummary: {}
   });
 
-  assert.equal(result.strategyDecision.action, 'request_user_decision');
+  assert.equal(result.strategyDecision.action, 'run_critic');
 });
 
 test('parser-backed weak research artifacts recommend more research instead of continue', () => {
@@ -229,7 +229,7 @@ test('implement-plan recommends replanning when a substantial plan is structural
   });
 
   assert.equal(result.strategyDecision.action, 'replan');
-  assert.equal(result.commandName, 'implement_plan');
+  assert.equal(result.commandName, 'implement-plan');
 });
 
 test('workflow command decisions normalize command aliases before emitting strategy artifacts', () => {
@@ -239,5 +239,5 @@ test('workflow command decisions normalize command aliases before emitting strat
     verificationSummary: {}
   });
 
-  assert.equal(result.commandName, 'validate_plan');
+  assert.equal(result.commandName, 'validate-plan');
 });

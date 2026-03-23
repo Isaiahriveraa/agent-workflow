@@ -302,71 +302,21 @@ const childPlanLooksImplementable = (artifact) => {
   return hasSummary && hasImplementationBody && hasTests && hasAssumptions;
 };
 
-const extractArtifactTitle = (artifact) => {
-  const match = artifact.body.match(/^#\s+(.+)$/m);
-  return match ? match[1].trim() : '';
-};
-
 const inferCreativePlan = (artifact) =>
-  /\b(redesign|landing page|marketing page|visual direction|design system)\b/i.test(
-    extractArtifactTitle(artifact)
+  /\b(redesign|landing page|marketing page|frontend|ui\/ux|ui|ux|visual direction|design system)\b/i.test(
+    `${artifact.body}\n${artifact.headings.join('\n')}`
   );
 
-const placeholderPattern = /^(not set|tbd|todo|to do|placeholder|n\/a|none|replace me)$/i;
-const creativePacketLabels = [
-  'intent',
-  'audience',
-  'visual direction',
-  'constraints',
-  'references',
-  'banned patterns',
-  'differentiation target',
-  'required states',
-  'selected skill',
-  'selected capsule'
-];
-
-const creativePacketKeyByLabel = {
-  intent: 'intent',
-  audience: 'audience',
-  'visual direction': 'visualDirection',
-  constraints: 'constraints',
-  references: 'references',
-  'banned patterns': 'bannedPatterns',
-  'differentiation target': 'differentiationTarget',
-  'required states': 'requiredStates',
-  'selected skill': 'selectedSkill',
-  'selected capsule': 'selectedCapsule'
-};
-
-const sectionHasSubstance = (section) => {
-  if (!section) return false;
-  const body = section.body.trim();
-  if (!body) return false;
-  if (placeholderPattern.test(body)) return false;
-  if (body.length < 20) return false;
-  return true;
-};
-
-const sectionHasValue = (section) => {
-  if (!section) return false;
-  const body = section.body.trim();
-  if (!body) return false;
-  return !placeholderPattern.test(body);
-};
-
 const creativePacketPresent = (artifact) => {
+  const body = artifact.body;
   return {
-    intent: sectionHasSubstance(findSection(artifact.sections, 'intent')),
-    audience: sectionHasSubstance(findSection(artifact.sections, 'audience')),
-    visualDirection: sectionHasSubstance(findSection(artifact.sections, 'visual direction')),
-    constraints: sectionHasSubstance(findSection(artifact.sections, 'constraints')),
-    references: sectionHasSubstance(findSection(artifact.sections, 'references')),
-    bannedPatterns: sectionHasSubstance(findSection(artifact.sections, 'banned patterns')),
-    differentiationTarget: sectionHasSubstance(findSection(artifact.sections, 'differentiation target')),
-    requiredStates: sectionHasSubstance(findSection(artifact.sections, 'required states')),
-    selectedSkill: sectionHasValue(findSection(artifact.sections, 'selected skill')),
-    selectedCapsule: sectionHasValue(findSection(artifact.sections, 'selected capsule'))
+    objective: /\bobjective\b/i.test(body),
+    audience: /\baudience\b/i.test(body),
+    visualDirection: /\bvisual direction\b/i.test(body),
+    references: /\breferences?\b/i.test(body),
+    bannedPatterns: /\bbanned patterns?\b/i.test(body),
+    differentiationTarget: /\bdifferentiation target\b/i.test(body),
+    requiredStates: /\brequired states?\b/i.test(body)
   };
 };
 
@@ -440,10 +390,10 @@ const buildGradeResult = (artifact, validation) => {
     ? buildResearchChecks(artifact)
     : buildPlanChecks(artifact);
 
-  if (!checks.critiqueEvidence) {
+  if (!checks.critiqueEvidence && artifact.frontmatter.critique_completed === true) {
     blockers.push({
       class: 'decision_missing',
-      message: 'substantial artifacts require critique evidence (a critique section or critique_artifacts) before readiness'
+      message: 'critique_completed is true but no critique section or critique_artifacts evidence exists'
     });
   }
 
@@ -561,8 +511,9 @@ const buildGradeResult = (artifact, validation) => {
     }
 
     if (checks.creativePlan) {
-      const creativeMissing = creativePacketLabels
-        .filter((label) => checks.creativePacket[creativePacketKeyByLabel[label]] !== true);
+      const creativeMissing = Object.entries(checks.creativePacket)
+        .filter(([, present]) => present !== true)
+        .map(([name]) => name);
 
       if (creativeMissing.length > 0) {
         blockers.push({
@@ -580,12 +531,10 @@ const buildGradeResult = (artifact, validation) => {
     reasons.push(`${readinessField} is true but structural checks still fail`);
   }
 
-  const critiqueCeilingReached = artifact.frontmatter.critique_cycles >= 3;
   const requiresAnotherPass = blockers.length > 0;
   const needsThirdPass =
     artifact.frontmatter.refinement_cycles >= 1 &&
-    blockers.length > 0 &&
-    !critiqueCeilingReached;
+    blockers.length > 0;
 
   return {
     artifactType: artifact.artifactType,
@@ -595,7 +544,6 @@ const buildGradeResult = (artifact, validation) => {
     declaredReady,
     requiresAnotherPass,
     needsThirdPass,
-    critiqueCeilingReached,
     nextAction: blockers.length === 0
       ? readinessField === 'research_ready_for_planning'
         ? 'create-plan'

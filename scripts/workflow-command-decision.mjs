@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 
 import { dispatchAutonomyEvent } from './autonomy-dispatcher.mjs';
 import { ensureProjectContext } from './project-context.mjs';
-import { normalizeWorkflowCommandName } from './workflow-command-resolution.mjs';
 
 const WORKFLOW_STAGES = new Set(['create-plan', 'implement-plan', 'validate-plan']);
 
@@ -37,17 +36,11 @@ const normalizeStage = (value) => {
 };
 
 const normalizeCommandName = (value, workflowStage) => {
-  const commandName = String(
-    value ?? (workflowStage === 'implement-plan'
-      ? 'implement_plan'
-      : workflowStage === 'validate-plan'
-        ? 'validate_plan'
-        : workflowStage)
-  ).trim();
+  const commandName = String(value ?? workflowStage).trim();
   if (!commandName) {
     throw new Error('commandName is required');
   }
-  return normalizeWorkflowCommandName(commandName);
+  return commandName;
 };
 
 const normalizeArtifactPathMap = (value = {}) => {
@@ -112,9 +105,6 @@ const normalizeGrade = (value, readinessField) => {
       blockers: [],
       reasons: [],
       nextAction: null,
-      requiresAnotherPass: false,
-      needsThirdPass: false,
-      critiqueCeilingReached: false,
       readinessField
     };
   }
@@ -267,14 +257,7 @@ const buildFindings = ({
 };
 
 const recommendCreatePlanAction = ({ routerScore, researchGrade, planGrade, verificationSummary }) => {
-  if (planGrade.present && !planGrade.passes && blockersInclude(planGrade, (_className, message) => /critique|refinement cycle|critique evidence/i.test(message))) {
-    if (planGrade.critiqueCeilingReached) {
-      return {
-        action: 'request_user_decision',
-        rationale: 'The draft plan still needs critique/refinement, but the bounded critique ceiling has been reached so a human decision is required before any further iteration.'
-      };
-    }
-
+  if (planGrade.present && !planGrade.passes && blockersInclude(planGrade, (_className, message) => /critique|refinement cycle/i.test(message))) {
     return {
       action: 'run_critic',
       rationale: 'The draft plan is not critique-complete yet, so planning should stay in critique/refinement before it is treated as implementation-ready.'

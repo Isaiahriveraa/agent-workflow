@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureProjectContext } from './project-context.mjs';
-import { createPath, status as sessionStatus, timestampParts, slugify } from './session-tools.mjs';
+import { createPath, status as sessionStatus, timestampParts } from './session-tools.mjs';
 import { persistWorkingSetSelection } from './artifact-tools.mjs';
 import { writeMarkdownSections } from './runtime-state-tools.mjs';
 
@@ -265,6 +265,7 @@ const checkpoint = (args) => {
     nextCommand,
     summary: `Checkpoint created by ${args.source ?? 'continuity-tools'}`
   });
+
   return {
     action: 'checkpoint',
     artifactPath,
@@ -331,9 +332,7 @@ const handoff = (args) => {
     artifactPath: handoffPath,
     relatedPlan: relatedPlan === 'none' ? null : relatedPlan,
     nextCommand: `/resume_handoff ${handoffPath}`,
-    summary: handoffExists
-      ? `Handoff sync recorded by ${args.source ?? 'continuity-tools'}`
-      : `Handoff created by ${args.source ?? 'continuity-tools'}`
+    summary: `Handoff sync recorded by ${args.source ?? 'continuity-tools'}`
   });
 
   return {
