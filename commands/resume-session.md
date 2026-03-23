@@ -17,8 +17,8 @@ This command resumes from the current project's project-local session artifacts.
 5. Read the current project's `state.md`.
 6. Read the current project's `research-index.md`.
 7. Read the current project's `artifacts.md`.
-8. Run `node ./scripts/artifact-tools.mjs suggest`.
-9. If the active artifact working set needs sync, run `node ./scripts/artifact-tools.mjs persist --source resume-session --focus "[workflow focus]"` with any category overrides needed to lock the resumed working set into the current project's `state.md`.
+8. Run `node $HOME/.agents/scripts/artifact-tools.mjs suggest`.
+9. If the active artifact working set needs sync, run `node $HOME/.agents/scripts/artifact-tools.mjs persist --source resume-session --focus "[workflow focus]"` with any category overrides needed to lock the resumed working set into the current project's `state.md`.
    - Treat `/resume-session` as continuity-authoritative: explicit overrides win, persisted working-set entries are reused, and heuristics stay advisory unless you intentionally request `--mode refresh`.
 10. Read any plan or research artifacts referenced by the session, plus the active working set artifacts that are still relevant.
 11. Prefer the persisted working set over fresh heuristics when reporting current context.

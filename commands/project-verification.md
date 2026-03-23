@@ -11,9 +11,9 @@ Detect the verification commands available in the current repo and persist them 
 1. Read `~/.agents/contexts/tooling.md`.
 2. Read `~/.agents/contexts/verification.md` if it exists.
 3. Detect verification commands with:
-   - `node ./scripts/verification-tools.mjs detect`
+   - `node $HOME/.agents/scripts/verification-tools.mjs detect`
 4. Build a preferred verification plan with:
-   - `node ./scripts/verification-tools.mjs plan`
+   - `node $HOME/.agents/scripts/verification-tools.mjs plan`
 5. Update `~/.agents/contexts/verification.md` with:
    - available checks
    - preferred order

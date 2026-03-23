@@ -43,17 +43,17 @@ Then wait for the user's input.
    - Read `~/.agents/contexts/failure-patterns.md` and `~/.agents/contexts/lessons-learned.md` when the task class is likely to benefit from prior mistakes
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
-   - Determine strict-workflow activation with `node ./scripts/workflow-router-tools.mjs activate` when the task shape is not already proven by a graded substantial research artifact
+   - Determine strict-workflow activation with `node $HOME/.agents/scripts/workflow-router-tools.mjs activate` when the task shape is not already proven by a graded substantial research artifact
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
-   - For substantial requests backed by research, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
+   - For substantial requests backed by research, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
    - After canonical context is loaded and before plan drafting, attempt `scripts/memory-sidecar-adapter.mjs` for workflow stage `create-plan`; this recall attempt is mandatory for command entry even when advisory memory is disabled, unavailable, or returns zero items
    - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
    - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold
    - Treat advisory recall as optional input only: empty recall is success, disabled or unavailable recall is still a successful attempt, and explicit research, decisions, and selected artifacts remain authoritative
    - Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections
    - Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; artifact grading stays bound to canonical files only
-   - After readiness scoring, research grading, and the mandatory recall attempt, run `node ./scripts/workflow-command-decision.mjs evaluate --input ...` to convert that evidence into one command strategy before drafting or finalizing the plan
+   - After readiness scoring, research grading, and the mandatory recall attempt, run `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` to convert that evidence into one command strategy before drafting or finalizing the plan
    - Obey the helper-backed strategy: `continue` may draft/finalize the plan, `do_more_research` must continue research, `run_critic` must complete critique/refinement before the plan is treated as ready, and `request_user_decision` must stop for the blocking decision
 
 1. **Read all mentioned files immediately and FULLY**:
@@ -89,7 +89,7 @@ Then wait for the user's input.
    - Identify whether capsule-specific context, references, anti-patterns, or grading criteria are still missing
    - Classify the discovery depth using `~/.agents/rules/common/discovery-levels.md`
    - Use router activation as the authority for whether substantial-task routing is required; do not treat the RPI path as discretionary when the router says the task is substantial
-   - Score readiness with `node ./scripts/workflow-router-tools.mjs score`
+   - Score readiness with `node $HOME/.agents/scripts/workflow-router-tools.mjs score`
    - If readiness is below threshold, do more research or ask focused questions before writing the plan
 
 5. **Present informed understanding and focused questions**:
@@ -328,7 +328,7 @@ After structure approval:
 - Similar implementation: `[file:line]`
 ````
 
-For substantial plans, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-plan`.
+For substantial plans, include readiness frontmatter and critique evidence required by `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan`.
 Do not mark the plan ready or hand it to implementation unless parser-backed output proves `plan_ready_for_implementation: true`.
 For substantial plans, `plan_ready_for_implementation: true` also requires:
 - `Original Prompt Alignment`
@@ -342,7 +342,7 @@ Steps to take before critique on substantial plans:
 
 ### Step 4.5: Adversarial Critique (substantial plans only)
 
-For plans where `substantial: true` (classified by `node ./scripts/workflow-router-tools.mjs classify` or activated by `node ./scripts/workflow-router-tools.mjs activate`):
+For plans where `substantial: true` (classified by `node $HOME/.agents/scripts/workflow-router-tools.mjs classify` or activated by `node $HOME/.agents/scripts/workflow-router-tools.mjs activate`):
 
 1. **Spawn `rpi-critic` agent** with the draft plan path:
    ```
@@ -397,9 +397,9 @@ frontmatter: `critique_completed: false`, `critique_cycles: 0`.
    - Missing edge cases or considerations?
    ```
    When presenting the plan, separate what the codebase proves, what advisory memory suggests, what is inferred, and what is newly proposed.
-   For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
+   For substantial workflows, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
    Treat a substantial plan as non-ready if it lacks child phase plans, if it is not tied back to the original prompt strongly enough, or if a redesign plan is missing the required creative packet.
-   If a graded draft still fails because critique/refinement evidence is missing, rerun `node ./scripts/workflow-command-decision.mjs evaluate --input ...` and route the outcome to `run_critic` instead of presenting the draft as ready.
+   If a graded draft still fails because critique/refinement evidence is missing, rerun `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` and route the outcome to `run_critic` instead of presenting the draft as ready.
    Then end the response with this exact standalone block using the saved plan path:
    ```text
    Next step
@@ -531,7 +531,7 @@ When spawning research sub-tasks:
 
 When writing `Automated Verification` sections:
 - Prefer actual repo commands from `~/.agents/contexts/verification.md`
-- Refresh them with `node ./scripts/verification-tools.mjs plan` when needed
+- Refresh them with `node $HOME/.agents/scripts/verification-tools.mjs plan` when needed
 - Treat examples like `make test` or `npm run lint` as placeholders unless they match the repo's real commands
 
 ## Workflow State Integration

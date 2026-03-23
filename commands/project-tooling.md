@@ -10,7 +10,7 @@ Detect environment-level tooling choices and persist them for later workflows.
 
 1. Read `~/.agents/contexts/tooling.md` if it exists.
 2. Detect the package manager with:
-   - `node ./scripts/package-manager-tools.mjs info`
+   - `node $HOME/.agents/scripts/package-manager-tools.mjs info`
 3. Update `~/.agents/contexts/tooling.md` with:
    - detected package manager
    - detection source
