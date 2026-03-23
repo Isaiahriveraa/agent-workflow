@@ -14,17 +14,17 @@ Default behavior:
 </objective>
 
 <execution_context>
-- Preferred bridge script: `/Users/isaiahrivera/.agents/scripts/memory-sync-bridge.mjs`
-- Compatibility alias: `/Users/isaiahrivera/.agents/scripts/codex-memory-bridge.mjs`
+- Preferred bridge script: `$HOME/.agents/scripts/memory-sync-bridge.mjs`
+- Compatibility alias: `$HOME/.agents/scripts/codex-memory-bridge.mjs`
 </execution_context>
 
 <process>
 1. If the argument is `status`, run:
-   - `node /Users/isaiahrivera/.agents/scripts/memory-sync-bridge.mjs status`
+   - `node $HOME/.agents/scripts/memory-sync-bridge.mjs status`
 2. If the argument starts with `recall`, require a workflow stage and run:
-   - `node /Users/isaiahrivera/.agents/scripts/memory-sync-bridge.mjs recall --workflow-stage <create-plan|implement-plan>`
+   - `node $HOME/.agents/scripts/memory-sync-bridge.mjs recall --workflow-stage <create-plan|implement-plan>`
 3. Otherwise run:
-   - `node /Users/isaiahrivera/.agents/scripts/memory-sync-bridge.mjs flush`
+   - `node $HOME/.agents/scripts/memory-sync-bridge.mjs flush`
 4. Report the script output directly.
 </process>
 
