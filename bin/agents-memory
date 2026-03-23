@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# ~/.agents/bin/agents-memory
+# Universal MEM0 access point - delegates to subcommands
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AGENTS_ROOT="${AGENTS_ROOT:-$HOME/.agents}"
+
+case "${1:-}" in
+  status)    exec "$SCRIPT_DIR/agents-memory-status" "${@:2}" ;;
+  recall)    exec "$SCRIPT_DIR/agents-memory-recall" "${@:2}" ;;
+  flush)     exec "$SCRIPT_DIR/agents-memory-flush" "${@:2}" ;;
+  -h|--help|"") 
+    echo "Usage: agents-memory <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  status                    Show memory backend readiness"
+    echo "  recall <stage>            Recall memories (create-plan|implement-plan)"
+    echo "  flush                     Flush queued lessons to memory"
+    echo ""
+    echo "Options for recall:"
+    echo "  --query <text>            Search query for memory recall"
+    echo "  --workflow-stage <stage> Explicit workflow stage (create-plan|implement-plan)"
+    echo "  --context-summary <text>  Context summary for better recall"
+    exit 0
+    ;;
+  *) echo "Unknown command: $1" >&2; exit 1 ;;
+esac

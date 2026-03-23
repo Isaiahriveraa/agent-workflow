@@ -32,3 +32,19 @@ This directory documents the Codex CLI-specific integration boundary.
 - Compatibility alias: `node ~/.agents/scripts/codex-memory-bridge.mjs <status|recall|flush>`.
 - Codex does not have a repo-managed native hook writeback bridge in this repo, so lesson flush remains manual.
 - The Codex adapter exists to keep the entry point pointed at the hub and to make regressions easy to validate.
+
+## Universal Memory Access (agents-memory)
+
+All ZLIs can also access memory via shell wrappers in PATH:
+
+```bash
+# Add to PATH (optional, one-time setup)
+ln -s ~/.agents/bin ~/bin
+
+# Then use from any ZLI
+agents-memory status
+agents-memory recall create-plan --query "planning a feature"
+agents-memory flush
+```
+
+This approach works for any CLI that can execute shell commands.

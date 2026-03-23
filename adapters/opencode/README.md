@@ -31,3 +31,19 @@ This directory documents the OpenCode-specific integration boundary.
 - Use `gsd memory-sync` to invoke the shared explicit memory bridge from OpenCode's bridged command surface.
 - Use `gsd memory-sync recall create-plan` or `gsd memory-sync recall implement-plan` for explicit advisory recall.
 - Preferred direct script path when you want to bypass command routing: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.
+
+## Universal Memory Access (agents-memory)
+
+All ZLIs can also access memory via shell wrappers in PATH:
+
+```bash
+# Add to PATH (optional, one-time setup)
+ln -s ~/.agents/bin ~/bin
+
+# Then use from any ZLI
+agents-memory status
+agents-memory recall create-plan --query "planning a feature"
+agents-memory flush
+```
+
+This approach works for any CLI that can execute shell commands.

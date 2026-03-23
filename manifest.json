@@ -13,6 +13,7 @@
     "adapters": "~/.agents/adapters",
     "rules": "~/.agents/rules",
     "prompts": "~/.agents/prompts",
+    "bin": "~/.agents/bin",
     "get-shit-done": "~/.agents/get-shit-done"
   },
   "symlinks": [
@@ -99,6 +100,13 @@
       "tier": 1,
       "tool": "openclaw",
       "type": "file"
+    },
+    {
+      "source": "~/bin",
+      "target": "~/.agents/bin",
+      "tier": 1,
+      "tool": "universal",
+      "type": "directory"
     }
   ],
   "not_managed": [
