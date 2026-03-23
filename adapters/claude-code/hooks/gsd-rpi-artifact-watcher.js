@@ -1,46 +1,44 @@
 #!/usr/bin/env node
-// PostToolUse hook — immediately mirrors a newly written lesson artifact to mem0/LanceDB.
-// Fires only on Write to **/.planning/lessons/*.md (queue files handled at Stop).
+// PostToolUse hook — auto-grades research/plan artifacts after Write/Edit/MultiEdit.
+// Updates research-index.md and STATE.md working set without blocking Claude.
 
-const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 
 const AGENTS_ROOT = process.env.AGENTS_ROOT
   ? path.resolve(process.env.AGENTS_ROOT)
-  : path.join(os.homedir(), '.agents');
-const LESSON_TOOLS = process.env.AGENTS_LESSON_HELPER
-  ? path.resolve(process.env.AGENTS_LESSON_HELPER)
-  : path.join(AGENTS_ROOT, 'scripts', 'lesson-tools.mjs');
+  : path.resolve(__dirname, '../../..');
+const ARTIFACT_TOOLS = path.join(AGENTS_ROOT, 'scripts', 'workflow-artifact-tools.mjs');
 
-const LESSON_RE = /\/.planning\/lessons\/[^/]+\.md$/;
-const QUEUE_RE = /\/.planning\/lessons\/(?:queue|pending|draft)/i;
+const RESEARCH_RE = /\/.planning\/research\/[^/]+\.md$/;
+const PLAN_RE = /\/.planning\/plans\/[^/]+\.md$/;
 
 let input = '';
-// Timeout guard: exit silently if stdin doesn't close within 3s
-const stdinTimeout = setTimeout(() => process.exit(0), 3000);
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', (chunk) => { input += chunk; });
 process.stdin.on('end', () => {
-  clearTimeout(stdinTimeout);
   try {
     const payload = input.trim() ? JSON.parse(input) : {};
     const toolName = payload.tool_name ?? '';
     const filePath = payload.tool_input?.file_path ?? payload.tool_input?.path ?? '';
 
-    if (toolName !== 'Write' || !filePath) {
+    if (!['Write', 'Edit', 'MultiEdit'].includes(toolName) || !filePath) {
       process.exit(0);
     }
 
-    if (!LESSON_RE.test(filePath) || QUEUE_RE.test(filePath)) {
+    const isResearch = RESEARCH_RE.test(filePath);
+    const isPlan = PLAN_RE.test(filePath);
+
+    if (!isResearch && !isPlan) {
       process.exit(0);
     }
 
+    const command = isResearch ? 'grade-research' : 'grade-plan';
     const cwd = payload.cwd || payload.workspace?.current_dir || process.cwd();
 
-    const flusher = spawn(
+    const grader = spawn(
       process.execPath,
-      [LESSON_TOOLS, 'flush', '--file', filePath],
+      [ARTIFACT_TOOLS, command, '--file', filePath],
       {
         detached: true,
         stdio: 'ignore',
@@ -48,7 +46,7 @@ process.stdin.on('end', () => {
         env: { ...process.env, AGENTS_PROJECT_ROOT: cwd }
       }
     );
-    flusher.unref();
+    grader.unref();
   } catch (_) {
     // Silent fail — never block Claude.
   }
