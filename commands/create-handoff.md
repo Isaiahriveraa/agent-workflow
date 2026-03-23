@@ -76,10 +76,10 @@ After writing the handoff document:
   - Update the current project's `state.md` so the workflow position, next step, blockers, and last-verified timestamp reflect the handoff point
   - Preserve `## Related Plan`
   - Update the current project's `session-index.md` so the latest transfer point is discoverable from normal resume flows
-  - Run `node ./scripts/artifact-tools.mjs persist --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]` and include any relevant `--plan`, `--research`, or `--session` overrides needed to preserve the active artifact working set in the current project's `state.md`
+  - Run `node $HOME/.agents/scripts/artifact-tools.mjs persist --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]` and include any relevant `--plan`, `--research`, or `--session` overrides needed to preserve the active artifact working set in the current project's `state.md`
   - Treat `create-handoff` as continuity-authoritative: explicit overrides win, persisted working-set entries are reused, and heuristics stay advisory unless you intentionally request `--mode refresh`
   - Prefer the shared continuity helper to keep runtime-state updates aligned when helper-backed flows exist:
-    - `node ./scripts/continuity-tools.mjs handoff --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]`
+    - `node $HOME/.agents/scripts/continuity-tools.mjs handoff --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]`
   - Keep the handoff itself under `~/.agents/thoughts/shared/handoffs/`; only runtime state is project-scoped
 ---
 

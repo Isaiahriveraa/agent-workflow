@@ -33,7 +33,7 @@ After writing the session artifact:
 - Preserve `## Related Plan`
 - Preserve the active artifact working set so resume flows do not re-guess context
 - Prefer the shared continuity helper when available:
-  - `node ./scripts/continuity-tools.mjs checkpoint --source pause-session --focus "[workflow focus]"`
+  - `node $HOME/.agents/scripts/continuity-tools.mjs checkpoint --source pause-session --focus "[workflow focus]"`
 
 ## Escalation
 

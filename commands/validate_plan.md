@@ -22,9 +22,9 @@ When invoked:
 3. **Gather implementation evidence**:
    - Read `~/.agents/contexts/verification.md` before selecting automated checks
    - Read `~/.agents/contexts/lessons-learned.md` and `~/.agents/contexts/failure-patterns.md` when the work involved failures, retries, or corrections
-   - Grade the related research and plan artifacts with `node ./scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` whenever the workflow is substantial
+   - Grade the related research and plan artifacts with `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` whenever the workflow is substantial
    - Treat missing, stale, or purely declarative critique evidence as a readiness failure, even if the frontmatter says the artifact is ready
-   - After grading, verification collection, and workflow-fidelity review, run `node ./scripts/workflow-command-decision.mjs evaluate --input ...` and obey the returned strategy before blessing the implementation
+   - After grading, verification collection, and workflow-fidelity review, run `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` and obey the returned strategy before blessing the implementation
    ```bash
    # Check recent commits
    git log --oneline -n 20
@@ -90,11 +90,11 @@ For each phase in the plan:
    - Did the implementation honor locked decisions from `~/.agents/contexts/decisions.md`?
    - Did the execution update the current project's `state.md` consistently?
    - If reusable research was produced or consumed, does the current project's `research-index.md` reflect it?
-   - For substantial workflows, did the related research and plan artifacts pass `node ./scripts/workflow-artifact-tools.mjs grade-research` and `node ./scripts/workflow-artifact-tools.mjs grade-plan` before implementation began?
-   - Did `node ./scripts/workflow-command-decision.mjs evaluate --input ...` recommend `continue`, `request_user_decision`, or `capture_lesson`, and did the command obey that result?
+   - For substantial workflows, did the related research and plan artifacts pass `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research` and `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan` before implementation began?
+   - Did `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` recommend `continue`, `request_user_decision`, or `capture_lesson`, and did the command obey that result?
    - If readiness failed or a new blocker emerged mid-flight, did execution stop and route back through critique/refinement or `/iterate_plan`?
    - For workflow-system changes, is there trace evidence that delegation, handoffs, and tool use were sane enough to pass `trace-grader` review?
-   - If the implementation hit verified failures or explicit corrections, did it capture a durable lesson with `node ./scripts/lesson-tools.mjs capture ...` or explain why no lesson was promoted?
+   - If the implementation hit verified failures or explicit corrections, did it capture a durable lesson with `node $HOME/.agents/scripts/lesson-tools.mjs capture ...` or explain why no lesson was promoted?
    - If manual verification was still missing or workflow-fidelity evidence was incomplete, did validation stop with `request_user_decision` instead of auto-accepting the work?
 
 ### Step 3: Generate Validation Report

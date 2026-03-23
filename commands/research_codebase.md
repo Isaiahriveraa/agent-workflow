@@ -33,7 +33,7 @@ Then wait for the user's research query.
    - Read the current project's `state.md` if you need the current runtime workflow position
    - Load `~/.agents/rules/common/search-first.md`
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
-   - If this research is the first step of a substantial request, capture the normalized intake artifact with `node ./scripts/workflow-router-tools.mjs capture`
+   - If this research is the first step of a substantial request, capture the normalized intake artifact with `node $HOME/.agents/scripts/workflow-router-tools.mjs capture`
    - For substantial requests, require at least one critique/refinement cycle before handoff
 
 1. **Read any directly mentioned files first:**
@@ -154,7 +154,7 @@ Then wait for the user's research query.
      [Any areas that need further investigation]
      ```
 
-     For substantial research intended to drive implementation planning, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-research`.
+     For substantial research intended to drive implementation planning, include readiness frontmatter and critique evidence required by `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research`.
      Do not hand off to planning unless parser-backed output proves `research_ready_for_planning: true`.
 
 #### Step 6.5: Adversarial Critique (substantial research only)
@@ -205,14 +205,14 @@ Note frontmatter: `critique_completed: false`, `critique_cycles: 0`.
    - Include key file references for easy navigation
    - State where the research document was saved using the absolute filesystem path
    - If an intake artifact was captured for this workflow, persist it into the current project's working set alongside the selected research artifact
-   - For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-research --file [absolute research path]` and refuse the planning handoff if it does not pass
+   - For substantial workflows, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [absolute research path]` and refuse the planning handoff if it does not pass
    - If the research artifact is intended to drive implementation planning, end the response with this exact standalone block using the saved artifact path:
      ```text
      Next step
 
      /create-plan /absolute/path/to/research.md
      ```
-   - Add or update the matching entry in the current project's `research-index.md` through the helper-backed path: `node ./scripts/artifact-tools.mjs sync-research --artifact [absolute research path] --topic "[topic]" --date [YYYY-MM-DD] --summary "[summary]" --source-file [absolute path]`
+   - Add or update the matching entry in the current project's `research-index.md` through the helper-backed path: `node $HOME/.agents/scripts/artifact-tools.mjs sync-research --artifact [absolute research path] --topic "[topic]" --date [YYYY-MM-DD] --summary "[summary]" --source-file [absolute path]`
    - Ask if they have follow-up questions or need clarification
 
 9. **Handle follow-up questions:**

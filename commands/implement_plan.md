@@ -13,7 +13,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 3. **Read `~/.agents/contexts/decisions.md` before starting work.**
 4. **Load `~/.agents/rules/common/workflow-router.md` before starting work.**
 5. **If the task class calls for a capsule, load it before starting work and honor its critic, grader, and memory-policy files.**
-6. **For substantial plans, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
+6. **For substantial plans, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
 7. **After canonical plan/state/decision context is loaded and before phase execution begins, attempt `scripts/memory-sidecar-adapter.mjs` for workflow stage `implement-plan`; this recall attempt is mandatory for implementation entry even when advisory memory is disabled, unavailable, or returns zero items.**
 8. **Use the same precedence rule during implementation entry:**
    1. active runtime state and selected artifacts
@@ -23,7 +23,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 9. **Treat advisory implementation recall as optional input only: disabled mode must preserve current behavior, disabled or unavailable recall still counts as a successful attempt, empty recall is success, and explicit artifacts stay authoritative when advisory memory disagrees.**
 10. **Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections.**
 11. **Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; plan grading and readiness remain bound to canonical artifacts only.**
-12. **After plan grading, runtime-state loading, and the mandatory recall attempt, run `node ./scripts/workflow-command-decision.mjs evaluate --input ...` to decide whether implementation should `continue`, `replan`, `capture_lesson`, or `request_user_decision`.**
+12. **After plan grading, runtime-state loading, and the mandatory recall attempt, run `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` to decide whether implementation should `continue`, `replan`, `capture_lesson`, or `request_user_decision`.**
 13. **Use the helper-backed strategy as the implementation entry authority: malformed or non-ready plan grades route to `replan`, durable automated verification misses route to `capture_lesson`, and evidence-backed blockers route to `request_user_decision`.**
 
 14. **If no parameter was provided**, ask:
@@ -97,8 +97,8 @@ If a check fails, a critic rejects the output, or the user corrects the implemen
 - Classify the miss
 - State the likely cause
 - Apply the smallest fix
-- Record a reusable lesson automatically with `node ./scripts/lesson-tools.mjs capture ...` when the evidence is strong enough
-- If `node ./scripts/workflow-command-decision.mjs evaluate --input ...` recommends `capture_lesson`, complete lesson capture before retrying implementation
+- Record a reusable lesson automatically with `node $HOME/.agents/scripts/lesson-tools.mjs capture ...` when the evidence is strong enough
+- If `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` recommends `capture_lesson`, complete lesson capture before retrying implementation
 - Surface a workflow suggestion if the miss appears systemic
 
 ### Step 4: Manual Verification Checkpoint
@@ -153,7 +153,7 @@ If this is a long session and you suspect context drift:
 - If newly discovered work maps to `blocking_unknown`, `decision_missing`, `evidence_weak`, `verification_missing`, `dependency_unmodeled`, or `rollout_unspecified`, route it to `/iterate_plan` or full re-planning instead of inventing a new design during implementation.
 - When the helper-backed decision returns `replan`, stop implementation entry and route back through `/iterate_plan` or full replanning instead of beginning edits.
 
-- After explicit user correction or eval-backed failure, update local learning artifacts with `node ./scripts/lesson-tools.mjs capture ...` when the lesson is durable and evidence-backed.
+- After explicit user correction or eval-backed failure, update local learning artifacts with `node $HOME/.agents/scripts/lesson-tools.mjs capture ...` when the lesson is durable and evidence-backed.
 
 ---
 
