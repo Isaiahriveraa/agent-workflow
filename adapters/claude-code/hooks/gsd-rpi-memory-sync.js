@@ -2,13 +2,12 @@
 // PostToolUse hook — immediately mirrors a newly written lesson artifact to mem0/LanceDB.
 // Fires only on Write to **/.planning/lessons/*.md (queue files handled at Stop).
 
-const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 
 const AGENTS_ROOT = process.env.AGENTS_ROOT
   ? path.resolve(process.env.AGENTS_ROOT)
-  : path.join(os.homedir(), '.agents');
+  : path.resolve(__dirname, '../../..');
 const LESSON_TOOLS = process.env.AGENTS_LESSON_HELPER
   ? path.resolve(process.env.AGENTS_LESSON_HELPER)
   : path.join(AGENTS_ROOT, 'scripts', 'lesson-tools.mjs');
@@ -17,12 +16,9 @@ const LESSON_RE = /\/.planning\/lessons\/[^/]+\.md$/;
 const QUEUE_RE = /\/.planning\/lessons\/(?:queue|pending|draft)/i;
 
 let input = '';
-// Timeout guard: exit silently if stdin doesn't close within 3s
-const stdinTimeout = setTimeout(() => process.exit(0), 3000);
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', (chunk) => { input += chunk; });
 process.stdin.on('end', () => {
-  clearTimeout(stdinTimeout);
   try {
     const payload = input.trim() ? JSON.parse(input) : {};
     const toolName = payload.tool_name ?? '';

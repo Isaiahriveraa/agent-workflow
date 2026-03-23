@@ -190,6 +190,28 @@ Once aligned on approach:
    Does this phasing make sense? Should I adjust the order or granularity?
    ```
 
+For substantial work, do not stop at a top-level phase outline. The default artifact shape is:
+- one parent plan that explains sequencing, dependencies, and end-state alignment
+- one child plan per implementation phase with decision-complete detail for that phase
+- a `Phase Plan Index` in the parent plan linking every phase to its child plan
+
+Before drafting the parent plan, force one explicit alignment pass:
+- restate the original user prompt in operational terms
+- ask whether the current approach is truly what the user wants or merely the bare minimum implementation
+- convert that answer into an `Original Prompt Alignment` section
+- add a `Research Sufficiency` section stating whether the research is actually enough to support implementation
+
+For redesign and other creative work, do not finalize the plan unless the planning packet includes:
+- objective
+- audience
+- visual direction
+- references
+- banned patterns
+- differentiation target
+- required states
+
+Treat missing child phase plans or a missing redesign packet as blocking plan-quality failures, not optional improvements.
+
 2. **Get feedback on structure** before writing details
 
 ### Step 4: Detailed Plan Writing
@@ -308,6 +330,15 @@ After structure approval:
 
 For substantial plans, include readiness frontmatter and critique evidence required by `node ./scripts/workflow-artifact-tools.mjs grade-plan`.
 Do not mark the plan ready or hand it to implementation unless parser-backed output proves `plan_ready_for_implementation: true`.
+For substantial plans, `plan_ready_for_implementation: true` also requires:
+- `Original Prompt Alignment`
+- `Research Sufficiency`
+- `Phase Plan Index`
+- one linked child phase plan per explicit implementation phase
+
+Steps to take before critique on substantial plans:
+- verify the plan produced one child plan per explicit phase
+- treat the parent-plus-child artifact set as the critique packet; do not critique only the parent shell first
 
 ### Step 4.5: Adversarial Critique (substantial plans only)
 
@@ -367,6 +398,7 @@ frontmatter: `critique_completed: false`, `critique_cycles: 0`.
    ```
    When presenting the plan, separate what the codebase proves, what advisory memory suggests, what is inferred, and what is newly proposed.
    For substantial workflows, run `node ./scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
+   Treat a substantial plan as non-ready if it lacks child phase plans, if it is not tied back to the original prompt strongly enough, or if a redesign plan is missing the required creative packet.
    If a graded draft still fails because critique/refinement evidence is missing, rerun `node ./scripts/workflow-command-decision.mjs evaluate --input ...` and route the outcome to `run_critic` instead of presenting the draft as ready.
    Then end the response with this exact standalone block using the saved plan path:
    ```text

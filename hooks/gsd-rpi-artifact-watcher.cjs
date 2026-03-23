@@ -20,23 +20,6 @@ const DEBOUNCE_SECONDS = 10;
 const cacheDir = path.join(os.homedir(), '.claude', 'cache');
 const debounceFile = path.join(cacheDir, 'gsd-artifact-debounce.json');
 
-// Lock guard — prevent multiple concurrent grader spawns
-const LOCK_FILE = path.join(os.tmpdir(), 'gsd-artifact-grader.lock');
-const LOCK_TTL = 60; // seconds
-
-function isGraderRunning() {
-  try {
-    if (!fs.existsSync(LOCK_FILE)) return false;
-    const data = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf8'));
-    if ((Date.now() / 1000) - (data.ts || 0) > LOCK_TTL) return false;
-    try { process.kill(data.pid, 0); return true; } catch (_) { return false; }
-  } catch (_) { return false; }
-}
-
-function writeLock(pid) {
-  try { fs.writeFileSync(LOCK_FILE, JSON.stringify({ pid, ts: Date.now() / 1000 })); } catch (_) {}
-}
-
 let input = '';
 // Timeout guard: exit silently if stdin doesn't close within 3s
 const stdinTimeout = setTimeout(() => process.exit(0), 3000);
@@ -86,10 +69,6 @@ process.stdin.on('end', () => {
     const command = isResearch ? 'grade-research' : 'grade-plan';
     const cwd = payload.cwd || payload.workspace?.current_dir || process.cwd();
 
-    if (isGraderRunning()) {
-      process.exit(0);
-    }
-
     const grader = spawn(
       process.execPath,
       [ARTIFACT_TOOLS, command, '--file', filePath],
@@ -100,7 +79,6 @@ process.stdin.on('end', () => {
         env: { ...process.env, AGENTS_PROJECT_ROOT: cwd }
       }
     );
-    writeLock(grader.pid);
     grader.unref();
   } catch (_) {
     // Silent fail — never block Claude.

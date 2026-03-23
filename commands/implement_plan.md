@@ -62,6 +62,9 @@ Before editing:
 - Treat router activation and parser-backed plan readiness as the only authority for whether strict workflow enforcement can be bypassed
 - Refuse to begin if the substantial-task workflow gate was bypassed and there is no decision-complete plan
 - For substantial plans, refuse to begin unless parser-backed output proves `plan_ready_for_implementation: true`
+- For substantial plans, refuse to begin unless the parent plan includes a `Phase Plan Index` and one linked child phase plan per explicit implementation phase
+- When executing a phase from a substantial plan, read the linked child phase plan for that phase before editing
+- For redesign and other creative plans, refuse to begin unless the plan grade confirms the required creative packet is present
 
 Ask the user to confirm before proceeding, unless they've already pre-approved all phases.
 

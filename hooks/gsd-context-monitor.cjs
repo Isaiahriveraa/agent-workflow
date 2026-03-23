@@ -34,23 +34,6 @@ const CONTINUITY_HELPER = process.env.AGENTS_CONTINUITY_HELPER
   ? path.resolve(process.env.AGENTS_CONTINUITY_HELPER)
   : path.join(AGENTS_ROOT, 'scripts', 'continuity-tools.mjs');
 
-// Lock guard — prevent multiple concurrent continuity-helper spawns
-const CONTINUITY_LOCK = path.join(os.tmpdir(), 'gsd-continuity.lock');
-const LOCK_TTL = 120; // seconds (continuity ops can take longer)
-
-function isContinuityRunning() {
-  try {
-    if (!fs.existsSync(CONTINUITY_LOCK)) return false;
-    const data = JSON.parse(fs.readFileSync(CONTINUITY_LOCK, 'utf8'));
-    if ((Date.now() / 1000) - (data.ts || 0) > LOCK_TTL) return false;
-    try { process.kill(data.pid, 0); return true; } catch (_) { return false; }
-  } catch (_) { return false; }
-}
-
-function writeContinuityLock(pid) {
-  try { fs.writeFileSync(CONTINUITY_LOCK, JSON.stringify({ pid, ts: Date.now() / 1000 })); } catch (_) {}
-}
-
 let input = '';
 // Timeout guard: if stdin doesn't close within 3s (e.g. pipe issues on
 // Windows/Git Bash), exit silently instead of hanging until Claude Code
@@ -139,15 +122,12 @@ process.stdin.on('end', () => {
       ];
 
       try {
-        if (!isContinuityRunning()) {
-          const child = spawn(process.execPath, args, {
-            detached: false,
-            stdio: 'ignore',
-            env: process.env
-          });
-          writeContinuityLock(child.pid);
-          child.unref();
-        }
+        const child = spawn(process.execPath, args, {
+          detached: false,
+          stdio: 'ignore',
+          env: process.env
+        });
+        child.unref();
       } catch (e) {
         // Silent fail -- hook automation must not block tool execution
       }

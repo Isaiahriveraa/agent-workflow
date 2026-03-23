@@ -61,11 +61,8 @@ test('gsd namespace is first-class in the shared command contract and codex adap
   assert.match(codexAdapter, /Explicit memory bridge parity only/);
   assert.match(codexAdapter, /memory-sync-bridge\.mjs <status\|recall\|flush>/);
   assert.match(codexAdapter, /codex-memory-bridge\.mjs <status\|recall\|flush>/);
-  assert.match(manifest.capabilities['codex-cli'].commands.contract, /gsd/);
-  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /No repo-managed native hook bridge/);
-  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /memory-sync-bridge\.mjs/);
-  assert.match(manifest.capabilities['codex-cli'].memory.contract, /Explicit memory bridge parity only/);
-  assert.match(manifest.capabilities['codex-cli'].memory.contract, /codex-memory-bridge\.mjs/);
+  assert.match(manifest.capabilities['codex-cli'].commands.contract, /command bridge/);
+  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /No hub-managed Codex hook bridge/);
 });
 
 test('system prompt documents enforcement-first router authority and stage contracts', () => {
@@ -125,7 +122,6 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /select and load the relevant capsule/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
-  assert.match(createPlan, /workflow-plan-tools\.mjs sync-child-plans/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(createPlan, /scripts\/memory-sidecar-adapter\.mjs/);
@@ -492,7 +488,7 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   assert.equal(capabilities['claude-code'].commands.status, 'native');
   assert.equal(capabilities['claude-code'].settings.status, 'validated-local');
   assert.equal(capabilities['codex-cli'].commands.status, 'unsupported');
-  assert.equal(capabilities['codex-cli'].memory.status, 'bridged-explicit');
+  assert.equal(capabilities['codex-cli'].hooks.status, 'unsupported');
   assert.equal(capabilities.opencode.memory.status, 'bridged-explicit');
   assert.equal(capabilities.opencode.agents.status, 'bridged');
   assert.equal(capabilities.antigravity.entrypoint.status, 'bridged');

@@ -166,7 +166,7 @@
     "codex-cli": {
       "commands": {
         "status": "unsupported",
-        "contract": "No hub-managed Codex-native slash-command bridge; rely on shared AGENTS command routing for documented command names and namespaces such as gsd"
+        "contract": "No hub-managed Codex-native command bridge in this repo"
       },
       "agents": {
         "status": "bridged",
@@ -174,7 +174,7 @@
       },
       "hooks": {
         "status": "unsupported",
-        "contract": "No repo-managed native hook bridge in Codex; explicit memory bridge usage stays manual via ~/.agents/scripts/memory-sync-bridge.mjs, with ~/.agents/scripts/codex-memory-bridge.mjs kept as a compatibility alias"
+        "contract": "No hub-managed Codex hook bridge"
       },
       "mcp": {
         "status": "native",
@@ -187,10 +187,6 @@
       "session_continuity": {
         "status": "bridged",
         "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
-      },
-      "memory": {
-        "status": "bridged-explicit",
-        "contract": "Explicit memory bridge parity only: ~/.agents/scripts/memory-sync-bridge.mjs provides status, recall, and flush, ~/.agents/scripts/codex-memory-bridge.mjs remains a compatibility alias, and automatic lesson flush is not repo-managed through native hooks"
       }
     },
     "opencode": {
