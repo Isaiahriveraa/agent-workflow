@@ -33,6 +33,22 @@ const AGENTS_ROOT = process.env.AGENTS_ROOT
 const CONTINUITY_HELPER = process.env.AGENTS_CONTINUITY_HELPER
   ? path.resolve(process.env.AGENTS_CONTINUITY_HELPER)
   : path.join(AGENTS_ROOT, 'scripts', 'continuity-tools.mjs');
+const SESSION_TOOLS = path.join(AGENTS_ROOT, 'scripts', 'session-tools.mjs');
+
+// Fire-and-forget metric increment — never blocks tool execution
+const fireMetricIncrement = (sessionId, field) => {
+  try {
+    const child = spawn(process.execPath, [SESSION_TOOLS, 'metrics', 'increment', sessionId, field], {
+      detached: false,
+      stdio: 'ignore',
+      env: process.env
+    });
+    child.unref();
+  } catch (_) {
+    // Silent fail — metrics are advisory only
+  }
+};
+
 
 let input = '';
 // Timeout guard: if stdin doesn't close within 3s (e.g. pipe issues on
@@ -49,6 +65,14 @@ process.stdin.on('end', () => {
 
     if (!sessionId) {
       process.exit(0);
+    }
+
+    // Always increment tool_use_count, regardless of context level
+    fireMetricIncrement(sessionId, 'tool_use_count');
+    // Increment error_count when the tool response indicates failure
+    const toolResponse = data.tool_response ?? data.response ?? null;
+    if (toolResponse && typeof toolResponse === 'object' && toolResponse.is_error) {
+      fireMetricIncrement(sessionId, 'error_count');
     }
 
     const tmpDir = os.tmpdir();
