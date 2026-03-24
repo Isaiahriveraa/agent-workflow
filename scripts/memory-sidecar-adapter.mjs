@@ -1,5 +1,7 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import fs from 'node:fs';
+import os from 'node:os';
 import { MemoryClient } from 'mem0ai';
 
 import {
@@ -55,6 +57,31 @@ const require = createRequire(import.meta.url);
 const truthy = new Set(['1', 'true', 'yes', 'on']);
 
 const parseBoolean = (value) => truthy.has(String(value ?? '').trim().toLowerCase());
+
+const getContextBudget = () => {
+  try {
+    const tmpDir = os.tmpdir();
+    const files = fs.readdirSync(tmpDir).filter(f => f.startsWith('claude-ctx-') && f.endsWith('.json') && !f.endsWith('-warned.json'));
+    if (files.length === 0) return null;
+    let latestFile = null;
+    let latestMtime = 0;
+    for (const f of files) {
+      const p = path.join(tmpDir, f);
+      const stat = fs.statSync(p);
+      if (stat.mtimeMs > latestMtime) {
+        latestMtime = stat.mtimeMs;
+        latestFile = p;
+      }
+    }
+    if (!latestFile) return null;
+    // Discard if older than 5 minutes
+    if (Date.now() - latestMtime > 5 * 60 * 1000) return null;
+    const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+    return typeof data.remaining_percentage === 'number' ? data.remaining_percentage : null;
+  } catch(e) {
+    return null;
+  }
+};
 
 export const MEMORY_ENV_KEYS = Object.freeze({
   enabled: 'AGENTS_MEMORY_ENABLED',
@@ -519,6 +546,16 @@ export const createMem0MemoryBackend = ({ client, config }) => {
 
   return {
     async search(query) {
+      const remaining = getContextBudget();
+      if (remaining !== null) {
+        if (remaining <= 30) {
+          return { items: [], total_considered: 0, warning: 'Context critically low: skipping recall' };
+        }
+        if (remaining <= 50) {
+          query.top_k = Math.max(1, Math.floor(Number(query.top_k ?? MEMORY_CONTRACT_LIMITS.maxRecallItems) / 2));
+        }
+      }
+
       const items = await mem0Client.search(buildMem0QueryText(query), {
         version: 'v2',
         filters: buildMem0Filters({ query, config }),
@@ -656,6 +693,16 @@ export const createMem0LanceDbMemoryBackend = ({ config, namespaceFactory } = {}
 
   return {
     async search(query) {
+      const remaining = getContextBudget();
+      if (remaining !== null) {
+        if (remaining <= 30) {
+          return { items: [], total_considered: 0, warning: 'Context critically low: skipping recall' };
+        }
+        if (remaining <= 50) {
+          query.top_k = Math.max(1, Math.floor(Number(query.top_k ?? MEMORY_CONTRACT_LIMITS.maxRecallItems) / 2));
+        }
+      }
+
       const projectUserId = buildScopeUserId({
         scope: 'project',
         projectId: query.project_id,
