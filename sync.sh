@@ -605,12 +605,20 @@ PYEOF
 
 cmd_gen_opencode_agents() {
     local target_dir="$HOME/.config/opencode/agents"
+    local free_flag="${OPENCODE_FREE_MODELS:-0}"
+    # Support --free flag from CLI
+    for arg in "$@"; do
+        [[ "$arg" == "--free" ]] && free_flag="1"
+    done
     mkdir -p "$target_dir"
 
     echo "Generating OpenCode agents from hub agents..."
+    if [[ "$free_flag" == "1" ]]; then
+        echo "  Mode: FREE (using free/near-free OpenRouter models)"
+    fi
     echo ""
 
-    HUB="$HUB" HOME="$HOME" python3 <<'PYEOF'
+    OPENCODE_FREE_MODELS="$free_flag" HUB="$HUB" HOME="$HOME" python3 <<'PYEOF'
 import glob
 import os
 import re
@@ -623,6 +631,14 @@ MODEL_MAP = {
     "sonnet": "anthropic/claude-sonnet-4-5-20250929",
     "haiku": "anthropic/claude-haiku-4-5-20251001",
 }
+
+FREE_MODEL_MAP = {
+    "opus": "xiaomi/mimo-v2-flash",
+    "sonnet": "xiaomi/mimo-v2-flash",
+    "haiku": "nvidia/nemotron-3-nano-30b-a3b:free",
+}
+
+active_map = FREE_MODEL_MAP if os.environ.get("OPENCODE_FREE_MODELS") == "1" else MODEL_MAP
 
 TOOL_MAP = {
     "Read": "read",
@@ -672,7 +688,7 @@ for md_file in sorted(glob.glob(os.path.join(hub, "*.md"))):
         "---",
         f"name: {os.path.splitext(name)[0]}",
         f"description: {description}",
-        f"model: {MODEL_MAP.get(model, MODEL_MAP['sonnet'])}"
+        f"model: {active_map.get(model, active_map['sonnet'])}"
     ]
     if opencode_tools:
         frontmatter_lines.append("tools:")
@@ -691,7 +707,7 @@ PYEOF
 }
 
 cmd_gen_agents() {
-    cmd_gen_opencode_agents
+    cmd_gen_opencode_agents "$@"
 }
 
 cmd_gen_antigravity_agents() {
@@ -859,8 +875,8 @@ case "${1:-}" in
     verify)                    cmd_verify ;;
     repair)                    cmd_repair ;;
     migrate)                   cmd_migrate ;;
-    gen-agents)                cmd_gen_agents ;;
-    gen-opencode-agents)       cmd_gen_opencode_agents ;;
+    gen-agents)                cmd_gen_agents "${@:2}" ;;
+    gen-opencode-agents)       cmd_gen_opencode_agents "${@:2}" ;;
     gen-antigravity-commands)  cmd_gen_antigravity_commands ;;
     gen-antigravity-agents)    cmd_gen_antigravity_agents ;;
     gen-openclaw-workspace)    cmd_gen_openclaw_workspace ;;
