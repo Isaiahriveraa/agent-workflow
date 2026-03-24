@@ -22,6 +22,7 @@ const DEFAULT_METRICS = () => ({
   command_count: 0,
   error_count: 0,
   tool_use_count: 0,
+  subagents_spawned: 0,
   duration_seconds: 0,
 });
 
