@@ -7,6 +7,8 @@ import { ensureProjectContext } from './project-context.mjs';
 import { createMemorySidecarAdapter } from './memory-sidecar-adapter.mjs';
 import { writeMarkdownSections } from './runtime-state-tools.mjs';
 import { loadDefaultEnvFiles } from './env-file-tools.mjs';
+import { openLifecycleDb } from './memory-consolidation.mjs';
+
 
 const root = process.env.AGENTS_ROOT
   ? path.resolve(process.env.AGENTS_ROOT)
@@ -23,6 +25,138 @@ const contexts = {
   lessonsLearned: path.join(root, 'contexts', 'lessons-learned.md')
 };
 
+// ---------------------------------------------------------------------------
+// Lesson lifecycle SQLite helpers
+// Uses the same memory_lifecycle DB opened by memory-consolidation.mjs.
+// lesson_lifecycle table: lesson_id (artifact path hash), lesson_path, usage_count,
+//   quality_score, scope, created_at, promoted_at
+// ---------------------------------------------------------------------------
+
+const AGENTS_MEMORY_DIR = (() => {
+  const envPath = process.env.AGENTS_MEMORY_LANCEDB_PATH?.trim();
+  if (envPath) return path.dirname(envPath);
+  const historyDb = process.env.AGENTS_MEMORY_OSS_HISTORY_DB_PATH?.trim();
+  if (historyDb) return path.dirname(historyDb);
+  return path.join(root, '.agents-memory');
+})();
+
+const openLessonLifecycleDb = () => {
+  const db = openLifecycleDb(AGENTS_MEMORY_DIR);
+  // Extend the schema with the lesson_lifecycle table if it doesn't exist yet
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS lesson_lifecycle (
+      lesson_id      TEXT PRIMARY KEY,
+      lesson_path    TEXT NOT NULL,
+      usage_count    INTEGER NOT NULL DEFAULT 0,
+      quality_score  REAL NOT NULL DEFAULT 0.5,
+      scope          TEXT NOT NULL DEFAULT 'project',
+      created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+      promoted_at    TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_lesson_usage ON lesson_lifecycle(usage_count DESC);
+  `);
+  return db;
+};
+
+const lessonId = (lessonPath) =>
+  crypto.createHash('sha1').update(lessonPath).digest('hex').slice(0, 16);
+
+const ensureLessonRow = (db, lessonPath, qualityScore = 0.5) => {
+  const id = lessonId(lessonPath);
+  db.prepare(`
+    INSERT INTO lesson_lifecycle (lesson_id, lesson_path, quality_score)
+    VALUES (?, ?, ?)
+    ON CONFLICT(lesson_id) DO NOTHING
+  `).run(id, lessonPath, qualityScore);
+  return id;
+};
+
+const scoreLesson = (lessonPath, delta = 1) => {
+  const db = openLessonLifecycleDb();
+  try {
+    const id = ensureLessonRow(db, lessonPath);
+    const row = db.prepare('SELECT usage_count, quality_score FROM lesson_lifecycle WHERE lesson_id = ?').get(id);
+    const newUsage = (row?.usage_count ?? 0) + delta;
+    // Quality score: weighted average (Bayesian), capped at 0.99
+    const newScore = Math.min(0.99, (row?.quality_score ?? 0.5) + delta * 0.05);
+    db.prepare(`
+      UPDATE lesson_lifecycle
+      SET usage_count = ?, quality_score = ?
+      WHERE lesson_id = ?
+    `).run(newUsage, newScore, id);
+    return { lesson_id: id, lesson_path: lessonPath, usage_count: newUsage, quality_score: newScore };
+  } finally {
+    db.close();
+  }
+};
+
+const pruneLessons = ({ maxAgeDays = 60, minUsageThreshold = 1, dryRun = false } = {}) => {
+  const db = openLessonLifecycleDb();
+  try {
+    const cutoff = new Date(Date.now() - maxAgeDays * 86_400_000)
+      .toISOString().slice(0, 19).replace('T', ' ');
+    const rows = db.prepare(`
+      SELECT lesson_id, lesson_path FROM lesson_lifecycle
+      WHERE usage_count < ? AND created_at < ? AND promoted_at IS NULL
+    `).all(minUsageThreshold, cutoff);
+
+    const pruned = [];
+    for (const row of rows) {
+      if (!dryRun) {
+        db.prepare('DELETE FROM lesson_lifecycle WHERE lesson_id = ?').run(row.lesson_id);
+        // Remove the markdown artifact if it still exists
+        if (fs.existsSync(row.lesson_path)) {
+          fs.rmSync(row.lesson_path, { force: true });
+        }
+      }
+      pruned.push({ lesson_id: row.lesson_id, lesson_path: row.lesson_path });
+    }
+    return { pruned_count: pruned.length, dry_run: dryRun, pruned };
+  } finally {
+    db.close();
+  }
+};
+
+const PROMOTE_USAGE_THRESHOLD = 5;
+const PROMOTE_SCORE_THRESHOLD = 0.7;
+
+const promoteLesson = ({ minUsage = PROMOTE_USAGE_THRESHOLD, minScore = PROMOTE_SCORE_THRESHOLD, dryRun = false } = {}) => {
+  const db = openLessonLifecycleDb();
+  try {
+    const rows = db.prepare(`
+      SELECT lesson_id, lesson_path, usage_count, quality_score FROM lesson_lifecycle
+      WHERE usage_count >= ? AND quality_score >= ? AND promoted_at IS NULL AND scope = 'project'
+    `).all(minUsage, minScore);
+
+    const promoted = [];
+    for (const row of rows) {
+      if (!fs.existsSync(row.lesson_path)) continue;
+      const content = fs.readFileSync(row.lesson_path, 'utf8');
+      // Extract the reusable rule from the lesson artifact
+      const ruleMatch = content.match(/## Reusable Rule\n- (.+)/);
+      const rule = ruleMatch?.[1] ?? path.basename(row.lesson_path, '.md');
+
+      if (!dryRun) {
+        // Append to shared lessons-learned.md under a ## Promoted Lessons section
+        const sharedPath = contexts.lessonsLearned;
+        const promotedEntry = `- [promoted] ${rule} (usage: ${row.usage_count}, score: ${row.quality_score.toFixed(2)}) — ${row.lesson_path}`;
+        updateBulletSection({ filePath: sharedPath, heading: '## Promoted Lessons', newItem: promotedEntry });
+
+        db.prepare(`
+          UPDATE lesson_lifecycle SET promoted_at = datetime('now'), scope = 'shared'
+          WHERE lesson_id = ?
+        `).run(row.lesson_id);
+      }
+
+      promoted.push({ lesson_id: row.lesson_id, rule, lesson_path: row.lesson_path, usage_count: row.usage_count });
+    }
+    return { promoted_count: promoted.length, dry_run: dryRun, promoted };
+  } finally {
+    db.close();
+  }
+};
+
+
 const getQueueDir = (projectContext) => path.join(projectContext.thoughtPaths.lessons, 'queue', projectContext.projectSlug);
 const toProcessingPath = (queuePath) => queuePath.replace(/\.json$/, '.processing');
 
@@ -32,12 +166,20 @@ const parseArgs = (args) => {
   for (let index = 0; index < args.length; index += 1) {
     const current = args[index];
     if (!current.startsWith('--')) continue;
-    parsed[current.slice(2)] = args[index + 1];
-    index += 1;
+    const key = current.slice(2);
+    const next = args[index + 1];
+    // Boolean flag: no following value or next is also a flag
+    if (!next || next.startsWith('--')) {
+      parsed[key] = true;
+    } else {
+      parsed[key] = next;
+      index += 1;
+    }
   }
 
   return parsed;
 };
+
 
 const requiredArg = (args, key) => {
   const value = args[key]?.trim();
@@ -643,8 +785,12 @@ export {
   flushQueue,
   normalizeCapturePayload,
   quickCapture,
-  queueLesson
+  queueLesson,
+  scoreLesson,
+  pruneLessons,
+  promoteLesson
 };
+
 
 if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta.url) === process.argv[1]) {
   const main = async () => {
@@ -666,8 +812,29 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
       case 'quick-capture':
         console.log(JSON.stringify(await quickCapture(args), null, 2));
         break;
+      case 'score': {
+        const lessonPath = args.file?.trim();
+        if (!lessonPath) { console.error('Usage: lesson-tools.mjs score --file <absolute path> [--delta N]'); process.exitCode = 1; break; }
+        const delta = args.delta ? Number(args.delta) : 1;
+        console.log(JSON.stringify(scoreLesson(lessonPath, delta), null, 2));
+        break;
+      }
+      case 'prune':
+        console.log(JSON.stringify(pruneLessons({
+          maxAgeDays: args['max-age-days'] ? Number(args['max-age-days']) : 60,
+          minUsageThreshold: args['min-usage'] ? Number(args['min-usage']) : 1,
+          dryRun: args['dry-run'] !== undefined
+        }), null, 2));
+        break;
+      case 'promote':
+        console.log(JSON.stringify(promoteLesson({
+          minUsage: args['min-usage'] ? Number(args['min-usage']) : 5,
+          minScore: args['min-score'] ? Number(args['min-score']) : 0.7,
+          dryRun: args['dry-run'] !== undefined
+        }), null, 2));
+        break;
       default:
-        console.error('Usage: node scripts/lesson-tools.mjs <capture|queue|flush|quick-capture> [--task-class <value> --trigger <value> --failure-class <value> --diagnosis <value> --rule <value> --fix <value> --source-artifact <absolute path> [--confidence low|medium|high] [--systemic true|false] [--suggestion <text>] [--preference-kind preferred|disliked --preference <text>] [--supersedes-memory-id <id>]]');
+        console.error('Usage: node scripts/lesson-tools.mjs <capture|queue|flush|quick-capture|score|prune|promote> [options]');
         process.exitCode = 1;
     }
   };
