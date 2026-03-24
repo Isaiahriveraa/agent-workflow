@@ -145,55 +145,54 @@ const parsePayload = (row) => {
 };
 
 // ---------------------------------------------------------------------------
-// Cosine similarity
+// 1. Deduplication (index-accelerated via LanceDB vector search)
 // ---------------------------------------------------------------------------
 
-const cosineSimilarity = (a, b) => {
-  if (!a || !b || a.length !== b.length) return 0;
-  let dot = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-  const denom = Math.sqrt(normA) * Math.sqrt(normB);
-  return denom === 0 ? 0 : dot / denom;
+const NEIGHBOR_SEARCH_LIMIT = 16;
+
+const pickWorse = (rowA, payloadA, rowB, payloadB) => {
+  const confA = Number(payloadA.confidence ?? payloadA.score ?? 0);
+  const confB = Number(payloadB.confidence ?? payloadB.score ?? 0);
+  if (confA !== confB) return confA < confB ? rowA._mem0_id : rowB._mem0_id;
+  const dateA = payloadA.created_at ?? '';
+  const dateB = payloadB.created_at ?? '';
+  return dateA < dateB ? rowA._mem0_id : rowB._mem0_id;
 };
-
-// ---------------------------------------------------------------------------
-// 1. Deduplication
-// ---------------------------------------------------------------------------
 
 const deduplicateTable = async (table, _tableName, threshold, dryRun, lifecycleDb) => {
   const rows = await getAllRows(table);
   if (rows.length < 2) return 0;
 
-  // Build adjacency: for each pair, if sim > threshold, mark the worse one for removal.
-  // "Worse" = lower confidence, older created_at.
+  // Use LanceDB's indexed search: for each row, find its nearest neighbors
+  // within the cosine distance threshold. O(n·k) instead of O(n²).
+  const maxDistance = 1 - threshold; // cosine distance = 1 - similarity
   const toRemove = new Set();
+  const rowById = new Map(rows.map((r) => [r._mem0_id, r]));
+  const payloadCache = new Map();
 
-  for (let i = 0; i < rows.length; i++) {
-    if (toRemove.has(i)) continue;
-    const payloadI = parsePayload(rows[i]);
+  const getPayload = (row) => {
+    if (!payloadCache.has(row._mem0_id)) payloadCache.set(row._mem0_id, parsePayload(row));
+    return payloadCache.get(row._mem0_id);
+  };
 
-    for (let j = i + 1; j < rows.length; j++) {
-      if (toRemove.has(j)) continue;
+  for (const row of rows) {
+    if (toRemove.has(row._mem0_id)) continue;
 
-      const sim = cosineSimilarity(rows[i].vector, rows[j].vector);
-      if (sim < threshold) continue;
+    const neighbors = await table
+      .search(row.vector)
+      .distanceType('cosine')
+      .limit(NEIGHBOR_SEARCH_LIMIT)
+      .toArray();
 
-      const payloadJ = parsePayload(rows[j]);
-      const confI = Number(payloadI.confidence ?? payloadI.score ?? 0);
-      const confJ = Number(payloadJ.confidence ?? payloadJ.score ?? 0);
-      const dateI = payloadI.created_at ?? '';
-      const dateJ = payloadJ.created_at ?? '';
+    for (const neighbor of neighbors) {
+      if (neighbor._mem0_id === row._mem0_id) continue;
+      if (toRemove.has(neighbor._mem0_id)) continue;
+      if (neighbor._distance > maxDistance) continue;
 
-      // Keep the one with higher confidence; tie-break on recency
-      const removeJ = confI > confJ || (confI === confJ && dateI >= dateJ);
-      toRemove.add(removeJ ? j : i);
-      if (!removeJ) break; // i was removed, stop comparing it
+      const neighborRow = rowById.get(neighbor._mem0_id) ?? neighbor;
+      const loserId = pickWorse(row, getPayload(row), neighborRow, getPayload(neighborRow));
+      toRemove.add(loserId);
+      if (loserId === row._mem0_id) break; // this row lost, stop searching its neighbors
     }
   }
 
