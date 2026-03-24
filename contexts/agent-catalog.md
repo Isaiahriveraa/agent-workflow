@@ -61,6 +61,17 @@ Use this file to track the workflow expert agents that act as the hub's control 
 - MCP, permissions, or tool-surface work -> `tooling-integrator`
 - unclear specialist choice -> `expert-agent-router`
 
+## Infrastructure
+
+- `model-router`
+  - type: library + CLI (`scripts/model-router.mjs`)
+  - purpose: contextual model tier selection for subagent tasks
+  - input: task description, optional budget/context/override signals
+  - output: `{ tier, model, alias, provider, confidence, reason }`
+  - integration: Claude Code Agent `model:` param, OpenCode per-agent config, Codex/Antigravity session-level
+  - rule card: `rules/common/model-routing.md`
+  - contract: `scripts/model-router-contract.mjs`
+
 ## Constraints
 - Prefer workflow experts before broad persona agents for workflow-system work.
 - Keep expert scopes narrow and non-overlapping where possible.

@@ -24,6 +24,19 @@ This directory documents the OpenCode-specific integration boundary.
 - `sync.sh gen-opencode-agents` generates OpenCode-compatible agent frontmatter from hub agents.
 - OpenCode command behavior remains hub-native via the shared commands symlink.
 
+## Model Routing
+
+OpenCode supports per-agent model overrides and a `small_model` config for lightweight tasks. Model IDs use `provider/model-id` format (e.g., `anthropic/claude-sonnet-4-6`).
+
+The model router returns provider-formatted model IDs for OpenCode:
+
+```bash
+node ~/.agents/scripts/model-router.mjs route --input "search for files"
+# → { "model": "anthropic/claude-haiku-4-5-20251001", ... }
+```
+
+`sync.sh gen-opencode-agents` can embed model tier recommendations in generated agent config.
+
 ## Canonical Boundary
 - Shared workflow policy remains in the hub.
 - This adapter only covers the format and placement needed for OpenCode to consume hub-owned workflow assets.

@@ -22,6 +22,17 @@ This directory documents the Codex CLI-specific integration boundary.
 - `~/.codex/config.toml`
 - `~/.codex/skills/.system/`
 
+## Model Routing
+
+Codex CLI has a single `--model` flag per session — no per-subagent model selection. The model router provides session-level recommendations:
+
+```bash
+node ~/.agents/scripts/model-router.mjs route --input "implement auth feature"
+# → { "model": "gpt-5.4-mini", "tier": "balanced", ... }
+```
+
+Before running `codex exec`, the codex skill can call the router to recommend the session model based on overall task complexity.
+
 ## Canonical Boundary
 - Shared workflow policy lives in `AGENTS.md`, `prompts/`, `commands/`, `contexts/`, and `rules/common/`.
 - AGENTS-routing compatibility is bridged through `~/.codex/AGENTS.md -> ~/.agents/AGENTS.md`.
