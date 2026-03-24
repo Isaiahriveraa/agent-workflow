@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Claude Code Statusline - GSD Edition
-// Shows: model | current task | directory | context usage
+// Shows: model | phase | current task | agents | memory | directory | context usage | duration
 
 const fs = require('fs');
 const path = require('path');
@@ -66,6 +66,81 @@ process.stdin.on('end', () => {
       }
     }
 
+    // GSD phase from state.md — pull the workflow name, not the verbose status
+    let phase = '';
+    const agentsRoot = process.env.AGENTS_ROOT || path.join(homeDir, '.agents');
+    const stateFiles = [
+      path.join(dir, '.agents', 'contexts', 'state.md'),
+      path.join(dir, '.planning', 'STATE.md')
+    ];
+    for (const sf of stateFiles) {
+      if (fs.existsSync(sf)) {
+        try {
+          const stateContent = fs.readFileSync(sf, 'utf8');
+          // Prefer "Current Workflow" (the task name) over "Current Phase" (verbose status)
+          const workflowMatch = stateContent.match(/##\s*Current Workflow\s*\n-\s*(.+)/i);
+          if (workflowMatch) {
+            phase = workflowMatch[1].trim();
+            // Strip parenthetical details for brevity
+            phase = phase.replace(/\s*\(.*\)/, '').slice(0, 24);
+            break;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Mem0 sync indicator — lights up when mem0 was recently triggered
+    // The rpi-memory-sync hook spawns lesson-tools flush, which touches memory.db
+    let memIndicator = '';
+    const memDbPath = path.join(agentsRoot, 'memory.db');
+    if (fs.existsSync(memDbPath)) {
+      try {
+        const stat = fs.statSync(memDbPath);
+        const ageSec = (Date.now() - stat.mtimeMs) / 1000;
+        // Show active indicator only when mem0 was triggered recently (last 30s)
+        if (ageSec < 30) {
+          memIndicator = '\x1b[32mmem0 ●\x1b[0m';
+        }
+      } catch (e) {}
+    }
+
+    // Session duration
+    let duration = '';
+    const tmpDir = os.tmpdir();
+    if (session) {
+      const sessionStartFile = path.join(tmpDir, `claude-session-start-${session}`);
+      if (fs.existsSync(sessionStartFile)) {
+        try {
+          const startTime = parseInt(fs.readFileSync(sessionStartFile, 'utf8').trim(), 10);
+          const elapsed = Math.floor((Date.now() / 1000) - startTime);
+          const mins = Math.floor(elapsed / 60);
+          const hrs = Math.floor(mins / 60);
+          duration = hrs > 0 ? `${hrs}h${mins % 60}m` : `${mins}m`;
+        } catch (e) {}
+      } else {
+        // First time — write start timestamp
+        try {
+          fs.writeFileSync(sessionStartFile, String(Math.floor(Date.now() / 1000)));
+          duration = '0m';
+        } catch (e) {}
+      }
+    }
+
+    // Active subagent count from todos
+    let agentCount = 0;
+    if (session && fs.existsSync(todosDir)) {
+      try {
+        const allFiles = fs.readdirSync(todosDir)
+          .filter(f => f.startsWith(session) && f.includes('-agent-') && f.endsWith('.json'));
+        for (const f of allFiles) {
+          try {
+            const todos = JSON.parse(fs.readFileSync(path.join(todosDir, f), 'utf8'));
+            agentCount += todos.filter(t => t.status === 'in_progress').length;
+          } catch (e) {}
+        }
+      } catch (e) {}
+    }
+
     // GSD update available?
     let gsdUpdate = '';
     const cacheFile = path.join(homeDir, '.claude', 'cache', 'gsd-update-check.json');
@@ -73,18 +148,25 @@ process.stdin.on('end', () => {
       try {
         const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
         if (cache.update_available) {
-          gsdUpdate = '\x1b[33m⬆ /gsd:update\x1b[0m │ ';
+          gsdUpdate = '\x1b[33m⬆ update\x1b[0m';
         }
       } catch (e) {}
     }
 
-    // Output
+    // Build output segments
+    const segments = [];
+    if (gsdUpdate) segments.push(gsdUpdate);
+    segments.push(`\x1b[2m${model}\x1b[0m`);
+    if (phase) segments.push(`\x1b[36m${phase}\x1b[0m`);
+    if (task) segments.push(`\x1b[1m${task}\x1b[0m`);
+    if (agentCount > 0) segments.push(`\x1b[35m${agentCount} agents\x1b[0m`);
+    if (memIndicator) segments.push(memIndicator);
+
     const dirname = path.basename(dir);
-    if (task) {
-      process.stdout.write(`${gsdUpdate}\x1b[2m${model}\x1b[0m │ \x1b[1m${task}\x1b[0m │ \x1b[2m${dirname}\x1b[0m${ctx}`);
-    } else {
-      process.stdout.write(`${gsdUpdate}\x1b[2m${model}\x1b[0m │ \x1b[2m${dirname}\x1b[0m${ctx}`);
-    }
+    segments.push(`\x1b[2m${dirname}\x1b[0m`);
+    if (duration) segments.push(`\x1b[2m${duration}\x1b[0m`);
+
+    process.stdout.write(segments.join(' │ ') + ctx);
   } catch (e) {
     // Silent fail - don't break statusline on parse errors
   }
