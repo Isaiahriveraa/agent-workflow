@@ -202,6 +202,22 @@ const shouldStayLocal = (input, categories) => {
   };
 };
 
+const evaluateConfidence = (trimmed, categories) => {
+  const scores = {};
+  for (const cat of categories) {
+    let score = 0.5; // Base score for matching a category
+    if (dominantIntentMatchers[cat]?.some((pattern) => pattern.test(trimmed))) {
+      score += 0.4;
+    }
+    // Boost if it's the only category mentioned
+    if (categories.length === 1) {
+      score += 0.2;
+    }
+    scores[cat] = Math.min(1.0, score);
+  }
+  return scores;
+};
+
 const routeTask = (input) => {
   const trimmed = input.trim();
   const categories = detectCategories(trimmed);
@@ -210,67 +226,57 @@ const routeTask = (input) => {
   if (localDecision.stayLocal) {
     return {
       route: 'stay-local',
+      confidence: 1.0,
       stayLocal: true,
       categories,
       reason: localDecision.reason
     };
   }
 
-  if (categories.length === 1) {
-    return {
-      route: expertByCategory[categories[0]],
-      stayLocal: false,
-      categories,
-      reason: `Single dominant workflow category: ${categories[0]}.`
-    };
+  const scores = evaluateConfidence(trimmed, categories);
+  
+  let bestCategory = null;
+  let maxScore = 0;
+  for (const [cat, score] of Object.entries(scores)) {
+    if (score > maxScore) {
+      maxScore = score;
+      bestCategory = cat;
+    }
   }
 
   if (categories.length > 1 && /\btogether\b|\bacross\b|\bplus\b|\bcombine\b|\bmixed\b/i.test(trimmed)) {
     return {
       route: 'expert-agent-router',
+      confidence: 0.9,
       stayLocal: false,
       categories,
       reason: 'The request explicitly bundles multiple workflow surfaces together.'
     };
   }
 
-  for (const category of [
-    'artifact_governance',
-    'critique_response',
-    'trace',
-    'eval',
-    'workflow_gating',
-    'tooling',
-    'parity',
-    'continuity'
-  ]) {
-    if (
-      categories.includes(category) &&
-      dominantIntentMatchers[category].some((pattern) => pattern.test(trimmed))
-    ) {
-      return {
-        route: expertByCategory[category],
-        stayLocal: false,
-        categories,
-        reason: `Dominant intent points to ${category} even though multiple categories matched.`
-      };
-    }
-  }
+  const rankedCandidates = Object.entries(scores)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, score]) => ({ route: expertByCategory[cat], score, category: cat }));
 
-  if (categories.length > 1) {
+  if (maxScore >= 0.6 && bestCategory) {
     return {
-      route: 'expert-agent-router',
+      route: expertByCategory[bestCategory],
+      confidence: Number(maxScore.toFixed(2)),
       stayLocal: false,
       categories,
-      reason: 'Multiple workflow categories matched; use the router to split ownership cleanly.'
+      reason: `High confidence match for ${bestCategory} (score: ${maxScore.toFixed(2)}).`
     };
   }
 
   return {
     route: 'expert-agent-router',
+    confidence: Number((maxScore > 0 ? maxScore : 0.1).toFixed(2)),
     stayLocal: false,
     categories,
-    reason: 'Workflow-system request detected, but no single expert category dominated.'
+    candidates: rankedCandidates.length > 0 ? rankedCandidates : undefined,
+    reason: rankedCandidates.length > 0 
+      ? 'Confidence too low (< 0.6) for a single route. Ranked candidates provided.'
+      : 'Workflow-system request detected, but no matching expert categories found.'
   };
 };
 
