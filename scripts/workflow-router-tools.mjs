@@ -14,32 +14,50 @@ const strictWorkflowSignals = Object.freeze([
   {
     id: 'vague_or_under_specified',
     reason: 'request is vague or under-specified',
+    weight: 'heavy',
     patterns: [/\bambiguous\b/i, /\bvague\b/i, /\bunderspecified\b/i, /\bunder-specified\b/i]
   },
   {
     id: 'multi_step_or_execution_heavy',
     reason: 'task is multi-step or implementation-heavy',
+    weight: 'heavy',
     patterns: [/\bmulti-step\b/i, /\bimplementation-heavy\b/i, /\bphase(?:d)?\b/i]
   },
   {
     id: 'workflow_or_planning_change',
     reason: 'task changes workflow behavior or requires planning',
+    weight: 'heavy',
     patterns: [/\bworkflow\b/i, /\bplan(?:ning)?\b/i, /\bresearch\b/i, /\bhandoff\b/i, /\bdelegat(?:e|ion)\b/i]
   },
   {
     id: 'shared_behavior_change',
     reason: 'task changes shared prompts, rules, adapters, or continuity behavior',
+    weight: 'heavy',
     patterns: [/\bshared\b/i, /\bprompts?\b/i, /\brules?\b/i, /\badapters?\b/i, /\bcontinuity\b/i]
   },
   {
     id: 'cross_subsystem_scope',
     reason: 'task spans multiple subsystems or architectural boundaries',
+    weight: 'heavy',
     patterns: [/\barchitecture\b/i, /\bmultiple subsystems\b/i, /\bcross-layer\b/i, /\bcross-provider\b/i]
   },
   {
     id: 'long_running_scope',
     reason: 'task is likely to take more than 30 minutes',
+    weight: 'heavy',
     patterns: [/\b30\+?\s*minutes?\b/i, /\bmore than 30 minutes\b/i, /\bhalf[- ]day\b/i, /\blarge refactor\b/i]
+  },
+  {
+    id: 'moderate_multi_file',
+    reason: 'task touches multiple files but scope is clear',
+    weight: 'moderate',
+    patterns: [/\b(?:2|3|few)\s*files?\b/i, /\bsmall change\b/i, /\bquick fix\b/i, /\bminor update\b/i]
+  },
+  {
+    id: 'moderate_feature_addition',
+    reason: 'task adds a bounded feature or subcommand',
+    weight: 'moderate',
+    patterns: [/\badd (?:a |the )?(?:command|subcommand|flag|option)\b/i, /\bextend\b/i, /\bnew hook\b/i]
   }
 ]);
 
@@ -74,32 +92,57 @@ const readInput = (args) => {
 const collectActivationReasons = (input, explicitFileCount) => {
   const reasons = strictWorkflowSignals.flatMap((signal) =>
     signal.patterns.some((pattern) => pattern.test(input))
-      ? [{ id: signal.id, reason: signal.reason }]
+      ? [{ id: signal.id, reason: signal.reason, weight: signal.weight }]
       : []
   );
 
   if (explicitFileCount !== null && explicitFileCount >= 3) {
     reasons.push({
       id: 'touches_three_or_more_files',
-      reason: 'task is likely to touch 3 or more files'
+      reason: 'task is likely to touch 3 or more files',
+      weight: 'heavy'
     });
   }
 
   return reasons;
 };
 
+const deriveTier = (reasons) => {
+  const heavyCount = reasons.filter((r) => r.weight === 'heavy').length;
+  const moderateCount = reasons.filter((r) => r.weight === 'moderate').length;
+
+  if (heavyCount >= 2 || (heavyCount >= 1 && moderateCount >= 1)) return 3;
+  if (heavyCount === 1 || moderateCount >= 1) return 2;
+  return 1;
+};
+
+const tierLabels = Object.freeze({
+  1: 'trivial',
+  2: 'moderate',
+  3: 'substantial'
+});
+
+const tierNextActions = Object.freeze({
+  1: 'proceed-lightweight',
+  2: 'plan-then-implement',
+  3: 'optimize-prompt'
+});
+
 const deriveActivationDecision = (input) => {
   const fileEstimate = input.match(/\b(\d+)\s*\+?\s*files?\b/i);
   const explicitFileCount = fileEstimate ? Number.parseInt(fileEstimate[1], 10) : null;
   const reasons = collectActivationReasons(input, explicitFileCount);
-  const substantial = reasons.length > 0;
+  const tier = deriveTier(reasons);
+  const substantial = tier === 3;
 
   return {
     strictWorkflowRequired: substantial,
-    taskSize: substantial ? 'substantial' : 'lightweight',
+    tier,
+    tierLabel: tierLabels[tier],
+    taskSize: tierLabels[tier],
     reasons,
     explicitFileCount,
-    recommendedNextAction: substantial ? 'optimize-prompt' : 'proceed-lightweight'
+    recommendedNextAction: tierNextActions[tier]
   };
 };
 
@@ -107,6 +150,8 @@ const classifyTask = (input) => {
   const activation = deriveActivationDecision(input);
   return {
     substantial: activation.strictWorkflowRequired,
+    tier: activation.tier,
+    tierLabel: activation.tierLabel,
     reasons: activation.reasons.map((item) => item.id),
     explicitFileCount: activation.explicitFileCount,
     activation

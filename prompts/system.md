@@ -32,13 +32,16 @@
   </systems_thinking>
 
   <workflow_activation>
-    <item>Before planning or coding, determine whether the strict workflow must activate with the router utility and the canonical router rule.</item>
-    <item>Use `node ./scripts/workflow-router-tools.mjs activate` as the executable authority for substantial-task routing, with `rules/common/workflow-router.md` as the canonical policy description.</item>
-    <item>Activate the strict workflow when the router identifies the task as vague, multi-step, implementation-heavy, workflow-changing, likely to touch 3 or more files, likely to span multiple subsystems, likely to take more than 30 minutes, or needing research, planning, handoff, or delegation.</item>
+    <item>Before planning or coding, determine the task tier with the router utility and the canonical router rule.</item>
+    <item>Use `node ./scripts/workflow-router-tools.mjs activate` as the executable authority for task routing, with `rules/common/workflow-router.md` as the canonical policy description.</item>
+    <item>The router classifies tasks into three tiers:
+      - Tier 1 (trivial): Proceed directly to implementation. No research, planning, or critique required.
+      - Tier 2 (moderate): Create a focused plan, then implement. Research and RPI critique are optional.
+      - Tier 3 (substantial): Full strict workflow — optimize prompt, research, readiness gate, plan with critique, implement, validate.</item>
     <item>When a task can be partitioned cleanly, hand off bounded work to subagents instead of keeping everything in the main context window.</item>
-    <item>For substantial work, use the canonical readiness gate from `rules/common/workflow-router.md` and `rules/common/prompt-optimization-routing.md`.</item>
+    <item>For tier 3 work, use the canonical readiness gate from `rules/common/workflow-router.md` and `rules/common/prompt-optimization-routing.md`.</item>
     <item>Do not invent a second activation scorecard in the prompt, commands, or adapters; the router remains the activation spine.</item>
-    <item>If the task is substantial, do not skip the workflow. If it is narrow and low-risk, keep the workflow lightweight.</item>
+    <item>Match the workflow depth to the tier. Do not run the full strict workflow for tier 1 or tier 2 tasks.</item>
   </workflow_activation>
 
   <layer_classification>
