@@ -2,6 +2,179 @@
 
 This repo is the shareable starter for the workflow system. Reusable policy, prompts, commands, adapters, skills, capsules, scripts, and tests live here. Machine-local secrets and runtime state do not.
 
+## System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              AI CODING TOOLS                                    │
+│    ┌──────────────┐   ┌────────────┐   ┌──────────┐   ┌────────────┐          │
+│    │ Claude Code  │   │ Codex CLI  │   │ OpenCode │   │ Antigravity│  ...     │
+│    └──────┬───────┘   └─────┬──────┘   └────┬─────┘   └─────┬──────┘          │
+└───────────┼─────────────────┼──────────────┼───────────────┼──────────────────┘
+            │                 │              │               │
+            └─────────────────┴──────────────┴───────────────┘
+                                     │
+                              ┌──────▼──────┐
+                              │  ADAPTERS  │
+                              │ /adapters/ │
+                              │  - claude   │
+                              │  - codex    │
+                              │  - opencode │
+                              │  - etc      │
+                              └──────┬──────┘
+                                     │
+┌────────────────────────────────────┼────────────────────────────────────────────┐
+│                                    │           CORE SYSTEM                     │
+│     ┌──────────────────────────────▼──────────────────────────┐                  │
+│     │                    WORKFLOW ENGINE                       │                  │
+│     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
+│     │  │ Commands   │  │  Agents    │  │   Skills   │        │                  │
+│     │  │ (43 cmds)  │  │ (43 agents)│  │ (43 skills)│        │                  │
+│     │  └────────────┘  └────────────┘  └────────────┘        │                  │
+│     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
+│     │  │   Hooks    │  │   Rules    │  │ Capsules   │        │                  │
+│     │  │ (17 hooks) │  │ (16 rules) │  │ (2 packs)  │        │                  │
+│     │  └────────────┘  └────────────┘  └────────────┘        │                  │
+│     └────────────────────────────────────────────────────────┘                  │
+│                                    │                                            │
+│     ┌──────────────────────────────▼──────────────────────────┐                  │
+│     │                   WORKFLOW ROUTER                       │                  │
+│     │     Tier 1 (trivial) → Tier 2 (moderate) → Tier 3      │                  │
+│     └────────────────────────────────────────────────────────┘                  │
+└────────────────────────────────────┼────────────────────────────────────────────┘
+                                     │
+                    ┌────────────────┼────────────────┐
+                    │                │                │
+              ┌─────▼─────┐    ┌──────▼──────┐  ┌──────▼──────┐
+              │  LanceDB  │    │   SQLite    │  │   Sessions  │
+              │ (vectors) │    │  (history)  │  │   (state)   │
+              └───────────┘    └─────────────┘  └─────────────┘
+```
+
+## Tiered Workflow System
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              TASK INTAKE                                       │
+│                    User Request → AI Tool → Commands                          │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────┐
+                    │      WORKFLOW ROUTER        │
+                    │   (workflow-router-tools)   │
+                    └──────────────┬───────────────┘
+                                   │
+         ┌─────────────────────────┼─────────────────────────┐
+         │                         │                         │
+         ▼                         ▼                         ▼
+   ┌─────────────┐          ┌───────────────┐        ┌──────────────┐
+   │   TIER 1    │          │    TIER 2     │        │    TIER 3    │
+   │   Trivial   │          │   Moderate    │        │ Substantial │
+   │  Direct     │          │  Plan +       │        │   Strict     │
+   │  Execute    │          │  Implement    │        │   Workflow   │
+   └─────────────┘          └───────────────┘        └───────┬──────┘
+                                                             │
+                                              ┌──────────────▼──────────────┐
+                                              │      TIER 3 FLOW            │
+                                              │  1. Optimize Prompt         │
+                                              │  2. Research (research)     │
+                                              │  3. Readiness Gate (70/15)  │
+                                              │  4. Plan (create-plan)      │
+                                              │     └─► RPI Critique        │
+                                              │  5. Implement (implement)  │
+                                              │  6. Validate (verification) │
+                                              └─────────────────────────────┘
+```
+
+## Memory Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          MEMORY ARCHITECTURE                                │
+│                                                                          │
+│   ┌─────────┐    ┌──────────────┐    ┌─────────────────┐                │
+│   │  Hooks  │───▶│    mem0ai    │───▶│    LanceDB      │                │
+│   │ Capture │    │ Orchestration│    │  (vector store) │                │
+│   └─────────┘    └──────────────┘    └─────────────────┘                │
+│        │                                       │                         │
+│        │         ┌──────────────┐               │                         │
+│        └────────▶│   Recall    │◀──────────────┘                         │
+│                  │  (semantic) │                                          │
+│                  └──────────────┘                                         │
+│                        │                                                   │
+│                        ▼                                                   │
+│               ┌────────────────┐                                           │
+│               │ Context +      │                                           │
+│               │ Planning       │                                           │
+│               └────────────────┘                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Directory Structure
+
+```
+/Users/isaiahrivera/.agents/
+├── prompts/              # System prompt (core AI behavior)
+├── commands/             # 29 command definitions (workflow commands)
+│   └── gsd/              # 43 GSD subcommands
+├── agents/               # 43 workflow expert agents
+├── skills/               # 43 skill packs
+├── capsules/             # 2 task-class operating packs
+├── rules/common/         # 16 reusable rule cards
+├── contexts/             # Shared workspace state
+├── scripts/              # 36 Node.js tools
+├── hooks/                # 17 hook scripts
+├── adapters/             # 5 provider adapters
+│   ├── claude-code/
+│   ├── codex-cli/
+│   ├── opencode/
+│   ├── antigravity/
+│   └── openclaw/
+├── tests/                # 27 test files
+├── get-shit-done/        # GSD workflow system
+│   ├── workflows/        # 43 workflows
+│   └── templates/
+├── bin/                  # CLI wrappers
+├── .agents/              # Global agent state
+│   ├── contexts/
+│   └── sessions/
+└── .agents-memory/      # Local vector memory (LanceDB)
+```
+
+## Data Flow
+
+```
+User Input
+    │
+    ▼
+┌─────────────────┐
+│  AI Tool        │
+│ (Claude/Codex)  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐     ┌─────────────────┐
+│ Command Router  │────▶│  Workflow Tier  │
+│ (commands/)     │     │  (1/2/3)        │
+└─────────────────┘     └────────┬────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────┐          ┌─────────────┐         ┌─────────────┐
+│   Execute   │          │   Plan +    │         │   Full RPI  │
+│   Direct    │          │  Implement  │         │   Workflow  │
+└─────────────┘          └─────────────┘         └──────┬──────┘
+                                                        │
+                              ┌─────────────────────────┼─────────────┐
+                              │                         │             │
+                              ▼                         ▼             ▼
+                        ┌──────────┐            ┌──────────┐  ┌──────────┐
+                        │  Memory  │            │  Verify  │  │  Result  │
+                        │  Store   │            │  Check   │  │  Output  │
+                        └──────────┘            └──────────┘  └──────────┘
+```
+
 ## What Gets Shared
 - `prompts/`, `commands/`, `rules/`, `agents/`, `skills/`, `adapters/`, `hooks/`
 - `capsules/` for task-class operating packs
