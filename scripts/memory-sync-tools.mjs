@@ -16,8 +16,34 @@ const command = args[0];
 const target = args[1] || 'all';
 
 if (!command) {
-  console.log("Usage: node scripts/memory-sync-tools.mjs flush [file|all]");
+  console.log("Usage: node scripts/memory-sync-tools.mjs <command> [options]");
+  console.log("Commands:");
+  console.log("  flush [file|all]    Sync lesson artifacts to memory index");
+  console.log("  consolidate         Deduplicate, expire, and promote memories");
+  console.log("    --dry-run         Preview changes without modifying data");
+  console.log("    --verbose         Show detailed progress");
   process.exit(1);
+}
+
+if (command === 'consolidate') {
+  const consolidateArgs = args.slice(1);
+  const AGENTS_ROOT = process.env.AGENTS_ROOT
+    ? path.resolve(process.env.AGENTS_ROOT)
+    : path.join(os.homedir(), '.agents');
+
+  const consolidationScript = path.join(AGENTS_ROOT, 'scripts', 'memory-consolidation.mjs');
+
+  if (!fs.existsSync(consolidationScript)) {
+    console.error('[Memory Sync] memory-consolidation.mjs not found.');
+    process.exit(1);
+  }
+
+  const result = spawnSync('node', [consolidationScript, ...consolidateArgs], {
+    encoding: 'utf8',
+    stdio: 'inherit',
+    env: process.env
+  });
+  process.exit(result.status ?? 0);
 }
 
 if (command === 'flush') {

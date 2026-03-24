@@ -17,6 +17,39 @@ import {
 import { LanceDbLangChainStore } from './memory-lancedb-store.mjs';
 import { getProjectContext } from './project-context.mjs';
 
+// Lazy lifecycle tracking — non-blocking, best-effort
+let lifecycleModulePromise = null;
+let lifecycleDb = null;
+
+const ensureLifecycleModule = () => {
+  if (!lifecycleModulePromise) {
+    lifecycleModulePromise = import('./memory-consolidation.mjs').catch(() => null);
+  }
+  return lifecycleModulePromise;
+};
+
+const trackRecallUsage = (items, config) => {
+  const lanceDbPath = config?.localMemory?.lanceDb?.path;
+  if (!lanceDbPath || items.length === 0) return;
+
+  // Fire-and-forget — never block the recall path
+  ensureLifecycleModule().then((mod) => {
+    if (!mod) return;
+    try {
+      if (!lifecycleDb) {
+        lifecycleDb = mod.openLifecycleDb(path.dirname(lanceDbPath));
+      }
+      for (const item of items) {
+        if (item.id) {
+          mod.incrementUsage(lifecycleDb, item.id, `recall:${item.scope ?? 'unknown'}`);
+        }
+      }
+    } catch {
+      // Best-effort
+    }
+  }).catch(() => {});
+};
+
 const require = createRequire(import.meta.url);
 
 const truthy = new Set(['1', 'true', 'yes', 'on']);
@@ -853,6 +886,10 @@ export const getRelevantMemories = async (input, options = {}) => {
 
   const query = buildQuery({ input, projectContext });
   const result = await backend.search(query);
+  const items = result.items.map(normalizeRecallItem);
+
+  // Best-effort usage tracking for consolidation promotion
+  trackRecallUsage(items, config);
 
   return {
     enabled: true,
@@ -860,7 +897,7 @@ export const getRelevantMemories = async (input, options = {}) => {
     project_id: query.project_id,
     limits: MEMORY_CONTRACT_LIMITS,
     source: config.backend,
-    items: result.items.map(normalizeRecallItem),
+    items,
     warnings: []
   };
 };
