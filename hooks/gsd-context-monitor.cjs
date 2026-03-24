@@ -49,6 +49,85 @@ const fireMetricIncrement = (sessionId, field) => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// Anti-Drift: File scope validation
+// Reads the active plan from state.md and checks if currently modified files
+// (via git status) are within the plan's declared scope boundaries.
+// ---------------------------------------------------------------------------
+
+const getActivePlanPath = () => {
+  try {
+    const candidates = [
+      path.join(process.cwd(), '.agents', 'contexts', 'state.md'),
+      path.join(AGENTS_ROOT, '.agents', 'contexts', 'state.md'),
+      path.join(os.homedir(), '.agents', '.agents', 'contexts', 'state.md')
+    ];
+    let state = null;
+    for (const p of candidates) {
+      if (fs.existsSync(p)) { state = fs.readFileSync(p, 'utf8'); break; }
+    }
+    if (!state) return null;
+    const match = state.match(/## Related Plan\n-\s+(.*)/);
+    const plan = match ? match[1].trim() : null;
+    return (plan && plan !== 'none') ? path.resolve(plan) : null;
+  } catch (_) { return null; }
+};
+
+const getModifiedFiles = () => {
+  try {
+    // Check locally modified or staged files
+    const result = require('child_process').spawnSync('git', ['status', '--porcelain'], { cwd: process.cwd(), encoding: 'utf8' });
+    if (result.status !== 0) return [];
+    return (result.stdout || '').split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => line.substring(3).trim()) // Remove XY status string
+      .map(file => path.resolve(process.cwd(), file));
+  } catch (_) { return []; }
+};
+
+const detectDrift = (sessionId) => {
+  const planPath = getActivePlanPath();
+  if (!planPath || !fs.existsSync(planPath)) return null;
+
+  // Retrieve metrics to only check drift every N tool uses to save CPU
+  try {
+    const metricsPath = path.join(os.tmpdir(), `claude-ctx-${sessionId}.json`);
+    const metrics = fs.existsSync(metricsPath) ? JSON.parse(fs.readFileSync(metricsPath, 'utf8')) : {};
+    const calls = metrics.tool_use_count ?? 0;
+    // Debounce: check drift every 5 calls
+    if (calls % 5 !== 0) return null;
+  } catch (_) { return null; }
+
+  const modified = getModifiedFiles();
+  if (modified.length === 0) return null;
+
+  try {
+    const planContent = fs.readFileSync(planPath, 'utf8');
+    // Extract file targets formatted as markdown links or code blocks
+    const targetPattern = /\[.*?\]\((file:\/\/\/.*?)\)|`(.*?)`/g;
+    const targets = new Set();
+    let match;
+    while ((match = targetPattern.exec(planContent)) !== null) {
+      const p = match[1] ? match[1].replace('file://', '') : match[2];
+      if (p && !p.includes(' ')) targets.add(path.resolve(process.cwd(), p));
+    }
+
+    // Identify drift: modified files not mentioned in the plan
+    const drifted = modified.filter(f => !targets.has(f) && !f.includes('/.agents/') && !f.includes('/.planning/'));
+    
+    if (drifted.length > 0) {
+      return `ANTI-DRIFT WARNING: You are modifying files that are out of scope for the current plan.\n` +
+             `Plan: ${path.basename(planPath)}\n` +
+             `Drifted files:\n${drifted.map(f => `  - ${path.basename(f)}`).join('\n')}\n\n` +
+             `Correction needed: If these changes are necessary, update the plan first. Otherwise, revert them to maintain strict scope.`;
+    }
+  } catch (_) { return null; }
+
+  return null;
+};
+
+
 
 let input = '';
 // Timeout guard: if stdin doesn't close within 3s (e.g. pipe issues on
@@ -158,15 +237,26 @@ process.stdin.on('end', () => {
     }
 
     // Build advisory warning message
-    let message;
+    let message = '';
+    
+    // Check for scope drift
+    const driftWarning = detectDrift(sessionId);
+    if (driftWarning) {
+      message += driftWarning + '\n\n';
+    }
+
     if (isCritical) {
-      message = `CONTEXT MONITOR CRITICAL: Usage at ${usedPct}%. Remaining: ${remaining}%. ` +
+      message += `CONTEXT MONITOR CRITICAL: Usage at ${usedPct}%. Remaining: ${remaining}%. ` +
         'STOP new work immediately. Save state NOW and inform the user that context is nearly exhausted. ' +
         'If using GSD, run /gsd:pause-work at the next natural stopping point.';
-    } else {
-      message = `CONTEXT MONITOR WARNING: Usage at ${usedPct}%. Remaining: ${remaining}%. ` +
+    } else if (remaining <= WARNING_THRESHOLD) {
+      message += `CONTEXT MONITOR WARNING: Usage at ${usedPct}%. Remaining: ${remaining}%. ` +
         'Begin wrapping up current task. Do not start new complex work. ' +
         'If using GSD, consider /gsd:pause-work to save state.';
+    }
+
+    if (!message) {
+      process.exit(0);
     }
 
     const output = {
