@@ -90,6 +90,22 @@ timestamp=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" current-timesta
 ```
 </step>
 
+<step name="phase-checkpoint">
+Write a structured JSON phase-exit record alongside the handoff file:
+
+```bash
+node "$HOME/.agents/scripts/continuity-tools.mjs" phase-checkpoint \
+  --phase "[phase-name]" \
+  --completed "[task1|task2]" \
+  --pending "[task3|task4]" \
+  --decisions "[key decision 1|key decision 2]" \
+  --files "[modified file 1|modified file 2]" \
+  --next-phase "[next-phase-name]"
+```
+
+Populate from the state gathered in the `gather` step. Use pipe `|` as separator for multi-value fields.
+</step>
+
 <step name="commit">
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "wip: [phase-name] paused at task [X]/[Y]" --files .planning/phases/*/.continue-here.md
