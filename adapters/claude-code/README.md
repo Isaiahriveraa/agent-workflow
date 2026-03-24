@@ -26,6 +26,20 @@ This directory contains Claude Code-specific operational assets.
 - Files in this adapter may improve Claude Code ergonomics, but they must not become the source of truth for workflow behavior.
 - `~/.claude/settings.json` remains Claude-local configuration, but required `~/.agents` access fields are part of the validated adapter contract.
 
+## Model Routing
+
+Claude Code's `Agent` tool accepts a `model` parameter with alias values: `"haiku"`, `"sonnet"`, `"opus"`.
+
+The model router (`scripts/model-router.mjs`) returns both a full model ID and an alias. Use `result.alias` when passing to the Agent tool:
+
+```js
+import { route } from './scripts/model-router.mjs';
+const { alias } = route({ taskDescription: 'search for files' });
+// alias → "haiku" — pass as model: "haiku" to the Agent tool
+```
+
+This is the deepest integration point: per-subagent model selection is native.
+
 ## Compatibility
 - Legacy paths under `~/.agents/hooks` may delegate to files in this directory.
 - Hook failures must remain non-blocking.

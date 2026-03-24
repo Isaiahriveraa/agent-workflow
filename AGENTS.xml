@@ -89,6 +89,7 @@
     <rule>Use the package-manager detection rule before presenting or running Node package-manager commands in an unknown repo.</rule>
     <rule>Use the verification automation rule before recommending automated checks in a repo with scripts or build tooling.</rule>
     <rule>Use the artifact retrieval rule before loading multiple workflow artifacts into context.</rule>
+    <rule>Use the model routing rule before spawning subagents to select the optimal model tier based on task complexity, budget, and CLI context.</rule>
   </rule-card-rules>
 
   <adapter-rules>
