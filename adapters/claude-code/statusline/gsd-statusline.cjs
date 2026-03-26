@@ -153,10 +153,25 @@ process.stdin.on('end', () => {
       } catch (e) {}
     }
 
+    // Git branch
+    let branch = '';
+    try {
+      const { execSync } = require('child_process');
+      branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: dir, timeout: 1000, stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
+    } catch (e) {}
+
+    // Truncate long branch names: "feat/some-long-name" → "feat/some-lo…"
+    const MAX_BRANCH = 20;
+    let branchDisplay = branch;
+    if (branch.length > MAX_BRANCH) {
+      branchDisplay = branch.slice(0, MAX_BRANCH - 1) + '…';
+    }
+
     // Build output segments
     const segments = [];
     if (gsdUpdate) segments.push(gsdUpdate);
     segments.push(`\x1b[2m${model}\x1b[0m`);
+    if (branchDisplay) segments.push(`\x1b[33m${branchDisplay}\x1b[0m`);
     if (phase) segments.push(`\x1b[36m${phase}\x1b[0m`);
     if (task) segments.push(`\x1b[1m${task}\x1b[0m`);
     if (agentCount > 0) segments.push(`\x1b[35m${agentCount} agents\x1b[0m`);
