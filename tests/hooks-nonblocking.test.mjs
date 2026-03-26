@@ -16,18 +16,23 @@ test('compatibility hooks are self-contained CJS implementations with ESM aliase
   const contextMonitorAlias = read('hooks/gsd-context-monitor.js');
   const rpiArtifactCjs = read('hooks/gsd-rpi-artifact-watcher.cjs');
   const rpiArtifactAlias = read('hooks/gsd-rpi-artifact-watcher.js');
+  const consolidationCjs = read('hooks/gsd-stop-memory-consolidation.cjs');
+  const consolidationAlias = read('hooks/gsd-stop-memory-consolidation.js');
 
   // .cjs files must be self-contained implementations (no child spawn to adapter path)
   assert.match(updateCjs, /AGENTS_DISABLE_UPDATE_CHECK/);
   assert.match(updateCjs, /gsd-update-check\.json/);
   assert.match(contextMonitorCjs, /WARNING_THRESHOLD/);
   assert.match(rpiArtifactCjs, /workflow-artifact-tools\.mjs/);
+  assert.match(consolidationCjs, /memory-consolidation\.mjs/);
+  assert.match(consolidationCjs, /DEBOUNCE_SECONDS/);
 
   // .js aliases must reference the corresponding local .cjs files (not adapter paths)
   assert.match(updateAlias, /\.\/gsd-check-update\.cjs|adapters\/claude-code\/hooks\/gsd-check-update\.js/);
   assert.match(statuslineWrapper, /adapters\/claude-code\/statusline\/gsd-statusline\.(js|cjs)/);
   assert.match(contextMonitorAlias, /\.\/gsd-context-monitor\.cjs/);
   assert.match(rpiArtifactAlias, /\.\/gsd-rpi-artifact-watcher\.cjs/);
+  assert.match(consolidationAlias, /\.\/gsd-stop-memory-consolidation\.cjs/);
 });
 
 test('claude adapter hook implementations are defensive and non-blocking', () => {

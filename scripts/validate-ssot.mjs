@@ -61,6 +61,7 @@ const requiredFiles = [
   'adapters/openclaw/templates/USER.md',
   'adapters/openclaw/templates/TOOLS.md',
   'hooks/gsd-check-update.cjs',
+  'hooks/gsd-stop-memory-consolidation.cjs',
   'hooks/gsd-statusline.js',
   'commands/session-start.md',
   'commands/session-status.md',
