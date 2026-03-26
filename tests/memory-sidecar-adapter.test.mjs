@@ -981,12 +981,27 @@ test('mem0 lancedb backend stays unavailable when the history db path is missing
   assert.equal(backend, null);
 });
 
-test('mem0 lancedb backend stays unavailable when lancedb path is missing AND history db path is missing', () => {
+test('mem0 lancedb falls back to default path under HOME when explicit and history-db paths are missing', () => {
+  const config = resolveMemorySidecarConfig({
+    env: buildLanceDbEnv({
+      AGENTS_MEMORY_LANCEDB_PATH: '',
+      AGENTS_MEMORY_OSS_HISTORY_DB_PATH: '',
+      HOME: '/Users/test-user'
+    })
+  });
+
+  assert.equal(config.localMemory.lanceDb.path, '/Users/test-user/.agents/.agents-memory/lancedb');
+  assert.equal(config.localMemory.lanceDb.pathResolution, 'default');
+});
+
+test('mem0 lancedb backend stays unavailable when all path sources are missing', () => {
   const backend = resolveMemorySidecarBackend({
     config: resolveMemorySidecarConfig({
       env: buildLanceDbEnv({
         AGENTS_MEMORY_LANCEDB_PATH: '',
-        AGENTS_MEMORY_OSS_HISTORY_DB_PATH: ''
+        AGENTS_MEMORY_OSS_HISTORY_DB_PATH: '',
+        HOME: '',
+        USERPROFILE: ''
       })
     }),
     client: async () => null

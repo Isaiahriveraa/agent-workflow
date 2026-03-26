@@ -122,16 +122,30 @@ const resolveLanceDbPath = (env) => {
   }
 
   const historyDbPath = env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim();
-  if (!historyDbPath) {
+  if (historyDbPath) {
     return {
-      path: null,
-      resolution: 'missing'
+      path: path.join(path.dirname(historyDbPath), 'lancedb'),
+      resolution: 'derived-from-history-db'
     };
   }
 
+  const home = env.HOME ?? env.USERPROFILE;
   return {
-    path: path.join(path.dirname(historyDbPath), 'lancedb'),
-    resolution: 'derived-from-history-db'
+    path: home ? path.join(home, '.agents', '.agents-memory', 'lancedb') : null,
+    resolution: home ? 'default' : 'missing'
+  };
+};
+
+const resolveHistoryDbPath = (env) => {
+  const explicit = env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim();
+  if (explicit) {
+    return { path: explicit, resolution: 'explicit-env' };
+  }
+
+  const home = env.HOME ?? env.USERPROFILE;
+  return {
+    path: home ? path.join(home, '.agents', '.agents-memory', 'memory_lifecycle.db') : null,
+    resolution: home ? 'default' : 'missing'
   };
 };
 
@@ -156,9 +170,10 @@ const buildReadiness = ({ backend, env }) => {
       baseUrlPresent: Boolean(env[MEMORY_ENV_KEYS.localLlmBaseUrl]?.trim())
     };
     const lanceDb = resolveLanceDbPath(env);
+    const resolvedHistoryDb = resolveHistoryDbPath(env);
     const historyDb = {
-      pathPresent: Boolean(env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim()),
-      resolution: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() ? 'explicit-env' : 'missing'
+      pathPresent: Boolean(resolvedHistoryDb.path),
+      resolution: resolvedHistoryDb.resolution
     };
 
     return {
@@ -222,8 +237,8 @@ export const resolveMemorySidecarConfig = ({ env = process.env } = {}) => {
         tableBase: env[MEMORY_ENV_KEYS.lanceDbTableBase]?.trim() || SUPPORTED_MEM0_LANCEDB_PROFILE.storage.tableBaseName
       },
       historyDb: {
-        path: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() || null,
-        resolution: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() ? 'explicit-env' : 'missing'
+        path: resolveHistoryDbPath(env).path,
+        resolution: resolveHistoryDbPath(env).resolution
       }
     },
     scope: {

@@ -60,7 +60,7 @@ export const getMemoryHealth = ({ env = process.env, backend } = {}) => {
 
     if (
       config.backend === 'mem0-lancedb'
-      && config.localMemory.lanceDb.pathResolution !== 'explicit-env'
+      && !['explicit-env', 'default'].includes(config.localMemory.lanceDb.pathResolution)
     ) {
       return {
         exitCode: 1,
