@@ -161,34 +161,21 @@ Then wait for the user's research query.
 
 For substantial research intended to drive implementation planning:
 
-1. **Spawn `rpi-critic` agent** with the research document path:
-   ```
-   Task(
-     prompt="Critique the research at [research_path]. artifact_type: research",
-     subagent_type="rpi-critic",
-     description="Critique research document"
-   )
-   ```
+1. **Run rpi-critique in-place** on the research document:
+   - Use the `/rpi-critique` skill with the research document path
+   - The skill runs all critique dimensions silently, revises the artifact directly, and prints a human-readable improvement summary
+   - No separate critique file is written
 
-2. **Wait for completion**. The critic writes to `.planning/critique/YYYY-MM-DD-HHMMSS-[slug]-critique.md`
-   and returns a structured verdict.
+2. **After rpi-critique completes**, check the printed summary:
+   - If **BLOCKING issues found**: read the summary, verify the in-place fixes were applied, and re-run `/rpi-critique` if the research still fails grading (max 2 revision cycles)
+   - If **WARNINGS ONLY**: review the summary; proceed to `grade-research`
+   - If **ADVISORY**: proceed to `grade-research`
+   - If **HUMAN JUDGMENT REQUIRED** (blocking after 2 cycles): surface the blocking issues to the user and do NOT hand off to planning
 
-3. **If `## CRITIQUE: BLOCKING ISSUES FOUND`:**
-   - Read the critique document fully
-   - Spawn `critique-responder` to revise the research document against the critique findings (re-run research sub-agents if needed)
-   - Update frontmatter: increment `critique_cycles`, add critique path to `critique_artifacts` (single-line array only)
-   - Re-spawn the critic (max 2 revision cycles total — 3 runs)
-   - If still blocking after 2 revisions: surface issues to the user; do NOT hand off to planning
-
-4. **If `## CRITIQUE: WARNINGS ONLY` or `## CRITIQUE: ADVISORY`:**
-   - Use `critique-responder` for any material warning-driven revisions
-   - Update frontmatter: `critique_completed: true`, `critique_cycles: 1`, `critique_artifacts: ["/absolute/path"]` (single-line)
-   - Before handoff, use `artifact-gatekeeper` when readiness is ambiguous or the critique/grade signals conflict
-   - Proceed to `grade-research`
-
-5. **If `## CRITIQUE: HUMAN JUDGMENT REQUIRED`:**
-   - Present the blocking issues to the user
-   - Wait for guidance before handing off to planning
+3. **After critique**, verify frontmatter updated correctly:
+   - `critique_completed: true`
+   - `critique_cycles: N` (incremented)
+   - `research_ready_for_planning: true|false` (re-evaluated)
 
 **Skip condition**: Skip if this research is non-substantial (exploratory, not intended to drive a plan).
 Note frontmatter: `critique_completed: false`, `critique_cycles: 0`.

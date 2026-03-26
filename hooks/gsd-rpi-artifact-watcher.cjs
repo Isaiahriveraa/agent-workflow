@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // PostToolUse hook — auto-grades research/plan artifacts after Write/Edit/MultiEdit.
 // Updates research-index.md and STATE.md working set without blocking Claude.
+// Also prompts Claude to run /rpi-critique on the artifact.
 
 const fs = require('fs');
 const os = require('os');
@@ -80,6 +81,13 @@ process.stdin.on('end', () => {
       }
     );
     grader.unref();
+
+    // Prompt Claude to run critique on the artifact
+    const artifactType = isResearch ? 'research' : 'plan';
+    process.stdout.write(
+      `\n${artifactType.charAt(0).toUpperCase() + artifactType.slice(1)} artifact detected: ${filePath}\n` +
+      `Run /rpi-critique ${filePath} to critique and improve this artifact in-place.\n`
+    );
   } catch (_) {
     // Silent fail — never block Claude.
   }
