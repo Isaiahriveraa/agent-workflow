@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createMemorySidecarAdapter, DeterministicMemoryBackend } from '../scripts/memory-sidecar-adapter.mjs';
-import { captureLesson } from '../scripts/lesson-tools.mjs';
+import { captureLesson, quickCapture, flushQueue } from '../scripts/lesson-tools.mjs';
 
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 
@@ -19,47 +19,38 @@ const runProjectContext = (repoRoot) =>
   JSON.parse(execFileSync('node', ['scripts/project-context.mjs', 'current'], {
     cwd: root,
     encoding: 'utf8',
-    env: {
-      ...process.env,
-      AGENTS_PROJECT_ROOT: repoRoot
-    }
+    env: { ...process.env, AGENTS_PROJECT_ROOT: repoRoot }
   }));
 
-const execLessonTool = (args, repoRoot, extraEnv = {}) =>
-  execFileSync('node', ['scripts/lesson-tools.mjs', ...args], {
-    cwd: root,
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      AGENTS_PROJECT_ROOT: repoRoot,
-      ...extraEnv
-    }
-  });
+// Helper: mock fetch to return a quality gate pass verdict
+const fakeWritePass = (score = 4.0) => ({
+  ok: true,
+  json: async () => ({
+    choices: [{
+      message: {
+        content: JSON.stringify({
+          reusability: score, novelty: score, durability: score, specificity: score,
+          overall: score, pass: true, reason: 'test pass'
+        })
+      }
+    }]
+  })
+});
 
-const withContextBackups = async (run) => {
-  const originalLessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
-  const originalPatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
-  const originalTaste = fs.readFileSync(path.join(root, 'contexts', 'user-taste.md'), 'utf8');
-
-  try {
-    return await run();
-  } finally {
-    fs.writeFileSync(path.join(root, 'contexts', 'lessons-learned.md'), originalLessons);
-    fs.writeFileSync(path.join(root, 'contexts', 'failure-patterns.md'), originalPatterns);
-    fs.writeFileSync(path.join(root, 'contexts', 'user-taste.md'), originalTaste);
-  }
-};
-
-const cleanupLessonArtifacts = (needle) => {
-  const lessonsDir = path.join(root, 'thoughts', 'lessons');
-  if (!fs.existsSync(lessonsDir)) return;
-
-  for (const entry of fs.readdirSync(lessonsDir)) {
-    if (entry.includes(needle)) {
-      fs.rmSync(path.join(lessonsDir, entry), { force: true });
-    }
-  }
-};
+// Helper: mock fetch to return a quality gate fail verdict
+const fakeWriteFail = (score = 1.5) => ({
+  ok: true,
+  json: async () => ({
+    choices: [{
+      message: {
+        content: JSON.stringify({
+          reusability: 1, novelty: 1, durability: 2, specificity: 2,
+          overall: score, pass: false, reason: 'test reject'
+        })
+      }
+    }]
+  })
+});
 
 test('project context exposes the shared lessons path', { concurrency: false }, () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-context-'));
@@ -73,377 +64,284 @@ test('project context exposes the shared lessons path', { concurrency: false }, 
   }
 });
 
-test('lesson capture writes an artifact and updates learning contexts', { concurrency: false }, () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'capture');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
-
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
-  fs.writeFileSync(sourceArtifact, '# Source\n');
-
-  const originalLessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
-  const originalPatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
-  const originalTaste = fs.readFileSync(path.join(root, 'contexts', 'user-taste.md'), 'utf8');
-
-  try {
-    const output = JSON.parse(execLessonTool([
-      'capture',
-      '--task-class', 'creative-redesign',
-      '--trigger', 'user correction',
-      '--failure-class', 'creative/taste miss',
-      '--diagnosis', 'The output reused a generic structure and ignored bold differentiation.',
-      '--rule', 'When the user rejects generic creative output, load stronger references before retrying.',
-      '--fix', 'Rebuild the brief with references and banned patterns before another pass.',
-      '--source-artifact', sourceArtifact,
-      '--confidence', 'high',
-      '--systemic', 'true',
-      '--suggestion', 'Tighten the creative capsule gate to require references.',
-      '--preference-kind', 'disliked',
-      '--preference', 'Generic redesigns that only polish the surface.'
-    ], repoRoot));
-
-    assert.match(output.artifactPath, /thoughts\/lessons\/\d{4}-\d{2}-\d{2}-creative-redesign-creative-taste-miss-/);
-    assert.equal(fs.existsSync(output.artifactPath), true);
-
-    const lessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
-    const failurePatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
-    const userTaste = fs.readFileSync(path.join(root, 'contexts', 'user-taste.md'), 'utf8');
-
-    assert.match(lessons, /creative-redesign \| user correction/);
-    assert.match(lessons, /thoughts\/lessons\//);
-    assert.match(failurePatterns, /creative\/taste miss \| trigger: user correction/);
-    assert.match(userTaste, /Generic redesigns that only polish the surface\./);
-    assert.match(userTaste, /Recent Confirmations/);
-  } finally {
-    fs.writeFileSync(path.join(root, 'contexts', 'lessons-learned.md'), originalLessons);
-    fs.writeFileSync(path.join(root, 'contexts', 'failure-patterns.md'), originalPatterns);
-    fs.writeFileSync(path.join(root, 'contexts', 'user-taste.md'), originalTaste);
-
-    const lessonsDir = path.join(root, 'thoughts', 'lessons');
-    if (fs.existsSync(lessonsDir)) {
-      for (const entry of fs.readdirSync(lessonsDir)) {
-        if (entry.includes('creative-redesign-creative-taste-miss')) {
-          fs.rmSync(path.join(lessonsDir, entry), { force: true });
-        }
-      }
-    }
-
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-});
-
-test('lesson capture requires an absolute source artifact path', { concurrency: false }, () => {
+test('capture requires an absolute source artifact path', { concurrency: false }, () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
   const repoRoot = createRepo(tmpDir, 'errors');
 
   try {
-    assert.throws(() => execLessonTool([
+    const output = execFileSync('node', ['scripts/lesson-tools.mjs',
       'capture',
       '--task-class', 'api-workflow',
       '--trigger', 'eval failure',
       '--failure-class', 'API contract miss',
       '--diagnosis', 'The handler omitted a documented edge case.',
-      '--rule', 'Always add explicit edge-case tests before calling the API workflow done.',
-      '--fix', 'Add the missing edge-case test and handler branch.',
+      '--rule', 'Always add explicit edge-case tests.',
+      '--fix', 'Add the missing edge-case test.',
       '--source-artifact', 'relative/path.md'
-    ], repoRoot), /source-artifact to be an absolute path/);
+    ], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, AGENTS_PROJECT_ROOT: repoRoot },
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    assert.fail('Should have thrown');
+  } catch (error) {
+    assert.match(error.stderr, /source-artifact to be an absolute path/);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
 
-test('lesson queue persists a pending item and flush processes it', { concurrency: false }, () => {
+test('capture writes to LanceDB when quality gate passes', { concurrency: false }, async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => fakeWritePass());
+
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'queue');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'queued-source.md');
-
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
-  fs.writeFileSync(sourceArtifact, '# Queued Source\n');
-
-  const originalLessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
-  const originalPatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
-  const originalTaste = fs.readFileSync(path.join(root, 'contexts', 'user-taste.md'), 'utf8');
-
-  try {
-    const queued = JSON.parse(execLessonTool([
-      'queue',
-      '--task-class', 'api-workflow',
-      '--trigger', 'critic rejection',
-      '--failure-class', 'edge-case miss',
-      '--diagnosis', 'The contract missed an error-path edge case.',
-      '--rule', 'Queue reusable API misses for automatic writeback after the run.',
-      '--fix', 'Add the missing branch and test before retrying.',
-      '--source-artifact', sourceArtifact,
-      '--confidence', 'medium'
-    ], repoRoot));
-
-    assert.equal(queued.queued, true);
-    assert.equal(fs.existsSync(queued.queuePath), true);
-
-    const flushed = JSON.parse(execLessonTool(['flush'], repoRoot));
-    assert.equal(flushed.processed, 1);
-    assert.equal(flushed.failed, 0);
-    assert.equal(fs.existsSync(queued.queuePath), false);
-    assert.equal(fs.existsSync(flushed.results[0].tracePath), true);
-    assert.equal(fs.existsSync(flushed.results[0].evalPath), true);
-    assert.equal(fs.existsSync(flushed.results[0].strategyPath), true);
-    assert.equal(flushed.results[0].learningRecords.length, 1);
-
-    const lessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
-    const failurePatterns = fs.readFileSync(path.join(root, 'contexts', 'failure-patterns.md'), 'utf8');
-
-    assert.match(lessons, /api-workflow \| critic rejection/);
-    assert.match(failurePatterns, /edge-case miss \| trigger: critic rejection/);
-  } finally {
-    fs.writeFileSync(path.join(root, 'contexts', 'lessons-learned.md'), originalLessons);
-    fs.writeFileSync(path.join(root, 'contexts', 'failure-patterns.md'), originalPatterns);
-    fs.writeFileSync(path.join(root, 'contexts', 'user-taste.md'), originalTaste);
-
-    const lessonsDir = path.join(root, 'thoughts', 'lessons');
-    if (fs.existsSync(lessonsDir)) {
-      for (const entry of fs.readdirSync(lessonsDir)) {
-        if (entry.includes('api-workflow-edge-case-miss')) {
-          fs.rmSync(path.join(lessonsDir, entry), { force: true });
-        }
-      }
-      const queuePath = path.join(lessonsDir, 'queue');
-      if (fs.existsSync(queuePath)) {
-        fs.rmSync(queuePath, { recursive: true, force: true });
-      }
-    }
-
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-});
-
-test('lesson queue flush skips items already claimed by a processing sentinel', { concurrency: false }, () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'queue-processing');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'queued-source.md');
-
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
-  fs.writeFileSync(sourceArtifact, '# Queued Source\n');
-
-  try {
-    const queued = JSON.parse(execLessonTool([
-      'queue',
-      '--task-class', 'api-workflow',
-      '--trigger', 'critic rejection',
-      '--failure-class', 'processing-claim',
-      '--diagnosis', 'Another worker already claimed this item.',
-      '--rule', 'Rename queue entries before processing.',
-      '--fix', 'Skip duplicate claim attempts.',
-      '--source-artifact', sourceArtifact
-    ], repoRoot));
-
-    const processingPath = queued.queuePath.replace(/\.json$/, '.processing');
-    fs.renameSync(queued.queuePath, processingPath);
-
-    const flushed = JSON.parse(execLessonTool(['flush'], repoRoot));
-    assert.equal(flushed.processed, 0);
-    assert.equal(flushed.failed, 0);
-    assert.equal(fs.existsSync(processingPath), true);
-  } finally {
-    cleanupLessonArtifacts('api-workflow-processing-claim');
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-});
-
-test('lesson capture mirrors curated memories after canonical writes when memory is enabled', { concurrency: false }, async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'memory-mirror');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
-
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
+  const repoRoot = createRepo(tmpDir, 'capture-pass');
+  const sourceArtifact = path.join(repoRoot, 'source.md');
   fs.writeFileSync(sourceArtifact, '# Source\n');
 
   const projectContext = runProjectContext(repoRoot);
   const backend = new DeterministicMemoryBackend();
   const adapter = createMemorySidecarAdapter({
-    env: {
-      AGENTS_MEMORY_ENABLED: 'true'
-    },
+    env: { AGENTS_MEMORY_ENABLED: 'true' },
     backend
   });
 
   try {
-    await withContextBackups(async () => {
-      const result = await captureLesson({
-        'task-class': 'api-workflow',
-        trigger: 'critic rejection',
-        'failure-class': 'edge-case miss',
-        diagnosis: 'The contract missed an error-path edge case.',
-        rule: 'Capture the reusable fix after canonical lesson write succeeds.',
-        fix: 'Add the missing branch and test before retrying.',
-        'source-artifact': sourceArtifact,
-        confidence: 'high',
-        'preference-kind': 'preferred',
-        preference: 'Compact implementation plans with explicit verification order.'
-      }, {
-        projectContext,
-        memoryAdapter: adapter
-      });
+    const result = await captureLesson({
+      'task-class': 'api-workflow',
+      trigger: 'critic rejection',
+      'failure-class': 'edge-case miss',
+      diagnosis: 'The contract missed an error-path edge case.',
+      rule: 'Capture the reusable fix after canonical write succeeds.',
+      fix: 'Add the missing branch and test.',
+      'source-artifact': sourceArtifact,
+      confidence: 'high'
+    }, { projectContext, memoryAdapter: adapter });
 
-      assert.equal(fs.existsSync(result.artifactPath), true);
-      assert.equal(result.memoryMirror.results.length, 3);
-      assert.equal(result.memoryMirror.warnings.length, 0);
+    assert.equal(result.recorded, true);
+    assert.equal(result.gateVerdict.pass, true);
+    assert.equal(result.memoryResults.length, 2); // lesson + failure_pattern
+    assert.equal(result.memoryResults.every(r => r.recorded), true);
 
-      const createPlanRecall = await adapter.getRelevantMemories({
-        workflowStage: 'create-plan',
-        projectContext,
-        minScore: 0
-      });
-      const implementRecall = await adapter.getRelevantMemories({
-        workflowStage: 'implement-plan',
-        projectContext,
-        minScore: 0
-      });
-
-      assert.equal(createPlanRecall.items.some((item) => item.memory_kind === 'lesson'), true);
-      assert.equal(createPlanRecall.items.some((item) => item.memory_kind === 'user_preference'), true);
-      assert.equal(implementRecall.items.some((item) => item.memory_kind === 'lesson'), true);
-      assert.equal(implementRecall.items.some((item) => item.memory_kind === 'failure_pattern'), true);
+    // Verify records landed in backend
+    const recall = await adapter.getRelevantMemories({
+      workflowStage: 'implement-plan',
+      projectContext,
+      minScore: 0
     });
+    assert.equal(recall.items.some(i => i.memory_kind === 'failure_pattern'), true);
   } finally {
-    cleanupLessonArtifacts('api-workflow-edge-case-miss');
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
 
-test('lesson capture preserves canonical writes when memory mirror fails', { concurrency: false }, async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'mirror-failure');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
+test('capture returns recorded:false when quality gate rejects', { concurrency: false }, async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => fakeWriteFail());
 
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
+  const repoRoot = createRepo(tmpDir, 'capture-reject');
+  const sourceArtifact = path.join(repoRoot, 'source.md');
+  fs.writeFileSync(sourceArtifact, '# Source\n');
+
+  const projectContext = runProjectContext(repoRoot);
+  const backend = new DeterministicMemoryBackend();
+  const adapter = createMemorySidecarAdapter({
+    env: { AGENTS_MEMORY_ENABLED: 'true' },
+    backend
+  });
+
+  try {
+    const result = await captureLesson({
+      'task-class': 'api-workflow',
+      trigger: 'eval failure',
+      'failure-class': 'trivial fix',
+      diagnosis: 'Misspelled a variable.',
+      rule: 'Spell check.',
+      fix: 'Fix the typo.',
+      'source-artifact': sourceArtifact
+    }, { projectContext, memoryAdapter: adapter });
+
+    assert.equal(result.recorded, false);
+    assert.ok(result.reason);
+    assert.ok(result.gateVerdict);
+    assert.equal(backend.records.length, 0);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('capture does not write artifacts to filesystem', { concurrency: false }, async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => fakeWritePass());
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
+  const repoRoot = createRepo(tmpDir, 'no-artifacts');
+  const sourceArtifact = path.join(repoRoot, 'source.md');
+  fs.writeFileSync(sourceArtifact, '# Source\n');
+
+  const projectContext = runProjectContext(repoRoot);
+  const backend = new DeterministicMemoryBackend();
+  const adapter = createMemorySidecarAdapter({
+    env: { AGENTS_MEMORY_ENABLED: 'true' },
+    backend
+  });
+
+  const lessonsDir = path.join(root, 'thoughts', 'lessons');
+  const beforeFiles = fs.existsSync(lessonsDir) ? fs.readdirSync(lessonsDir) : [];
+
+  try {
+    await captureLesson({
+      'task-class': 'api-workflow',
+      trigger: 'user correction',
+      'failure-class': 'no-artifact-check',
+      diagnosis: 'Testing that no files are written.',
+      rule: 'Do not write markdown artifacts.',
+      fix: 'Write to LanceDB only.',
+      'source-artifact': sourceArtifact
+    }, { projectContext, memoryAdapter: adapter });
+
+    const afterFiles = fs.existsSync(lessonsDir) ? fs.readdirSync(lessonsDir) : [];
+    assert.equal(afterFiles.length, beforeFiles.length, 'No new lesson artifacts should be created');
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('capture handles memory backend failure gracefully', { concurrency: false }, async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => fakeWritePass());
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
+  const repoRoot = createRepo(tmpDir, 'backend-fail');
+  const sourceArtifact = path.join(repoRoot, 'source.md');
   fs.writeFileSync(sourceArtifact, '# Source\n');
 
   const projectContext = runProjectContext(repoRoot);
   const failingAdapter = {
-    recordMemory: async () => {
-      throw new Error('backend offline');
-    }
+    recordMemory: async () => { throw new Error('backend offline'); },
+    getRelevantMemories: async () => ({ items: [] })
   };
 
   try {
-    await withContextBackups(async () => {
-      const result = await captureLesson({
-        'task-class': 'api-workflow',
-        trigger: 'eval failure',
-        'failure-class': 'mirror outage',
-        diagnosis: 'The memory backend was unavailable during capture.',
-        rule: 'Never roll back canonical lesson capture when the memory mirror is down.',
-        fix: 'Surface the mirror failure and continue.',
-        'source-artifact': sourceArtifact
-      }, {
-        projectContext,
-        memoryAdapter: failingAdapter
-      });
+    const result = await captureLesson({
+      'task-class': 'api-workflow',
+      trigger: 'eval failure',
+      'failure-class': 'backend outage',
+      diagnosis: 'The memory backend was unavailable.',
+      rule: 'Handle backend failures gracefully.',
+      fix: 'Surface warnings, do not throw.',
+      'source-artifact': sourceArtifact
+    }, { projectContext, memoryAdapter: failingAdapter });
 
-      assert.equal(fs.existsSync(result.artifactPath), true);
-      assert.equal(result.memoryMirror.results.every((item) => item.recorded === false), true);
-      assert.equal(result.memoryMirror.warnings.length >= 1, true);
-
-      const lessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
-      assert.match(lessons, /Never roll back canonical lesson capture when the memory mirror is down\./);
-    });
+    // Should still return recorded:true (gate passed) but with warnings
+    assert.equal(result.recorded, true);
+    assert.ok(result.warnings.length >= 1);
+    assert.equal(result.memoryResults.every(r => r.recorded === false), true);
   } finally {
-    cleanupLessonArtifacts('api-workflow-mirror-outage');
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
 
-test('lesson capture is a no-op for memory mirroring when memory is disabled', { concurrency: false }, async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'mirror-disabled');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
+test('capture with preference kind writes user_preference event', { concurrency: false }, async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => fakeWritePass());
 
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
+  const repoRoot = createRepo(tmpDir, 'preference');
+  const sourceArtifact = path.join(repoRoot, 'source.md');
   fs.writeFileSync(sourceArtifact, '# Source\n');
 
   const projectContext = runProjectContext(repoRoot);
   const backend = new DeterministicMemoryBackend();
   const adapter = createMemorySidecarAdapter({
-    env: {},
+    env: { AGENTS_MEMORY_ENABLED: 'true' },
     backend
   });
 
   try {
-    await withContextBackups(async () => {
-      const result = await captureLesson({
-        'task-class': 'api-workflow',
-        trigger: 'user correction',
-        'failure-class': 'disabled mirror',
-        diagnosis: 'Memory is intentionally disabled.',
-        rule: 'Disabled memory must leave canonical lesson writes unchanged.',
-        fix: 'Do nothing in the mirror path.',
-        'source-artifact': sourceArtifact
-      }, {
-        projectContext,
-        memoryAdapter: adapter
-      });
+    const result = await captureLesson({
+      'task-class': 'api-workflow',
+      trigger: 'user correction',
+      'failure-class': 'taste miss',
+      diagnosis: 'User disliked the output.',
+      rule: 'Follow user taste preferences.',
+      fix: 'Check preferences first.',
+      'source-artifact': sourceArtifact,
+      'preference-kind': 'preferred',
+      preference: 'Compact implementation plans.'
+    }, { projectContext, memoryAdapter: adapter });
 
-      assert.equal(fs.existsSync(result.artifactPath), true);
-      assert.equal(result.memoryMirror.results.every((item) => item.recorded === false), true);
-      assert.equal(result.memoryMirror.warnings.length, 0);
-      assert.equal(backend.records.length, 0);
-
-      const lessons = fs.readFileSync(path.join(root, 'contexts', 'lessons-learned.md'), 'utf8');
-      assert.match(lessons, /Disabled memory must leave canonical lesson writes unchanged\./);
-    });
+    assert.equal(result.recorded, true);
+    assert.equal(result.memoryResults.length, 3); // lesson + failure + preference
+    assert.equal(result.memoryResults.some(r => r.memory_kind === 'user_preference'), true);
   } finally {
-    cleanupLessonArtifacts('api-workflow-disabled-mirror');
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
 
-test('repeated mirrored captures dedupe by idempotency key', { concurrency: false }, async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
-  const repoRoot = createRepo(tmpDir, 'mirror-dedupe');
-  const sourceArtifact = path.join(repoRoot, '.planning', 'research', 'source.md');
+test('idempotency key dedup on repeated captures', { concurrency: false }, async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => fakeWritePass());
 
-  fs.mkdirSync(path.dirname(sourceArtifact), { recursive: true });
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
+  const repoRoot = createRepo(tmpDir, 'idempotency');
+  const sourceArtifact = path.join(repoRoot, 'source.md');
   fs.writeFileSync(sourceArtifact, '# Source\n');
 
   const projectContext = runProjectContext(repoRoot);
   const backend = new DeterministicMemoryBackend();
   const adapter = createMemorySidecarAdapter({
-    env: {
-      AGENTS_MEMORY_ENABLED: 'true'
-    },
+    env: { AGENTS_MEMORY_ENABLED: 'true' },
     backend
   });
+
   const args = {
     'task-class': 'api-workflow',
     trigger: 'critic rejection',
-    'failure-class': 'duplicate mirror',
-    diagnosis: 'Repeated flushes should not duplicate memory records.',
-    rule: 'Use a deterministic idempotency key for mirrored writes.',
-    fix: 'Upsert repeated mirror writes instead of appending duplicates.',
+    'failure-class': 'duplicate capture',
+    diagnosis: 'Repeated captures should dedupe.',
+    rule: 'Use deterministic idempotency key.',
+    fix: 'Upsert instead of append.',
     'source-artifact': sourceArtifact
   };
 
   try {
-    await withContextBackups(async () => {
-      const first = await captureLesson(args, { projectContext, memoryAdapter: adapter });
-      const second = await captureLesson({
-        ...args
-      }, { projectContext, memoryAdapter: adapter });
+    await captureLesson(args, { projectContext, memoryAdapter: adapter });
+    await captureLesson(args, { projectContext, memoryAdapter: adapter });
 
-      assert.equal(first.memoryMirror.results.length, 2);
-      assert.equal(second.memoryMirror.results.length, 2);
-      assert.equal(backend.records.length, 2);
-
-      const implementRecall = await adapter.getRelevantMemories({
-        workflowStage: 'implement-plan',
-        projectContext,
-        minScore: 0
-      });
-
-      assert.equal(implementRecall.items.filter((item) => item.summary.includes('Repeated flushes should not duplicate')).length, 1);
-    });
+    // DeterministicMemoryBackend upserts by idempotency_key
+    assert.equal(backend.records.length, 2); // lesson + failure_pattern (not 4)
   } finally {
-    cleanupLessonArtifacts('api-workflow-duplicate-mirror');
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('flushQueue is a no-op stub', async () => {
+  const result = await flushQueue();
+  assert.equal(result.processed, 0);
+  assert.equal(result.failed, 0);
+  assert.ok(Array.isArray(result.results));
+});
+
+test('quickCapture via CLI returns gate verdict', { concurrency: false }, async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => fakeWritePass(3.5));
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-lesson-tools-'));
+  const repoRoot = createRepo(tmpDir, 'quick');
+  const projectContext = runProjectContext(repoRoot);
+  const backend = new DeterministicMemoryBackend();
+  const adapter = createMemorySidecarAdapter({
+    env: { AGENTS_MEMORY_ENABLED: 'true' },
+    backend
+  });
+
+  try {
+    const result = await quickCapture({
+      what: 'API rate limit hit',
+      why: 'exceeded 20 req/min',
+      rule: 'implement backoff with jitter'
+    }, { projectContext, memoryAdapter: adapter });
+
+    assert.equal(result.recorded, true);
+    assert.ok(result.gateVerdict);
+  } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
