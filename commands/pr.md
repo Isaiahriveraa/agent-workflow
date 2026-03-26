@@ -109,7 +109,7 @@ Only add `Why` if the motivation is not obvious.
 Use:
 - `Title`
 - `Summary`
-- `Rationale
+- `Rationale`
 - `Changes`
 - `Tests & Validation`
 - `Risks`
