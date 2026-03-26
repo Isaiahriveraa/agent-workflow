@@ -15,7 +15,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 5. **If the task class calls for a capsule, load it before starting work and honor its critic, grader, and memory-policy files.**
 6. **For substantial plans, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
 7. **After canonical plan/state/decision context is loaded and before phase execution begins, run this command to recall relevant memories:
-   `agents-memory recall implement-plan --query "<brief description of what you're implementing>"`
+   `agents-memory recall implement-plan --query "<brief description of what you're implementing>" --filter-relevance`
    This recall attempt is mandatory for implementation entry. If memory is disabled or returns zero items, that is still a successful attempt — proceed normally. If items are returned, incorporate them as advisory context (lower priority than codebase evidence and the plan itself).**
 8. **Use the same precedence rule during implementation entry:**
    1. active runtime state and selected artifacts
@@ -99,7 +99,7 @@ If a check fails, a critic rejects the output, or the user corrects the implemen
 - Classify the miss
 - State the likely cause
 - Apply the smallest fix
-- Record a reusable lesson automatically with `node $HOME/.agents/scripts/lesson-tools.mjs capture ...` when the evidence is strong enough
+- Record a reusable lesson automatically with `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."` when the evidence is strong enough
 - If `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` recommends `capture_lesson`, complete lesson capture before retrying implementation
 - Surface a workflow suggestion if the miss appears systemic
 
@@ -155,7 +155,7 @@ If this is a long session and you suspect context drift:
 - If newly discovered work maps to `blocking_unknown`, `decision_missing`, `evidence_weak`, `verification_missing`, `dependency_unmodeled`, or `rollout_unspecified`, route it to `/iterate_plan` or full re-planning instead of inventing a new design during implementation.
 - When the helper-backed decision returns `replan`, stop implementation entry and route back through `/iterate_plan` or full replanning instead of beginning edits.
 
-- After explicit user correction or eval-backed failure, update local learning artifacts with `node $HOME/.agents/scripts/lesson-tools.mjs capture ...` when the lesson is durable and evidence-backed.
+- After explicit user correction or eval-backed failure, update local learning artifacts with `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."` when the lesson is durable and evidence-backed.
 
 ---
 
