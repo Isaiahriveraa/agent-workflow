@@ -13,5 +13,6 @@ node_modules/
 .agents-memory/
 memory.db
 gsd-local-patches/
+.pids/
 config/
 !projects/.gitkeep
