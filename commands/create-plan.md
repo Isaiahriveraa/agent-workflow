@@ -40,7 +40,6 @@ Then wait for the user's input.
    - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
    - Read the current project's runtime `research-index.md` if prior research exists
    - Read the current project's runtime `state.md` when the existing workflow position matters
-   - Read `~/.agents/contexts/failure-patterns.md` and `~/.agents/contexts/lessons-learned.md` when the task class is likely to benefit from prior mistakes
    - Load only the relevant rule cards from `~/.agents/rules/common/`
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
    - Determine strict-workflow activation with `node $HOME/.agents/scripts/workflow-router-tools.mjs activate` when the task shape is not already proven by a graded substantial research artifact
@@ -48,7 +47,7 @@ Then wait for the user's input.
    - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
    - For substantial requests backed by research, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
 - After canonical context is loaded and before plan drafting, run this command to recall relevant memories:
-      `agents-memory recall create-plan --query "<brief description of what you're planning>"`
+      `agents-memory recall create-plan --query "<brief description of what you're planning>" --filter-relevance`
       This recall attempt is mandatory for command entry. If memory is disabled or returns zero items, that is still a successful attempt — proceed normally. If items are returned, incorporate them as advisory context (lower priority than codebase evidence and explicit decisions).
    - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
    - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold

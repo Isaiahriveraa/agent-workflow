@@ -125,8 +125,8 @@
         "additionalDirectories includes ~/.agents",
         "permissions.allow includes Read(~/.agents/**)",
         "env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1",
-        "hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs",
-        "hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs"
+        "hooks.Stop runs ~/.claude/hooks/gsd-stop-memory-consolidation.cjs",
+        "hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-memory-consolidation.cjs"
       ],
       "note": "Claude settings stay hand-managed, but these access fields are validated as part of the adapter contract."
     }

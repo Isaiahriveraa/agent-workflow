@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const hookPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  './gsd-rpi-memory-sync.cjs'
+  './gsd-stop-memory-consolidation.cjs'
 );
 
 const child = spawn(process.execPath, [hookPath], {

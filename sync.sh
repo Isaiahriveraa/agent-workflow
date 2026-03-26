@@ -614,7 +614,7 @@ cmd_gen_opencode_agents() {
 
     echo "Generating OpenCode agents from hub agents..."
     if [[ "$free_flag" == "1" ]]; then
-        echo "  Mode: FREE (using free/near-free OpenRouter models)"
+        echo "  Mode: FREE (using OpenCode Zen free models)"
     fi
     echo ""
 
@@ -633,9 +633,9 @@ MODEL_MAP = {
 }
 
 FREE_MODEL_MAP = {
-    "opus": "xiaomi/mimo-v2-flash",
-    "sonnet": "xiaomi/mimo-v2-flash",
-    "haiku": "nvidia/nemotron-3-nano-30b-a3b:free",
+    "opus": "opencode/minimax-m2.5-free",
+    "sonnet": "opencode/minimax-m2.5-free",
+    "haiku": "opencode/minimax-m2.5-free",
 }
 
 active_map = FREE_MODEL_MAP if os.environ.get("OPENCODE_FREE_MODELS") == "1" else MODEL_MAP

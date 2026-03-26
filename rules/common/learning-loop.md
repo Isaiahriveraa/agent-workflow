@@ -18,7 +18,7 @@ Run the learning loop when one or more are true:
    - why it happened
    - which failure class it belongs to
 3. Apply the smallest local fix for the current task.
-4. Write back a durable lesson when the evidence is strong enough with `node ./scripts/lesson-tools.mjs capture ...`.
+4. Write back a durable lesson when the evidence is strong enough with `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."`.
 5. If the miss is systemic, surface a workflow improvement suggestion to the user.
 
 ## Writeback Policy
@@ -52,4 +52,4 @@ node $HOME/.agents/scripts/lesson-tools.mjs quick-capture \
 
 Optional flags: `--kind lesson|preference|failure` (default: lesson), `--confidence low|medium|high`, `--source-artifact /path/to/relevant/file`.
 
-Use this instead of the full `capture` command when you want to record a lesson quickly. The full `capture` command with all 7 required fields is still available for detailed, high-confidence entries.
+The quality gate evaluates reusability, novelty, durability, and specificity before writing to LanceDB. Low-quality or duplicate lessons are automatically rejected.

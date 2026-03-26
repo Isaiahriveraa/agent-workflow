@@ -122,16 +122,30 @@ const resolveLanceDbPath = (env) => {
   }
 
   const historyDbPath = env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim();
-  if (!historyDbPath) {
+  if (historyDbPath) {
     return {
-      path: null,
-      resolution: 'missing'
+      path: path.join(path.dirname(historyDbPath), 'lancedb'),
+      resolution: 'derived-from-history-db'
     };
   }
 
+  const home = env.HOME ?? env.USERPROFILE;
   return {
-    path: path.join(path.dirname(historyDbPath), 'lancedb'),
-    resolution: 'derived-from-history-db'
+    path: home ? path.join(home, '.agents', '.agents-memory', 'lancedb') : null,
+    resolution: home ? 'default' : 'missing'
+  };
+};
+
+const resolveHistoryDbPath = (env) => {
+  const explicit = env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim();
+  if (explicit) {
+    return { path: explicit, resolution: 'explicit-env' };
+  }
+
+  const home = env.HOME ?? env.USERPROFILE;
+  return {
+    path: home ? path.join(home, '.agents', '.agents-memory', 'memory_lifecycle.db') : null,
+    resolution: home ? 'default' : 'missing'
   };
 };
 
@@ -156,9 +170,10 @@ const buildReadiness = ({ backend, env }) => {
       baseUrlPresent: Boolean(env[MEMORY_ENV_KEYS.localLlmBaseUrl]?.trim())
     };
     const lanceDb = resolveLanceDbPath(env);
+    const resolvedHistoryDb = resolveHistoryDbPath(env);
     const historyDb = {
-      pathPresent: Boolean(env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim()),
-      resolution: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() ? 'explicit-env' : 'missing'
+      pathPresent: Boolean(resolvedHistoryDb.path),
+      resolution: resolvedHistoryDb.resolution
     };
 
     return {
@@ -222,8 +237,8 @@ export const resolveMemorySidecarConfig = ({ env = process.env } = {}) => {
         tableBase: env[MEMORY_ENV_KEYS.lanceDbTableBase]?.trim() || SUPPORTED_MEM0_LANCEDB_PROFILE.storage.tableBaseName
       },
       historyDb: {
-        path: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() || null,
-        resolution: env[MEMORY_ENV_KEYS.localHistoryDbPath]?.trim() ? 'explicit-env' : 'missing'
+        path: resolveHistoryDbPath(env).path,
+        resolution: resolveHistoryDbPath(env).resolution
       }
     },
     scope: {
@@ -1085,6 +1100,32 @@ const runCli = async ({ argv = process.argv.slice(2), cwd = process.cwd(), env =
       cwd: resolvedCwd
     }, { env });
 
+    // Cap to 5 items before any filtering
+    if (result.items) result.items = result.items.slice(0, 5);
+
+    // LLM relevance filter: evaluate each recalled item against the current task
+    if (args['filter-relevance'] != null && args.query?.trim() && result.items?.length) {
+      try {
+        const { evaluateRecallRelevance } = await import('./memory-quality-gate.mjs');
+        const filtered = [];
+        const deadline = Date.now() + 3000; // 3-second total budget
+        for (const item of result.items) {
+          if (Date.now() >= deadline) break;
+          const verdict = await evaluateRecallRelevance({
+            memory: item.summary || item.text || '',
+            taskDescription: args.query.trim(),
+            workflowStage
+          });
+          if (verdict.applicable) {
+            filtered.push({ ...item, relevance: verdict });
+          }
+        }
+        result.items = filtered;
+      } catch {
+        // fail-open: return unfiltered items if quality gate import or LLM fails
+      }
+    }
+
     console.log(JSON.stringify({
       ok: true,
       command: 'recall',
@@ -1093,7 +1134,7 @@ const runCli = async ({ argv = process.argv.slice(2), cwd = process.cwd(), env =
     return;
   }
 
-  throw new Error('Usage: node scripts/memory-sidecar-adapter.mjs <status|recall> [--workflow-stage stage] [--query text] [--context-summary text]');
+  throw new Error('Usage: node scripts/memory-sidecar-adapter.mjs <status|recall> [--workflow-stage stage] [--query text] [--context-summary text] [--filter-relevance]');
 };
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -7,7 +7,7 @@ description: Synchronize pending lessons and plans to the long-term memory store
 **Purpose**: Safely and synchronously index newly learned lessons, patterns, and planning files without silently hijacking context in the background.
 
 1. **Verify State**:
-   - Confirm that there are un-synced lessons in `.planning/lessons/` (if the directory exists).
+   - Check LanceDB health: `node $HOME/.agents/scripts/memory-health-check.mjs`
 
 2. **Execute Synchronous Flush**:
    - Run the explicit sync script:
