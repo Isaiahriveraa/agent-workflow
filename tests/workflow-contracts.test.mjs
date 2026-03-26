@@ -124,14 +124,14 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
-  assert.match(createPlan, /scripts\/memory-sync-bridge\.mjs recall/);
+  assert.match(createPlan, /agents-memory recall create-plan/);
   assert.match(createPlan, /scripts\/workflow-command-decision\.mjs evaluate/);
   assert.match(createPlan, /Original Prompt Alignment/);
   assert.match(createPlan, /Research Sufficiency/);
   assert.match(createPlan, /Phase Plan Index/);
   assert.match(createPlan, /one child plan per implementation phase/);
   assert.match(createPlan, /before critique/);
-  assert.match(createPlan, /--workflow-stage create-plan/);
+  assert.match(createPlan, /workflow-command-decision\.mjs evaluate/);
   assert.match(createPlan, /do_more_research/);
   assert.match(createPlan, /run_critic/);
   assert.match(createPlan, /request_user_decision/);
@@ -143,9 +143,9 @@ test('workflow commands reference explicit context files', () => {
   assert.match(implementPlan, /critic, grader, and memory-policy files/);
   assert.match(implementPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(implementPlan, /plan_ready_for_implementation/);
-  assert.match(implementPlan, /scripts\/memory-sync-bridge\.mjs recall/);
+  assert.match(implementPlan, /agents-memory recall implement-plan/);
   assert.match(implementPlan, /scripts\/workflow-command-decision\.mjs evaluate/);
-  assert.match(implementPlan, /--workflow-stage implement-plan/);
+  assert.match(implementPlan, /workflow-command-decision\.mjs evaluate/);
   assert.match(implementPlan, /active runtime state and selected artifacts/);
   assert.match(implementPlan, /advisory memory recall/);
   assert.match(implementPlan, /disabled mode must preserve current behavior/);

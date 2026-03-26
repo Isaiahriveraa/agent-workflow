@@ -310,7 +310,7 @@ const inferCreativePlan = (artifact) =>
 const creativePacketPresent = (artifact) => {
   const body = artifact.body;
   return {
-    objective: /\bobjective\b/i.test(body),
+    objective: /\b(?:objective|intent)\b/i.test(body),
     audience: /\baudience\b/i.test(body),
     visualDirection: /\bvisual direction\b/i.test(body),
     references: /\breferences?\b/i.test(body),
@@ -390,10 +390,10 @@ const buildGradeResult = (artifact, validation) => {
     ? buildResearchChecks(artifact)
     : buildPlanChecks(artifact);
 
-  if (!checks.critiqueEvidence && artifact.frontmatter.critique_completed === true) {
+  if (!checks.critiqueEvidence && (artifact.frontmatter.critique_completed === true || artifact.frontmatter.substantial === true)) {
     blockers.push({
       class: 'decision_missing',
-      message: 'critique_completed is true but no critique section or critique_artifacts evidence exists'
+      message: 'substantial plan requires critique evidence — no critique section or critique_artifacts found'
     });
   }
 

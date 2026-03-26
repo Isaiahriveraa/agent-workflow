@@ -238,7 +238,7 @@ const routeTask = (input) => {
   let bestCategory = null;
   let maxScore = 0;
   for (const [cat, score] of Object.entries(scores)) {
-    if (score > maxScore) {
+    if (score >= maxScore) {
       maxScore = score;
       bestCategory = cat;
     }

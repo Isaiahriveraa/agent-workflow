@@ -117,7 +117,7 @@ const deriveTier = (reasons) => {
 };
 
 const tierLabels = Object.freeze({
-  1: 'trivial',
+  1: 'lightweight',
   2: 'moderate',
   3: 'substantial'
 });
