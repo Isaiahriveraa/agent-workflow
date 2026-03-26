@@ -117,8 +117,6 @@ test('workflow commands reference explicit context files', () => {
 
   assert.match(createPlan, /contexts\/decisions\.md/);
   assert.match(createPlan, /current project's runtime `research-index\.md`/);
-  assert.match(createPlan, /contexts\/failure-patterns\.md/);
-  assert.match(createPlan, /contexts\/lessons-learned\.md/);
   assert.match(createPlan, /select and load the relevant capsule/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
@@ -158,17 +156,15 @@ test('workflow commands reference explicit context files', () => {
   assert.match(implementPlan, /Do not write advisory recall into the current project's `state\.md`, `research-index\.md`, session continuity artifacts, or active artifact selections/);
   assert.match(implementPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
   assert.match(implementPlan, /Never retry blindly after a verified miss/);
-  assert.match(implementPlan, /lesson-tools\.mjs capture/);
+  assert.match(implementPlan, /lesson-tools\.mjs quick-capture/);
   assert.match(validatePlan, /current project's `state\.md`/);
-  assert.match(validatePlan, /contexts\/lessons-learned\.md/);
-  assert.match(validatePlan, /contexts\/failure-patterns\.md/);
   assert.match(validatePlan, /current project's `research-index\.md`/);
   assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(validatePlan, /scripts\/workflow-command-decision\.mjs evaluate/);
   assert.match(validatePlan, /request_user_decision/);
   assert.match(validatePlan, /capture_lesson/);
-  assert.match(validatePlan, /lesson-tools\.mjs capture/);
+  assert.match(validatePlan, /lesson-tools\.mjs quick-capture/);
   assert.match(optimizePrompt, /Capsule:/);
   assert.match(research, /current project's `research-index\.md`/);
   assert.match(research, /project-context\.mjs current/);
@@ -395,8 +391,8 @@ test('ssot validation fails when Claude get-shit-done drifts into a local direct
       permissions: { allow: [`Read(${path.join(home, '.agents')}/**)`] },
       env: { CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: '1' },
       hooks: {
-        Stop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"` }] }],
-        SubagentStop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"` }] }]
+        Stop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-memory-consolidation.cjs')}"` }] }],
+        SubagentStop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-memory-consolidation.cjs')}"` }] }]
       }
     }, null, 2));
 
@@ -431,9 +427,7 @@ test('manifest points Codex CLI at the shared AGENTS contract', () => {
 
 test('learning contexts, quality gate rules, and capsules exist with expected sections', () => {
   const userTaste = read('contexts/user-taste.md');
-  const failurePatterns = read('contexts/failure-patterns.md');
   const referenceLibrary = read('contexts/reference-library.md');
-  const lessons = read('contexts/lessons-learned.md');
   const uiUxBrief = read('contexts/ui-ux.md');
   const uiUxRouting = read('rules/common/ui-ux-routing.md');
   const learningLoop = read('rules/common/learning-loop.md');
@@ -443,15 +437,11 @@ test('learning contexts, quality gate rules, and capsules exist with expected se
 
   assert.match(userTaste, /## Preferred Characteristics/);
   assert.match(userTaste, /## Recent Confirmations/);
-  assert.match(failurePatterns, /## Recurring Failure Classes/);
-  assert.match(failurePatterns, /## Recent Entries/);
   assert.match(referenceLibrary, /## Approved Sources/);
-  assert.match(lessons, /## Writeback Policy/);
-  assert.match(lessons, /## Recent Artifacts/);
   assert.match(uiUxBrief, /Placeholder values such as/);
   assert.match(uiUxRouting, /Placeholder content such as `Not set`/);
   assert.match(learningLoop, /## Required Flow/);
-  assert.match(learningLoop, /lesson-tools\.mjs capture/);
+  assert.match(learningLoop, /lesson-tools\.mjs quick-capture/);
   assert.match(qualityGate, /## Minimum Creative Gate/);
   assert.match(qualityGate, /## Minimum API Gate/);
   assert.match(creativeAssembly, /contexts\/user-taste\.md/);
@@ -576,8 +566,8 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
     'additionalDirectories includes ~/.agents',
     'permissions.allow includes Read(~/.agents/**)',
     'env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1',
-    'hooks.Stop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs',
-    'hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-lesson-capture.cjs'
+    'hooks.Stop runs ~/.claude/hooks/gsd-stop-memory-consolidation.cjs',
+    'hooks.SubagentStop runs ~/.claude/hooks/gsd-stop-memory-consolidation.cjs'
   ]);
   assert.ok(settings.additionalDirectories.includes(agentsDir));
   assert.ok(settings.permissions.allow.includes(`Read(${agentsDir}/**)`));
@@ -588,11 +578,11 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   );
   assert.equal(
     settings.hooks.Stop[0].hooks[0].command,
-    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.cjs')}"`
+    `node "${path.join(claudeDir, 'hooks/gsd-stop-memory-consolidation.cjs')}"`
   );
   assert.equal(
     settings.hooks.SubagentStop[0].hooks[0].command,
-    `node "${path.join(claudeDir, 'hooks/gsd-stop-lesson-capture.cjs')}"`
+    `node "${path.join(claudeDir, 'hooks/gsd-stop-memory-consolidation.cjs')}"`
   );
   assert.equal(
     settings.statusLine.command,

@@ -7,5 +7,4 @@ Write back lessons when:
 
 Promote durable lessons into:
 - `~/.agents/contexts/user-taste.md`
-- `~/.agents/contexts/failure-patterns.md`
-- `~/.agents/contexts/lessons-learned.md`
+- LanceDB via `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."`

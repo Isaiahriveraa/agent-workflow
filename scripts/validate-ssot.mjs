@@ -20,9 +20,7 @@ const requiredFiles = [
   'contexts/agent-catalog.md',
   'contexts/ui-ux.md',
   'contexts/user-taste.md',
-  'contexts/failure-patterns.md',
   'contexts/reference-library.md',
-  'contexts/lessons-learned.md',
   'rules/common/discovery-levels.md',
   'rules/common/decision-fidelity.md',
   'rules/common/search-first.md',
@@ -63,10 +61,7 @@ const requiredFiles = [
   'adapters/openclaw/templates/USER.md',
   'adapters/openclaw/templates/TOOLS.md',
   'hooks/gsd-check-update.cjs',
-  'hooks/gsd-stop-lesson-capture.cjs',
-  'hooks/gsd-stop-lesson-capture.js',
   'hooks/gsd-statusline.js',
-  'adapters/claude-code/hooks/gsd-stop-lesson-capture.js',
   'commands/session-start.md',
   'commands/session-status.md',
   'commands/pause-session.md',
@@ -93,9 +88,7 @@ const requiredHeadings = new Map([
   ['contexts/agent-catalog.md', ['## Agent Classes', '## Workflow Experts', '## Routing Defaults', '## Constraints']],
   ['contexts/ui-ux.md', ['## Intent', '## Audience', '## Visual Direction', '## Constraints', '## References', '## Banned Patterns', '## Differentiation Target', '## Required States', '## Selected Skill', '## Selected Capsule']],
   ['contexts/user-taste.md', ['## Preferred Characteristics', '## Disliked Patterns', '## Recent Confirmations', '## Evidence Threshold', '## Last Updated']],
-  ['contexts/failure-patterns.md', ['## Recurring Failure Classes', '## Diagnosis Format', '## Recent Entries', '## Promotion Rules', '## Last Updated']],
-  ['contexts/reference-library.md', ['## Approved Sources', '## Reference Entry Format', '## Selection Guidance', '## Last Updated']],
-  ['contexts/lessons-learned.md', ['## Active Lessons', '## Lesson Format', '## Writeback Policy', '## Recent Artifacts', '## Last Updated']]
+  ['contexts/reference-library.md', ['## Approved Sources', '## Reference Entry Format', '## Selection Guidance', '## Last Updated']]
 ]);
 
 const adapterReadmeHeadings = new Map([
@@ -107,9 +100,9 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', '~/.agents/contexts/failure-patterns.md', '~/.agents/contexts/lessons-learned.md', 'select and load the relevant capsule', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `create-plan`', "Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'do_more_research', 'run_critic', 'request_user_decision', 'Original Prompt Alignment', 'Research Sufficiency', 'Phase Plan Index', 'one child plan per implementation phase']],
-  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'scripts/workflow-artifact-tools.mjs grade-plan', 'plan_ready_for_implementation', 'load it before starting work and honor its critic, grader, and memory-policy files', 'scripts/memory-sidecar-adapter.mjs', 'workflow stage `implement-plan`', 'active runtime state and selected artifacts', 'advisory memory recall', 'disabled mode must preserve current behavior', "Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'replan', 'capture_lesson', 'request_user_decision', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs capture', 'Phase Plan Index', 'one linked child phase plan per explicit implementation phase', 'read the linked child phase plan for that phase before editing']],
-  ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', '~/.agents/contexts/lessons-learned.md', '~/.agents/contexts/failure-patterns.md', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'scripts/workflow-command-decision.mjs evaluate', 'request_user_decision', 'capture_lesson', 'scripts/lesson-tools.mjs capture']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'select and load the relevant capsule', 'agents-memory recall create-plan', "Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'do_more_research', 'run_critic', 'request_user_decision', 'Original Prompt Alignment', 'Research Sufficiency', 'Phase Plan Index', 'one child plan per implementation phase']],
+  ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'scripts/workflow-artifact-tools.mjs grade-plan', 'plan_ready_for_implementation', 'load it before starting work and honor its critic, grader, and memory-policy files', 'agents-memory recall implement-plan', 'active runtime state and selected artifacts', 'advisory memory recall', 'disabled mode must preserve current behavior', "Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'replan', 'capture_lesson', 'request_user_decision', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs quick-capture', 'Phase Plan Index', 'one linked child phase plan per explicit implementation phase', 'read the linked child phase plan for that phase before editing']],
+  ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'scripts/workflow-command-decision.mjs evaluate', 'request_user_decision', 'capture_lesson', 'scripts/lesson-tools.mjs quick-capture']],
   ['commands/research_codebase.md', ["current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture', 'scripts/workflow-artifact-tools.mjs grade-research', 'research_ready_for_planning']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],
@@ -419,20 +412,20 @@ if (fs.existsSync(manifestPath)) {
       const subagentStopHooks = Array.isArray(settings.hooks?.SubagentStop) ? settings.hooks.SubagentStop : [];
       const hasStopHook = stopHooks.some((matcher) =>
         Array.isArray(matcher.hooks) &&
-        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"`)
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-memory-consolidation.cjs')}"`)
       );
       const hasSubagentStopHook = subagentStopHooks.some((matcher) =>
         Array.isArray(matcher.hooks) &&
-        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-lesson-capture.cjs')}"`)
+        matcher.hooks.some((hook) => hook.command === `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-memory-consolidation.cjs')}"`)
       );
 
       if (!hasStopHook) {
-        console.error('Claude settings missing Stop hook for gsd-stop-lesson-capture.cjs');
+        console.error('Claude settings missing Stop hook for gsd-stop-memory-consolidation.cjs');
         hasError = true;
       }
 
       if (!hasSubagentStopHook) {
-        console.error('Claude settings missing SubagentStop hook for gsd-stop-lesson-capture.cjs');
+        console.error('Claude settings missing SubagentStop hook for gsd-stop-memory-consolidation.cjs');
         hasError = true;
       }
     } catch (error) {

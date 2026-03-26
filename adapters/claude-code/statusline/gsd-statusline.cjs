@@ -90,7 +90,7 @@ process.stdin.on('end', () => {
     }
 
     // Mem0 sync indicator — lights up when mem0 was recently triggered
-    // The rpi-memory-sync hook spawns lesson-tools flush, which touches memory.db
+    // Memory consolidation hook touches memory.db when LanceDB maintenance runs
     let memIndicator = '';
     const memDbPath = path.join(agentsRoot, 'memory.db');
     if (fs.existsSync(memDbPath)) {

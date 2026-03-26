@@ -184,7 +184,7 @@ last_validated: 2026-03-12T18:10:00.000Z
   assert.equal(result.strategyDecision.action, 'do_more_research');
 });
 
-test('helper routes through autonomy dispatcher and emits machine-readable artifacts', async () => {
+test('helper routes through autonomy dispatcher and returns strategy decision', async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workflow-command-decision-'));
   const repoRoot = path.join(tmpDir, 'repo');
   fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
@@ -200,9 +200,7 @@ test('helper routes through autonomy dispatcher and emits machine-readable artif
 
     assert.equal(result.status, 'processed');
     assert.equal(result.strategyDecision.action, 'capture_lesson');
-    assert.equal(fs.existsSync(result.tracePath), true);
-    assert.equal(fs.existsSync(result.evalPath), true);
-    assert.equal(fs.existsSync(result.strategyPath), true);
+    assert.equal(result.duplicate, false);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }

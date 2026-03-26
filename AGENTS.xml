@@ -66,9 +66,7 @@
     <rule>contexts/agent-catalog.md is the source of truth for workflow expert agents, their triggers, and routing boundaries.</rule>
     <rule>contexts/ui-ux.md is required before substantial design-heavy UI work.</rule>
     <rule>contexts/user-taste.md is the source of truth for durable user-specific output preferences and dislikes.</rule>
-    <rule>contexts/failure-patterns.md is the source of truth for reusable failure diagnoses and anti-patterns.</rule>
     <rule>contexts/reference-library.md is the source of truth for approved references, exemplars, and inspiration inputs.</rule>
-    <rule>contexts/lessons-learned.md is the source of truth for reusable lessons promoted from verified failures or corrections.</rule>
   </context-rules>
 
   <capsule-rules>

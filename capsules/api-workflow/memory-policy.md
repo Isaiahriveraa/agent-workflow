@@ -6,5 +6,4 @@ Write back lessons when:
 - a repeated integration failure appears
 
 Promote durable lessons into:
-- `~/.agents/contexts/failure-patterns.md`
-- `~/.agents/contexts/lessons-learned.md`
+- LanceDB via `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."`
