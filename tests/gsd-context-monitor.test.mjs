@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const hookPath = path.join(root, 'hooks', 'gsd-context-monitor.js');
 
-const runHook = ({ payload, metrics, env = {}, warned, sessionId = 'session-1' }) => {
+const runHook = ({ payload, metrics, env = {}, warned, sessionId = 'session-1', cwd = root }) => {
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-hook-test-'));
   const metricsPath = path.join(tmpRoot, `claude-ctx-${sessionId}.json`);
   const warnedPath = path.join(tmpRoot, `claude-ctx-${sessionId}-warned.json`);
@@ -22,7 +22,7 @@ const runHook = ({ payload, metrics, env = {}, warned, sessionId = 'session-1' }
     }
 
     const result = spawnSync(process.execPath, [hookPath], {
-      cwd: root,
+      cwd,
       encoding: 'utf8',
       input: JSON.stringify(payload ?? { session_id: sessionId }),
       env: {
@@ -159,6 +159,109 @@ test('context monitor bypasses debounce when warning escalates to critical', asy
   }
 });
 
+test('context monitor mentions active execution task when execution state is present', async () => {
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-context-monitor-'));
+  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const now = Math.floor(Date.now() / 1000);
+
+  try {
+    fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
+    fs.mkdirSync(path.dirname(executionPath), { recursive: true });
+    fs.writeFileSync(executionPath, JSON.stringify({
+      status: 'active',
+      current_task_key: 'phase-1-step-1-line-10',
+      updated_at: new Date().toISOString()
+    }, null, 2));
+
+    const result = runHook({
+      cwd: repoRoot,
+      metrics: {
+        timestamp: now,
+        remaining_percentage: 35,
+        used_pct: 65
+      }
+    });
+
+    assert.equal(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /Active execution:/);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /Current task: phase-1-step-1-line-10/);
+  } finally {
+    fs.rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('context monitor includes autonomy recommendation in warning output', async () => {
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-context-monitor-'));
+  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const statePath = path.join(repoRoot, '.agents', 'contexts', 'state.md');
+  const now = Math.floor(Date.now() / 1000);
+
+  try {
+    fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
+    fs.mkdirSync(path.dirname(executionPath), { recursive: true });
+    fs.mkdirSync(path.dirname(statePath), { recursive: true });
+    fs.writeFileSync(statePath, `# Workflow State
+
+Use this file as the canonical resumable state for in-flight work in the current project.
+
+## Current Workflow
+- oh-my-openagent-adoption-plan
+
+## Current Phase
+- Phase 3
+
+## Next Step
+- Resume phase 3 implementation
+
+## Blockers
+- None.
+
+## Last Verified At
+- now
+
+## Related Plan
+- /tmp/phase-3-plan.md
+
+## Active Artifact Working Set
+- Last updated: now
+- Source: test
+- Focus: phase 3
+
+### Selected By Category
+- intake: none
+- plan: /tmp/phase-3-plan.md
+- research: none
+- session: none
+- handoff: none
+
+### Ordered Artifacts
+1. /tmp/phase-3-plan.md
+`);
+    fs.writeFileSync(executionPath, JSON.stringify({
+      status: 'paused',
+      current_task_key: 'phase-3-step-1-line-10',
+      updated_at: new Date().toISOString()
+    }, null, 2));
+
+    const result = runHook({
+      cwd: repoRoot,
+      metrics: {
+        timestamp: now,
+        remaining_percentage: 35,
+        used_pct: 65
+      }
+    });
+
+    assert.equal(result.status, 0);
+    const parsed = JSON.parse(result.stdout);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /Autonomy recommendation: resume_execution/);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /paused/i);
+  } finally {
+    fs.rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('context monitor triggers checkpoint automation in checkpoint mode', async () => {
   const helperLog = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-hook-helper-')), 'helper.json');
   const helperScript = path.join(path.dirname(helperLog), 'helper.mjs');
@@ -184,6 +287,7 @@ test('context monitor triggers checkpoint automation in checkpoint mode', async 
     const helperArgs = JSON.parse(fs.readFileSync(helperLog, 'utf8'));
     assert.equal(helperArgs[0], 'checkpoint');
     assert.match(helperArgs.join(' '), /gsd-context-monitor/);
+    assert.match(helperArgs.join(' '), /resume the tracked plan|wrap up the current task|checkpoint/i);
   } finally {
     fs.rmSync(path.dirname(helperLog), { recursive: true, force: true });
     fs.rmSync(result.tmpRoot, { recursive: true, force: true });

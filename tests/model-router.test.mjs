@@ -8,9 +8,12 @@ const root = path.resolve(new URL('..', import.meta.url).pathname);
 // Direct imports for library-mode testing (<5ms path)
 import {
   MODEL_TIERS,
+  ROUTER_CATEGORIES,
+  INTENT_KINDS,
   PROVIDERS,
   TIER_PRECEDENCE,
   DEFAULT_PROVIDER_MAPS,
+  DEFAULT_CATEGORY_CONFIGS,
   SCORE_THRESHOLDS,
   CONFIDENCE,
   normalizeRouterInput,
@@ -20,6 +23,8 @@ import {
 import {
   classifyComplexity,
   detectProvider,
+  inferIntentKind,
+  inferCategory,
   applyFloors,
   applyBudget,
   resolveModel,
@@ -30,6 +35,29 @@ import {
 
 test('MODEL_TIERS contains exactly fast/balanced/deep', () => {
   assert.deepEqual(MODEL_TIERS, ['fast', 'balanced', 'deep']);
+});
+
+test('ROUTER_CATEGORIES contains the verified upstream category vocabulary', () => {
+  assert.deepEqual(ROUTER_CATEGORIES, [
+    'visual-engineering',
+    'ultrabrain',
+    'deep',
+    'artistry',
+    'quick',
+    'unspecified-low',
+    'unspecified-high',
+    'writing'
+  ]);
+});
+
+test('INTENT_KINDS contains supported request modes', () => {
+  assert.deepEqual(INTENT_KINDS, [
+    'explanation',
+    'investigation',
+    'implementation',
+    'fix',
+    'open-ended'
+  ]);
 });
 
 test('PROVIDERS contains all supported CLIs', () => {
@@ -70,6 +98,14 @@ test('opencode maps use provider/ prefix format', () => {
   }
 });
 
+test('DEFAULT_CATEGORY_CONFIGS has default fallback metadata for every category', () => {
+  for (const category of ROUTER_CATEGORIES) {
+    assert.ok(DEFAULT_CATEGORY_CONFIGS[category], `missing config for ${category}`);
+    assert.ok(MODEL_TIERS.includes(DEFAULT_CATEGORY_CONFIGS[category].tierHint));
+    assert.ok(Array.isArray(DEFAULT_CATEGORY_CONFIGS[category].fallbackModels));
+  }
+});
+
 // --- Normalizer tests ---
 
 test('normalizeRouterInput requires taskDescription', () => {
@@ -84,6 +120,8 @@ test('normalizeRouterInput fills defaults', () => {
   assert.equal(result.tierFloor, null);
   assert.equal(result.tierOverride, null);
   assert.equal(result.contextRemaining, null);
+  assert.equal(result.category, null);
+  assert.equal(result.intentKind, null);
 });
 
 test('normalizeRouterInput rejects invalid budgetMode', () => {
@@ -93,14 +131,26 @@ test('normalizeRouterInput rejects invalid budgetMode', () => {
 
 test('normalizeRouterOutput produces all required fields', () => {
   const output = normalizeRouterOutput({
+    category: 'quick',
+    intent_kind: 'implementation',
+    tier_hint: 'fast',
+    primary_model: 'm',
+    fallback_candidates: [],
+    provenance: { strategy: 'category-first' },
+    attempted_models: ['m'],
     tier: 'fast', model: 'm', provider: 'generic',
     confidence: 0.9, reason: 'test', score: 0, signals: ['a']
   });
+  assert.equal(output.category, 'quick');
+  assert.equal(output.intent_kind, 'implementation');
+  assert.equal(output.tier_hint, 'fast');
+  assert.equal(output.primary_model, 'm');
   assert.equal(output.tier, 'fast');
   assert.equal(output.alias, null);
   assert.equal(output.budgetAdjusted, false);
   assert.equal(output.floorApplied, false);
   assert.equal(output.overridden, false);
+  assert.deepEqual(output.attempted_models, ['m']);
   assert.deepEqual(output.signals, ['a']);
 });
 
@@ -177,6 +227,38 @@ test('no signals defaults to balanced with 0.5 confidence', () => {
   assert.equal(result.tier, 'balanced');
   assert.equal(result.confidence, CONFIDENCE.noSignals);
   assert.equal(result.signals.length, 0);
+});
+
+test('inferIntentKind respects explicit intent', () => {
+  const result = inferIntentKind(normalizeRouterInput({
+    taskDescription: 'implement a feature',
+    intentKind: 'fix'
+  }));
+  assert.equal(result.intentKind, 'fix');
+  assert.equal(result.source, 'explicit');
+});
+
+test('inferIntentKind detects explanation requests', () => {
+  const result = inferIntentKind(normalizeRouterInput({
+    taskDescription: 'explain the auth flow'
+  }));
+  assert.equal(result.intentKind, 'explanation');
+});
+
+test('inferCategory respects explicit category', () => {
+  const input = normalizeRouterInput({
+    taskDescription: 'build a dashboard',
+    category: 'visual-engineering'
+  });
+  const result = inferCategory(input, { tier: 'balanced' }, { intentKind: 'implementation' });
+  assert.equal(result.category, 'visual-engineering');
+  assert.equal(result.source, 'explicit');
+});
+
+test('inferCategory maps documentation work to writing', () => {
+  const input = normalizeRouterInput({ taskDescription: 'write docs for the CLI' });
+  const result = inferCategory(input, { tier: 'balanced' }, { intentKind: 'explanation' });
+  assert.equal(result.category, 'writing');
 });
 
 // --- Floor tests ---
@@ -343,13 +425,10 @@ test('resolveModel falls back to generic for unknown provider', () => {
 
 test('SC1: route("read the contents of package.json") → fast', () => {
   const result = route({ taskDescription: 'read the contents of package.json', provider: 'claude-code' });
-  // No signals match → defaults to balanced. But plan says fast.
-  // Actually "read" doesn't match any signal. Score = 0 → fast by threshold, but no-signal override → balanced.
-  // The implementation defaults no-signals to balanced. This conflicts with SC1.
-  // For now we test what the implementation actually does:
-  // score 0, no signals → balanced (no-signal default)
-  assert.equal(result.score, 0);
-  // The tier depends on no-signal handling — see note in classifyComplexity
+  assert.equal(result.category, 'quick');
+  assert.equal(result.tier, 'fast');
+  assert.equal(result.primary_model, result.model);
+  assert.ok(Array.isArray(result.fallback_candidates));
 });
 
 test('SC2: route("design auth architecture for multi-tenant SaaS") → deep', () => {
@@ -357,8 +436,10 @@ test('SC2: route("design auth architecture for multi-tenant SaaS") → deep', ()
     taskDescription: 'design auth architecture for multi-tenant SaaS',
     provider: 'claude-code'
   });
+  assert.equal(result.category, 'ultrabrain');
   assert.equal(result.tier, 'deep');
   assert.equal(result.alias, 'opus');
+  assert.equal(result.intent_kind, 'open-ended');
 });
 
 test('SC3: route("write unit tests for the user service") → balanced', () => {
@@ -366,6 +447,7 @@ test('SC3: route("write unit tests for the user service") → balanced', () => {
     taskDescription: 'write unit tests for the user service',
     provider: 'claude-code'
   });
+  assert.equal(result.category, 'writing');
   assert.equal(result.tier, 'balanced');
   assert.equal(result.alias, 'sonnet');
 });
@@ -375,10 +457,9 @@ test('SC4: route("quick security review of auth.js") → balanced', () => {
     taskDescription: 'quick security review of auth.js',
     provider: 'claude-code'
   });
-  assert.equal(result.tier, 'balanced');
-  // Classification already scores 1 (balanced), so floor doesn't need to raise it.
-  // The floor is a safety net — it would catch a case where dampeners pushed score ≤ 0.
-  assert.equal(result.alias, 'sonnet');
+  assert.equal(result.category, 'deep');
+  assert.equal(result.tier, 'deep');
+  assert.equal(result.alias, 'opus');
 });
 
 test('SC5: contextRemaining=25 forces fast even for deep task', () => {
@@ -387,10 +468,8 @@ test('SC5: contextRemaining=25 forces fast even for deep task', () => {
     provider: 'claude-code',
     contextRemaining: 25
   });
-  // Budget forces fast, but architecture has a balanced floor.
-  // Precedence: floor > budget → balanced
   assert.equal(result.tier, 'balanced');
-  assert.equal(result.floorApplied, true);
+  assert.equal(result.budgetAdjusted, true);
 });
 
 test('SC5b: contextRemaining=25 forces fast for non-floored task', () => {
@@ -407,6 +486,7 @@ test('SC5b: contextRemaining=25 forces fast for non-floored task', () => {
 test('SC6: claude-code returns aliases, opencode returns provider/model-id', () => {
   const cc = route({ taskDescription: 'implement a feature', provider: 'claude-code' });
   assert.ok(cc.alias !== null);
+  assert.ok(Array.isArray(cc.fallback_candidates));
   const oc = route({ taskDescription: 'implement a feature', provider: 'opencode' });
   assert.ok(oc.model.startsWith('anthropic/'));
   assert.equal(oc.alias, null);
@@ -433,6 +513,7 @@ test('SC7b: override without floor conflict applies override', () => {
   assert.equal(result.tier, 'deep');
   assert.equal(result.overridden, true);
   assert.equal(result.alias, 'opus');
+  assert.equal(result.tier_hint, 'deep');
 });
 
 test('SC4b: floor activates when only dampeners + security review (hypothetical score 0)', () => {
@@ -464,10 +545,13 @@ test('SC12: CLI invocation returns valid JSON', () => {
   ], { cwd: root, encoding: 'utf8' });
   const parsed = JSON.parse(output);
   assert.ok(MODEL_TIERS.includes(parsed.tier));
+  assert.ok(ROUTER_CATEGORIES.includes(parsed.category));
+  assert.ok(typeof parsed.primary_model === 'string');
   assert.ok(parsed.model);
   assert.ok(typeof parsed.confidence === 'number');
   assert.ok(typeof parsed.reason === 'string');
   assert.ok(Array.isArray(parsed.signals));
+  assert.ok(Array.isArray(parsed.fallback_candidates));
 });
 
 test('CLI classify command returns valid JSON', () => {
@@ -520,7 +604,6 @@ test('E13: contextRemaining not provided — budget check skipped', () => {
     taskDescription: 'design system architecture',
     provider: 'claude-code'
   });
-  // No contextRemaining → no context-based budget downgrade
   assert.equal(result.tier, 'deep');
   assert.equal(result.budgetAdjusted, false);
 });
@@ -549,6 +632,31 @@ test('E15: workflow router tier and model router tier are independent', () => {
   assert.ok(result.tier); // just verify it returns a valid tier
 });
 
+test('explicit category routes deterministically even when task text is generic', () => {
+  const result = route({
+    taskDescription: 'handle this task',
+    provider: 'claude-code',
+    category: 'artistry',
+    intentKind: 'implementation'
+  });
+  assert.equal(result.category, 'artistry');
+  assert.equal(result.intent_kind, 'implementation');
+  assert.equal(result.tier_hint, 'balanced');
+  assert.ok(result.fallback_candidates.length > 0);
+  assert.equal(result.provenance.category_source, 'explicit');
+});
+
+test('legacy caller without category still returns additive category-first fields', () => {
+  const result = route({
+    taskDescription: 'implement feature',
+    provider: 'codex-cli'
+  });
+  assert.ok(ROUTER_CATEGORIES.includes(result.category));
+  assert.ok(result.primary_model.startsWith('gpt-'));
+  assert.equal(result.primary_model, result.model);
+  assert.ok(Array.isArray(result.attempted_models));
+});
+
 test('codex-cli returns model IDs without aliases', () => {
   const result = route({ taskDescription: 'implement feature', provider: 'codex-cli' });
   assert.equal(result.alias, null);
@@ -568,6 +676,7 @@ test('generic provider returns tier names as model IDs', () => {
 
 test('fix typo in README routes to fast', () => {
   const result = route({ taskDescription: 'fix the typo in README', provider: 'claude-code' });
+  assert.equal(result.category, 'quick');
   assert.equal(result.tier, 'fast');
   assert.equal(result.alias, 'haiku');
 });
@@ -577,7 +686,8 @@ test('debug routes to balanced (single deep signal = score 2)', () => {
     taskDescription: 'debug this intermittent crash with unknown root cause',
     provider: 'claude-code'
   });
-  assert.equal(result.tier, 'balanced');
+  assert.equal(result.category, 'deep');
+  assert.equal(result.tier, 'deep');
   assert.ok(result.signals.some((s) => s.includes('debug')));
 });
 

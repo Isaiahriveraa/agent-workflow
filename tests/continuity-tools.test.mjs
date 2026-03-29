@@ -92,6 +92,208 @@ test('continuity checkpoint creates a project-local session artifact and updates
   }
 });
 
+test('continuity checkpoint includes execution-state metadata when active execution exists', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'execution');
+  const context = runProjectContext(repoRoot);
+  const planPath = path.join(root, 'thoughts', 'plans', `continuity-execution-plan-${path.basename(repoRoot)}.md`);
+  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+
+  fs.mkdirSync(path.dirname(planPath), { recursive: true });
+  fs.mkdirSync(path.dirname(executionPath), { recursive: true });
+  fs.writeFileSync(planPath, '# plan\n');
+  fs.writeFileSync(executionPath, JSON.stringify({
+    schema: 'execution-state.v1',
+    active_plan: planPath,
+    plan_name: 'continuity execution plan',
+    started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    status: 'active',
+    session_ids: [],
+    current_task_key: 'phase-1-step-1-line-10',
+    completed_task_keys: [],
+    task_sessions: {}
+  }, null, 2));
+
+  try {
+    const result = runContinuityTool([
+      'checkpoint',
+      '--topic', 'Execution Checkpoint',
+      '--workflow', 'implementation',
+      '--phase', 'phase execution',
+      '--next-step', 'Continue the active task',
+      '--plan', planPath
+    ], repoRoot);
+
+    assert.equal(result.execution.path, executionPath);
+    assert.equal(result.diagnostics.execution.current_task_key, 'phase-1-step-1-line-10');
+
+    const sessionArtifact = fs.readFileSync(result.artifactPath, 'utf8');
+    assert.match(sessionArtifact, new RegExp(`- Path: ${executionPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+    assert.match(sessionArtifact, /- Current task: phase-1-step-1-line-10/);
+    assert.match(sessionArtifact, /## Continuation Guidance/);
+    assert.match(sessionArtifact, /- Remaining tasks: 1/);
+    assert.match(sessionArtifact, /- Reminder: Execution is active with 1 remaining task\(s\)\./);
+
+    const sessionIndex = fs.readFileSync(context.contextPaths.sessionIndex, 'utf8');
+    assert.match(sessionIndex, /execution active @ phase-1-step-1-line-10/);
+    assert.equal(result.diagnostics.next_command, '/start-work');
+    assert.equal(result.diagnostics.execution_guidance.remaining_task_count, 1);
+    assert.match(sessionArtifact, /next_command: \/start-work/);
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    fs.rmSync(planPath, { force: true });
+  }
+});
+
+test('continuity checkpoint surfaces cleanup guidance for terminal execution state', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'terminal-execution');
+  const planPath = path.join(root, 'thoughts', 'plans', `continuity-terminal-plan-${path.basename(repoRoot)}.md`);
+  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+
+  fs.mkdirSync(path.dirname(planPath), { recursive: true });
+  fs.mkdirSync(path.dirname(executionPath), { recursive: true });
+  fs.writeFileSync(planPath, '# Plan\n- [ ] first task\n- [ ] second task\n');
+  fs.writeFileSync(executionPath, JSON.stringify({
+    schema: 'execution-state.v1',
+    active_plan: planPath,
+    plan_name: 'continuity terminal plan',
+    started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    status: 'completed',
+    session_ids: [],
+    current_task_key: null,
+    completed_task_keys: ['plan-first-task-line-2'],
+    task_sessions: {},
+    task_catalog: [
+      { key: 'plan-first-task-line-2', label: 'first task', completed: true, line: 2, scope: 'Plan' },
+      { key: 'plan-second-task-line-3', label: 'second task', completed: false, line: 3, scope: 'Plan' }
+    ]
+  }, null, 2));
+
+  try {
+    const result = runContinuityTool([
+      'checkpoint',
+      '--topic', 'Terminal Execution Checkpoint',
+      '--workflow', 'implementation',
+      '--phase', 'phase execution',
+      '--next-step', 'Clean up terminal execution state',
+      '--plan', planPath
+    ], repoRoot);
+
+    const sessionArtifact = fs.readFileSync(result.artifactPath, 'utf8');
+    assert.equal(result.diagnostics.next_command, '/stop-work');
+    assert.equal(result.diagnostics.execution_guidance.cleanup.recommended_command, '/stop-work');
+    assert.match(sessionArtifact, /- Cleanup command: \/stop-work/);
+    assert.match(sessionArtifact, /Execution is completed but 1 task\(s\) still appear incomplete/);
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    fs.rmSync(planPath, { force: true });
+  }
+});
+
+test('continuity checkpoint preserves doctor-recommended handoff recovery when no execution state exists', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'doctor-handoff');
+  const context = runProjectContext(repoRoot);
+  const uniqueId = path.basename(repoRoot);
+  const planPath = path.join(root, 'thoughts', 'plans', `continuity-doctor-plan-${uniqueId}.md`);
+  const handoffPath = path.join(root, 'thoughts', 'shared', 'handoffs', 'general', `2026-03-29_21-00-00_doctor-handoff-${uniqueId}.md`);
+  const originalState = fs.readFileSync(context.contextPaths.state, 'utf8');
+
+  fs.mkdirSync(path.dirname(planPath), { recursive: true });
+  fs.mkdirSync(path.dirname(handoffPath), { recursive: true });
+  fs.writeFileSync(planPath, '# plan\n');
+  fs.writeFileSync(handoffPath, '# Handoff\n');
+
+  try {
+    const seededState = setWorkingSet(
+      originalState
+        .replace(/## Current Workflow\n- .*/m, '## Current Workflow\n- implementation')
+        .replace(/## Current Phase\n- .*/m, '## Current Phase\n- phase 3')
+        .replace(/## Next Step\n- .*/m, '## Next Step\n- Resume from handoff')
+        .replace(/## Related Plan\n- .*/m, '## Related Plan\n- none'),
+      `
+- Last updated: 2026-03-29T00:00:00Z
+- Source: manual
+- Focus: doctor handoff
+
+### Selected By Category
+- intake: none
+- plan: none
+- research: none
+- session: none
+- handoff: ${handoffPath}
+
+### Ordered Artifacts
+1. ${handoffPath}
+`
+    );
+    fs.writeFileSync(context.contextPaths.state, seededState);
+
+    const result = runContinuityTool([
+      'checkpoint',
+      '--source', 'test-suite',
+      '--focus', 'doctor handoff',
+      '--topic', 'Doctor Guided Checkpoint',
+      '--handoff', handoffPath
+    ], repoRoot);
+
+    assert.equal(result.diagnostics.next_command, `/resume_handoff ${handoffPath}`);
+    const sessionArtifact = fs.readFileSync(result.artifactPath, 'utf8');
+    assert.match(sessionArtifact, new RegExp(`next_command: /resume_handoff ${handoffPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+
+    const sessionIndex = fs.readFileSync(context.contextPaths.sessionIndex, 'utf8');
+    assert.match(sessionIndex, new RegExp(`- Next command: /resume_handoff ${handoffPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  } finally {
+    fs.writeFileSync(context.contextPaths.state, originalState);
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    fs.rmSync(planPath, { force: true });
+    fs.rmSync(handoffPath, { force: true });
+  }
+});
+
+test('continuity checkpoint defaults next command to start-work when active execution exists', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'execution-next-command');
+  const context = runProjectContext(repoRoot);
+  const planPath = path.join(root, 'thoughts', 'plans', `continuity-next-command-plan-${path.basename(repoRoot)}.md`);
+  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+
+  fs.mkdirSync(path.dirname(planPath), { recursive: true });
+  fs.mkdirSync(path.dirname(executionPath), { recursive: true });
+  fs.writeFileSync(planPath, '# plan\n');
+  fs.writeFileSync(executionPath, JSON.stringify({
+    schema: 'execution-state.v1',
+    active_plan: planPath,
+    plan_name: 'continuity next command plan',
+    started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    status: 'active',
+    session_ids: [],
+    current_task_key: 'phase-3-step-1-line-71',
+    completed_task_keys: [],
+    task_sessions: {}
+  }, null, 2));
+
+  try {
+    const result = runContinuityTool([
+      'checkpoint',
+      '--topic', 'Execution Resume Command',
+      '--workflow', 'implementation',
+      '--phase', 'phase 3',
+      '--next-step', 'Continue current task',
+      '--plan', planPath
+    ], repoRoot);
+
+    const sessionArtifact = fs.readFileSync(result.artifactPath, 'utf8');
+    assert.match(sessionArtifact, /next_command: \/start-work/);
+
+    const sessionIndex = fs.readFileSync(context.contextPaths.sessionIndex, 'utf8');
+    assert.match(sessionIndex, /- Next command: \/start-work/);
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+    fs.rmSync(planPath, { force: true });
+  }
+});
+
 test('continuity handoff preserves authored handoff content and syncs project-local runtime state', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'handoff');
   const context = runProjectContext(repoRoot);
