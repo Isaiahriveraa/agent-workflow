@@ -24,14 +24,14 @@ This directory documents the Codex CLI-specific integration boundary.
 
 ## Model Routing
 
-Codex CLI has a single `--model` flag per session — no per-subagent model selection. The model router provides session-level recommendations:
+Codex CLI has a single `--model` flag per session — no per-subagent model selection. The model router now exposes a category-first recommendation contract with additive fields like `category`, `intent_kind`, `tier_hint`, `primary_model`, and `fallback_candidates`, while keeping legacy `tier` and `model` compatibility fields:
 
 ```bash
 node ~/.agents/scripts/model-router.mjs route --input "implement auth feature"
 # → { "model": "gpt-5.4-mini", "tier": "balanced", ... }
 ```
 
-Before running `codex exec`, the codex skill can call the router to recommend the session model based on overall task complexity.
+Before running `codex exec`, the codex skill can call the router to recommend the session model based on overall task complexity. `fallback_candidates` are advisory alternatives; Codex still has one active session model at a time.
 
 ## Canonical Boundary
 - Shared workflow policy lives in `AGENTS.md`, `prompts/`, `commands/`, `contexts/`, and `rules/common/`.

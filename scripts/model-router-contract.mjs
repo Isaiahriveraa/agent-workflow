@@ -3,6 +3,25 @@
 
 export const MODEL_TIERS = Object.freeze(['fast', 'balanced', 'deep']);
 
+export const ROUTER_CATEGORIES = Object.freeze([
+  'visual-engineering',
+  'ultrabrain',
+  'deep',
+  'artistry',
+  'quick',
+  'unspecified-low',
+  'unspecified-high',
+  'writing'
+]);
+
+export const INTENT_KINDS = Object.freeze([
+  'explanation',
+  'investigation',
+  'implementation',
+  'fix',
+  'open-ended'
+]);
+
 export const PROVIDERS = Object.freeze([
   'claude-code', 'opencode', 'codex-cli', 'antigravity', 'generic'
 ]);
@@ -10,6 +29,52 @@ export const PROVIDERS = Object.freeze([
 export const BUDGET_MODES = Object.freeze(['normal', 'economy', 'minimum']);
 
 export const TIER_PRECEDENCE = Object.freeze({ fast: 0, balanced: 1, deep: 2 });
+
+export const CATEGORY_TIER_HINTS = Object.freeze({
+  'visual-engineering': 'balanced',
+  ultrabrain: 'deep',
+  deep: 'deep',
+  artistry: 'balanced',
+  quick: 'fast',
+  'unspecified-low': 'fast',
+  'unspecified-high': 'balanced',
+  writing: 'balanced'
+});
+
+export const DEFAULT_CATEGORY_CONFIGS = Object.freeze({
+  'visual-engineering': Object.freeze({
+    tierHint: 'balanced',
+    fallbackModels: Object.freeze(['deep', 'fast'])
+  }),
+  ultrabrain: Object.freeze({
+    tierHint: 'deep',
+    fallbackModels: Object.freeze(['balanced'])
+  }),
+  deep: Object.freeze({
+    tierHint: 'deep',
+    fallbackModels: Object.freeze(['balanced', 'fast'])
+  }),
+  artistry: Object.freeze({
+    tierHint: 'balanced',
+    fallbackModels: Object.freeze(['deep', 'fast'])
+  }),
+  quick: Object.freeze({
+    tierHint: 'fast',
+    fallbackModels: Object.freeze(['balanced'])
+  }),
+  'unspecified-low': Object.freeze({
+    tierHint: 'fast',
+    fallbackModels: Object.freeze(['balanced'])
+  }),
+  'unspecified-high': Object.freeze({
+    tierHint: 'balanced',
+    fallbackModels: Object.freeze(['deep', 'fast'])
+  }),
+  writing: Object.freeze({
+    tierHint: 'balanced',
+    fallbackModels: Object.freeze(['fast'])
+  })
+});
 
 // --- Default provider model maps (embedded — updates with git pull) ---
 
@@ -104,6 +169,11 @@ export const normalizeRouterInput = (input) => {
     throw new Error('normalizeRouterInput requires taskDescription');
   }
 
+  const normalizedCategory = ROUTER_CATEGORIES.includes(input.category) ? input.category : null;
+  const normalizedIntentKind = INTENT_KINDS.includes(input.intentKind ?? input.intent_kind)
+    ? (input.intentKind ?? input.intent_kind)
+    : null;
+
   return {
     taskDescription,
     taskType: input.taskType ?? null,
@@ -113,13 +183,22 @@ export const normalizeRouterInput = (input) => {
     budgetMode: BUDGET_MODES.includes(input.budgetMode) ? input.budgetMode : 'normal',
     contextRemaining: input.contextRemaining != null ? Number(input.contextRemaining) : null,
     tierFloor: MODEL_TIERS.includes(input.tierFloor) ? input.tierFloor : null,
-    tierOverride: MODEL_TIERS.includes(input.tierOverride) ? input.tierOverride : null
+    tierOverride: MODEL_TIERS.includes(input.tierOverride) ? input.tierOverride : null,
+    category: normalizedCategory,
+    intentKind: normalizedIntentKind
   };
 };
 
 export const normalizeRouterOutput = (output) => ({
+  category: output.category,
+  intent_kind: output.intent_kind,
+  tier_hint: output.tier_hint,
+  primary_model: output.primary_model,
+  fallback_candidates: [...(output.fallback_candidates ?? [])],
+  provenance: output.provenance ?? null,
+  attempted_models: [...(output.attempted_models ?? [])],
   tier: output.tier,
-  model: output.model,
+  model: output.model ?? output.primary_model,
   alias: output.alias ?? null,
   provider: output.provider,
   confidence: Number(output.confidence),

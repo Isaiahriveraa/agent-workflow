@@ -7,10 +7,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   MODEL_TIERS,
+  ROUTER_CATEGORIES,
+  INTENT_KINDS,
   PROVIDERS,
-  BUDGET_MODES,
   TIER_PRECEDENCE,
   DEFAULT_PROVIDER_MAPS,
+  DEFAULT_CATEGORY_CONFIGS,
+  CATEGORY_TIER_HINTS,
   DAMPENER_PATTERNS,
   BALANCED_SIGNAL_PATTERNS,
   DEEP_SIGNAL_PATTERNS,
@@ -48,7 +51,7 @@ export const detectProvider = (env = process.env) => {
 
 // --- Config override loading ---
 
-const loadConfigOverrides = () => {
+const loadRouterConfig = () => {
   const configPath = path.join(root, 'config', 'model-router.json');
   try {
     const raw = fs.readFileSync(configPath, 'utf8');
@@ -62,7 +65,7 @@ const loadConfigOverrides = () => {
       }
     }
 
-    return config.providerMaps ?? null;
+    return config;
   } catch {
     return null;
   }
@@ -71,11 +74,28 @@ const loadConfigOverrides = () => {
 // --- Resolve provider map ---
 
 const getProviderMap = (provider) => {
-  const overrides = loadConfigOverrides();
-  if (overrides && overrides[provider]) {
-    return overrides[provider];
+  const config = loadRouterConfig();
+  if (config?.providerMaps?.[provider]) {
+    return config.providerMaps[provider];
   }
   return DEFAULT_PROVIDER_MAPS[provider] ?? DEFAULT_PROVIDER_MAPS.generic;
+};
+
+const getCategoryConfig = (provider, category) => {
+  const config = loadRouterConfig();
+  const base = DEFAULT_CATEGORY_CONFIGS[category] ?? DEFAULT_CATEGORY_CONFIGS['unspecified-high'];
+  const globalOverride = config?.categories?.[category] ?? {};
+  const providerOverride = config?.providerCategories?.[provider]?.[category] ?? {};
+  return {
+    ...base,
+    ...globalOverride,
+    ...providerOverride,
+    fallbackModels: [
+      ...(base.fallbackModels ?? []),
+      ...(globalOverride.fallbackModels ?? []),
+      ...(providerOverride.fallbackModels ?? [])
+    ]
+  };
 };
 
 // --- Complexity classification ---
@@ -149,6 +169,78 @@ export const classifyComplexity = (input) => {
   return { tier, score, signals, confidence };
 };
 
+const INTENT_PATTERNS = Object.freeze({
+  explanation: [/\bexplain\b/i, /\bsummarize\b/i, /\bdocument\b/i, /\bwrite(?: up)?\b/i],
+  investigation: [/\binvestigat(?:e|ion)\b/i, /\bresearch\b/i, /\banaly[sz]e\b/i, /\bdebug\b/i],
+  implementation: [/\bimplement\b/i, /\bbuild\b/i, /\bcreate\b/i, /\badd\b/i, /\bwire\b/i],
+  fix: [/\bfix\b/i, /\brepair\b/i, /\bbug\b/i, /\bregression\b/i, /\bbroken\b/i],
+  'open-ended': []
+});
+
+const CATEGORY_PATTERNS = Object.freeze({
+  'visual-engineering': [/\bui\b/i, /\bux\b/i, /\bfrontend\b/i, /\bcss\b/i, /\bcomponent\b/i, /\blayout\b/i],
+  ultrabrain: [/\barchitecture\b/i, /\bsystem design\b/i, /\bresearch\b/i, /\bplan(?:ning)?\b/i, /\bnovel algorithm\b/i],
+  deep: [/\bdebug\b/i, /\bsecurity\b/i, /\bperformance\b/i, /\bmigration\b/i, /\brefactor\b/i],
+  artistry: [/\bart\b/i, /\billustration\b/i, /\banimation\b/i, /\bbrand\b/i, /\bcreative\b/i],
+  quick: [/\bquick\b/i, /\bsimple\b/i, /\bminor\b/i, /\btypo\b/i, /\bread\b/i, /\bsearch\b/i],
+  writing: [/\bwrite\b/i, /\bdocs?\b/i, /\bcopy\b/i, /\brewrite\b/i, /\bexplain\b/i]
+});
+
+export const inferIntentKind = (input) => {
+  if (input.intentKind) {
+    return {
+      intentKind: input.intentKind,
+      source: 'explicit'
+    };
+  }
+
+  for (const intentKind of INTENT_KINDS) {
+    const patterns = INTENT_PATTERNS[intentKind] ?? [];
+    if (patterns.some((pattern) => pattern.test(input.taskDescription))) {
+      return { intentKind, source: 'inferred' };
+    }
+  }
+
+  return {
+    intentKind: 'open-ended',
+    source: 'default'
+  };
+};
+
+export const inferCategory = (input, classification, intent) => {
+  if (input.category) {
+    return {
+      category: input.category,
+      source: 'explicit'
+    };
+  }
+
+  for (const category of ROUTER_CATEGORIES) {
+    const patterns = CATEGORY_PATTERNS[category] ?? [];
+    if (patterns.some((pattern) => pattern.test(input.taskDescription))) {
+      return { category, source: 'inferred-pattern' };
+    }
+  }
+
+  if (intent.intentKind === 'explanation') {
+    return { category: 'writing', source: 'inferred-intent' };
+  }
+
+  if (intent.intentKind === 'implementation' && classification.tier === 'fast') {
+    return { category: 'quick', source: 'inferred-tier' };
+  }
+
+  if (classification.tier === 'fast') {
+    return { category: 'unspecified-low', source: 'inferred-tier' };
+  }
+
+  if (classification.tier === 'deep') {
+    return { category: 'deep', source: 'inferred-tier' };
+  }
+
+  return { category: 'unspecified-high', source: 'default' };
+};
+
 // --- Signal floors ---
 
 export const applyFloors = (tier, taskDescription, explicitFloor) => {
@@ -212,11 +304,81 @@ export const resolveModel = (tier, provider) => {
   };
 };
 
+const normalizeFallbackCandidate = (entry, provider) => {
+  const providerMap = getProviderMap(provider);
+  if (typeof entry === 'string') {
+    if (MODEL_TIERS.includes(entry)) {
+      const resolved = providerMap[entry] ?? DEFAULT_PROVIDER_MAPS.generic[entry];
+      return {
+        tier_hint: entry,
+        model: resolved?.model ?? null,
+        alias: resolved?.alias ?? null,
+        provider,
+        available: Boolean(resolved?.model),
+        source: 'tier-fallback'
+      };
+    }
+
+    return {
+      tier_hint: null,
+      model: entry,
+      alias: null,
+      provider,
+      available: true,
+      source: 'direct-fallback'
+    };
+  }
+
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+    return null;
+  }
+
+  const targetProvider = entry.provider ?? provider;
+  const providerMatches = targetProvider === provider || targetProvider === 'generic';
+  const resolvedProvider = targetProvider === 'generic' ? provider : targetProvider;
+  const resolvedByTier = entry.tier && MODEL_TIERS.includes(entry.tier)
+    ? (getProviderMap(resolvedProvider)[entry.tier] ?? DEFAULT_PROVIDER_MAPS.generic[entry.tier])
+    : null;
+  const model = entry.model ?? resolvedByTier?.model ?? null;
+  const alias = entry.alias ?? resolvedByTier?.alias ?? null;
+
+  return {
+    tier_hint: MODEL_TIERS.includes(entry.tier) ? entry.tier : null,
+    model,
+    alias,
+    provider: resolvedProvider,
+    available: providerMatches && Boolean(model),
+    source: entry.model ? 'object-model' : 'object-tier',
+    variant: entry.variant ?? null,
+    reasoningEffort: entry.reasoningEffort ?? null,
+    temperature: entry.temperature ?? null,
+    top_p: entry.top_p ?? null,
+    maxTokens: entry.maxTokens ?? null,
+    thinking: entry.thinking ?? null
+  };
+};
+
+const buildFallbackCandidates = (provider, category, primaryModel) => {
+  const categoryConfig = getCategoryConfig(provider, category);
+  const seen = new Set([primaryModel]);
+  const results = [];
+
+  for (const entry of categoryConfig.fallbackModels ?? []) {
+    const candidate = normalizeFallbackCandidate(entry, provider);
+    if (!candidate?.model || seen.has(candidate.model)) continue;
+    seen.add(candidate.model);
+    results.push(candidate);
+  }
+
+  return results;
+};
+
 // --- Main route function ---
 
 export const route = (rawInput) => {
   const input = normalizeRouterInput(rawInput);
   const provider = input.provider ?? detectProvider();
+  const intent = inferIntentKind(input);
 
   // Check for tier override first
   if (input.tierOverride) {
@@ -224,9 +386,24 @@ export const route = (rawInput) => {
     const { tier: overrideTier, floorApplied } = applyFloors(
       input.tierOverride, input.taskDescription, input.tierFloor
     );
+    const categoryDecision = inferCategory(input, { tier: overrideTier }, intent);
     const { model, alias } = resolveModel(overrideTier, provider);
+    const fallbackCandidates = buildFallbackCandidates(provider, categoryDecision.category, model);
 
     return normalizeRouterOutput({
+      category: categoryDecision.category,
+      intent_kind: intent.intentKind,
+      tier_hint: overrideTier,
+      primary_model: model,
+      fallback_candidates: fallbackCandidates,
+      provenance: {
+        strategy: 'category-first',
+        category_source: categoryDecision.source,
+        intent_source: intent.source,
+        primary_source: floorApplied ? 'override-with-floor' : 'override',
+        fallback_source: 'category-defaults'
+      },
+      attempted_models: [model, ...fallbackCandidates.filter((item) => item.available).map((item) => item.model)],
       tier: overrideTier,
       model,
       alias,
@@ -245,7 +422,9 @@ export const route = (rawInput) => {
 
   // 1. Classify complexity
   const classification = classifyComplexity(input);
-  let { tier } = classification;
+  const categoryDecision = inferCategory(input, classification, intent);
+  const categoryConfig = getCategoryConfig(provider, categoryDecision.category);
+  let tier = categoryConfig.tierHint ?? CATEGORY_TIER_HINTS[categoryDecision.category] ?? classification.tier;
   let { confidence } = classification;
   let floorApplied = false;
   let budgetAdjusted = false;
@@ -263,9 +442,11 @@ export const route = (rawInput) => {
 
   // 4. Resolve model
   const { model, alias } = resolveModel(tier, provider);
+  const fallbackCandidates = buildFallbackCandidates(provider, categoryDecision.category, model);
 
   // 5. Build reason
   const parts = [];
+  parts.push(`category ${categoryDecision.category}`);
   if (classification.signals.length === 0) {
     parts.push('No complexity signals matched, defaulting to balanced');
   } else {
@@ -275,6 +456,19 @@ export const route = (rawInput) => {
   if (floorApplied) parts.push('floor-applied');
 
   return normalizeRouterOutput({
+    category: categoryDecision.category,
+    intent_kind: intent.intentKind,
+    tier_hint: categoryConfig.tierHint ?? CATEGORY_TIER_HINTS[categoryDecision.category] ?? classification.tier,
+    primary_model: model,
+    fallback_candidates: fallbackCandidates,
+    provenance: {
+      strategy: 'category-first',
+      category_source: categoryDecision.source,
+      intent_source: intent.source,
+      primary_source: categoryDecision.source === 'explicit' ? 'explicit-category' : 'inferred-category',
+      fallback_source: 'category-defaults'
+    },
+    attempted_models: [model, ...fallbackCandidates.filter((item) => item.available).map((item) => item.model)],
     tier,
     model,
     alias,
@@ -318,6 +512,8 @@ if (import.meta.url === `file://${process.argv[1]}` || fileURLToPath(import.meta
           contextRemaining: args.context != null ? Number(args.context) : undefined,
           tierFloor: args.floor ?? undefined,
           tierOverride: args.override ?? undefined,
+          category: args.category ?? undefined,
+          intentKind: args.intent ?? undefined,
           fileCount: args.files != null ? Number(args.files) : undefined,
           workflowTier: args['workflow-tier'] != null ? Number(args['workflow-tier']) : undefined
         };

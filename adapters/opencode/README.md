@@ -28,14 +28,14 @@ This directory documents the OpenCode-specific integration boundary.
 
 OpenCode supports per-agent model overrides and a `small_model` config for lightweight tasks. Model IDs use `provider/model-id` format (e.g., `anthropic/claude-sonnet-4-6`).
 
-The model router returns provider-formatted model IDs for OpenCode:
+The model router is category-first and returns provider-formatted `primary_model` values for OpenCode plus additive metadata such as `category`, `intent_kind`, `tier_hint`, and `fallback_candidates`:
 
 ```bash
 node ~/.agents/scripts/model-router.mjs route --input "search for files"
 # → { "model": "anthropic/claude-haiku-4-5-20251001", ... }
 ```
 
-`sync.sh gen-opencode-agents` can embed model tier recommendations in generated agent config.
+`sync.sh gen-opencode-agents` can embed the primary route and compatibility tier hints in generated agent config. `fallback_candidates` describe declared alternates only; runtime fallback remains a separate concern.
 
 ## Canonical Boundary
 - Shared workflow policy remains in the hub.

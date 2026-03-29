@@ -30,7 +30,7 @@ This directory contains Claude Code-specific operational assets.
 
 Claude Code's `Agent` tool accepts a `model` parameter with alias values: `"haiku"`, `"sonnet"`, `"opus"`.
 
-The model router (`scripts/model-router.mjs`) returns both a full model ID and an alias. Use `result.alias` when passing to the Agent tool:
+The model router (`scripts/model-router.mjs`) is now category-first. It returns additive routing metadata such as `category`, `intent_kind`, `tier_hint`, `primary_model`, `fallback_candidates`, and legacy compatibility fields like `tier`, `model`, and `alias`. Use `result.alias` when passing to the Agent tool:
 
 ```js
 import { route } from './scripts/model-router.mjs';
@@ -38,7 +38,7 @@ const { alias } = route({ taskDescription: 'search for files' });
 // alias → "haiku" — pass as model: "haiku" to the Agent tool
 ```
 
-This is the deepest integration point: per-subagent model selection is native.
+This is the deepest integration point: per-subagent model selection is native. `fallback_candidates` describe declared alternatives; they do not imply Claude Code-native runtime failover by themselves.
 
 ## Compatibility
 - Legacy paths under `~/.agents/hooks` may delegate to files in this directory.

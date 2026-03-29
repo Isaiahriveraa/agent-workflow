@@ -27,6 +27,28 @@ const AGENTS_ROOT = process.env.AGENTS_ROOT
   : path.resolve(__dirname, '..');
 
 const CONTINUITY_HELPER = path.join(AGENTS_ROOT, 'scripts', 'continuity-tools.mjs');
+const AUTONOMY_TOOLS = path.join(AGENTS_ROOT, 'scripts', 'autonomy-tools.mjs');
+const DOCTOR_TOOLS = path.join(AGENTS_ROOT, 'scripts', 'doctor.mjs');
+const readExecutionState = () => {
+  try {
+    const candidates = [
+      path.join(process.cwd(), '.agents', 'runtime', 'execution', 'active.json'),
+      path.join(AGENTS_ROOT, '.agents', 'runtime', 'execution', 'active.json'),
+      path.join(os.homedir(), '.agents', '.agents', 'runtime', 'execution', 'active.json')
+    ];
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        return {
+          path: candidate,
+          state: JSON.parse(fs.readFileSync(candidate, 'utf8'))
+        };
+      }
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Read state.md helpers
@@ -55,6 +77,38 @@ const readFirstBullet = (content, heading) => {
   return match ? match[1].trim() : 'unknown';
 };
 
+const readAutonomyDecision = () => {
+  try {
+    const result = spawnSync(process.execPath, [AUTONOMY_TOOLS, 'evaluate'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: 1500,
+      env: process.env
+    });
+    if (result.status !== 0 || !result.stdout) return null;
+    return JSON.parse(result.stdout);
+  } catch (_) {
+    return null;
+  }
+};
+
+const readDoctorReport = () => {
+  try {
+    const result = spawnSync(process.execPath, [DOCTOR_TOOLS, 'report'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: 1500,
+      env: process.env
+    });
+    if (result.status !== 0 || !result.stdout) return null;
+    return JSON.parse(result.stdout);
+  } catch (_) {
+    return null;
+  }
+};
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -79,6 +133,30 @@ process.stdin.on('end', () => {
     const workflow = readFirstBullet(state, '## Current Workflow');
     const nextStep = readFirstBullet(state, '## Next Step');
     const relatedPlan = readFirstBullet(state, '## Related Plan');
+    const execution = readExecutionState();
+    const currentTask = execution?.state?.current_task_key ?? 'none';
+    const executionPlan = execution?.state?.active_plan ?? null;
+    const checkpointPlan = executionPlan || relatedPlan;
+    const autonomyDecision = readAutonomyDecision();
+    const doctorReport = readDoctorReport();
+    const doctorWarnings = Array.isArray(doctorReport?.warnings) ? doctorReport.warnings : [];
+    const doctorNextCommand = doctorReport?.recommended_next_command ?? null;
+    const autonomyRecommendation = autonomyDecision?.recommended_action ?? null;
+    const autonomyReason = autonomyDecision?.reason ?? null;
+    const noteParts = [
+      `Auto-archived before context compaction.`,
+      `Next step: ${nextStep}.`,
+      `Current task: ${currentTask}.`
+    ];
+    if (executionPlan && executionPlan !== relatedPlan) {
+      noteParts.push(`Execution plan overrides related plan: ${executionPlan}.`);
+    }
+    if (autonomyRecommendation) {
+      noteParts.push(`Autonomy recommends ${autonomyRecommendation}.`);
+    }
+    if (doctorNextCommand) {
+      noteParts.push(`Doctor next command: ${doctorNextCommand}.`);
+    }
 
     // Write a phase-checkpoint JSON before compaction fires
     const result = spawnSync(process.execPath, [
@@ -86,9 +164,9 @@ process.stdin.on('end', () => {
       'phase-checkpoint',
       '--phase', `pre-compact: ${phase}`,
       '--workflow', workflow,
-      '--plan', relatedPlan,
+      '--plan', checkpointPlan,
       '--session-id', sessionId,
-      '--notes', `Auto-archived before context compaction. Next step: ${nextStep}`
+      '--notes', noteParts.join(' ')
     ], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -109,7 +187,14 @@ process.stdin.on('end', () => {
       `  Phase:        ${phase}`,
       `  Workflow:     ${workflow}`,
       `  Related Plan: ${relatedPlan}`,
+      executionPlan ? `  Execution Plan:${executionPlan === relatedPlan ? ' ' : ''} ${executionPlan}` : '',
       `  Next Step:    ${nextStep}`,
+      execution ? `  Execution:    ${execution.path}` : '',
+      execution ? `  Task:         ${currentTask}` : '',
+      autonomyRecommendation ? `  Autonomy:     ${autonomyRecommendation}` : '',
+      autonomyReason ? `  Why:          ${autonomyReason}` : '',
+      doctorWarnings[0] ? `  Doctor Warn:  ${doctorWarnings[0]}` : '',
+      doctorNextCommand ? `  Next Command: ${doctorNextCommand}` : '',
       checkpointPath ? `  Checkpoint:   ${checkpointPath}` : '',
       ``,
       `To restore context: read the checkpoint file above and resume from Next Step.`,

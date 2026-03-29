@@ -33,7 +33,11 @@ const AGENTS_ROOT = process.env.AGENTS_ROOT
 const CONTINUITY_HELPER = process.env.AGENTS_CONTINUITY_HELPER
   ? path.resolve(process.env.AGENTS_CONTINUITY_HELPER)
   : path.join(AGENTS_ROOT, 'scripts', 'continuity-tools.mjs');
+const AUTONOMY_TOOLS = process.env.AGENTS_AUTONOMY_TOOLS
+  ? path.resolve(process.env.AGENTS_AUTONOMY_TOOLS)
+  : path.join(AGENTS_ROOT, 'scripts', 'autonomy-tools.mjs');
 const SESSION_TOOLS = path.join(AGENTS_ROOT, 'scripts', 'session-tools.mjs');
+const STALE_EXECUTION_SECONDS = 6 * 60 * 60;
 
 // Fire-and-forget metric increment — never blocks tool execution
 const fireMetricIncrement = (sessionId, field) => {
@@ -127,6 +131,51 @@ const detectDrift = (sessionId) => {
   return null;
 };
 
+const readExecutionState = () => {
+  try {
+    const candidates = [
+      path.join(process.cwd(), '.agents', 'runtime', 'execution', 'active.json'),
+      path.join(AGENTS_ROOT, '.agents', 'runtime', 'execution', 'active.json'),
+      path.join(os.homedir(), '.agents', '.agents', 'runtime', 'execution', 'active.json')
+    ];
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        return {
+          path: candidate,
+          state: JSON.parse(fs.readFileSync(candidate, 'utf8'))
+        };
+      }
+    }
+  } catch (_) {
+    return null;
+  }
+  return null;
+};
+
+const readAutonomyDecision = (remaining) => {
+  try {
+    const result = require('child_process').spawnSync(
+      process.execPath,
+      [AUTONOMY_TOOLS, 'evaluate', '--context-remaining', String(remaining)],
+      {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+        timeout: 1500,
+        env: process.env
+      }
+    );
+
+    if (result.status !== 0 || !result.stdout) {
+      return null;
+    }
+
+    const parsed = JSON.parse(result.stdout);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch (_) {
+    return null;
+  }
+};
+
 
 
 let input = '';
@@ -211,17 +260,24 @@ process.stdin.on('end', () => {
     warnData.lastLevel = currentLevel;
     fs.writeFileSync(warnPath, JSON.stringify(warnData));
 
+    const autonomyDecision = readAutonomyDecision(remaining);
+
     if (AUTOMATION_MODE !== 'off') {
       const action = isCritical && AUTOMATION_MODE === 'handoff' ? 'handoff' : 'checkpoint';
+      const autonomyNextStep = autonomyDecision?.reason
+        ? `${autonomyDecision.reason}`
+        : (
+          isCritical
+            ? 'Resume from the latest continuity artifact before starting new work.'
+            : 'Wrap up the current task and resume from the latest checkpoint if needed.'
+        );
       const args = [
         CONTINUITY_HELPER,
         action,
         '--source', 'gsd-context-monitor',
         '--topic', isCritical ? 'Critical Context Threshold' : 'Warning Context Threshold',
         '--next-step',
-        isCritical
-          ? 'Resume from the latest continuity artifact before starting new work.'
-          : 'Wrap up the current task and resume from the latest checkpoint if needed.'
+        autonomyNextStep
       ];
 
       try {
@@ -238,6 +294,16 @@ process.stdin.on('end', () => {
 
     // Build advisory warning message
     let message = '';
+    const execution = readExecutionState();
+    const executionStatus = execution?.state?.status ?? null;
+    const executionTask = execution?.state?.current_task_key ?? null;
+    const updatedAt = execution?.state?.updated_at ? Math.floor(new Date(execution.state.updated_at).getTime() / 1000) : null;
+    const staleExecution = Boolean(
+      execution
+      && executionStatus === 'active'
+      && updatedAt
+      && (now - updatedAt) > STALE_EXECUTION_SECONDS
+    );
     
     // Check for scope drift
     const driftWarning = detectDrift(sessionId);
@@ -253,6 +319,24 @@ process.stdin.on('end', () => {
       message += `CONTEXT MONITOR WARNING: Usage at ${usedPct}%. Remaining: ${remaining}%. ` +
         'Begin wrapping up current task. Do not start new complex work. ' +
         'If using GSD, consider /gsd:pause-work to save state.';
+    }
+
+    if (execution) {
+      message += ` Active execution: ${executionStatus ?? 'unknown'} at ${execution.path}.`;
+      if (executionTask) {
+        message += ` Current task: ${executionTask}.`;
+      }
+    }
+
+    if (staleExecution) {
+      message += ' Execution state looks stale for an active task; pause now or clear stale continuation before resuming new work.';
+    }
+
+    if (autonomyDecision?.recommended_action) {
+      message += ` Autonomy recommendation: ${autonomyDecision.recommended_action}.`;
+      if (autonomyDecision.reason) {
+        message += ` ${autonomyDecision.reason}`;
+      }
     }
 
     if (!message) {

@@ -359,6 +359,7 @@ run_generator_command() {
         "sync.sh gen-antigravity-commands") cmd_gen_antigravity_commands ;;
         "sync.sh gen-antigravity-agents") cmd_gen_antigravity_agents ;;
         "sync.sh gen-openclaw-workspace") cmd_gen_openclaw_workspace ;;
+        "sync.sh sync-nemoclaw-skills") cmd_sync_nemoclaw_skills ;;
         *)
             echo "Unknown generator command in manifest: $1" >&2
             return 1
@@ -367,10 +368,14 @@ run_generator_command() {
 }
 
 run_manifest_generators() {
-    local generator seen
+    local generator type seen
     seen=""
 
-    while IFS='|' read -r _tool _surface _source _target generator _type _outputs; do
+    while IFS='|' read -r _tool _surface _source _target generator type _outputs; do
+        if [ "$type" = "remote-sync" ]; then
+            info "Skipping remote-sync generator in migrate: $generator"
+            continue
+        fi
         case " ${seen} " in
             *" ${generator} "*) continue ;;
         esac
@@ -486,7 +491,11 @@ cmd_verify() {
         fi
     done < <(manifest_symlink_rows)
 
-    while IFS='|' read -r tool surface source target _generator _type outputs; do
+    while IFS='|' read -r tool surface source target _generator type outputs; do
+        if [ "$type" = "remote-sync" ]; then
+            info "Skipping remote-sync verification for $tool $surface"
+            continue
+        fi
         if ! verify_generated_surface "$tool" "$surface" "$source" "$target" "$outputs"; then
             generated_ok=false
         fi
