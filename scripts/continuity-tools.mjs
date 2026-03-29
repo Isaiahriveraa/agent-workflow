@@ -4,6 +4,9 @@ import { ensureProjectContext } from './project-context.mjs';
 import { createPath, status as sessionStatus, timestampParts, slugify } from './session-tools.mjs';
 import { persistWorkingSetSelection } from './artifact-tools.mjs';
 import { writeMarkdownSections } from './runtime-state-tools.mjs';
+import { readActiveExecutionState, buildExecutionGuidance } from './execution-state-tools.mjs';
+import { buildDoctorReport } from './doctor.mjs';
+import { evaluateAutonomy } from './autonomy-tools.mjs';
 
 const project = ensureProjectContext();
 const statePath = project.contextPaths.state;
@@ -97,6 +100,101 @@ const buildSessionEntry = ({
   `- Summary: ${summary}`
 ].join('\n');
 
+const formatExecutionSummary = (execution) => {
+  if (!execution?.state) return 'none';
+  const currentTask = execution.state.current_task_key ?? 'none';
+  return `${execution.state.status} @ ${currentTask}`;
+};
+
+const extractExecutionContext = () => {
+  const execution = readActiveExecutionState();
+  if (!execution) return null;
+
+  return {
+    path: execution.path,
+    status: execution.state.status,
+    currentTaskKey: execution.state.current_task_key ?? null,
+    state: execution.state
+  };
+};
+
+const formatContinuationGuidance = ({ guidance, nextCommand }) => {
+  if (!guidance.present) {
+    return [
+      '## Continuation Guidance',
+      '- No active execution state is present.',
+      `- Next recommended command: ${nextCommand}`
+    ].join('\n');
+  }
+
+  const lines = [
+    '## Continuation Guidance',
+    `- Remaining tasks: ${guidance.remaining_task_count}`,
+    `- Completed tasks: ${guidance.completed_task_count}`,
+    `- Next recommended command: ${nextCommand}`
+  ];
+
+  if (guidance.current_task) {
+    lines.push(`- Current task label: ${guidance.current_task.label}`);
+    lines.push(`- Current task scope: ${guidance.current_task.scope}`);
+  }
+
+  if (guidance.reminder) {
+    lines.push(`- Reminder: ${guidance.reminder}`);
+  }
+
+  if (guidance.cleanup) {
+    lines.push(`- Cleanup command: ${guidance.cleanup.recommended_command}`);
+    lines.push(`- Cleanup reason: ${guidance.cleanup.reason}`);
+  }
+
+  for (const task of guidance.next_tasks) {
+    lines.push(`- Upcoming task: ${task.label} (${task.scope})`);
+  }
+
+  return lines.join('\n');
+};
+
+const deriveCheckpointNextCommand = ({ explicitNextCommand, artifactPath, execution, selectedHandoff }) => {
+  if (explicitNextCommand) return explicitNextCommand;
+
+  if (!execution && selectedHandoff && selectedHandoff !== 'none') {
+    return `/resume_handoff ${selectedHandoff}`;
+  }
+
+  const autonomy = evaluateAutonomy();
+  const doctor = buildDoctorReport();
+  const guidance = buildExecutionGuidance(execution ? { path: execution.path, state: execution.state } : null);
+  const recommended = doctor?.recommended_next_command ?? null;
+  const action = autonomy?.recommended_action ?? null;
+
+  if (guidance.cleanup?.recommended_command === '/stop-work') {
+    return guidance.cleanup.recommended_command;
+  }
+
+  if (recommended === '/stop-work') {
+    return recommended;
+  }
+
+  if (recommended && (recommended.startsWith('/resume_') || recommended === '/project-doctor')) {
+    return recommended;
+  }
+
+  if (['resume_execution', 'continue', 'resume_plan'].includes(action)) {
+    return '/start-work';
+  }
+
+  if (execution?.status === 'active' || execution?.status === 'paused') {
+    return '/start-work';
+  }
+
+  if (recommended) {
+    return recommended;
+  }
+
+  return `/resume-session ${artifactPath}`;
+};
+
 const setStateValues = ({ workflow, phase, nextStep, relatedPlan, verifiedAt }) => {
   writeMarkdownSections({
     filePath: statePath,
@@ -163,7 +261,21 @@ const setHandoffSessionIndex = ({ sessionId, iso, topic, artifactPath, relatedPl
   });
 };
 
-const writeCheckpointArtifact = ({ artifactPath, iso, topic, workflow, phase, focus, artifacts, blockers, nextAction, nextCommand, relatedPlan }) => {
+const writeCheckpointArtifact = ({
+  artifactPath,
+  iso,
+  topic,
+  workflow,
+  phase,
+  focus,
+  artifacts,
+  blockers,
+  nextAction,
+  nextCommand,
+  relatedPlan,
+  execution,
+  executionGuidance
+}) => {
   fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
   const content = [
     '---',
@@ -174,6 +286,7 @@ const writeCheckpointArtifact = ({ artifactPath, iso, topic, workflow, phase, fo
     `related_plan: ${relatedPlan ?? 'none'}`,
     'related_research:',
     `  - ${artifacts.research ?? 'none'}`,
+    `execution_state: ${execution?.path ?? 'none'}`,
     `next_command: ${nextCommand}`,
     '---',
     '',
@@ -188,6 +301,16 @@ const writeCheckpointArtifact = ({ artifactPath, iso, topic, workflow, phase, fo
     `- ${artifacts.plan ?? 'none'}`,
     `- ${artifacts.research ?? 'none'}`,
     `- ${artifacts.handoff ?? 'none'}`,
+    '',
+    '## Active Execution',
+    `- Path: ${execution?.path ?? 'none'}`,
+    `- Status: ${execution?.status ?? 'none'}`,
+    `- Current task: ${execution?.currentTaskKey ?? 'none'}`,
+    '',
+    formatContinuationGuidance({
+      guidance: executionGuidance,
+      nextCommand
+    }),
     '',
     '## Decisions In Force',
     '- Keep this repo as the provider-agnostic single source of truth.',
@@ -210,6 +333,8 @@ const checkpoint = (args) => {
   const nextAction = args['next-step'] ?? readFirstBullet(state, '## Next Step');
   const relatedPlan = args.plan ?? readFirstBullet(state, '## Related Plan');
   const blockers = args.blockers ?? readFirstBullet(state, '## Blockers');
+  const execution = extractExecutionContext();
+  const executionGuidance = buildExecutionGuidance(execution ? { path: execution.path, state: execution.state } : null);
   const artifactPath = createPath(topic);
   const sessionId = path.basename(artifactPath, '.md');
 
@@ -241,7 +366,12 @@ const checkpoint = (args) => {
     }
   });
 
-  const nextCommand = args['next-command'] ?? '/resume-session';
+  const nextCommand = deriveCheckpointNextCommand({
+    explicitNextCommand: args['next-command'],
+    artifactPath,
+    execution,
+    selectedHandoff: artifactState.selected.handoff
+  });
 
   writeCheckpointArtifact({
     artifactPath,
@@ -254,7 +384,9 @@ const checkpoint = (args) => {
     blockers,
     nextAction,
     nextCommand,
-    relatedPlan: relatedPlan === 'none' ? null : relatedPlan
+    relatedPlan: relatedPlan === 'none' ? null : relatedPlan,
+    execution,
+    executionGuidance
   });
 
   setActiveSessionIndex({
@@ -264,7 +396,7 @@ const checkpoint = (args) => {
     artifactPath,
     relatedPlan: relatedPlan === 'none' ? null : relatedPlan,
     nextCommand,
-    summary: `Checkpoint created by ${args.source ?? 'continuity-tools'}`
+    summary: `Checkpoint created by ${args.source ?? 'continuity-tools'}; execution ${formatExecutionSummary(execution)}`
   });
 
   return {
@@ -277,10 +409,20 @@ const checkpoint = (args) => {
       action: 'checkpoint',
       persistence_mode: artifactState.mode,
       focus: args.focus ?? topic,
+      next_command: nextCommand,
+      execution: execution
+        ? {
+          path: execution.path,
+          status: execution.status,
+          current_task_key: execution.currentTaskKey
+        }
+        : null,
+      execution_guidance: executionGuidance,
       selected_categories: Object.fromEntries(
         Object.entries(artifactState.selected).map(([key, value]) => [key, Boolean(value)])
       )
-    }
+    },
+    execution
   };
 };
 
@@ -298,6 +440,8 @@ const handoff = (args) => {
   const relatedPlan = args.plan ?? readFirstBullet(state, '## Related Plan');
   const topic = args.topic ?? args.focus ?? 'handoff';
   const handoffExists = fs.existsSync(handoffPath);
+  const execution = extractExecutionContext();
+  const executionGuidance = buildExecutionGuidance(execution ? { path: execution.path, state: execution.state } : null);
 
   if (!handoffExists) {
     throw new Error(`Authored handoff does not exist: ${handoffPath}`);
@@ -333,7 +477,7 @@ const handoff = (args) => {
     artifactPath: handoffPath,
     relatedPlan: relatedPlan === 'none' ? null : relatedPlan,
     nextCommand: `/resume_handoff ${handoffPath}`,
-    summary: `Handoff sync recorded by ${args.source ?? 'continuity-tools'}`
+    summary: `Handoff sync recorded by ${args.source ?? 'continuity-tools'}; execution ${formatExecutionSummary(execution)}`
   });
 
   return {
@@ -345,10 +489,19 @@ const handoff = (args) => {
       action: 'handoff',
       persistence_mode: artifactState.mode,
       focus: args.focus ?? topic,
+      execution: execution
+        ? {
+          path: execution.path,
+          status: execution.status,
+          current_task_key: execution.currentTaskKey
+        }
+        : null,
+      execution_guidance: executionGuidance,
       selected_categories: Object.fromEntries(
         Object.entries(artifactState.selected).map(([key, value]) => [key, Boolean(value)])
       )
-    }
+    },
+    execution
   };
 };
 
