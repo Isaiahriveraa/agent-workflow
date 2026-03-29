@@ -11,7 +11,8 @@ Default for this skill:
 
 - Optimize for agent task handoffs, not generic copy polish
 - Prefer cross-provider-safe prompting patterns
-- Return a ready-to-use prompt plus brief notes
+- Use the rewritten prompt internally unless the user explicitly asks to see it
+- Return brief notes only when they materially help downstream execution
 - Keep simple tasks simple
 
 ## When To Use
@@ -26,7 +27,7 @@ Use this skill when the user asks to:
 
 ## What To Produce
 
-Return output in this shape unless the user asks for something else:
+Only return the rewritten prompt in this shape when the user explicitly asks to see it:
 
 ```text
 OPTIMIZED PROMPT
@@ -54,6 +55,8 @@ Identify the minimum needed to produce a useful handoff:
 - validation or verification needs
 
 If the input is missing details, infer only low-risk defaults and call them out in `NOTES`.
+
+If the input is already a clear structured handoff or optimized prompt, preserve it and do not recursively rewrite it.
 
 ### 2. Remove ambiguity
 

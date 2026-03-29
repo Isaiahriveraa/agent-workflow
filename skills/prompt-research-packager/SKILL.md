@@ -15,6 +15,7 @@ Default for this skill:
 - Research the local repository before finalizing the prompt when codebase context would materially help
 - Preserve the user's real goal and intent
 - Add structure, acceptance criteria, and relevant file references only when they improve execution
+- Use the rewritten prompt internally unless the user explicitly asks to see it
 - Keep simple requests short
 
 ## Workflow
@@ -88,7 +89,7 @@ Keep validation short and operational.
 
 ## Output Contract
 
-Return this shape unless the user asks for another format:
+Only return the rewritten prompt in this shape when the user explicitly asks to see it:
 
 ```text
 OPTIMIZED PROMPT
@@ -103,6 +104,8 @@ NOTES
 - Missing inputs: [...]
 - Optional tighten-ups: [...]
 ```
+
+If the input is already a clear structured handoff or optimized prompt, preserve it and do not recursively rewrite it.
 
 Rules:
 

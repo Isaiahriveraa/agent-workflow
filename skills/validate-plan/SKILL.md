@@ -22,6 +22,9 @@ When invoked:
 
 3. **Gather implementation evidence**:
    - Read `~/.agents/contexts/verification.md` before selecting automated checks
+   - Grade the related research and plan artifacts with `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` whenever the workflow is substantial
+   - Treat missing, stale, or purely declarative critique evidence as a readiness failure, even if the frontmatter says the artifact is ready
+   - After grading, verification collection, and workflow-fidelity review, run `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` and obey the returned strategy before blessing the implementation
    ```bash
    # Check recent commits
    git log --oneline -n 20
@@ -87,6 +90,10 @@ For each phase in the plan:
    - Did the implementation honor locked decisions from `~/.agents/contexts/decisions.md`?
    - Did the execution update the current project's `state.md` consistently?
    - If reusable research was produced or consumed, does `~/.agents/contexts/research-index.md` reflect it?
+   - For substantial workflows, did the related research and plan artifacts pass `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research` and `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan` before implementation began?
+   - Did `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` recommend `continue`, `request_user_decision`, or `capture_lesson`, and did the command obey that result?
+   - If readiness failed or a new blocker emerged mid-flight, did execution stop and route back through critique/refinement or `/iterate_plan`?
+   - If manual verification was still missing or workflow-fidelity evidence was incomplete, did validation stop with `request_user_decision` instead of auto-accepting the work?
 
 ### Step 3: Generate Validation Report
 

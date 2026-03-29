@@ -32,6 +32,9 @@ Then wait for the user's research query.
    - Read `~/.agents/contexts/research-index.md`
    - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` if you need the current runtime workflow position from the project's `state.md`
    - Load `~/.agents/rules/common/search-first.md`
+   - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
+   - If this research is the first step of a substantial request, capture the normalized intake artifact with `node $HOME/.agents/scripts/workflow-router-tools.mjs capture`
+   - For substantial requests, require at least one critique/refinement cycle before handoff
 
 1. **Read any directly mentioned files first:**
    - If the user mentions specific files (tickets, docs, JSON), read them FULLY first
@@ -150,6 +153,29 @@ Then wait for the user's research query.
      [Any areas that need further investigation]
      ```
 
+#### Step 6.5: Adversarial Critique (substantial research only)
+
+For substantial research intended to drive implementation planning:
+
+1. **Run rpi-critique in-place** on the research document:
+   - Use the `/rpi-critique` skill with the research document path
+   - The skill runs all critique dimensions silently, revises the artifact directly, and prints a human-readable improvement summary
+   - No separate critique file is written
+
+2. **After rpi-critique completes**, check the printed summary:
+   - If **BLOCKING issues found**: read the summary, verify the in-place fixes were applied, and re-run `/rpi-critique` if the research still fails grading (max 2 revision cycles)
+   - If **WARNINGS ONLY**: review the summary; proceed to `grade-research`
+   - If **ADVISORY**: proceed to `grade-research`
+   - If **HUMAN JUDGMENT REQUIRED** (blocking after 2 cycles): surface the blocking issues to the user and do NOT hand off to planning
+
+3. **After critique**, verify frontmatter updated correctly:
+   - `critique_completed: true`
+   - `critique_cycles: N` (incremented)
+   - `research_ready_for_planning: true|false` (re-evaluated)
+
+**Skip condition**: Skip if this research is non-substantial (exploratory, not intended to drive a plan).
+Note frontmatter: `critique_completed: false`, `critique_cycles: 0`.
+
 7. **Add GitHub permalinks (if applicable):**
    - Check if inside a git repo with a remote: `git remote get-url origin 2>/dev/null`
    - If a remote exists and commit is pushed, generate GitHub permalinks:
@@ -162,7 +188,15 @@ Then wait for the user's research query.
    - Include key file references for easy navigation
    - State where the research document was saved
    - Add or update an entry in `~/.agents/contexts/research-index.md` with the topic, date, source files, artifact path, and summary
+   - For substantial workflows, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [absolute research path]` and refuse the planning handoff if it does not pass
+   - Add or update the matching entry in the current project's `research-index.md` through the helper-backed path: `node $HOME/.agents/scripts/artifact-tools.mjs sync-research --artifact [absolute research path] --topic "[topic]" --date [YYYY-MM-DD] --summary "[summary]" --source-file [absolute path]`
    - Ask if they have follow-up questions or need clarification
+   - If the research artifact is intended to drive implementation planning, end the response with this exact standalone block using the saved artifact path:
+     ```text
+     Next step
+
+     /create-plan /absolute/path/to/research.md
+     ```
 
 9. **Handle follow-up questions:**
    - If the user has follow-up questions, append to the same research document

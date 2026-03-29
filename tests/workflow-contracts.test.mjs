@@ -106,6 +106,8 @@ test('workflow commands reference explicit context files', () => {
   const implementPlan = read('commands/implement_plan.md');
   const validatePlan = read('commands/validate_plan.md');
   const optimizePrompt = read('commands/optimize-prompt.md');
+  const fixPr = read('commands/fix-pr.md');
+  const promptResearchPackager = read('skills/prompt-research-packager/SKILL.md');
   const research = read('commands/research_codebase.md');
   const sessionStart = read('commands/session-start.md');
   const pauseSession = read('commands/pause-session.md');
@@ -114,6 +116,7 @@ test('workflow commands reference explicit context files', () => {
   const projectVerification = read('commands/project-verification.md');
   const projectArtifacts = read('commands/project-artifacts.md');
   const pr = read('commands/pr.md');
+  const promptOptimizationRouting = read('rules/common/prompt-optimization-routing.md');
 
   assert.match(createPlan, /contexts\/decisions\.md/);
   assert.match(createPlan, /current project's runtime `research-index\.md`/);
@@ -165,7 +168,20 @@ test('workflow commands reference explicit context files', () => {
   assert.match(validatePlan, /request_user_decision/);
   assert.match(validatePlan, /capture_lesson/);
   assert.match(validatePlan, /lesson-tools\.mjs quick-capture/);
-  assert.match(optimizePrompt, /Capsule:/);
+  assert.match(optimizePrompt, /Do not emit the rewritten prompt block from this command/);
+  assert.match(optimizePrompt, /If the input is already a structured handoff or optimized prompt, use it as-is and do not rewrite it again/);
+  assert.doesNotMatch(optimizePrompt, /OPTIMIZED PROMPT/);
+  assert.doesNotMatch(optimizePrompt, /NOTES\n- Assumptions:/);
+  assert.match(fixPr, /analysis-first/);
+  assert.match(fixPr, /Do not edit conflict files until the analysis has been shared and the user approves the approach/);
+  assert.match(fixPr, /Plain-English summary/);
+  assert.match(fixPr, /Evidence-based resolution options/);
+  assert.match(fixPr, /Uncertainty \/ validation needed before applying the fix/);
+  assert.doesNotMatch(fixPr, /OPTIMIZED PROMPT/);
+  assert.match(promptResearchPackager, /Use the rewritten prompt internally unless the user explicitly asks to see it/);
+  assert.match(promptResearchPackager, /Only return the rewritten prompt in this shape when the user explicitly asks to see it/);
+  assert.match(promptOptimizationRouting, /an already-structured handoff or optimized prompt that should be used as-is/);
+  assert.match(promptOptimizationRouting, /Treat the optimized prompt as an internal working artifact that drives the next step, not as user-facing output/);
   assert.match(research, /current project's `research-index\.md`/);
   assert.match(research, /project-context\.mjs current/);
   assert.match(research, /workflow-router-tools\.mjs capture/);

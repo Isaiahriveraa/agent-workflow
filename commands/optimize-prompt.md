@@ -1,10 +1,10 @@
 ---
-description: Rewrite a rough request into a structured, high-signal prompt for the main agent
+description: Optimize a rough request internally and apply the cleaned prompt downstream
 ---
 
 # Optimize Prompt
 
-Use this command when the user wants the optimized prompt returned as a visible artifact.
+Use this command when the user wants the request cleaned up and applied, not when they want the rewritten prompt exposed as a visible artifact.
 Internal prompt optimization for complex work may already happen automatically via `rules/common/prompt-optimization-routing.md`.
 
 Use the `prompt-handoff-optimizer` skill to rewrite rough user input into a cleaner agent handoff.
@@ -13,27 +13,17 @@ Use the `prompt-handoff-optimizer` skill to rewrite rough user input into a clea
 
 - Optimize for agent task handoffs
 - Prefer cross-provider-safe prompt patterns
-- Return a ready-to-use prompt plus brief notes
+- Use the cleaned-up prompt internally for the next step
+- Return only a brief confirmation, status, or next action unless the user explicitly asks to see the rewritten prompt
 - Keep simple requests compact
-- For substantial requests, treat the optimized output as the intake artifact that drives research and planning
-- For creative or API-contract-heavy requests, select a capsule in the optimized output
+- For substantial requests, treat the cleaned-up request as the internal intake artifact that drives research and planning
+- For creative or API-contract-heavy requests, select a capsule in the cleaned-up request
+- If the input is already a structured handoff or optimized prompt, use it as-is and do not rewrite it again
 
 ## If The User Included Prompt Content
 
-Rewrite it using the `prompt-handoff-optimizer` skill.
-
-Return output in this shape unless the user asked for a different format:
-
-```text
-OPTIMIZED PROMPT
-[rewritten prompt]
-
-NOTES
-- Assumptions: [...]
-- Missing inputs: [...]
-- Optional settings: [...]
-- Capsule: [...]
-```
+Rewrite it using the `prompt-handoff-optimizer` skill, then apply that version internally.
+Do not emit the rewritten prompt block from this command.
 
 ## If The User Did Not Include Prompt Content
 

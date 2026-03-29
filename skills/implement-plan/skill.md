@@ -12,15 +12,35 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 1. **If a plan path was provided as a parameter**, read the plan file fully before doing anything else.
 2. **Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's `state.md` before starting work.**
 3. **Read `~/.agents/contexts/decisions.md` before starting work.**
+4. **Load `~/.agents/rules/common/workflow-router.md` before starting work.**
+5. **If the task class calls for a capsule, load it before starting work and honor its critic, grader, and memory-policy files.**
+6. **For substantial plans, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
+7. **After canonical plan/state/decision context is loaded and before phase execution begins, run this command to recall relevant memories:
+   `agents-memory recall implement-plan --query "<brief description of what you're implementing>" --filter-relevance`
+   This recall attempt is mandatory for implementation entry. If memory is disabled or returns zero items, that is still a successful attempt — proceed normally. If items are returned, incorporate them as advisory context (lower priority than codebase evidence and the plan itself).**
+8. **Use the same precedence rule during implementation entry:**
+   1. active runtime state and selected artifacts
+   2. explicit decisions and active research/plan
+   3. advisory memory recall
+   4. no recall when relevance is weak
+9. **Treat advisory implementation recall as optional input only: disabled mode must preserve current behavior, disabled or unavailable recall still counts as a successful attempt, empty recall is success, and explicit artifacts stay authoritative when advisory memory disagrees.**
+10. **Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections.**
+11. **Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; plan grading and readiness remain bound to canonical artifacts only.**
+12. **After plan grading, runtime-state loading, and the mandatory recall attempt, run `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` to decide whether implementation should `continue`, `replan`, `capture_lesson`, or `request_user_decision`.**
+13. **Use the helper-backed strategy as the implementation entry authority: malformed or non-ready plan grades route to `replan`, durable automated verification misses route to `capture_lesson`, and evidence-backed blockers route to `request_user_decision`.**
+   - For substantial plans, refuse to begin unless parser-backed output proves `plan_ready_for_implementation: true`
+   - For substantial plans, refuse to begin unless the parent plan includes a `Phase Plan Index` and one linked child phase plan per explicit implementation phase
+   - When executing a phase from a substantial plan, read the linked child phase plan for that phase before editing
+   - For redesign and other creative plans, refuse to begin unless the plan grade confirms the required creative packet is present
 
-4. **If no parameter was provided**, ask:
+14. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
    Example: /absolute/path/to/.agents/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
-5. **Confirm readiness**:
+15. **Confirm readiness**:
    ```
    I've read the plan. It has [N] phases:
    1. [Phase 1 name] — [one-line goal]

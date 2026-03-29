@@ -23,6 +23,7 @@ Skip the optimization pass when the request is already narrow and operational:
 - short follow-up fixes
 - casual conversation
 - mechanical requests where extra structure would add latency without reducing risk
+- an already-structured handoff or optimized prompt that should be used as-is
 
 ## Internal Optimization Pass
 
@@ -54,6 +55,8 @@ Use the smallest structure that removes uncertainty. Prefer the `prompt-handoff-
 - `VALIDATION`
 - `CAPSULE`
 
+If the input is already a clean handoff, keep it intact and do not re-optimize it.
+
 ## RPI Routing
 
 If the optimized task is substantial, route it through:
@@ -73,6 +76,7 @@ Choose the discovery depth with `rules/common/discovery-levels.md`.
 ## Output Discipline
 
 - Do not show the optimized prompt by default.
+- Treat the optimized prompt as an internal working artifact that drives the next step, not as user-facing output.
 - Do not broaden scope while optimizing.
 - If the optimization materially changes execution assumptions, state the interpreted task briefly before proceeding.
 - If the user asks for prompt rewriting as the deliverable, use `/optimize-prompt` or the `prompt-handoff-optimizer` skill directly.

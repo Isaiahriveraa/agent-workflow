@@ -134,7 +134,8 @@
   "auto_discovery": {
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
-    "antigravity_skills": "Auto-discovers from ~/.agents/skills/ as the user-scope alias — no ~/.gemini/skills symlink needed"
+    "antigravity_skills": "Auto-discovers from ~/.agents/skills/ as the user-scope alias — no ~/.gemini/skills symlink needed",
+    "nemoclaw_skills": "Auto-discovers from /sandbox/.agents/skills/ inside the sandbox — synced by sync.sh sync-nemoclaw-skills"
   },
   "capabilities": {
     "claude-code": {
@@ -342,6 +343,15 @@
         "TOOLS.md"
       ],
       "note": "OpenClaw workspace wrappers preserve tool-local identity while pointing back to the hub as the workflow source."
+    },
+    {
+      "tool": "nemoclaw",
+      "target": "<sandbox>:/sandbox/.agents/skills",
+      "source": "~/.agents/skills",
+      "type": "remote-sync",
+      "generator": "sync.sh sync-nemoclaw-skills",
+      "surface": "skills",
+      "note": "Skills are pushed into the NemoClaw sandbox at /sandbox/.agents/skills/ where OpenClaw auto-discovers them as personal agent skills. Run after npx skills add or sandbox restart."
     }
   ]
 }

@@ -41,7 +41,21 @@ Then wait for the user's input.
    - Read `~/.agents/contexts/research-index.md` if prior research exists
    - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current` and read the current project's runtime `state.md` when the existing workflow position matters
    - Load only the relevant rule cards from `~/.agents/rules/common/`
+   - Determine strict-workflow activation with `node $HOME/.agents/scripts/workflow-router-tools.mjs activate` when the task shape is not already proven by a graded substantial research artifact
+   - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
+   - If the task is creative or API-contract-heavy, select and load the relevant capsule before drafting implementation steps
+   - For substantial requests backed by research, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-research --file [research path]` and refuse to finalize a plan unless it passes
    - Treat decisions recorded there as authoritative unless the user explicitly changes them
+   - After canonical context is loaded and before plan drafting, run this command to recall relevant memories:
+     `agents-memory recall create-plan --query "<brief description of what you're planning>" --filter-relevance`
+     This recall attempt is mandatory for command entry. If memory is disabled or returns zero items, that is still a successful attempt — proceed normally. If items are returned, incorporate them as advisory context (lower priority than codebase evidence and explicit decisions).
+   - Pass active project identity from `scripts/project-context.mjs` and current artifact focus into the advisory recall request
+   - Limit advisory recall to `lesson`, `failure_pattern`, `user_preference`, and `prior_work_summary`, with a bounded `top_k` and explicit score threshold
+   - Treat advisory recall as optional input only: empty recall is success, disabled or unavailable recall is still a successful attempt, and explicit research, decisions, and selected artifacts remain authoritative
+   - Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections
+   - Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`; artifact grading stays bound to canonical files only
+   - After readiness scoring, research grading, and the mandatory recall attempt, run `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` to convert that evidence into one command strategy before drafting or finalizing the plan
+   - Obey the helper-backed strategy: `continue` may draft/finalize the plan, `do_more_research` must continue research, `run_critic` must complete critique/refinement before the plan is treated as ready, and `request_user_decision` must stop for the blocking decision
 
 1. **Read all mentioned files immediately and FULLY**:
    - Research documents
@@ -166,6 +180,28 @@ Once aligned on approach:
 
 2. **Get feedback on structure** before writing details
 
+For substantial work, do not stop at a top-level phase outline. The default artifact shape is:
+- one parent plan that explains sequencing, dependencies, and end-state alignment
+- one child plan per implementation phase with decision-complete detail for that phase
+- a `Phase Plan Index` in the parent plan linking every phase to its child plan
+
+Before drafting the parent plan, force one explicit alignment pass:
+- restate the original user prompt in operational terms
+- ask whether the current approach is truly what the user wants or merely the bare minimum implementation
+- convert that answer into an `Original Prompt Alignment` section
+- add a `Research Sufficiency` section stating whether the research is actually enough to support implementation
+
+For redesign and other creative work, do not finalize the plan unless the planning packet includes:
+- objective
+- audience
+- visual direction
+- references
+- banned patterns
+- differentiation target
+- required states
+
+Treat missing child phase plans or a missing redesign packet as blocking plan-quality failures, not optional improvements.
+
 ### Step 4: Detailed Plan Writing
 
 After structure approval:
@@ -207,6 +243,14 @@ After structure approval:
 ## Implementation Approach
 
 [High-level strategy and reasoning]
+
+## Original Prompt Alignment
+
+[Restate the user's request in operational terms, and confirm whether the plan is the full ask or the bare minimum implementation.]
+
+## Research Sufficiency
+
+[State whether the current research is sufficient to support implementation, or what still needs verification.]
 
 ## Phase 1: [Descriptive Name]
 
@@ -273,6 +317,33 @@ After structure approval:
 - Similar implementation: `[file:line]`
 ````
 
+Before critique on substantial plans:
+- run `node $HOME/.agents/scripts/workflow-plan-tools.mjs sync-child-plans --parent [absolute parent plan path]` to generate or refresh the child phase-plan set
+- verify the plan produced one child plan per explicit phase
+- treat the parent-plus-child artifact set as the critique packet; do not critique only the parent shell first
+
+### Step 4.5: Adversarial Critique (substantial plans only)
+
+For plans where substantial routing is active:
+
+1. **Run rpi-critique in-place** on the draft plan:
+   - Use the `/rpi-critique` skill with the draft plan path
+   - The skill runs all critique dimensions silently, revises the artifact directly, and prints a human-readable improvement summary
+   - No separate critique file is written
+
+2. **After rpi-critique completes**, check the printed summary:
+   - If **BLOCKING issues found**: read the summary, verify the in-place fixes were applied, and re-run `/rpi-critique` if the plan still fails grading (max 2 revision cycles)
+   - If **WARNINGS ONLY**: review the summary; proceed to plan presentation
+   - If **ADVISORY**: proceed to plan presentation
+   - If **HUMAN JUDGMENT REQUIRED** (blocking after 2 cycles): surface the blocking issues to the user and do NOT present the plan as ready
+
+3. **After critique**, verify frontmatter updated correctly:
+   - `critique_completed: true`
+   - `critique_cycles: N` (incremented)
+   - `plan_ready_for_implementation: true|false` (re-evaluated)
+
+**Skip condition**: If substantial routing is not active, skip this step and note in the plan frontmatter: `critique_completed: false`, `critique_cycles: 0`.
+
 ### Step 5: Review
 
 1. **Present the draft plan location**:
@@ -286,12 +357,17 @@ After structure approval:
    - Any technical details that need adjustment?
    - Missing edge cases or considerations?
    ```
+   For substantial workflows, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [absolute plan path]` before presenting the plan as implementation-ready.
+   Treat a substantial plan as non-ready if it lacks child phase plans, if it is not tied back to the original prompt strongly enough, or if a redesign plan is missing the required creative packet.
+   If a graded draft still fails because critique/refinement evidence is missing, rerun `node $HOME/.agents/scripts/workflow-command-decision.mjs evaluate --input ...` and route the outcome to `run_critic` instead of presenting the draft as ready.
 
 2. **Iterate based on feedback** - be ready to:
    - Add missing phases
    - Adjust technical approach
    - Clarify success criteria (both automated and manual)
    - Add/remove scope items
+   - Refresh child phase plans if the parent plan changes
+   - Re-run `grade-plan` if the artifact set changes materially
 
 3. **Continue refining** until the user is satisfied
 

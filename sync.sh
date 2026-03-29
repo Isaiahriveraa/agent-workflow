@@ -871,6 +871,114 @@ print("\nDone. OpenClaw workspace wrappers refreshed.")
 PYEOF
 }
 
+cmd_sync_nemoclaw_skills() {
+    local sandbox=""
+    local dry_run=false
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --sandbox) sandbox="$2"; shift 2 ;;
+            --dry-run) dry_run=true; shift ;;
+            *) echo "Unknown option: $1" >&2; return 1 ;;
+        esac
+    done
+
+    local registry="$HOME/.nemoclaw/sandboxes.json"
+    if [[ -z "$sandbox" ]]; then
+        if [[ ! -f "$registry" ]]; then
+            fail "No sandbox registry at $registry — run nemoclaw onboard first"
+            return 1
+        fi
+        sandbox=$(jq -r '.defaultSandbox // empty' "$registry")
+        if [[ -z "$sandbox" ]]; then
+            fail "No default sandbox in $registry — pass --sandbox <name>"
+            return 1
+        fi
+    fi
+
+    echo "Syncing skills to NemoClaw sandbox '${sandbox}'..."
+    echo ""
+
+    # Read skip list
+    local skip_file="$HUB/.nemoclaw-skill-skip"
+    local -a skip_list=()
+    if [[ -f "$skip_file" ]]; then
+        while IFS= read -r line; do
+            line="${line%%#*}"
+            line="${line// /}"
+            [[ -n "$line" ]] && skip_list+=("$line")
+        done < "$skip_file"
+    fi
+
+    is_skipped() {
+        local name="$1"
+        for skip in "${skip_list[@]+"${skip_list[@]}"}"; do
+            [[ "$name" == "$skip" ]] && return 0
+        done
+        return 1
+    }
+
+    # Stage eligible skills
+    local staging
+    staging=$(mktemp -d)
+    trap "rm -rf '$staging'" EXIT
+
+    local synced=0
+    local skipped=0
+    local skills_dir="$HUB/skills"
+
+    if [[ ! -d "$skills_dir" ]]; then
+        fail "Skills directory not found: $skills_dir"
+        return 1
+    fi
+
+    for skill_path in "$skills_dir"/*/; do
+        [[ -d "$skill_path" ]] || continue
+        local skill_name
+        skill_name=$(basename "$skill_path")
+
+        if is_skipped "$skill_name"; then
+            warn "Skipped: $skill_name"
+            skipped=$((skipped + 1))
+            continue
+        fi
+
+        cp -a "$skill_path" "$staging/$skill_name"
+        ok "Staged:  $skill_name"
+        synced=$((synced + 1))
+    done
+
+    echo ""
+
+    if [[ "$synced" -eq 0 ]]; then
+        warn "No skills to sync"
+        return 0
+    fi
+
+    if $dry_run; then
+        echo -e "${YELLOW}Dry run:${NC} would sync $synced skills to sandbox '$sandbox' (skipped $skipped)"
+        return 0
+    fi
+
+    # Get SSH config for the sandbox
+    info "Pushing $synced skills to sandbox '$sandbox'..."
+
+    local ssh_conf
+    ssh_conf=$(mktemp "${TMPDIR:-/tmp}/nemoclaw-ssh-XXXXXX.conf")
+    openshell sandbox ssh-config "$sandbox" > "$ssh_conf"
+    trap "rm -rf '$staging' '$ssh_conf'" EXIT
+
+    # Clean remote skills directory
+    ssh -T -F "$ssh_conf" "openshell-${sandbox}" \
+        "rm -rf /sandbox/.agents/skills && mkdir -p /sandbox/.agents"
+
+    # Upload staged skills
+    openshell sandbox upload "$sandbox" "$staging" /sandbox/.agents/skills
+
+    echo ""
+    echo -e "${GREEN}Done.${NC} Synced $synced skills to sandbox '$sandbox' at /sandbox/.agents/skills/ (skipped $skipped)"
+}
+
 case "${1:-}" in
     verify)                    cmd_verify ;;
     repair)                    cmd_repair ;;
@@ -880,5 +988,6 @@ case "${1:-}" in
     gen-antigravity-commands)  cmd_gen_antigravity_commands ;;
     gen-antigravity-agents)    cmd_gen_antigravity_agents ;;
     gen-openclaw-workspace)    cmd_gen_openclaw_workspace ;;
+    sync-nemoclaw-skills)      cmd_sync_nemoclaw_skills "${@:2}" ;;
     *)                         usage ;;
 esac
