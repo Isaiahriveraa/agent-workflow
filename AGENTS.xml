@@ -88,6 +88,7 @@
     <rule>Use the verification automation rule before recommending automated checks in a repo with scripts or build tooling.</rule>
     <rule>Use the artifact retrieval rule before loading multiple workflow artifacts into context.</rule>
     <rule>Use the model routing rule before spawning subagents to select the optimal model tier based on task complexity, budget, and CLI context.</rule>
+    <rule>Prefer the lowest capable model for delegated bounded work when it can complete the task without degrading correctness or safety.</rule>
   </rule-card-rules>
 
   <adapter-rules>
@@ -109,7 +110,8 @@
     <rule>Load contexts/agent-catalog.md before introducing or routing to new workflow experts.</rule>
     <rule>Use the smallest expert set that covers the task cleanly.</rule>
     <rule>Stay local when the request is a narrow operational fix rather than workflow-system work.</rule>
-    <rule>Prefer subagents and skills for bounded, parallelizable work so the main context window stays focused on the critical path.</rule>
+    <rule>Prefer subagents and skills for bounded, parallelizable, or low-risk work so the main context window stays focused on the critical path.</rule>
+    <rule>Delegate extraction, search, summarization, formatting, verification, and other narrowly scoped subtasks by default when they can be expressed without shared hidden context.</rule>
     <rule>Use node ./scripts/expert-agent-routing-tools.mjs route --input "&lt;task&gt;" when the correct expert is not obvious from the request.</rule>
   </expert-agent-rules>
 
