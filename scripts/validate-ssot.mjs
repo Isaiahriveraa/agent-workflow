@@ -67,6 +67,8 @@ const requiredFiles = [
   'commands/session-status.md',
   'commands/pause-session.md',
   'commands/resume-session.md',
+  'commands/rpi.md',
+  'commands/rpi-brainstorm.md',
   'commands/project-tooling.md',
   'commands/project-verification.md',
   'commands/project-artifacts.md',
@@ -101,10 +103,11 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'select and load the relevant capsule', 'agents-memory recall create-plan', "Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'do_more_research', 'run_critic', 'request_user_decision', 'Original Prompt Alignment', 'Research Sufficiency', 'Phase Plan Index', 'one child plan per implementation phase']],
+  ['commands/create-plan.md', ['~/.agents/contexts/decisions.md', "current project's runtime `research-index.md`", "current project's runtime `state.md`", 'scripts/workflow-router-tools.mjs score', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'select and load the relevant capsule', 'agents-memory recall create-plan', "Do not write advisory recall into the current project's runtime `state.md`, `research-index.md`, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'do_more_research', 'run_critic', 'request_user_decision', 'Original Prompt Alignment', 'Research Sufficiency', 'Phase Plan Index', 'one child plan per implementation phase', '[project root]/thoughts/plans']],
   ['commands/implement_plan.md', ["current project's `state.md`", '~/.agents/contexts/decisions.md', 'rules/common/workflow-router.md', 'scripts/workflow-artifact-tools.mjs grade-plan', 'plan_ready_for_implementation', 'load it before starting work and honor its critic, grader, and memory-policy files', 'agents-memory recall implement-plan', 'active runtime state and selected artifacts', 'advisory memory recall', 'disabled mode must preserve current behavior', "Do not write advisory recall into the current project's `state.md`, `research-index.md`, session continuity artifacts, or active artifact selections", 'Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`', 'scripts/workflow-command-decision.mjs evaluate', 'replan', 'capture_lesson', 'request_user_decision', 'Never retry blindly after a verified miss', 'scripts/lesson-tools.mjs quick-capture', 'Phase Plan Index', 'one linked child phase plan per explicit implementation phase', 'read the linked child phase plan for that phase before editing']],
   ['commands/validate_plan.md', ["current project's `state.md`", "current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-artifact-tools.mjs grade-research', 'scripts/workflow-artifact-tools.mjs grade-plan', 'scripts/workflow-command-decision.mjs evaluate', 'request_user_decision', 'capture_lesson', 'scripts/lesson-tools.mjs quick-capture']],
   ['commands/research_codebase.md', ["current project's `research-index.md`", '~/.agents/contexts/decisions.md', 'scripts/workflow-router-tools.mjs capture', 'scripts/workflow-artifact-tools.mjs grade-research', 'research_ready_for_planning']],
+  ['commands/rpi.md', ['simple frontend', 'workflow-router-tools.mjs activate', 'Tier 1: do not force full RPI', 'Tier 3: run the full strict workflow', 'rpi-brainstorm.md', 'research_codebase.md', 'create-plan.md', 'implement_plan.md', 'validate_plan.md', 'ambiguityDetected', 'recommendedResearchEntry']],
   ['commands/session-start.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/session-status.md', ["current project's `session-index.md`", "current project's `state.md`"]],
   ['commands/pause-session.md', ["current project's `session-index.md`", "current project's `state.md`"]],
@@ -115,11 +118,12 @@ const commandContracts = new Map([
 ]);
 
 const handoffContracts = new Map([
-  ['commands/create-handoff.md', ['~/.agents/thoughts/shared/handoffs/', "current project's `state.md`", "current project's `session-index.md`", 'scripts/artifact-tools.mjs persist']],
-  ['commands/resume-handoff.md', ['~/.agents/thoughts/shared/handoffs/', '~/.agents/thoughts/plans', '.planning/research']]
+  ['commands/create-handoff.md', ['[project root]/thoughts/handoffs/', "current project's `state.md`", "current project's `session-index.md`", 'scripts/artifact-tools.mjs persist']],
+  ['commands/resume-handoff.md', ['[project root]/thoughts/handoffs/', "current project's `thoughts/plans`", "current project's `thoughts/research`"]]
 ]);
 
 const explicitOutputContracts = new Map([
+  ['commands/rpi-brainstorm.md', ['Next step', '/research_codebase /absolute/path/to/intake.md']],
   ['commands/research_codebase.md', ['/create-plan /absolute/path/to/research.md']],
   ['commands/create-plan.md', ['Next step', '/implement_plan /absolute/path/to/.agents/thoughts/plans/YYYY-MM-DD-description.md']],
   ['commands/create-handoff.md', ['Use the exact absolute handoff path written in the current run.', 'Next step', '/resume_handoff path/to/handoff.md']],
@@ -128,14 +132,14 @@ const explicitOutputContracts = new Map([
 ]);
 
 const continuityContracts = new Map([
-  ['AGENTS.md', ['project-local `.agents/sessions/`', 'thoughts/shared/handoffs/']],
-  ['rules/common/artifact-retrieval.md', ['.agents/sessions/', 'thoughts/shared/handoffs/']],
-  ['contexts/artifacts.md', ['project-local runtime files', '~/.agents/thoughts/shared/handoffs']],
+  ['AGENTS.md', ['project-local `.agents/sessions/`', 'thoughts/handoffs/']],
+  ['rules/common/artifact-retrieval.md', ['.agents/sessions/', 'thoughts/handoffs/']],
+  ['contexts/artifacts.md', ['project-local runtime files', '[project root]/thoughts/handoffs']],
   ['contexts/research-index.md', ['shared compatibility document', '[project root]/.agents/contexts/research-index.md']],
-  ['contexts/session-index.md', ['shared compatibility document', '[project root]/.agents/contexts/session-index.md', 'Shared/global handoffs']],
+  ['contexts/session-index.md', ['shared compatibility document', '[project root]/.agents/contexts/session-index.md', 'Project-local handoffs']],
   ['commands/session-start.md', ['ordinary pause/resume continuity', ".agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md"]],
-  ['commands/resume-session.md', ['project-local session artifacts', 'shared/global transfer artifact']],
-  ['commands/project-artifacts.md', ['handoffs remain shared/global transfer artifacts']]
+  ['commands/resume-session.md', ['project-local session artifacts', 'project-local transfer artifact']],
+  ['commands/project-artifacts.md', ['handoffs remain project-local transfer artifacts']]
 ]);
 
 let hasError = false;

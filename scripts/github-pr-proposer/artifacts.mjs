@@ -19,7 +19,7 @@ const localHostArtifactRoot = process.env.GITHUB_PR_PROPOSER_HOST_ARTIFACT_ROOT
 const sharedArtifactRoots = {
   research: path.join(agentsRoot, 'thoughts', 'research', 'github-pr-proposer'),
   plan: path.join(agentsRoot, 'thoughts', 'plans', 'github-pr-proposer'),
-  handoff: path.join(agentsRoot, 'thoughts', 'shared', 'handoffs', 'github-pr-proposer')
+  handoff: path.join(agentsRoot, 'thoughts', 'handoffs', 'github-pr-proposer')
 };
 const localArtifactKinds = {
   research: 'research.md',

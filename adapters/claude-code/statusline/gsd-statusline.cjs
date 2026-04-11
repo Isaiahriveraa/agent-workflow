@@ -14,14 +14,50 @@ process.stdin.on('end', () => {
   try {
     const data = JSON.parse(input);
     const model = data.model?.display_name || 'Claude';
+    const modelId = data.model?.id || '';
     const dir = data.workspace?.current_dir || process.cwd();
     const session = data.session_id || '';
     const remaining = data.context_window?.remaining_percentage;
+    const currentUsage = data.context_window?.current_usage || null;
+    const contextWindowSize = data.context_window?.context_window_size || 0;
+    const isCodexModel = /^gpt-/i.test(modelId) || /codex/i.test(modelId) || /gpt-|codex/i.test(model);
+
+    function formatTokens(value) {
+      if (!Number.isFinite(value)) return '0';
+      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`;
+      if (value >= 1_000) return `${Math.round(value / 1_000)}k`;
+      return String(Math.round(value));
+    }
 
     // Context window display (shows USED percentage scaled to 80% limit)
     // Claude Code enforces an 80% context limit, so we scale to show 100% at that point
     let ctx = '';
-    if (remaining != null) {
+    if (isCodexModel && currentUsage && contextWindowSize > 0) {
+      const usedTokens =
+        (currentUsage.input_tokens || 0) +
+        (currentUsage.cache_creation_input_tokens || 0) +
+        (currentUsage.cache_read_input_tokens || 0);
+      const rawUsed = Math.max(
+        0,
+        Math.min(100, Math.round((usedTokens / contextWindowSize) * 100))
+      );
+      // Keep Codex visually aligned with the Claude GSD statusline:
+      // treat 80% real context usage as "full" because compaction pressure
+      // begins before the absolute window limit.
+      const used = Math.min(100, Math.round((rawUsed / 80) * 100));
+      const filled = Math.floor(used / 10);
+      const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+
+      if (used < 63) {        // ~50% real
+        ctx = ` \x1b[32m${bar} ${used}%\x1b[0m`;
+      } else if (used < 81) { // ~65% real
+        ctx = ` \x1b[33m${bar} ${used}%\x1b[0m`;
+      } else if (used < 95) { // ~76% real
+        ctx = ` \x1b[38;5;208m${bar} ${used}%\x1b[0m`;
+      } else {
+        ctx = ` \x1b[5;31m💀 ${bar} ${used}%\x1b[0m`;
+      }
+    } else if (remaining != null) {
       const rem = Math.round(remaining);
       const rawUsed = Math.max(0, Math.min(100, 100 - rem));
       // Scale: 80% real usage = 100% displayed

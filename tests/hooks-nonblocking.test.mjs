@@ -109,3 +109,38 @@ test('legacy session start hook alias stays executable under the ESM hooks packa
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('rpi artifact watcher prompts critique for research artifacts in the Claude adapter', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-rpi-hook-'));
+  const repoRoot = path.join(tmpDir, 'repo');
+  const homeDir = path.join(tmpDir, 'home');
+  const hookPath = fileURLToPath(new URL('../adapters/claude-code/hooks/gsd-rpi-artifact-watcher.js', import.meta.url));
+  const artifactPath = path.join(repoRoot, '.planning', 'research', '2026-04-03-rpi-hook.md');
+
+  try {
+    fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+    fs.mkdirSync(homeDir, { recursive: true });
+    fs.writeFileSync(artifactPath, '# artifact\n');
+
+    const output = execFileSync(process.execPath, [hookPath], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      input: JSON.stringify({
+        tool_name: 'Write',
+        tool_input: { file_path: artifactPath },
+        workspace: { current_dir: repoRoot }
+      }),
+      env: {
+        ...process.env,
+        HOME: homeDir,
+        AGENTS_ROOT: '/Users/isaiahrivera/.agents'
+      }
+    });
+
+    assert.match(output, /Research artifact detected:/);
+    assert.match(output, new RegExp(artifactPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(output, /Run \/rpi-critique .* to critique and improve this artifact in-place\./);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});

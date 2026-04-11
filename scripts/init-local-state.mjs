@@ -7,7 +7,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const starterDirs = [
   path.join(repoRoot, 'thoughts', 'plans'),
   path.join(repoRoot, 'thoughts', 'research'),
-  path.join(repoRoot, 'thoughts', 'shared', 'handoffs'),
+  path.join(repoRoot, 'thoughts', 'handoffs'),
   path.join(repoRoot, 'projects')
 ];
 

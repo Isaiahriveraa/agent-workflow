@@ -165,7 +165,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
       },
       "settings": {
         "status": "validated-local",
@@ -195,7 +195,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
       }
     },
     "opencode": {
@@ -221,7 +221,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
       },
       "memory": {
         "status": "bridged-explicit",
@@ -259,7 +259,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
       },
       "memory": {
         "status": "bridged-explicit",
@@ -289,7 +289,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and shared handoffs"
+        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
       },
       "memory": {
         "status": "bridged-explicit",

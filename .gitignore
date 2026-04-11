@@ -16,3 +16,4 @@ gsd-local-patches/
 .pids/
 config/
 !projects/.gitkeep
+.omx/

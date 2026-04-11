@@ -13,12 +13,11 @@ const statePath = project.contextPaths.state;
 const researchIndexPath = project.contextPaths.researchIndex;
 const repoLocalArtifactRoots = {
   intake: project.thoughtPaths.intake,
+  plans: project.thoughtPaths.plans,
   research: project.thoughtPaths.research
 };
-const canonicalPlanRoot = project.thoughtPaths.plans;
 const legacyPlanRoot = path.join(project.planningDir, 'plans');
 const sharedArtifactRoots = {
-  plans: canonicalPlanRoot,
   handoffs: project.thoughtPaths.handoffs
 };
 const projectRuntimeArtifactRoots = {
@@ -77,7 +76,7 @@ const listFiles = (dir) => {
 };
 
 const listPlanFiles = () => {
-  const canonical = listFiles(canonicalPlanRoot);
+  const canonical = listFiles(project.thoughtPaths.plans);
   if (canonical.length > 0) return canonical;
   return listFiles(legacyPlanRoot);
 };
@@ -308,7 +307,7 @@ const buildStateTerms = (state) => new Set([
   ...tokenize(parseBullets(state, '## Related Plan').join(' '))
 ]);
 
-const canonicalLatestPlan = () => listFiles(canonicalPlanRoot)[0] ?? null;
+const canonicalLatestPlan = () => listFiles(project.thoughtPaths.plans)[0] ?? null;
 const legacyLatestPlan = () => listFiles(legacyPlanRoot)[0] ?? null;
 const defaultPlanSuggestion = (state) => {
   const explicitRelatedPlan = parseBullets(state, '## Related Plan').find((line) => line && line !== 'none');

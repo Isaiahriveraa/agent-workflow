@@ -13,8 +13,8 @@ const AGENTS_ROOT = process.env.AGENTS_ROOT
   : path.join(os.homedir(), '.agents');
 const ARTIFACT_TOOLS = path.join(AGENTS_ROOT, 'scripts', 'workflow-artifact-tools.mjs');
 
-const RESEARCH_RE = /\/.planning\/research\/[^/]+\.md$/;
-const PLAN_RE = /\/.planning\/plans\/[^/]+\.md$/;
+const RESEARCH_RE = /\/thoughts\/research\/[^/]+\.md$/;
+const PLAN_RE = /\/thoughts\/plans\/[^/]+\.md$/;
 
 // Debounce: skip if we already graded this file within the last 10 seconds
 const DEBOUNCE_SECONDS = 10;

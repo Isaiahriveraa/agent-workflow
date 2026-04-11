@@ -173,7 +173,6 @@ Commands:
   gen-antigravity-commands  Generate Antigravity command TOML from hub commands
   gen-antigravity-agents    Generate Gemini-compatible agents from hub agents
   gen-openclaw-workspace    Generate OpenClaw workspace wrappers
-
 Set HOME and/or HUB to run against fixture environments without touching your real tool directories.
 EOF
     exit 1

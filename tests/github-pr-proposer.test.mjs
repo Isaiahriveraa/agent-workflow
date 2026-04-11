@@ -26,7 +26,7 @@ const withTempGithubPrProposerRoots = (fn) => {
 
   fs.mkdirSync(path.join(agentsRoot, 'thoughts', 'research'), { recursive: true });
   fs.mkdirSync(path.join(agentsRoot, 'thoughts', 'plans'), { recursive: true });
-  fs.mkdirSync(path.join(agentsRoot, 'thoughts', 'shared', 'handoffs'), { recursive: true });
+  fs.mkdirSync(path.join(agentsRoot, 'thoughts', 'handoffs'), { recursive: true });
   fs.mkdirSync(workspaceRoot, { recursive: true });
 
   try {
@@ -82,7 +82,7 @@ test('artifact helper resolves canonical research, plan, and handoff paths', () 
     assert.equal(plan.ok, true);
     assert.match(plan.path, new RegExp(`/thoughts/plans/github-pr-proposer/${exampleRepoSlug}/311da0f2-ab8c-8089-b40b-fcae833befa8\\.md$`));
     assert.equal(handoff.ok, true);
-    assert.match(handoff.path, new RegExp(`/thoughts/shared/handoffs/github-pr-proposer/${exampleRepoSlug}/311da0f2-ab8c-8089-b40b-fcae833befa8\\.md$`));
+    assert.match(handoff.path, new RegExp(`/thoughts/handoffs/github-pr-proposer/${exampleRepoSlug}/311da0f2-ab8c-8089-b40b-fcae833befa8\\.md$`));
   });
 });
 

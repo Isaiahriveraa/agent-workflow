@@ -56,6 +56,8 @@ test('workflow router derives strict activation reasons for substantial requests
     assert.equal(parsed.taskSize, 'substantial');
     assert.equal(parsed.recommendedNextAction, 'optimize-prompt');
     assert.equal(parsed.explicitFileCount, 4);
+    assert.equal(parsed.ambiguityDetected, false);
+    assert.equal(parsed.recommendedResearchEntry, 'research');
     assert.deepEqual(
       parsed.reasons.map((item) => item.id),
       [
@@ -64,6 +66,25 @@ test('workflow router derives strict activation reasons for substantial requests
         'touches_three_or_more_files'
       ]
     );
+  } finally {
+    fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
+  }
+});
+
+test('workflow router flags vague substantial requests for brainstorm-first discovery', () => {
+  const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-router-')), 'activate-brainstorm');
+
+  try {
+    const parsed = JSON.parse(execWorkflowRouter([
+      'activate',
+      '--input',
+      'This vague workflow change needs research, planning, and delegation before implementation.'
+    ], repoRoot));
+
+    assert.equal(parsed.strictWorkflowRequired, true);
+    assert.equal(parsed.ambiguityDetected, true);
+    assert.equal(parsed.recommendedResearchEntry, 'brainstorm');
+    assert.equal(parsed.recommendedNextAction, 'optimize-prompt');
   } finally {
     fs.rmSync(path.dirname(repoRoot), { recursive: true, force: true });
   }

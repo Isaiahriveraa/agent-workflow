@@ -134,6 +134,7 @@ const deriveActivationDecision = (input) => {
   const reasons = collectActivationReasons(input, explicitFileCount);
   const tier = deriveTier(reasons);
   const substantial = tier === 3;
+  const ambiguityDetected = reasons.some((item) => item.id === 'vague_or_under_specified');
 
   return {
     strictWorkflowRequired: substantial,
@@ -142,6 +143,8 @@ const deriveActivationDecision = (input) => {
     taskSize: tierLabels[tier],
     reasons,
     explicitFileCount,
+    ambiguityDetected,
+    recommendedResearchEntry: ambiguityDetected ? 'brainstorm' : 'research',
     recommendedNextAction: tierNextActions[tier]
   };
 };

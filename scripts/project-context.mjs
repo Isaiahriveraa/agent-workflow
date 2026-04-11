@@ -92,7 +92,7 @@ Shared/global research notes may still exist, but this file is the live source o
 
 Use this file to track project-local lightweight work sessions for the current project.
 
-Shared/global handoffs are recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.
+Project-local handoffs are recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.
 
 ## Active Sessions
 - No active sessions recorded.
@@ -112,22 +112,22 @@ Shared/global handoffs are recorded here as transfer points, but they do not rep
 `,
   artifacts: `# Artifact Retrieval Context
 
-Use this file to describe how the current project's runtime state should select from repo-local and shared workflow artifacts.
+Use this file to describe how the current project's runtime state should select from repo-local workflow artifacts.
 
-Lightweight continuity artifacts are project-local runtime files. Shared/global handoffs are transfer artifacts, not the ordinary pause/resume path.
+Lightweight continuity artifacts and handoffs are project-local artifacts. Handoffs remain transfer artifacts, not the ordinary pause/resume path.
 
 ## Sources
 - intake: [project root]/.planning/intake
-- plans: ~/.agents/thoughts/plans
-- research: [project root]/.planning/research
+- plans: [project root]/thoughts/plans
+- research: [project root]/thoughts/research
 - sessions: [project root]/.agents/sessions
-- handoffs: \`~/.agents/thoughts/shared/handoffs\`
+- handoffs: \`[project root]/thoughts/handoffs\`
 
 ## Preferred Retrieval Order
 1. active or explicitly requested intake/session artifact
 2. related plan from the current project's state file
 3. latest matching repo-local research artifact
-4. latest matching shared handoff artifact
+4. latest matching project-local handoff artifact
 
 ## Notes
 - Use \`node ./scripts/artifact-tools.mjs suggest\` to retrieve likely relevant artifacts for the current project.
@@ -135,7 +135,7 @@ Lightweight continuity artifacts are project-local runtime files. Shared/global 
 - Use \`node ./scripts/artifact-tools.mjs persist --source [command] --focus "[workflow focus]"\` to lock the chosen working set into the current project's state file.
 - Prefer persisted session and working-set selections over heuristics when resuming work.
 - Use \`node ./scripts/workflow-router-tools.mjs capture\` to persist a substantial-task intake artifact before research or planning.
-- Legacy repo-local plan paths under \`[project root]/.planning/plans\` remain readable, but new canonical plans live under \`~/.agents/thoughts/plans\`.
+- Legacy repo-local plan paths under \`[project root]/.planning/plans\` remain readable, but new canonical plans live under \`[project root]/thoughts/plans\`.
 `
 };
 
@@ -160,6 +160,7 @@ export const getProjectContext = (options = {}) => {
   const projectDir = path.join(projectRoot, '.agents');
   const contextsDir = path.join(projectDir, 'contexts');
   const planningDir = path.join(projectRoot, '.planning');
+  const thoughtsDir = path.join(projectRoot, 'thoughts');
   const sessionsDir = path.join(projectDir, 'sessions', 'general');
 
   return {
@@ -177,14 +178,14 @@ export const getProjectContext = (options = {}) => {
     },
     thoughtPaths: {
       intake: path.join(planningDir, 'intake'),
-      plans: path.join(agentsRoot, 'thoughts', 'plans'),
-      research: path.join(planningDir, 'research'),
-      lessons: path.join(agentsRoot, 'thoughts', 'lessons'),
-      traces: path.join(agentsRoot, 'thoughts', 'traces'),
-      evaluations: path.join(agentsRoot, 'thoughts', 'evaluations'),
-      strategies: path.join(agentsRoot, 'thoughts', 'strategies'),
+      plans: path.join(thoughtsDir, 'plans'),
+      research: path.join(thoughtsDir, 'research'),
+      lessons: path.join(thoughtsDir, 'lessons'),
+      traces: path.join(thoughtsDir, 'traces'),
+      evaluations: path.join(thoughtsDir, 'evaluations'),
+      strategies: path.join(thoughtsDir, 'strategies'),
       sessions: sessionsDir,
-      handoffs: path.join(agentsRoot, 'thoughts', 'shared', 'handoffs')
+      handoffs: path.join(thoughtsDir, 'handoffs')
     }
   };
 };

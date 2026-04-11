@@ -37,7 +37,7 @@ const withTempProjectsRoot = (fn) => {
 test('handoff tool resolves an explicit absolute path', () => {
   withTempProjectsRoot((env) => {
     const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-handoff-')), 'repo');
-    const handoffPath = path.join(root, 'thoughts', 'shared', 'handoffs', 'general', '2026-03-06_20-30-00_explicit.md');
+    const handoffPath = path.join(repoRoot, 'thoughts', 'handoffs', 'general', '2026-03-06_20-30-00_explicit.md');
     fs.mkdirSync(path.dirname(handoffPath), { recursive: true });
     fs.writeFileSync(handoffPath, '# handoff\n');
 
@@ -71,7 +71,7 @@ test('handoff tool reports no candidate when a ticket has no handoffs', () => {
 test('handoff tool picks the most recent timestamped handoff for a ticket', () => {
   withTempProjectsRoot((env) => {
     const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-handoff-')), 'repo');
-    const ticketDir = path.join(root, 'thoughts', 'shared', 'handoffs', 'ENG-4242');
+    const ticketDir = path.join(repoRoot, 'thoughts', 'handoffs', 'ENG-4242');
     const first = path.join(ticketDir, '2026-03-06_10-00-00_ENG-4242_first.md');
     const latest = path.join(ticketDir, '2026-03-06_11-00-00_ENG-4242_second.md');
     fs.mkdirSync(ticketDir, { recursive: true });

@@ -35,7 +35,7 @@ test('AGENTS declares contexts, rules, and adapters as canonical layers', () => 
   assert.match(content, /expert-agent routing rule/);
   assert.match(content, /expert-agent-routing-tools\.mjs route/);
   assert.match(content, /project-local `\.agents\/sessions\/`/);
-  assert.match(content, /thoughts\/shared\/handoffs\//);
+  assert.match(content, /thoughts\/handoffs\//);
   assert.match(content, /commands\/\*\*\/\*\.md/);
   assert.match(content, /commands\/gsd\/\*\.md/);
   assert.match(content, /\/gsd:help/);
@@ -72,6 +72,7 @@ test('system prompt documents enforcement-first router authority and stage contr
   assert.match(content, /router remains the activation spine/);
   assert.match(content, /Memory is advisory but mandatory to attempt for `create-plan` and `implement-plan` stages/);
   assert.match(content, /If router activation requires the task to be substantial, run prompt optimization first/);
+  assert.match(content, /run a brief brainstorm\/clarification pass before codebase research/);
   assert.match(content, /That explanation must separate: what the codebase proves, what memory suggests, what is inferred, and what is newly proposed/);
   assert.match(content, /Do not implement until the user explicitly approves the plan/);
 });
@@ -98,13 +99,14 @@ test('global research and session indexes are compatibility documents with runti
   assert.match(research, /\[project root\]\/\.agents\/contexts\/research-index\.md/);
   assert.match(session, /shared compatibility document/);
   assert.match(session, /\[project root\]\/\.agents\/contexts\/session-index\.md/);
-  assert.match(session, /Shared\/global handoffs/);
+  assert.match(session, /Project-local handoffs/);
 });
 
 test('workflow commands reference explicit context files', () => {
   const createPlan = read('commands/create-plan.md');
   const implementPlan = read('commands/implement_plan.md');
   const validatePlan = read('commands/validate_plan.md');
+  const rpi = read('commands/rpi.md');
   const optimizePrompt = read('commands/optimize-prompt.md');
   const fixPr = read('commands/fix-pr.md');
   const promptResearchPackager = read('skills/prompt-research-packager/SKILL.md');
@@ -138,6 +140,8 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /request_user_decision/);
   assert.match(createPlan, /Do not write advisory recall into the current project's runtime `state\.md`, `research-index\.md`, or active artifact selections/);
   assert.match(createPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
+  assert.match(createPlan, /User-Facing Contract/);
+  assert.match(createPlan, /Lead with the planning job, not with the workflow machinery/);
   assert.match(implementPlan, /current project's `state\.md`/);
   assert.match(implementPlan, /contexts\/decisions\.md/);
   assert.match(implementPlan, /rules\/common\/workflow-router\.md/);
@@ -160,6 +164,8 @@ test('workflow commands reference explicit context files', () => {
   assert.match(implementPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
   assert.match(implementPlan, /Never retry blindly after a verified miss/);
   assert.match(implementPlan, /lesson-tools\.mjs quick-capture/);
+  assert.match(implementPlan, /Primary Execution Contract/);
+  assert.match(implementPlan, /write or update tests first when behavior is changing/);
   assert.match(validatePlan, /current project's `state\.md`/);
   assert.match(validatePlan, /current project's `research-index\.md`/);
   assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-research/);
@@ -182,12 +188,22 @@ test('workflow commands reference explicit context files', () => {
   assert.match(promptResearchPackager, /Only return the rewritten prompt in this shape when the user explicitly asks to see it/);
   assert.match(promptOptimizationRouting, /an already-structured handoff or optimized prompt that should be used as-is/);
   assert.match(promptOptimizationRouting, /Treat the optimized prompt as an internal working artifact that drives the next step, not as user-facing output/);
+  assert.match(promptOptimizationRouting, /commands\/rpi-brainstorm\.md/);
   assert.match(research, /current project's `research-index\.md`/);
   assert.match(research, /project-context\.mjs current/);
   assert.match(research, /workflow-router-tools\.mjs capture/);
   assert.match(research, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(research, /research_ready_for_planning/);
+  assert.match(research, /commands\/rpi-brainstorm\.md/);
   assert.match(research, /artifact-tools\.mjs sync-research/);
+  assert.match(rpi, /simple frontend/);
+  assert.match(rpi, /workflow-router-tools\.mjs activate/);
+  assert.match(rpi, /rpi-brainstorm\.md/);
+  assert.match(rpi, /ambiguityDetected/);
+  assert.match(rpi, /recommendedResearchEntry/);
+  assert.match(rpi, /Brainstorm/);
+  assert.match(rpi, /Tier 3: run the full strict workflow/);
+  assert.match(rpi, /Do not auto-run git branch, push, or PR actions unless the user explicitly asks/);
   assert.match(sessionStart, /current project's `session-index\.md`/);
   assert.match(sessionStart, /ordinary pause\/resume continuity/);
   assert.match(pauseSession, /current project's `session-index\.md`/);
@@ -199,7 +215,7 @@ test('workflow commands reference explicit context files', () => {
   assert.match(projectVerification, /contexts\/verification\.md/);
   assert.match(projectArtifacts, /current project's `artifacts\.md`/);
   assert.match(projectArtifacts, /current project's `research-index\.md`/);
-  assert.match(projectArtifacts, /handoffs remain shared\/global transfer artifacts/);
+  assert.match(projectArtifacts, /handoffs remain project-local transfer artifacts/);
   assert.match(projectArtifacts, /--mode refresh/);
   assert.match(pr, /Describe only what is actually in the committed branch diff against the base branch/);
   assert.match(pr, /Do not invent provenance from the conversation/);
@@ -208,18 +224,18 @@ test('workflow commands reference explicit context files', () => {
   assert.match(pr, /No references to `\.planning\/research` or `thoughts\/` unless those paths are committed and reviewer-relevant in this PR/);
 });
 
-test('handoff commands keep handoffs global while runtime state can be project-scoped', () => {
+test('handoff commands keep handoffs project-local while runtime state stays project-scoped', () => {
   const createHandoff = read('commands/create-handoff.md');
   const resumeHandoff = read('commands/resume-handoff.md');
   const gsd = read('commands/gsd.md');
 
-  assert.match(createHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\//);
+  assert.match(createHandoff, /\[project root\]\/thoughts\/handoffs\//);
   assert.match(createHandoff, /current project's `state\.md`/);
   assert.match(createHandoff, /current project's `session-index\.md`/);
   assert.match(createHandoff, /artifact-tools\.mjs persist/);
   assert.match(createHandoff, /continuity-authoritative/);
-  assert.doesNotMatch(createHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
-  assert.match(resumeHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\/ENG-XXXX/);
+  assert.doesNotMatch(createHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\//);
+  assert.match(resumeHandoff, /\[project root\]\/thoughts\/handoffs\/ENG-XXXX/);
   assert.match(resumeHandoff, /\/resume-handoff` resolves to the same command file/);
   assert.match(resumeHandoff, /~\/\.agents\/thoughts\/plans/);
   assert.match(resumeHandoff, /\.planning\/research/);
@@ -233,10 +249,13 @@ test('artifact-producing workflow docs require exact next-command output', () =>
   const createHandoff = read('commands/create-handoff.md');
   const implementPlan = read('commands/implement_plan.md');
   const validatePlan = read('commands/validate_plan.md');
+  const brainstorm = read('commands/rpi-brainstorm.md');
 
   assert.match(createPlan, /Next step/);
   assert.match(createPlan, /\/implement_plan \/absolute\/path\/to\/\.agents\/thoughts\/plans\/YYYY-MM-DD-description\.md/);
   assert.match(research, /\/create-plan \/absolute\/path\/to\/research\.md/);
+  assert.match(brainstorm, /Next step/);
+  assert.match(brainstorm, /\/research_codebase \/absolute\/path\/to\/intake\.md/);
   assert.match(createHandoff, /Use the exact absolute handoff path written in the current run\./);
   assert.match(createHandoff, /Next step/);
   assert.match(createHandoff, /\/resume_handoff path\/to\/handoff\.md/);
@@ -273,7 +292,7 @@ Use this global file only for legacy/shared notes that are not specific to a sin
 - Not set.
 
 ## Blockers
-- None recorded at the shared/global level.
+- None recorded at the project-local level.
 
 ## Last Verified At
 - Not set.

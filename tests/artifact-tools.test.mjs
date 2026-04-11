@@ -111,8 +111,8 @@ const withSeededArtifacts = (repoRoot, fn) => {
   const intakePath = path.join(repoRoot, '.planning', 'intake', `${seedId}-intake.md`);
   const canonicalPlanPath = path.join(root, 'thoughts', 'plans', `${seedId}-plan.md`);
   const legacyPlanPath = path.join(repoRoot, '.planning', 'plans', `${seedId}-legacy-plan.md`);
-  const researchPath = path.join(repoRoot, '.planning', 'research', `${seedId}-research.md`);
-  const handoffPath = path.join(root, 'thoughts', 'shared', 'handoffs', 'ENG-general', `${seedId}-handoff.md`);
+  const researchPath = path.join(repoRoot, 'thoughts', 'research', `${seedId}-research.md`);
+  const handoffPath = path.join(repoRoot, 'thoughts', 'handoffs', 'ENG-general', `${seedId}-handoff.md`);
 
   fs.mkdirSync(path.dirname(intakePath), { recursive: true });
   fs.mkdirSync(path.dirname(canonicalPlanPath), { recursive: true });
@@ -140,7 +140,7 @@ test('artifact retrieval context exists with required sections', () => {
   const content = readFile(runProjectContext(fixtureRepoRoot).contextPaths.artifacts);
   assert.match(content, /## Sources/);
   assert.match(content, /## Preferred Retrieval Order/);
-  assert.match(content, /handoffs: `~\/\.agents\/thoughts\/shared\/handoffs`/);
+  assert.match(content, /handoffs: `~\/\.agents\/thoughts\/handoffs`/);
   assert.match(content, /Lightweight continuity artifacts are project-local runtime files/);
 });
 
@@ -163,9 +163,9 @@ test('artifact related command returns shared durable artifacts plus project ses
     const parsed = JSON.parse(output);
 
     assert.match(parsed.intake ?? '', /\/\.planning\/intake\//);
-    assert.match(parsed.plans ?? '', /\/thoughts\/plans\//);
-    assert.match(parsed.research ?? '', /\/\.planning\/research\//);
-    assert.match(parsed.handoffs ?? '', /thoughts\/shared\/handoffs\//);
+    assert.match(parsed.plans ?? '', /\/(thoughts|\.planning)\/plans\//);
+    assert.match(parsed.research ?? '', /\/thoughts\/research\//);
+    assert.match(parsed.handoffs ?? '', /thoughts\/handoffs\//);
   });
 });
 
@@ -194,9 +194,9 @@ test('artifact suggestion uses canonical shared artifacts only when they outrank
 
         const parsed = JSON.parse(execArtifactTool(['suggest'], fixtureRepoRoot));
         assert.match(parsed.suggested.intake ?? '', /\/\.planning\/intake\//);
-        assert.match(parsed.suggested.plan ?? '', /\/\.planning\/plans\//);
-        assert.match(parsed.suggested.research ?? '', /\/\.planning\/research\//);
-        assert.match(parsed.suggested.handoff ?? '', /thoughts\/shared\/handoffs\//);
+        assert.match(parsed.suggested.plan ?? '', /\/(thoughts|\.planning)\/plans\//);
+        assert.match(parsed.suggested.research ?? '', /\/thoughts\/research\//);
+        assert.match(parsed.suggested.handoff ?? '', /thoughts\/handoffs\//);
       } finally {
         fs.writeFileSync(projectStatePath, originalState);
       }
@@ -206,7 +206,7 @@ test('artifact suggestion uses canonical shared artifacts only when they outrank
 test('artifact suggestion falls back to legacy repo-local plans when no canonical thought plan exists', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-legacy-')), 'legacy-only');
   const legacyPlanPath = path.join(repoRoot, '.planning', 'plans', 'legacy-plan.md');
-  const researchPath = path.join(repoRoot, '.planning', 'research', 'legacy-research.md');
+  const researchPath = path.join(repoRoot, 'thoughts', 'research', 'legacy-research.md');
 
   fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
   fs.mkdirSync(path.dirname(researchPath), { recursive: true });
@@ -733,7 +733,7 @@ test('authoritative persistence lets project-artifacts persist only the explicit
 test('artifact tools sync research-index entries by artifact path without duplication', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-research-index-')), 'research-index');
   const context = runProjectContext(repoRoot);
-  const researchPath = path.join(repoRoot, '.planning', 'research', 'continuity-repair.md');
+  const researchPath = path.join(repoRoot, 'thoughts', 'research', 'continuity-repair.md');
 
   fs.mkdirSync(path.dirname(researchPath), { recursive: true });
   fs.writeFileSync(researchPath, '# Research\n');
@@ -898,8 +898,8 @@ test('artifact working sets remain isolated across two repos', () => {
 
 test('artifact suggestion prefers ready research over a newer non-ready artifact', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-readiness-')), 'ready-beats-newer');
-  const readyPath = path.join(repoRoot, '.planning', 'research', '2026-03-08-ready.md');
-  const weakPath = path.join(repoRoot, '.planning', 'research', '2026-03-09-weak.md');
+  const readyPath = path.join(repoRoot, 'thoughts', 'research', '2026-03-08-ready.md');
+  const weakPath = path.join(repoRoot, 'thoughts', 'research', '2026-03-09-weak.md');
 
   fs.mkdirSync(path.dirname(readyPath), { recursive: true });
   fs.writeFileSync(readyPath, readyResearchArtifact);
@@ -922,7 +922,7 @@ test('artifact suggestion prefers ready research over a newer non-ready artifact
 
 test('artifact suggestion reports legacy substantial plans as inspectable but blocked for implementation', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-legacy-block-')), 'legacy-block');
-  const legacyPlanPath = path.join(root, 'thoughts', 'plans', `${Date.now()}-legacy-substantial-plan.md`);
+  const legacyPlanPath = path.join(repoRoot, '.planning', 'plans', `${Date.now()}-legacy-substantial-plan.md`);
 
   fs.mkdirSync(path.dirname(legacyPlanPath), { recursive: true });
   fs.writeFileSync(legacyPlanPath, `# Legacy Plan
