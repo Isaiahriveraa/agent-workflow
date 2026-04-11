@@ -35,6 +35,7 @@ Then wait for the user's research query.
    - For substantial requests, load `~/.agents/rules/common/workflow-router.md`
    - If this research is the first step of a substantial request, capture the normalized intake artifact with `node $HOME/.agents/scripts/workflow-router-tools.mjs capture`
    - For substantial requests, require at least one critique/refinement cycle before handoff
+   - If the request is still ambiguous enough that you cannot name a concrete research target, stop and route through `commands/rpi-brainstorm.md` before continuing
 
 1. **Read any directly mentioned files first:**
    - If the user mentions specific files (tickets, docs, JSON), read them FULLY first
@@ -89,7 +90,7 @@ Then wait for the user's research query.
 5. **Gather metadata for the research document:**
    - Get today's date: `date +%Y-%m-%d`
    - If inside a git repo, get branch and commit: `git branch --show-current` and `git rev-parse --short HEAD`
-   - Filename: `[project root]/.planning/research/YYYY-MM-DD-description.md`
+    - Filename: `[project root]/thoughts/research/YYYY-MM-DD-description.md`
      - In all user-facing responses, report the research artifact using its absolute filesystem path
      - Format: `YYYY-MM-DD-description.md` where:
        - YYYY-MM-DD is today's date
@@ -145,10 +146,10 @@ Then wait for the user's research query.
 
      ## Historical Context (from thoughts/)
      [Relevant insights from thoughts/ directory with references]
-     - `[project root]/.planning/research/something.md` - Historical decision about X
+      - `[project root]/thoughts/research/something.md` - Historical decision about X
 
      ## Related Research
-     [Links to other research documents in the current project's `.planning/research/` and entries referenced from the current project's `.agents/contexts/research-index.md`]
+      [Links to other research documents in the current project's `thoughts/research/` and entries referenced from the current project's `.agents/contexts/research-index.md`]
 
      ## Open Questions
      [Any areas that need further investigation]

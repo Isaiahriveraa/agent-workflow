@@ -161,7 +161,7 @@ Durable artifacts must live under these canonical roots:
 
 - Research: `.agents/thoughts/research/github-pr-proposer/...`
 - Plan: `.agents/thoughts/plans/github-pr-proposer/...`
-- Error handoff: `.agents/thoughts/shared/handoffs/github-pr-proposer/...`
+- Error handoff: `.agents/thoughts/handoffs/github-pr-proposer/...`
 
 ### `openclaw-local`
 

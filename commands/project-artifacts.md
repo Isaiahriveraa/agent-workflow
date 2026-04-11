@@ -6,7 +6,7 @@ description: Suggest the most relevant workflow artifacts to read next
 
 Suggest the most relevant plan, research, session, and handoff artifacts for the current workflow state.
 
-Only runtime continuity state is project-scoped here. Plans and research are typically repo-local runtime artifacts, while handoffs remain shared/global transfer artifacts.
+Only runtime continuity state is project-scoped here. Plans and research are typically repo-local runtime artifacts, while handoffs remain project-local transfer artifacts.
 
 ## Process
 

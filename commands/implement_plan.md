@@ -6,6 +6,19 @@ description: Execute an implementation plan phase by phase with verification che
 
 Execute an implementation plan sequentially, phase by phase. Each phase is verified before proceeding. Manual checkpoints require explicit user confirmation.
 
+## Primary Execution Contract
+
+The main job of this command is to execute the approved plan safely and incrementally.
+
+From the user's perspective, each phase should feel like:
+1. state the goal
+2. write or update tests first when behavior is changing
+3. make the smallest code change that satisfies the phase
+4. run verification
+5. pause for required human confirmation
+
+Keep the TDD or test-first loop explicit when it applies. Keep the rest of the governance in the background unless it changes what happens next.
+
 ## Initial Setup
 
 1. **If a plan path was provided as a parameter**, read the plan file fully before doing anything else.
@@ -31,7 +44,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 14. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
-   Example: /absolute/path/to/.agents/thoughts/plans/2026-02-17-my-feature.md
+   Example: /absolute/path/to/project/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 
@@ -73,6 +86,10 @@ Ask the user to confirm before proceeding, unless they've already pre-approved a
 ### Step 2: Execute Phase Tasks
 
 Work through every task listed in the phase:
+- Prefer test-first execution for meaningful behavior changes:
+  - add or update the relevant automated test first
+  - run the targeted test and confirm it fails for the expected reason when practical
+  - make the minimum code change required to satisfy the test and the plan
 - Make changes incrementally — one logical unit at a time
 - After each file change, briefly state what was changed and why (one sentence is enough)
 - If a task is ambiguous, stop and ask — do not guess

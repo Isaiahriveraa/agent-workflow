@@ -15,19 +15,19 @@ When this command is invoked:
 1. **If the path to a handoff document was provided**:
    - If a handoff document path was provided as a parameter, skip the default message
    - Immediately read the handoff document FULLY
-   - Immediately read any canonical or linked plan and research documents it references under `~/.agents/thoughts/plans` or the current project's `.planning/research`. do NOT use a sub-agent to read these critical files.
+    - Immediately read any canonical or linked plan and research documents it references under current project's `thoughts/plans` or current project's `thoughts/research`. do NOT use a sub-agent to read these critical files.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
 2. **If a ticket number (like ENG-XXXX) was provided**:
    - Prefer resolving the target with `node $HOME/.agents/scripts/handoff-tools.mjs resolve ENG-XXXX` when helper-backed recovery tooling is available.
-   - locate the most recent handoff document for the ticket in the shared/global handoff directory `~/.agents/thoughts/shared/handoffs/ENG-XXXX`. e.g. for `ENG-2124` the handoffs would be in `~/.agents/thoughts/shared/handoffs/ENG-2124/`. **List this directory's contents using absolute filesystem paths.**
+   - locate the most recent handoff document for the ticket in the project-local handoff directory `[project root]/thoughts/handoffs/ENG-XXXX`. e.g. for `ENG-2124` the handoffs would be in `[project root]/thoughts/handoffs/ENG-2124/`. **List this directory's contents using absolute filesystem paths.**
    - There may be zero, one or multiple files in the directory.
    - **If there are zero files in the directory, or the directory does not exist**: tell the user: "I'm sorry, I can't seem to find that handoff document. Can you please provide me with a path to it?"
    - **If there is only one file in the directory**: proceed with that handoff
    - **If there are multiple files in the directory**: using the date and time specified in the file name (it will be in the format `YYYY-MM-DD_HH-MM-SS` in 24-hour time format), proceed with the _most recent_ handoff document.
    - Immediately read the handoff document FULLY
-   - Immediately read any canonical or linked plan and research documents it references under `~/.agents/thoughts/plans` or the current project's `.planning/research`; do NOT use a sub-agent to read these critical files.
+    - Immediately read any canonical or linked plan and research documents it references under current project's `thoughts/plans` or current project's `thoughts/research`; do NOT use a sub-agent to read these critical files.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
@@ -37,7 +37,7 @@ I'll help you resume work from a handoff document. Let me find the available han
 
 Which handoff would you like to resume from?
 
-Tip: You can invoke this command directly with a handoff path: `/resume_handoff ~/.agents/thoughts/shared/handoffs/ENG-XXXX/YYYY-MM-DD_HH-MM-SS_ENG-XXXX_description.md`
+Tip: You can invoke this command directly with a handoff path: `/resume_handoff [project root]/thoughts/handoffs/ENG-XXXX/YYYY-MM-DD_HH-MM-SS_ENG-XXXX_description.md`
 
 or using a ticket number to resume from the most recent handoff for that ticket: `/resume_handoff ENG-XXXX`
 

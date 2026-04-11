@@ -16,7 +16,8 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 5. **If the task class calls for a capsule, load it before starting work and honor its critic, grader, and memory-policy files.**
 6. **For substantial plans, run `node $HOME/.agents/scripts/workflow-artifact-tools.mjs grade-plan --file [plan path]` before starting work and refuse malformed or non-ready plans.**
 7. **After canonical plan/state/decision context is loaded and before phase execution begins, run this command to recall relevant memories:
-   `agents-memory recall implement-plan --query "<brief description of what you're implementing>" --filter-relevance`
+   `"$HOME/.agents/bin/agents-memory" recall implement-plan --query "<brief description of what you're implementing>"`
+   You may optionally add `--context-summary "<short context summary>"` when it improves retrieval quality.
    This recall attempt is mandatory for implementation entry. If memory is disabled or returns zero items, that is still a successful attempt — proceed normally. If items are returned, incorporate them as advisory context (lower priority than codebase evidence and the plan itself).**
 8. **Use the same precedence rule during implementation entry:**
    1. active runtime state and selected artifacts
@@ -36,7 +37,7 @@ Execute an implementation plan sequentially, phase by phase. Each phase is verif
 14. **If no parameter was provided**, ask:
    ```
    Please provide the path to the plan file.
-   Example: /absolute/path/to/.agents/thoughts/plans/2026-02-17-my-feature.md
+   Example: /absolute/path/to/project/thoughts/plans/2026-02-17-my-feature.md
    ```
    Wait for the user to provide the path, then read the file fully.
 

@@ -17,7 +17,9 @@ When this command is invoked:
 
 2. **If no parameters provided**, respond with:
 ```
-I'll help you create a detailed implementation plan. Let me start by understanding what we're building.
+I'll create the implementation plan for this work.
+
+I’ll first verify the current state, then turn that into a concrete plan we can implement safely.
 
 Please provide:
 1. The task description (or path to a spec/brief file)
@@ -26,10 +28,20 @@ Please provide:
 
 I'll analyze this information and work with you to create a comprehensive plan.
 
-Tip: You can invoke this command with a file directly: `/create-plan /absolute/path/to/project/.planning/research/2026-02-17-my-research.md`
+Tip: You can invoke this command with a file directly: `/create-plan /absolute/path/to/project/thoughts/research/2026-02-17-my-research.md`
 ```
 
 Then wait for the user's input.
+
+## User-Facing Contract
+
+From the user's perspective, this command should feel like:
+1. understand the goal
+2. verify the codebase reality
+3. produce the plan
+
+Keep governance and helper steps mostly internal unless they block progress.
+Lead with the planning job, not with the workflow machinery.
 
 ## Process Steps
 
@@ -219,7 +231,7 @@ Treat missing child phase plans or a missing redesign packet as blocking plan-qu
 
 After structure approval:
 
-1. **Write the plan** to `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
+1. **Write the plan** to `[project root]/thoughts/plans/YYYY-MM-DD-description.md`
    - In all user-facing responses, include the final plan location as an absolute filesystem path
    - Format: `YYYY-MM-DD-description.md` where:
      - YYYY-MM-DD is today's date (get it via `date +%Y-%m-%d`)
@@ -325,7 +337,7 @@ After structure approval:
 
 ## References
 
-- Related research: `[project root]/.planning/research/[relevant].md`
+- Related research: `[project root]/thoughts/research/[relevant].md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -370,7 +382,7 @@ frontmatter: `critique_completed: false`, `critique_cycles: 0`.
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `~/.agents/thoughts/plans/YYYY-MM-DD-description.md`
+   `[project root]/thoughts/plans/YYYY-MM-DD-description.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?

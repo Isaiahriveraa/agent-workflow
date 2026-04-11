@@ -16,13 +16,13 @@ Use the following information to understand how to create your document:
     - Read the current project's `state.md`
     - Read the current project's `session-index.md`
     - Read any directly relevant plan, research, validation, or prior handoff artifact referenced by the current project's `state.md`
-    - create your file under the shared/global handoff directory `~/.agents/thoughts/shared/handoffs/ENG-XXXX/YYYY-MM-DD_HH-MM-SS_ENG-ZZZZ_description.md`, where:
+    - create your file under the project-local handoff directory `[project root]/thoughts/handoffs/ENG-XXXX/YYYY-MM-DD_HH-MM-SS_ENG-ZZZZ_description.md`, where:
         - YYYY-MM-DD is today's date
         - HH-MM-SS is the hours, minutes and seconds based on the current time, in 24-hour format (i.e. use `13:00` for `1:00 pm`)
         - ENG-XXXX is the ticket number (replace with `general` if no ticket)
         - ENG-ZZZZ is the ticket number (omit if no ticket)
         - description is a brief kebab-case description
-    - if the shared handoff directory does not exist yet, create it before writing the handoff
+    - if the project-local handoff directory does not exist yet, create it before writing the handoff
     - Gather metadata by running: `git rev-parse HEAD` (commit hash), `git rev-parse --abbrev-ref HEAD` (branch), and `date` (current time)
     - Examples:
         - With ticket: `2025-01-08_13-55-22_ENG-2166_create-context-compaction.md`
@@ -80,7 +80,7 @@ After writing the handoff document:
   - Treat `create-handoff` as continuity-authoritative: explicit overrides win, persisted working-set entries are reused, and heuristics stay advisory unless you intentionally request `--mode refresh`
   - Prefer the shared continuity helper to keep runtime-state updates aligned when helper-backed flows exist:
     - `node $HOME/.agents/scripts/continuity-tools.mjs handoff --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]`
-  - Keep the handoff itself under `~/.agents/thoughts/shared/handoffs/`; only runtime state is project-scoped
+  - Keep the handoff itself under `[project root]/thoughts/handoffs/`; only runtime state is project-scoped
 ---
 
 ### 4. Confirm
@@ -108,7 +108,7 @@ Handoff created and synced!
 Next step
 
 ```bash
-/resume_handoff ~/.agents/thoughts/shared/handoffs/ENG-2166/2025-01-08_13-44-55_ENG-2166_create-context-compaction.md
+/resume_handoff [project root]/thoughts/handoffs/ENG-2166/2025-01-08_13-44-55_ENG-2166_create-context-compaction.md
 ```
 </example_response>
 

@@ -30,7 +30,12 @@ Before drafting the PR:
    - `git branch --show-current`
    - `git status --short`
 
-2. Inspect the change against base:
+2. Determine the base branch:
+   - Default: use the branch specified by the user, or the configured upstream branch
+   - If not specified, infer from `git config branch.<current>.merge` or ask the user
+   - You may also use `/pr <base-branch>` to explicitly specify the base (e.g., `/pr develop`, `/pr origin/staging`)
+
+3. Inspect the change against base:
    - `git log --oneline <base>..HEAD`
    - `git diff --stat <base>...HEAD`
    - `git diff --name-only <base>...HEAD`

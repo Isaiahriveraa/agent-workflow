@@ -6,7 +6,7 @@ description: Start or refresh a lightweight work session with explicit workflow 
 
 Start a lightweight resumable session for the current stream of work.
 
-Use this command for ordinary pause/resume continuity. Shared handoffs are for deliberate transfer, not the default session path.
+Use this command for ordinary pause/resume continuity. Project-local handoffs are for deliberate transfer, not the default session path.
 
 ## Process
 

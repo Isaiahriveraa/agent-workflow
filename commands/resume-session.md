@@ -6,7 +6,7 @@ description: Resume work from the latest lightweight session checkpoint
 
 Resume work from a lightweight session checkpoint.
 
-This command resumes from the current project's project-local session artifacts. Use `/resume-handoff` only when resuming from a deliberate shared/global transfer artifact.
+This command resumes from the current project's project-local session artifacts. Use `/resume-handoff` only when resuming from a deliberate project-local transfer artifact.
 
 ## Process
 
@@ -37,7 +37,7 @@ This command resumes from the current project's project-local session artifacts.
    - next recommended command
 15. Update the current project's `state.md` so the resumed workflow matches the session artifact and the active artifact working set.
 
-Only runtime continuity state is project-scoped here. Plans and research may be repo-local, while handoffs remain shared/global transfer artifacts.
+Only runtime continuity state is project-scoped here. Plans and research may be repo-local, while handoffs remain project-local transfer artifacts.
 
 ## If No Session Exists
 
