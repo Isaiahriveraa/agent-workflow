@@ -5,7 +5,7 @@ Use lightweight sessions for normal workflow continuity and handoffs for deliber
 ## Canonical Storage
 - Lightweight session artifacts are project-local runtime artifacts under `[project root]/.agents/sessions/`.
 - The live continuity metadata is project-local under `[project root]/.agents/contexts/state.md` and `[project root]/.agents/contexts/session-index.md`.
-- Shared/global handoffs live under `~/.agents/thoughts/shared/handoffs/`.
+- Project-local handoffs live under `[project root]/thoughts/handoffs/`.
 
 ## Use A Session When
 - You are pausing normal work and want to resume later.

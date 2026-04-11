@@ -60,11 +60,12 @@ If the input is already a clean handoff, keep it intact and do not re-optimize i
 ## RPI Routing
 
 If the optimized task is substantial, route it through:
-1. research current state
-2. score readiness with `node ./scripts/workflow-router-tools.mjs score`
-3. create a decision-complete plan
-4. implement in phases
-5. validate outcomes
+1. if the request is still vague, run a brief brainstorm/clarification pass first
+2. research current state
+3. score readiness with `node ./scripts/workflow-router-tools.mjs score`
+4. create a decision-complete plan
+5. implement in phases
+6. validate outcomes
 
 The readiness gate must pass before implementation planning or coding can begin:
 - threshold: `>= 70/100`
@@ -72,6 +73,8 @@ The readiness gate must pass before implementation planning or coding can begin:
 - if the score fails, continue research or ask focused questions
 
 Choose the discovery depth with `rules/common/discovery-levels.md`.
+
+Use `commands/rpi-brainstorm.md` when the user has intent but not yet a concrete research target.
 
 ## Output Discipline
 

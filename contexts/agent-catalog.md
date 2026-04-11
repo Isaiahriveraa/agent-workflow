@@ -10,7 +10,7 @@ Use this file to track the workflow expert agents that act as the hub's control 
 ## Workflow Experts
 - `continuity-manager`
   - trigger: session drift, handoff flow design, runtime-state correctness, artifact working-set issues
-  - scope: project-local sessions, shared handoffs, continuity helpers, runtime state docs/tests
+  - scope: project-local sessions, project-local handoffs, continuity helpers, runtime state docs/tests
   - deliverable: continuity findings or implementation guidance with exact file references
 - `workflow-router-auditor`
   - trigger: substantial work that may be skipping optimize -> research -> plan -> implement -> validate

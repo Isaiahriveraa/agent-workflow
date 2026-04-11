@@ -35,15 +35,18 @@ Treat the request as substantial (tier 3) when two or more of these are true:
 
 For substantial requests, use this order:
 1. optimize prompt
-2. select capsule when the task class requires richer context assembly
-3. research current state
-4. score readiness
-5. create a decision-complete plan
-6. implement
-7. validate
-8. run the learning loop after verified failures or explicit corrections
+2. if the request is still vague, run a brainstorm/clarification pass first
+3. select capsule when the task class requires richer context assembly
+4. research current state
+5. score readiness
+6. create a decision-complete plan
+7. implement
+8. validate
+9. run the learning loop after verified failures or explicit corrections
 
 Do not skip from intake to implementation.
+
+When ambiguity is still the main blocker, use `commands/rpi-brainstorm.md` before `research_codebase.md` so research starts from a concrete question instead of a fuzzy prompt.
 
 ## Tier 2 Flow
 

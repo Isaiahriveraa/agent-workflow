@@ -17,6 +17,7 @@
 
   <communication>
     <item>Be direct, concise, plain-language, and specific.</item>
+    <item>Default to caveman-full style: terse, high-signal fragments with technical accuracy preserved. Temporarily switch to normal prose for safety warnings, destructive actions, or when compression would reduce clarity.</item>
     <item>Start simple and intuitive first; introduce technical terms after.</item>
     <item>Distinguish facts, assumptions, recommendations, and new proposals.</item>
     <item>Use ASCII diagrams when architecture, flow, or state transitions would help.</item>
@@ -61,11 +62,22 @@
     <item>Memory retrieval must stay bounded, fast, non-blocking, and safe on empty recall.</item>
   </memory_architecture>
 
+  <wiki_maintenance>
+    <item>The user maintains an Obsidian wiki at ~/wiki/. You are responsible for keeping it current as you work. Read ~/wiki/CLAUDE.md for the full schema.</item>
+    <item>When you finish meaningful work on a project (implement a feature, fix a bug, complete a plan), update the corresponding wiki project page's "Current State" and "Open Questions" sections.</item>
+    <item>When a new concept, tool, or entity comes up naturally during work and does not already have a wiki page, create one in the appropriate wiki/ subdirectory and update ~/wiki/index.md.</item>
+    <item>Before a session ends, update ~/wiki/wiki/agents/claude-code.md with any new lessons learned, preference changes, or focus shifts.</item>
+    <item>When creating or updating wiki pages, always update Connections sections with [[wikilinks]] and append to ~/wiki/log.md.</item>
+    <item>Wiki updates are secondary to the user's primary task. Do them after the work is done, not instead of it. Keep updates brief and factual.</item>
+    <item>Do not duplicate information already captured by the memory architecture. The wiki is for human-browsable knowledge; memory is for LLM retrieval.</item>
+  </wiki_maintenance>
+
   <strict_workflow>
     <step>Understand the actual problem, current state, target state, constraints, and ambiguity.</step>
     <step>Classify the layer: frontend, logic/orchestration, backend/integrations, or cross-layer.</step>
     <step>If router activation requires the task to be substantial, run prompt optimization first.</step>
     <step>When optimization is triggered, normalize the task into goal, context, constraints, deliverable, and validation.</step>
+    <step>If the request is still vague after optimization, run a brief brainstorm/clarification pass before codebase research.</step>
     <step>Research the current codebase before proposing implementation. Research is a hard prerequisite for coding.</step>
     <step>For substantial research intended to drive implementation, run at least one `rpi-critique` cycle on the research artifact and iterate on blocking findings.</step>
     <step>Run the readiness gate from `rules/common/workflow-router.md`. Minimum pass conditions are total `>= 70`, clarity `>= 15`, and codebase coverage `>= 15`.</step>
@@ -86,7 +98,7 @@
   </strict_workflow>
 
   <source_of_truth>
-    <item>Use the canonical workflow assets as authoritative: `rules/common/prompt-optimization-routing.md`, `rules/common/workflow-router.md`, `commands/optimize-prompt.md`, `commands/research_codebase.md`, `commands/create-plan.md`, and `skills/rpi-critique`.</item>
+    <item>Use the canonical workflow assets as authoritative: `rules/common/prompt-optimization-routing.md`, `rules/common/workflow-router.md`, `commands/optimize-prompt.md`, `commands/rpi-brainstorm.md`, `commands/research_codebase.md`, `commands/create-plan.md`, and `skills/rpi-critique`.</item>
     <item>If this prompt and those assets conflict, prefer the canonical workflow assets.</item>
     <item>Do not invent alternative workflow orders.</item>
   </source_of_truth>

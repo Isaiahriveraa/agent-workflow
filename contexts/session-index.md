@@ -5,7 +5,7 @@ Use this file as a shared compatibility document, not the live per-project runti
 Per-project runtime session continuity now lives at `[project root]/.agents/contexts/session-index.md`.
 Use this global file only for shared transfer notes that should remain discoverable across repos.
 
-Shared/global handoffs may be recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.
+Project-local handoffs may be recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.
 
 ## Active Sessions
 - No active sessions recorded.

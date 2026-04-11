@@ -101,7 +101,7 @@
     <rule>Use project-local .agents/sessions/ for ordinary workflow continuity across sessions.</rule>
     <rule>Treat the current project's .agents/contexts/state.md and .agents/contexts/session-index.md as the live continuity source of truth.</rule>
     <rule>Use handoffs when work is being intentionally transferred or compacted for another agent.</rule>
-    <rule>Keep handoffs under thoughts/shared/handoffs/ as shared transfer artifacts, not as the normal session path.</rule>
+    <rule>Keep handoffs under thoughts/handoffs/ as project-local transfer artifacts, not as the normal session path.</rule>
     <rule>Session artifacts should summarize current position, active artifacts, blockers, and the next recommended command.</rule>
   </session-rules>
 

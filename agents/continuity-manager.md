@@ -19,7 +19,7 @@ Keep workflow continuity coherent across session artifacts, handoffs, runtime st
 - `.agents/contexts/state.md`
 - `.agents/contexts/session-index.md`
 - `.agents/sessions/`
-- shared handoff flow under `thoughts/shared/handoffs/`
+- project-local handoff flow under `thoughts/handoffs/`
 - continuity helper scripts and tests
 
 ## Deliverable

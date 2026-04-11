@@ -12,9 +12,9 @@ Prefer explicit artifact selection over broad context loading.
 - `contexts/session-index.md`
 - `contexts/research-index.md`
 - `thoughts/plans/`
-- `.planning/research/`
+- `thoughts/research/`
 - `.agents/sessions/`
-- `thoughts/shared/handoffs/`
+- `thoughts/handoffs/`
 
 ## Notes
 - Canonical plans live under `thoughts/plans/`.

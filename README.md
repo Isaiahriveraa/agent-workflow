@@ -29,7 +29,7 @@ This repo is the shareable starter for the workflow system. Reusable policy, pro
 │     │                    WORKFLOW ENGINE                       │                  │
 │     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
 │     │  │ Commands   │  │  Agents    │  │   Skills   │        │                  │
-│     │  │ (43 cmds)  │  │ (43 agents)│  │ (43 skills)│        │                  │
+│     │  │ (43 cmds)  │  │ (43 agents)│  │ (46 skills)│        │                  │
 │     │  └────────────┘  └────────────┘  └────────────┘        │                  │
 │     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
 │     │  │   Hooks    │  │   Rules    │  │ Capsules   │        │                  │
@@ -77,12 +77,13 @@ This repo is the shareable starter for the workflow system. Reusable policy, pro
                                               ┌──────────────▼──────────────┐
                                               │      TIER 3 FLOW            │
                                               │  1. Optimize Prompt         │
-                                              │  2. Research (research)     │
-                                              │  3. Readiness Gate (70/15)  │
-                                              │  4. Plan (create-plan)      │
+                                              │  2. Brainstorm (if vague)   │
+                                              │  3. Research (research)     │
+                                              │  4. Readiness Gate (70/15)  │
+                                              │  5. Plan (create-plan)      │
                                               │     └─► RPI Critique        │
-                                              │  5. Implement (implement)  │
-                                              │  6. Validate (verification) │
+                                              │  6. Implement (implement)   │
+                                              │  7. Validate (verification) │
                                               └─────────────────────────────┘
 ```
 
@@ -118,7 +119,7 @@ This repo is the shareable starter for the workflow system. Reusable policy, pro
 ├── commands/             # 29 command definitions (workflow commands)
 │   └── gsd/              # 43 GSD subcommands
 ├── agents/               # 43 workflow expert agents
-├── skills/               # 43 skill packs
+├── skills/               # 46 skill packs
 ├── capsules/             # 2 task-class operating packs
 ├── rules/common/         # 16 reusable rule cards
 ├── contexts/             # Shared workspace state

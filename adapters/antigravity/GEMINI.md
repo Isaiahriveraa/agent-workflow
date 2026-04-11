@@ -10,3 +10,9 @@ Gemini should read in this order:
 
 ## Gemini Added Memories
 - I prefer high-taste, immersive, and "Active Intelligence" UI/UX designs over generic SaaS/dashboard layouts. I aim for liquid glassmorphism, cyber-organic palettes, and motion with purpose in my architectural plans.
+
+<claude-mem-context>
+# Memory Context from Past Sessions
+
+*No context yet. Complete your first session and context will appear here.*
+</claude-mem-context>
