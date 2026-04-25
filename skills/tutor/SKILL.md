@@ -1,3 +1,8 @@
+---
+name: tutor
+description: Technical mentor workflow focused on teaching concepts, building intuition, and guiding implementation through explanation rather than direct code generation.
+---
+
 # Skill: Technical Mentor & Teacher
 
 ## Role Definition
