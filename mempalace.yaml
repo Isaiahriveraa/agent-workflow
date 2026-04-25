@@ -1,0 +1,105 @@
+wing: .agents
+rooms:
+- name: contexts
+  description: Files from contexts/
+  keywords:
+  - contexts
+  - contexts
+- name: bin
+  description: Files from bin/
+  keywords:
+  - bin
+  - bin
+- name: projects
+  description: Files from projects/
+  keywords:
+  - projects
+  - projects
+- name: testing
+  description: Files from tests/
+  keywords:
+  - testing
+  - tests
+- name: agents
+  description: Files from agents/
+  keywords:
+  - agents
+  - agents
+- name: gsd_local_patches
+  description: Files from gsd-local-patches/
+  keywords:
+  - gsd_local_patches
+  - gsd-local-patches
+- name: adapters
+  description: Files from adapters/
+  keywords:
+  - adapters
+  - adapters
+- name: capsules
+  description: Files from capsules/
+  keywords:
+  - capsules
+  - capsules
+- name: sessions
+  description: Files from sessions/
+  keywords:
+  - sessions
+  - sessions
+- name: hooks
+  description: Files from hooks/
+  keywords:
+  - hooks
+  - hooks
+- name: scripts
+  description: Files from scripts/
+  keywords:
+  - scripts
+  - scripts
+- name: thoughts
+  description: Files from thoughts/
+  keywords:
+  - thoughts
+  - thoughts
+- name: rules
+  description: Files from rules/
+  keywords:
+  - rules
+  - rules
+- name: prompts
+  description: Files from prompts/
+  keywords:
+  - prompts
+  - prompts
+- name: commands
+  description: Files from commands/
+  keywords:
+  - commands
+  - commands
+- name: skills
+  description: Files from skills/
+  keywords:
+  - skills
+  - skills
+- name: get_shit_done
+  description: Files from get-shit-done/
+  keywords:
+  - get_shit_done
+  - get-shit-done
+- name: planning
+  description: Files from specs/
+  keywords:
+  - planning
+  - specs
+- name: research
+  description: Files from research/
+  keywords:
+  - research
+  - research
+- name: documentation
+  description: Files from wiki/
+  keywords:
+  - documentation
+  - wiki
+- name: general
+  description: Files that don't fit other rooms
+  keywords: []
