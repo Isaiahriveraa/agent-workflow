@@ -37,15 +37,6 @@
       "installedAt": "2026-02-17T06:42:06.050Z",
       "updatedAt": "2026-02-17T06:42:06.050Z"
     },
-    "remembering-conversations": {
-      "source": "obra/episodic-memory",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/obra/episodic-memory.git",
-      "skillPath": "skills/remembering-conversations/SKILL.md",
-      "skillFolderHash": "c39796fe24cf728f7c26687a68aecf1f611144f8",
-      "installedAt": "2026-02-17T20:39:13.913Z",
-      "updatedAt": "2026-02-17T20:39:13.913Z"
-    },
     "performance": {
       "source": "addyosmani/web-quality-skills",
       "sourceType": "github",
