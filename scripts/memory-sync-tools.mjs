@@ -2,7 +2,7 @@
 /**
  * memory-sync-tools.mjs
  * 
- * Explicitly parses active lessons/artifacts and flushes them to LanceDB/mem0.
+ * Explicitly parses active lessons/artifacts and flushes them to the memory backend (MemPalace).
  * Replaces the old detached implicit hook behavior.
  */
 

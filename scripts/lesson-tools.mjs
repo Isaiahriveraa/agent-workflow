@@ -99,7 +99,7 @@ const normalizeQuickCapturePayload = (args) => {
 };
 
 // ---------------------------------------------------------------------------
-// Memory event building (kept from original — builds LanceDB record shape)
+// Memory event building — shapes events for the memory backend (MemPalace)
 // ---------------------------------------------------------------------------
 
 const confidenceToScore = (confidence) => {
@@ -179,7 +179,7 @@ const buildMirrorEvents = ({ payload, projectContext }) => {
 };
 
 // ---------------------------------------------------------------------------
-// Core capture path: quality gate → dedup → LanceDB write
+// Core capture path: quality gate → dedup → memory backend write (MemPalace)
 // ---------------------------------------------------------------------------
 
 const applyCapturePayload = async (payload, options = {}) => {
@@ -218,7 +218,7 @@ const applyCapturePayload = async (payload, options = {}) => {
     };
   }
 
-  // 3. Write directly to LanceDB via memory-sidecar-adapter
+  // 3. Write via memory-sidecar-adapter (routes to MemPalace backend)
   const events = buildMirrorEvents({ payload, projectContext });
   const results = [];
   const warnings = [];
@@ -267,7 +267,7 @@ const flushQueue = async () => ({
   processed: 0,
   failed: 0,
   results: [],
-  note: 'flushQueue is deprecated — lessons are written directly to LanceDB via quality gate'
+  note: 'flushQueue is deprecated — lessons are written directly to memory backend via quality gate'
 });
 
 // ---------------------------------------------------------------------------

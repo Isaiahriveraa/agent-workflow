@@ -12,7 +12,8 @@ import {
   MEMORY_KINDS,
   SHARED_SCOPE_ALLOWED_KINDS,
   SUPPORTED_MEM0_LANCEDB_PROFILE,
-  SUPPORTED_MEM0_PROFILE
+  SUPPORTED_MEM0_PROFILE,
+  SUPPORTED_MEMPALACE_PROFILE
 } from '../scripts/memory-sidecar-contract.mjs';
 import { createMem0LanceDbMemoryBackend } from '../scripts/memory-sidecar-adapter.mjs';
 import { getProjectContext } from '../scripts/project-context.mjs';
@@ -68,7 +69,7 @@ test('supported mem0 profile stays disabled by default and forbids in-memory per
   assert.equal(SUPPORTED_MEM0_PROFILE.failureMode.enabledBackendUnavailable, 'warn-and-return-empty');
 });
 
-test('supported mem0 lancedb profile stays disabled by default and locks the lancedb contract', () => {
+test('supported mem0 lancedb profile (legacy) stays disabled by default and locks the lancedb contract', () => {
   assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.enabledByDefault, false);
   assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.integration, 'oss-node');
   assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.backend, 'mem0-lancedb');
@@ -86,6 +87,17 @@ test('supported mem0 lancedb profile stays disabled by default and locks the lan
   assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.upsertStrategy, 'delete-and-readd');
   assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.filterStrategy, 'scope-isolated-table-plus-client-side-merge');
   assert.equal(SUPPORTED_MEM0_LANCEDB_PROFILE.openclaw.supportedInV1, false);
+});
+
+test('supported mempalace profile is disabled by default and uses chromadb provider', () => {
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.enabledByDefault, false);
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.integration, 'mempalace');
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.backend, 'mempalace');
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.storage.persistenceRequired, true);
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.storage.provider, 'chromadb');
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.model.provider, 'local-chromadb');
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.failureMode.disabled, 'silent-no-op');
+  assert.equal(SUPPORTED_MEMPALACE_PROFILE.failureMode.enabledBackendUnavailable, 'warn-and-return-empty');
 });
 
 test('shared scope remains limited to the locked kinds', () => {

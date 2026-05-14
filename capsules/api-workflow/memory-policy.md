@@ -6,4 +6,4 @@ Write back lessons when:
 - a repeated integration failure appears
 
 Promote durable lessons into:
-- LanceDB via `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."`
+- MemPalace via `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."`

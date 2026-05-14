@@ -7,4 +7,4 @@ Write back lessons when:
 
 Promote durable lessons into:
 - `~/.agents/contexts/user-taste.md`
-- LanceDB via `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."`
+- MemPalace via `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "..." --why "..." --rule "..."`

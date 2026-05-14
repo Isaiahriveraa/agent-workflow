@@ -3,7 +3,7 @@ name: gsd:sync-memory
 description: Explicitly flush planning and lesson artifacts to the project memory index
 ---
 <objective>
-Synchronize newly generated learned knowledge, checkpoints, and plans into the configured memory store (mem0/LanceDB).
+Synchronize newly generated learned knowledge, checkpoints, and plans into the MemPalace memory store.
 Use when you want to ensure the agent's long-term memory is updated before completing a milestone or pausing.
 </objective>
 

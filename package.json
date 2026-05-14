@@ -6,7 +6,6 @@
   "scripts": {
     "init:local-state": "node ./scripts/init-local-state.mjs",
     "export:public": "node ./scripts/export-public-repo.mjs",
-    "memory:lancedb:smoke": "node ./scripts/memory-lancedb-smoke-test.mjs",
     "memory:health": "node ./scripts/memory-health-check.mjs",
     "validate:ssot": "node ./scripts/validate-ssot.mjs",
     "test:workflows": "node --test ./tests/workflow-contracts.test.mjs ./tests/handoff-tools.test.mjs ./tests/expert-agents.test.mjs ./tests/expert-agent-routing-tools.test.mjs",
@@ -21,9 +20,5 @@
     "test:github-pr-proposer": "node --test ./tests/github-pr-proposer.test.mjs",
     "test": "npm run test:workflows && npm run test:adapters && npm run test:hooks && npm run test:sessions && npm run test:tooling && npm run test:verification && npm run test:artifacts && npm run test:plans && npm run test:github-pr-proposer && npm run test:model-router"
   },
-  "dependencies": {
-    "@lancedb/lancedb": "^0.26.2",
-    "@langchain/core": "^0.3.80",
-    "mem0ai": "^2.3.0"
-  }
+  "dependencies": {}
 }

@@ -126,7 +126,7 @@ process.stdin.on('end', () => {
     }
 
     // Mem0 sync indicator — lights up when mem0 was recently triggered
-    // Memory consolidation hook touches memory.db when LanceDB maintenance runs
+    // Memory consolidation hook touches memory.db when MemPalace maintenance runs
     let memIndicator = '';
     const memDbPath = path.join(agentsRoot, 'memory.db');
     if (fs.existsSync(memDbPath)) {

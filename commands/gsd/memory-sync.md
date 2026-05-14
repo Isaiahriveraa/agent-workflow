@@ -1,6 +1,6 @@
 ---
 name: gsd:memory-sync
-description: Flush queued lesson captures into the shared mem0/LanceDB bridge or inspect memory readiness
+description: Flush queued lesson captures into the MemPalace bridge or inspect memory readiness
 argument-hint: "[status|recall <create-plan|implement-plan>]"
 ---
 
