@@ -1,14 +1,28 @@
 #!/usr/bin/env node
 
+/**
+ * mempalace-context.cjs — MemPalace session injection hook.
+ *
+ * Calls mempalace (Python) to retrieve wake-up context (identity, preferences,
+ * project overview) and optionally search for query-specific memories.
+ *
+ * Hook output format (stdout JSON):
+ *   { hookSpecificOutput: { hookEventName, additionalContext } }
+ *
+ * Compatible with claude-code, codex, and opencode session-start lifecycle.
+ * If mempalace isn't installed or AGENTS_MEMPALACE_ENABLED is falsy, exits silently.
+ */
+
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const AGENTS_ROOT = process.env.AGENTS_ROOT
-  ? path.resolve(process.env.AGENTS_ROOT)
-  : path.resolve(__dirname, '..');
-const BRIDGE = path.join(AGENTS_ROOT, 'scripts', 'memory-sync-bridge.mjs');
+const MEMPALACE_PYTHON = process.env.AGENTS_MEMPALACE_PYTHON || '/opt/homebrew/bin/python3.13';
 const EVENT_NAME = process.argv[2] || 'SessionStart';
+const MAX_WAKEUP_LINES = 80;
+const MAX_SEARCH_RESULTS = 3;
+
+// ── Helpers ──────────────────────────────────────────────
 
 const readJsonFromStdin = () => {
   try {
@@ -42,41 +56,78 @@ const inferPromptText = (payload) => {
     payload.input,
     payload.arguments
   ];
-
   return candidates.map(extractText).find(Boolean) || '';
 };
 
+const runPython = (args, input) => {
+  return spawnSync(MEMPALACE_PYTHON, args, {
+    input,
+    encoding: 'utf8',
+    env: process.env,
+    timeout: 15000,
+  });
+};
+
+const stripAnsi = (text) => text.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+
+// ── Main ──────────────────────────────────────────────────
+
+// Skip if explicitly disabled
+if (process.env.AGENTS_MEMPALACE_ENABLED && !['1', 'true', 'yes', 'on'].includes(process.env.AGENTS_MEMPALACE_ENABLED.toLowerCase())) {
+  process.exit(0);
+}
+
+// Check mempalace is installed
+const check = runPython(['-c', 'import importlib.util,sys; sys.exit(0 if importlib.util.find_spec("mempalace") else 1)']);
+if (check.status !== 0) {
+  process.exit(0);
+}
+
 const payload = readJsonFromStdin();
-const contextSummary = `cwd=${payload.cwd || payload.workspace?.current_dir || payload.workspace?.cwd || process.cwd()}`;
-const args = ['inject', '--context-summary', contextSummary];
-const promptText = inferPromptText(payload);
+const contexts = [];
+const cwd = payload.cwd || payload.workspace?.current_dir || payload.workspace?.cwd || process.cwd();
 
-if (promptText) {
-  args.push('--text', promptText);
-}
-
-const result = spawnSync('node', [BRIDGE, ...args], {
-  encoding: 'utf8',
-  env: process.env,
-  timeout: 12000
-});
-
-if (result.status !== 0 || !result.stdout) {
-  process.exit(0);
-}
-
-try {
-  const parsed = JSON.parse(result.stdout);
-  if (!parsed.additional_context || !parsed.additional_context.trim()) {
-    process.exit(0);
+// 1. Always get wake-up context (identity, preferences, project overview)
+const wakeUp = runPython(['-m', 'mempalace', 'wake-up']);
+if (wakeUp.status === 0 && wakeUp.stdout) {
+  const clean = stripAnsi(wakeUp.stdout);
+  const lines = clean.split('\n').filter(Boolean);
+  const wakeContext = lines.slice(0, MAX_WAKEUP_LINES).join('\n');
+  if (wakeContext.length > 80) {
+    contexts.push(`<context source="mempalace-wakeup">\n${wakeContext}\n</context>`);
   }
+}
 
-  process.stdout.write(JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: EVENT_NAME,
-      additionalContext: parsed.additional_context
+// 2. If there's a prompt, search mempalace for relevant memories
+const promptText = inferPromptText(payload);
+if (promptText && promptText.length > 10) {
+  const search = runPython(['-m', 'mempalace', 'search', promptText]);
+  if (search.status === 0 && search.stdout) {
+    const clean = stripAnsi(search.stdout);
+    // Extract the result blocks (each starts with [N])
+    const blocks = clean.split(/\n\s*────────────────────────────────────────\n/);
+    if (blocks.length > 0) {
+      // Skip the header, take up to MAX_SEARCH_RESULTS blocks
+      const resultBlocks = blocks.slice(0, MAX_SEARCH_RESULTS + 1).filter(b => b.includes('Source:'));
+      if (resultBlocks.length > 0) {
+        const searchContext = resultBlocks.slice(0, MAX_SEARCH_RESULTS).join('\n---\n');
+        contexts.push(`<context source="mempalace-search" query="${promptText.slice(0, 120)}">\n${searchContext}\n</context>`);
+      }
     }
-  }));
-} catch {
+  }
+}
+
+// 3. Combine and output
+const additionalContext = contexts.join('\n\n');
+
+if (!additionalContext.trim()) {
   process.exit(0);
 }
+
+process.stdout.write(JSON.stringify({
+  hookSpecificOutput: {
+    hookEventName: EVENT_NAME,
+    additionalContext,
+    sources: contexts.map(c => c.match(/source="([^"]+)"/)?.[1] || 'unknown').join(', '),
+  }
+}));

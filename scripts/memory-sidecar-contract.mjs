@@ -108,6 +108,28 @@ export const SUPPORTED_MEM0_LANCEDB_PROFILE = Object.freeze({
   }
 });
 
+export const SUPPORTED_MEMPALACE_PROFILE = Object.freeze({
+  enabledByDefault: false,
+  integration: 'mempalace',
+  backend: 'mempalace',
+  projectIdentity: 'projectSlug',
+  branchIsolation: 'shared-palace',
+  storage: {
+    persistenceRequired: true,
+    inMemoryFallbackAllowed: false,
+    provider: 'chromadb',
+  },
+  model: {
+    provider: 'local-chromadb',
+    primary: 'all-MiniLM-L6-v2',
+    embedding: 'chromadb-default',
+  },
+  failureMode: {
+    disabled: 'silent-no-op',
+    enabledBackendUnavailable: 'warn-and-return-empty',
+  },
+});
+
 const STAGE_COMPATIBILITY = Object.freeze({
   'create-plan': new Set(['create-plan']),
   'implement-plan': new Set(['implement-plan', 'create-plan'])

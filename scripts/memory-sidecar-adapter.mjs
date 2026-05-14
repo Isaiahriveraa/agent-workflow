@@ -2,7 +2,9 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
-import { MemoryClient } from 'mem0ai';
+
+import { createMemPalaceMemoryBackend } from './memory-mempalace-backend.mjs';
+import { resolveMemPalaceConfig as resolveMpConfig } from './mempalace-bridge.mjs';
 
 import {
   compareMemoryRecords,
@@ -14,10 +16,26 @@ import {
   SHARED_SCOPE_ALLOWED_KINDS,
   SUPPORTED_MEM0_LANCEDB_PROFILE,
   SUPPORTED_MEM0_PROFILE,
+  SUPPORTED_MEMPALACE_PROFILE,
   normalizeMemoryRecord
 } from './memory-sidecar-contract.mjs';
-import { LanceDbLangChainStore } from './memory-lancedb-store.mjs';
+
+const require = createRequire(import.meta.url);
+
 import { getProjectContext } from './project-context.mjs';
+
+let _LanceDbLangChainStore = null;
+const getLanceDbStore = () => {
+  if (!_LanceDbLangChainStore) {
+    try {
+      const mod = require('./memory-lancedb-legacy-store.mjs');
+      _LanceDbLangChainStore = mod.LanceDbLangChainStore;
+    } catch {
+      _LanceDbLangChainStore = null;
+    }
+  }
+  return _LanceDbLangChainStore;
+};
 
 // Lazy lifecycle tracking — non-blocking, best-effort
 let lifecycleModulePromise = null;
@@ -52,7 +70,6 @@ const trackRecallUsage = (items, config) => {
   }).catch(() => {});
 };
 
-const require = createRequire(import.meta.url);
 
 const truthy = new Set(['1', 'true', 'yes', 'on']);
 
@@ -105,6 +122,9 @@ export const MEMORY_ENV_KEYS = Object.freeze({
 });
 
 const resolveBackendProfile = (backend) => {
+  if (backend === 'mempalace') {
+    return SUPPORTED_MEMPALACE_PROFILE;
+  }
   if (backend === 'mem0-lancedb' || backend === 'mem0-oss') {
     return SUPPORTED_MEM0_LANCEDB_PROFILE;
   }
@@ -159,6 +179,20 @@ const buildReadiness = ({ backend, env }) => {
     };
   }
 
+  if (backend === 'mempalace') {
+    const mpConfig = resolveMpConfig({ env });
+    return {
+      backend: 'mempalace',
+      overall: mpConfig.enabled === true && mpConfig.readiness.installed === true,
+      enabled: mpConfig.enabled,
+      installed: mpConfig.readiness.installed,
+      version: mpConfig.readiness.version,
+      palacePath: mpConfig.palacePath,
+      wing: mpConfig.wing,
+      topK: mpConfig.topK,
+    };
+  }
+
   if (backend === 'mem0-lancedb') {
     const embedder = {
       apiKeyPresent: Boolean(env[MEMORY_ENV_KEYS.localEmbedderApiKey]?.trim()),
@@ -204,6 +238,9 @@ export const resolveMemorySidecarConfig = ({ env = process.env } = {}) => {
   const profile = resolveBackendProfile(backend);
   const readiness = buildReadiness({ backend, env });
 
+  // For mempalace, resolve config from mempalace bridge
+  const mpConfig = backend === 'mempalace' ? resolveMpConfig({ env }) : null;
+
   return {
     enabled,
     backend,
@@ -213,6 +250,15 @@ export const resolveMemorySidecarConfig = ({ env = process.env } = {}) => {
       apiKeyPresent: Boolean(env[MEMORY_ENV_KEYS.apiKey]?.trim())
     },
     readiness,
+    wing: mpConfig?.wing ?? null,
+    mempalace: mpConfig ? {
+      enabled: mpConfig.enabled,
+      installed: mpConfig.readiness.installed,
+      version: mpConfig.readiness.version,
+      palacePath: mpConfig.palacePath,
+      wing: mpConfig.wing,
+      topK: mpConfig.topK,
+    } : null,
     mem0: {
       host: env[MEMORY_ENV_KEYS.baseUrl]?.trim() || null,
       organizationName: env[MEMORY_ENV_KEYS.organizationName]?.trim() || null,
@@ -272,6 +318,9 @@ const buildCredentialWarning = (config) =>
   `Memory enabled but backend "${config.backend}" is missing required credentials; returning empty advisory recall.`;
 
 const hasBackendReadiness = (config) => {
+  if (config.backend === 'mempalace') {
+    return config.readiness?.overall === true;
+  }
   if (config.backend === 'mem0-lancedb') {
     return config.readiness?.overall === true;
   }
@@ -549,8 +598,26 @@ const normalizeLocalMemorySearchResults = ({ items, projectId }) =>
     }
   });
 
+let _MemoryClient = null;
+const getMemoryClientClass = () => {
+  if (_MemoryClient) return _MemoryClient;
+  try {
+    ({ MemoryClient: _MemoryClient } = require('mem0ai'));
+  } catch {
+    _MemoryClient = null;
+  }
+  return _MemoryClient;
+};
+
 export const createMem0MemoryBackend = ({ client, config }) => {
-  const mem0Client = client ?? new MemoryClient({
+  const MemClient = getMemoryClientClass();
+  if (!MemClient && !client) {
+    return {
+      async search() { return { items: [], total_considered: 0, warning: 'mem0 package not available' }; },
+      async record(event) { return event; },
+    };
+  }
+  const mem0Client = client ?? new MemClient({
     apiKey: process.env[MEMORY_ENV_KEYS.apiKey],
     host: config.mem0.host ?? undefined,
     organizationName: config.mem0.organizationName ?? undefined,
@@ -830,6 +897,13 @@ export const resolveMemorySidecarBackend = ({ config, backend, client } = {}) =>
 
   if (!config?.enabled) {
     return null;
+  }
+
+  if (config.backend === 'mempalace') {
+    if (!hasBackendReadiness(config)) {
+      return null;
+    }
+    return createMemPalaceMemoryBackend({ config });
   }
 
   if (config.backend === 'mem0-oss') {

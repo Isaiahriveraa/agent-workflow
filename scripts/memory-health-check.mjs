@@ -23,6 +23,38 @@ export const getMemoryHealth = ({ env = process.env, backend } = {}) => {
     };
   }
 
+  if (config.backend === 'mempalace') {
+    if (!config.readiness?.overall) {
+      const reason = !config.readiness?.enabled
+        ? 'AGENTS_MEMORY_ENABLED or AGENTS_MEMPALACE_ENABLED not set'
+        : !config.readiness?.installed
+          ? 'mempalace Python package not installed'
+          : 'mempalace backend failed readiness check';
+      return {
+        exitCode: 2,
+        result: buildResult({ ok: false, status: 'fatal', reason })
+      };
+    }
+    try {
+      const resolvedBackend = resolveMemorySidecarBackend({ config, backend });
+      if (!resolvedBackend) {
+        return {
+          exitCode: 2,
+          result: buildResult({ ok: false, status: 'fatal', reason: 'mempalace backend failed to initialize' })
+        };
+      }
+      return {
+        exitCode: 0,
+        result: buildResult({ ok: true, status: 'healthy', reason: `mempalace v${config.readiness.version ?? '?'} — ${config.readiness.wing} wing` })
+      };
+    } catch (error) {
+      return {
+        exitCode: 2,
+        result: buildResult({ ok: false, status: 'fatal', reason: error.message })
+      };
+    }
+  }
+
   if (config.backend === 'mem0-lancedb' && config.readiness?.overall !== true) {
     return {
       exitCode: 2,
