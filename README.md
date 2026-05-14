@@ -29,7 +29,7 @@ This repo is the shareable starter for the workflow system. Reusable policy, pro
 │     │                    WORKFLOW ENGINE                       │                  │
 │     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
 │     │  │ Commands   │  │  Agents    │  │   Skills   │        │                  │
-│     │  │ (43 cmds)  │  │ (43 agents)│  │ (46 skills)│        │                  │
+│     │  │  commands  │  │  agents    │  │  skills    │        │                  │
 │     │  └────────────┘  └────────────┘  └────────────┘        │                  │
 │     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
 │     │  │   Hooks    │  │   Rules    │  │ Capsules   │        │                  │
@@ -116,10 +116,10 @@ This repo is the shareable starter for the workflow system. Reusable policy, pro
 ```
 /Users/isaiahrivera/.agents/
 ├── prompts/              # System prompt (core AI behavior)
-├── commands/             # 29 command definitions (workflow commands)
+├── commands/             # Command definitions (workflow commands)
 │   └── gsd/              # 43 GSD subcommands
 ├── agents/               # 43 workflow expert agents
-├── skills/               # 46 skill packs
+├── skills/               # Shared skill packs
 ├── capsules/             # 2 task-class operating packs
 ├── rules/common/         # 16 reusable rule cards
 ├── contexts/             # Shared workspace state

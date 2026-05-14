@@ -6,7 +6,7 @@ Pi-specific integration boundary. `@mariozechner/pi-coding-agent` v0.70.2.
 
 - `~/.pi/agent/settings.json` — global settings, loads all 4 extensions
 - `~/.pi/agent/AGENTS.md` → `~/.agents/AGENTS.md` (symlink)
-- `~/.pi/agent/skills/` → `~/.agents/skills/*/` (63 symlinked skills)
+- `~/.pi/agent/skills/` → `~/.agents/skills/*/` (per-skill symlinks; refresh after adding hub skills)
 - `~/.agents/scripts/rtk-pi-extension.ts` — RTK rewrite hook
 - `~/.agents/scripts/pi-slash-commands.ts` — hub slash commands
 - `~/.agents/scripts/pi-memory-extension.ts` — mempalace session injection
@@ -15,7 +15,7 @@ Pi-specific integration boundary. `@mariozechner/pi-coding-agent` v0.70.2.
 ## Capability Profile
 
 - entrypoint: `bridged` via AGENTS.md symlink
-- skills: `bridged` (63 skills symlinked from `~/.agents/skills/`)
+- skills: `bridged` (per-skill symlinks from `~/.agents/skills/`)
 - extensions: `native` (TypeScript, `tool_call` / `tool_result` / lifecycle hooks)
 - commands: `native` via `pi-slash-commands.ts`
 - hooks: `native` via extension events (`session_start`, `agent_start`, `agent_end`, `session_shutdown`)
