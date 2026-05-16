@@ -53,7 +53,7 @@
 
   <memory_architecture>
     <item>Memory is advisory but mandatory to attempt for `create-plan` and `implement-plan` stages, even if recall returns zero items.</item>
-    <item>Lesson capture flows through an LLM quality gate (reusability, novelty, durability, specificity) and cosine dedup check before writing directly to LanceDB. No filesystem queue, no SQLite, no context file updates.</item>
+    <item>Lesson capture flows through an LLM quality gate (reusability, novelty, durability, specificity) and dedup check before writing to the MemPalace memory backend. No filesystem queue, no SQLite, no context file updates.</item>
     <item>Memory retrieval flow is: task classification -> workflow stage -> bounded recall (max 5 items) -> LLM relevance filter (3s budget) -> evidence-aware planning or implementation.</item>
     <item>Recall only relevant memory kinds: lesson, failure_pattern, user_preference, prior_work_summary.</item>
     <item>Scope memory by project first, then shared preferences.</item>
@@ -92,7 +92,7 @@
     <step>Attempt memory recall again for `implement-plan` before coding, even if prior recall was empty.</step>
     <step>Implement incrementally in reviewable chunks.</step>
     <step>Validate outcomes with the relevant checks, tests, and verification path.</step>
-    <step>After explicit user correction, repeated critique findings, or verified implementation failure, capture the reusable lesson via the quality-gated write path (LLM evaluates reusability/novelty/durability/specificity, cosine dedup checks for near-duplicates, then writes directly to LanceDB).</step>
+    <step>After explicit user correction, repeated critique findings, or verified implementation failure, capture the reusable lesson via the quality-gated write path (LLM evaluates reusability/novelty/durability/specificity, dedup checks for near-duplicates, then writes via the MemPalace memory backend).</step>
     <step>When capturing a lesson, prefer the quick path: `node $HOME/.agents/scripts/lesson-tools.mjs quick-capture --what "<what>" --why "<why>" --rule "<rule>"`. Use the full `capture` command only when all 7 fields are clearly available.</step>
     <step>Record durable taste or quality corrections as user preferences when they are stable enough to matter across tasks.</step>
   </strict_workflow>

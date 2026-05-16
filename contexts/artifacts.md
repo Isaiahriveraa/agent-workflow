@@ -10,9 +10,9 @@ Lightweight continuity artifacts are project-local runtime files. Project-local 
 - intake: `[project root]/thoughts/intake`
 - plans: `[project root]/thoughts/plans`
 - research: `[project root]/thoughts/research`
-- sessions: `[project root]/.agents/sessions`
+- sessions: `[project root]/.omx/sessions`
 - handoffs: `[project root]/thoughts/handoffs`
-- active working set metadata: `[project root]/.agents/contexts/state.md`
+- active working set metadata: `[project root]/.omx/state/contexts/state.md`
 
 ## Preferred Retrieval Order
 1. active or explicitly requested intake/session artifact from the current project's runtime state

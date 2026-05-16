@@ -17,7 +17,7 @@ This is the top-level `.agents`/OMX operating contract. Role prompts, commands, 
 - Adapters: provider-specific glue under `adapters/`; adapters must not redefine canonical workflow policy.
 - Commands: `commands/**/*.md` and `commands/gsd/*.md` are authoritative for slash commands. Resolve `/gsd:help`, `gsd <subcommand>`, and underscore and hyphen variants of the same slash-style workflow command as equivalent when unambiguous.
 - Expert routing: read `contexts/agent-catalog.md`; use `node ./scripts/expert-agent-routing-tools.mjs route --input "<task>"` when the correct expert is unclear.
-- Continuity: ordinary runtime state is project-local `.agents/sessions/` plus project `.agents/contexts/*`; transfer handoffs live under `thoughts/handoffs/`.
+- Continuity: ordinary runtime state is project-local `.omx/sessions/` plus project `.omx/state/contexts/*`; transfer handoffs live under `thoughts/handoffs/`.
 
 <guidance_schema_contract>
 Canonical schema lives in `docs/guidance-schema.md` when present. Keep these runtime marker contracts stable:

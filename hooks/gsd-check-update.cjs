@@ -12,9 +12,9 @@ const cwd = process.cwd();
 const cacheDir = path.join(homeDir, '.claude', 'cache');
 const cacheFile = path.join(cacheDir, 'gsd-update-check.json');
 const repoArtifacts = [
-  path.join('.agents', 'repo.md'),
-  path.join('.agents', 'contexts', 'state.md'),
-  path.join('.agents', 'contexts', 'session-index.md')
+  path.join('.omx', 'repo.md'),
+  path.join('.omx', 'state', 'contexts', 'state.md'),
+  path.join('.omx', 'state', 'contexts', 'session-index.md')
 ];
 
 // VERSION file locations (check project first, then global)

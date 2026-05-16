@@ -20,9 +20,9 @@ This is a read-only summary command. It should explain the project as it exists 
 1. Resolve the current project context with:
    - `node ~/.agents/scripts/project-context.mjs current`
 2. Read the current project's runtime state if it exists:
-   - `.agents/contexts/state.md`
-   - `.agents/contexts/session-index.md`
-   - `.agents/contexts/research-index.md`
+   - `.omx/state/contexts/state.md`
+   - `.omx/state/contexts/session-index.md`
+   - `.omx/state/contexts/research-index.md`
 3. If an active session exists, read its artifact.
 4. Read the minimum repo surface needed to ground the explanation:
    - `README.md` if present

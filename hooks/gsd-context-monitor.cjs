@@ -62,9 +62,9 @@ const fireMetricIncrement = (sessionId, field) => {
 const getActivePlanPath = () => {
   try {
     const candidates = [
-      path.join(process.cwd(), '.agents', 'contexts', 'state.md'),
-      path.join(AGENTS_ROOT, '.agents', 'contexts', 'state.md'),
-      path.join(os.homedir(), '.agents', '.agents', 'contexts', 'state.md')
+      path.join(process.cwd(), '.omx', 'state', 'contexts', 'state.md'),
+      path.join(AGENTS_ROOT, '.omx', 'state', 'contexts', 'state.md'),
+      path.join(os.homedir(), '.omx', 'state', 'contexts', 'state.md')
     ];
     let state = null;
     for (const p of candidates) {
@@ -118,7 +118,7 @@ const detectDrift = (sessionId) => {
     }
 
     // Identify drift: modified files not mentioned in the plan
-    const drifted = modified.filter(f => !targets.has(f) && !f.includes('/.agents/') && !f.includes('/.planning/'));
+    const drifted = modified.filter(f => !targets.has(f) && !f.includes('/.omx/') && !f.includes('/.planning/'));
     
     if (drifted.length > 0) {
       return `ANTI-DRIFT WARNING: You are modifying files that are out of scope for the current plan.\n` +
@@ -134,9 +134,9 @@ const detectDrift = (sessionId) => {
 const readExecutionState = () => {
   try {
     const candidates = [
-      path.join(process.cwd(), '.agents', 'runtime', 'execution', 'active.json'),
-      path.join(AGENTS_ROOT, '.agents', 'runtime', 'execution', 'active.json'),
-      path.join(os.homedir(), '.agents', '.agents', 'runtime', 'execution', 'active.json')
+      path.join(process.cwd(), '.omx', 'runtime', 'execution', 'active.json'),
+      path.join(AGENTS_ROOT, '.omx', 'runtime', 'execution', 'active.json'),
+      path.join(os.homedir(), '.omx', 'runtime', 'execution', 'active.json')
     ];
     for (const candidate of candidates) {
       if (fs.existsSync(candidate)) {

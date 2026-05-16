@@ -21,15 +21,15 @@ This repo is split into two layers: tracked workflow assets and local runtime st
   - `node_modules/`
 - Per-project runtime generated inside the target repo:
   - `[project]/.planning/`
-  - `[project]/.agents/contexts/`
-  - `[project]/.agents/sessions/`
+  - `[project]/.omx/state/contexts/`
+  - `[project]/.omx/sessions/`
 
 The local runtime layer is intentionally untracked so a clone starts clean and so public publication does not expose credentials or active project state.
 
 ## Classification
 - Share as-is: `prompts/`, `commands/`, `rules/`, `skills/`, `agents/`, `adapters/`, `hooks/`, `capsules/`, `scripts/`, `tests/`, `get-shit-done/`, `manifest.json`, `package.json`, `package-lock.json`
 - Keep tracked but generic: `contexts/*.md` and `.env.example`
-- Keep local only: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `.planning/`, `thoughts/`, `projects/`, and per-project `.agents/` runtime files
+- Keep local only: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `.planning/`, `thoughts/`, `projects/`, and per-project `.omx/` runtime files
 - Generate on first setup: repo-local starter directories from `npm run init:local-state` and per-project context files from `node ~/.agents/scripts/project-context.mjs current`
 
 ## Safety Checklist

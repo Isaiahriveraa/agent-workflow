@@ -13,7 +13,7 @@ Prefer explicit artifact selection over broad context loading.
 - `contexts/research-index.md`
 - `thoughts/plans/`
 - `thoughts/research/`
-- `.agents/sessions/`
+- `.omx/sessions/`
 - `thoughts/handoffs/`
 
 ## Notes

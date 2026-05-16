@@ -148,8 +148,8 @@ Then wait for the user's research query.
      [Relevant insights from thoughts/ directory with references]
       - `[project root]/thoughts/research/something.md` - Historical decision about X
 
-     ## Related Research
-      [Links to other research documents in the current project's `thoughts/research/` and entries referenced from the current project's `.agents/contexts/research-index.md`]
+      ## Related Research
+       [Links to other research documents in the current project's `thoughts/research/` and entries referenced from the current project's `.omx/state/contexts/research-index.md`]
 
      ## Open Questions
      [Any areas that need further investigation]

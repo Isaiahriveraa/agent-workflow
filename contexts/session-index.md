@@ -2,7 +2,7 @@
 
 Use this file as a shared compatibility document, not the live per-project runtime session index source.
 
-Per-project runtime session continuity now lives at `[project root]/.agents/contexts/session-index.md`.
+Per-project runtime session continuity now lives at `[project root]/.omx/state/contexts/session-index.md`.
 Use this global file only for shared transfer notes that should remain discoverable across repos.
 
 Project-local handoffs may be recorded here as transfer points, but they do not replace project-local session artifacts for ordinary pause/resume continuity.

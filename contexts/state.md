@@ -2,7 +2,7 @@
 
 Use this file as a shared compatibility document, not the live per-project runtime state source.
 
-Per-project runtime workflow state now lives at `[project root]/.agents/contexts/state.md`.
+Per-project runtime workflow state now lives at `[project root]/.omx/state/contexts/state.md`.
 Use this global file only for legacy/shared notes that are not specific to a single repo.
 
 ## Current Workflow

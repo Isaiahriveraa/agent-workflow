@@ -15,7 +15,7 @@ Use this command for ordinary pause/resume continuity. Project-local handoffs ar
 3. Read the current project's `state.md`.
 4. Read the current project's `session-index.md`.
 5. If the user referenced an existing plan, research doc, or session artifact, read it fully.
-6. Create or refresh a lightweight session artifact under the current project's `.agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md`.
+6. Create or refresh a lightweight session artifact under the current project's `.omx/sessions/YYYY-MM-DD_HH-MM-SS_slug.md`.
 7. If an execution state already exists, run `node ~/.agents/scripts/execution-state-tools.mjs advise` and include its reminder or cleanup guidance in the session summary instead of writing a generic “continue” note.
 
 ## Session Artifact Format

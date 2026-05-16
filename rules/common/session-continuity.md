@@ -3,8 +3,8 @@
 Use lightweight sessions for normal workflow continuity and handoffs for deliberate transfer.
 
 ## Canonical Storage
-- Lightweight session artifacts are project-local runtime artifacts under `[project root]/.agents/sessions/`.
-- The live continuity metadata is project-local under `[project root]/.agents/contexts/state.md` and `[project root]/.agents/contexts/session-index.md`.
+- Lightweight session artifacts are project-local runtime artifacts under `[project root]/.omx/sessions/`.
+- The live continuity metadata is project-local under `[project root]/.omx/state/contexts/state.md` and `[project root]/.omx/state/contexts/session-index.md`.
 - Project-local handoffs live under `[project root]/thoughts/handoffs/`.
 
 ## Use A Session When

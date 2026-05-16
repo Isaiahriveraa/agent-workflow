@@ -52,4 +52,4 @@ node $HOME/.agents/scripts/lesson-tools.mjs quick-capture \
 
 Optional flags: `--kind lesson|preference|failure` (default: lesson), `--confidence low|medium|high`, `--source-artifact /path/to/relevant/file`.
 
-The quality gate evaluates reusability, novelty, durability, and specificity before writing to LanceDB. Low-quality or duplicate lessons are automatically rejected.
+The quality gate evaluates reusability, novelty, durability, and specificity before writing to the MemPalace memory backend. Low-quality or duplicate lessons are automatically rejected.

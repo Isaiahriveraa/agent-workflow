@@ -32,9 +32,9 @@ const DOCTOR_TOOLS = path.join(AGENTS_ROOT, 'scripts', 'doctor.mjs');
 const readExecutionState = () => {
   try {
     const candidates = [
-      path.join(process.cwd(), '.agents', 'runtime', 'execution', 'active.json'),
-      path.join(AGENTS_ROOT, '.agents', 'runtime', 'execution', 'active.json'),
-      path.join(os.homedir(), '.agents', '.agents', 'runtime', 'execution', 'active.json')
+      path.join(process.cwd(), '.omx', 'runtime', 'execution', 'active.json'),
+      path.join(AGENTS_ROOT, '.omx', 'runtime', 'execution', 'active.json'),
+      path.join(os.homedir(), '.omx', 'runtime', 'execution', 'active.json')
     ];
     for (const candidate of candidates) {
       if (fs.existsSync(candidate)) {
@@ -58,9 +58,9 @@ const readStateMd = () => {
   try {
     // Walk up from AGENTS_ROOT to find the project-local state.md
     const candidates = [
-      path.join(process.cwd(), '.agents', 'contexts', 'state.md'),
-      path.join(AGENTS_ROOT, '.agents', 'contexts', 'state.md'),
-      path.join(os.homedir(), '.agents', '.agents', 'contexts', 'state.md')
+      path.join(process.cwd(), '.omx', 'state', 'contexts', 'state.md'),
+      path.join(AGENTS_ROOT, '.omx', 'state', 'contexts', 'state.md'),
+      path.join(os.homedir(), '.omx', 'state', 'contexts', 'state.md')
     ];
     for (const p of candidates) {
       if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8');
