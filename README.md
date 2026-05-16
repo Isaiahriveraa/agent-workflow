@@ -2,90 +2,174 @@
 
 This repo is the shareable starter for the workflow system. Reusable policy, prompts, commands, adapters, skills, capsules, scripts, and tests live here. Machine-local secrets and runtime state do not.
 
-## System Architecture
+## SWE Workflow
+
+This hub is not just a prompt pack. It is an opinionated software delivery workflow for AI-assisted development.
+
+From a developer perspective, the workflow works like this:
+
+1. Your AI tool enters through an adapter.
+2. The shared router classifies the task.
+3. The task runs through the lightest safe workflow tier.
+4. Project-local state and artifacts are updated so work can resume cleanly later.
+5. Verification is expected before work is considered done.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              AI CODING TOOLS                                    │
-│    ┌──────────────┐   ┌────────────┐   ┌──────────┐   ┌────────────┐          │
-│    │ Claude Code  │   │ Codex CLI  │   │ OpenCode │   │ Antigravity│  ...     │
-│    └──────┬───────┘   └─────┬──────┘   └────┬─────┘   └─────┬──────┘          │
-└───────────┼─────────────────┼──────────────┼───────────────┼──────────────────┘
-            │                 │              │               │
-            └─────────────────┴──────────────┴───────────────┘
-                                     │
-                              ┌──────▼──────┐
-                              │  ADAPTERS  │
-                              │ /adapters/ │
-                              │  - claude   │
-                              │  - codex    │
-                              │  - opencode │
-                              │  - etc      │
-                              └──────┬──────┘
-                                     │
-┌────────────────────────────────────┼────────────────────────────────────────────┐
-│                                    │           CORE SYSTEM                     │
-│     ┌──────────────────────────────▼──────────────────────────┐                  │
-│     │                    WORKFLOW ENGINE                       │                  │
-│     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
-│     │  │ Commands   │  │  Agents    │  │   Skills   │        │                  │
-│     │  │  commands  │  │  agents    │  │  skills    │        │                  │
-│     │  └────────────┘  └────────────┘  └────────────┘        │                  │
-│     │  ┌────────────┐  ┌────────────┐  ┌────────────┐        │                  │
-│     │  │   Hooks    │  │   Rules    │  │ Capsules   │        │                  │
-│     │  │ (17 hooks) │  │ (16 rules) │  │ (2 packs)  │        │                  │
-│     │  └────────────┘  └────────────┘  └────────────┘        │                  │
-│     └────────────────────────────────────────────────────────┘                  │
-│                                    │                                            │
-│     ┌──────────────────────────────▼──────────────────────────┐                  │
-│     │                   WORKFLOW ROUTER                       │                  │
-│     │     Tier 1 (trivial) → Tier 2 (moderate) → Tier 3      │                  │
-│     └────────────────────────────────────────────────────────┘                  │
-└────────────────────────────────────┼────────────────────────────────────────────┘
-                                     │
-                    ┌────────────────┼────────────────┐
-                    │                │                │
-              ┌─────▼─────┐    ┌──────▼──────┐  ┌──────▼──────┐
-              │  LanceDB  │    │   SQLite    │  │   Sessions  │
-              │ (vectors) │    │  (history)  │  │   (state)   │
-              └───────────┘    └─────────────┘  └─────────────┘
+                          ┌──────────────────┐
+          ┌───────────────┤   Claude Code    │
+          │               │   Codex CLI      │
+          │               │   OpenCode       │
+          │               │   Antigravity    │
+          │               └────────┬─────────┘
+          │                        │
+          │               ┌────────▼─────────┐
+          │               │    ADAPTER       │  ergonomics, same workflow
+          │               │  (adapters/)     │
+          │               └────────┬─────────┘
+          │                        │
+          │               ┌────────▼─────────┐
+          │               │    ROUTER        │
+          │               │  (scripts/)      │  classify → pick tier
+          │               └────────┬─────────┘
+          │                        │
+          │         ┌──────────────┼──────────────────┐
+          │         │              │                  │
+          │   ┌─────▼─────┐  ┌────▼─────┐    ┌───────▼────────┐
+          │   │  Tier 1   │  │  Tier 2  │    │    Tier 3      │
+          │   │  Direct   │  │  Plan →  │    │  Research →    │
+          │   │  Execute  │  │  Impl →  │    │  Plan → Impl →│
+          │   │           │  │  Verify  │    │  Verify        │
+          │   └───────────┘  └──────────┘    └───────┬────────┘
+          │                                          │
+          │                                 ┌────────▼────────┐
+          │                                 │  CONTINUITY     │
+          │                                 │  state.md,      │
+          │                                 │  sessions/,     │
+          │                                 │  artifacts/     │
+          │                                 └─────────────────┘
+     ┌────┴────┐
+     │  SWE    │
+     │  Dev    │
+     └─────────┘
 ```
 
-## Tiered Workflow System
+### 1. Entry Point: Adapter Layer
 
+Each coding tool points at the same shared workflow hub:
+
+- Claude Code: native commands, hooks, agents, MCP
+- Codex CLI: shared workflow docs plus bridged continuity and memory helpers
+- OpenCode, Antigravity, OpenClaw: adapter-specific integration boundaries with the same shared policy core
+
+The adapter should change ergonomics, not workflow behavior. The source of truth stays in this repo: `AGENTS.md`, `prompts/`, `commands/`, `rules/common/`, `contexts/`, and `scripts/`.
+
+### 2. Task Routing: Pick The Smallest Safe Process
+
+The workflow router (`scripts/workflow-router-tools.mjs`) pushes work into one of three paths:
+
+1. Tier 1, trivial:
+Direct execution. Use this for small, clear, low-risk changes.
+2. Tier 2, moderate:
+Create a focused plan, implement, then validate.
+3. Tier 3, substantial:
+Use the strict workflow: normalize intake, research the current state, pass a readiness gate, create a decision-complete plan, implement, then validate.
+
+In practice, that means:
+
+- Small fix: edit directly.
+- Clear multi-file feature: `/create-plan` -> `/implement_plan` -> `/validate_plan`.
+- Workflow change, large refactor, vague request, or cross-subsystem work: do the full research and planning loop first.
+
+### 3. Primary Delivery Loop
+
+For ordinary SWE work, the main loop is:
+
+```text
+intake -> route -> research if needed -> plan -> implement -> verify -> resume or handoff
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                              TASK INTAKE                                       │
-│                    User Request → AI Tool → Commands                          │
-└──────────────────────────────────┬───────────────────────────────────────────┘
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │      WORKFLOW ROUTER        │
-                    │   (workflow-router-tools)   │
-                    └──────────────┬───────────────┘
-                                   │
-         ┌─────────────────────────┼─────────────────────────┐
-         │                         │                         │
-         ▼                         ▼                         ▼
-   ┌─────────────┐          ┌───────────────┐        ┌──────────────┐
-   │   TIER 1    │          │    TIER 2     │        │    TIER 3    │
-   │   Trivial   │          │   Moderate    │        │ Substantial │
-   │  Direct     │          │  Plan +       │        │   Strict     │
-   │  Execute    │          │  Implement    │        │   Workflow   │
-   └─────────────┘          └───────────────┘        └───────┬──────┘
-                                                             │
-                                              ┌──────────────▼──────────────┐
-                                              │      TIER 3 FLOW            │
-                                              │  1. Optimize Prompt         │
-                                              │  2. Brainstorm (if vague)   │
-                                              │  3. Research (research)     │
-                                              │  4. Readiness Gate (70/15)  │
-                                              │  5. Plan (create-plan)      │
-                                              │     └─► RPI Critique        │
-                                              │  6. Implement (implement)   │
-                                              │  7. Validate (verification) │
-                                              └─────────────────────────────┘
-```
+
+The command surfaces map to that loop like this:
+
+- `/research_codebase`
+Document the codebase as it exists today. This is the read-only discovery pass.
+- `/create-plan`
+Turn a request into a concrete implementation plan grounded in the current repo state.
+- `/implement_plan`
+Execute the plan incrementally, phase by phase, with explicit verification checkpoints.
+- `/validate_plan`
+Compare the finished implementation against the plan and success criteria.
+
+### 4. Project-Local Continuity Model
+
+The workflow is designed so a developer or agent can stop and resume without re-discovering context.
+
+Every git repo using the hub gets a project-local runtime area:
+
+- `.omx/state/contexts/state.md`
+Canonical workflow state for the current project.
+- `.omx/state/contexts/research-index.md`
+Index of reusable research artifacts.
+- `.omx/state/contexts/session-index.md`
+Index of lightweight resumable sessions.
+- `.omx/state/contexts/artifacts.md`
+Registry of relevant plan, research, session, and handoff artifacts.
+- `.omx/sessions/`
+Lightweight session checkpoints for normal pause/resume.
+- `.omx/runtime/execution/active.json`
+Execution sidecar that tracks where implementation is within a plan.
+- `thoughts/plans/`, `thoughts/research/`, `thoughts/handoffs/`
+Durable project artifacts for plans, research, and richer transfer docs.
+
+This split is important:
+
+- `state.md` is the workflow authority.
+- Execution JSON is only the execution-position sidecar.
+- Session artifacts are for ordinary continuity.
+- Handoffs are for deliberate transfer or compaction.
+
+### 5. Day-To-Day Commands
+
+These are the commands that make the workflow practical for SWE use:
+
+- `/session-start`
+Create or refresh a lightweight working session.
+- `/pause-session`
+Checkpoint ordinary work without writing a full handoff.
+- `/resume-session`
+Recover from the latest lightweight session artifact.
+- `/start-work`
+Attach to the active implementation plan and continue from the current task, not from the top.
+- `/project-artifacts`
+Ask the system which artifacts matter most right now.
+- `/project-story`
+Explain the project in plain English from evidence.
+- `/project-doctor`
+Run diagnostics across workflow state, execution state, routing, adapters, and memory health.
+- `/create-handoff` and `/resume-handoff`
+Use these only when lightweight session continuity is not enough.
+
+### 6. Large Project Mode: GSD
+
+There is also a phase-oriented workflow system under `get-shit-done/` and `commands/gsd/`.
+
+This is the heavier project-program-management layer. Use it when the work needs phased delivery, roadmap artifacts, or deeper orchestration:
+
+1. `/gsd:new-project`
+2. `/gsd:plan-phase <n>`
+3. `/gsd:execute-phase <n>`
+4. `/gsd:verify-work` or related verification commands
+
+GSD creates and manages `.planning/` artifacts like `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, and phase directories. The newer continuity layer then helps agents resume and execute that work cleanly inside the repo.
+
+### 7. What A Developer Should Remember
+
+If you only remember the operating model, remember this:
+
+1. The adapter gets you into the shared hub.
+2. The router decides how heavy the workflow should be.
+3. Plans, research, and validation are first-class artifacts, not side effects.
+4. `state.md` plus session and execution artifacts make the work resumable.
+5. Verification is part of completion, not an optional last step.
 
 ## Memory Architecture
 
@@ -94,12 +178,12 @@ This repo is the shareable starter for the workflow system. Reusable policy, pro
 │                          MEMORY ARCHITECTURE                                │
 │                                                                          │
 │   ┌─────────┐    ┌──────────────┐    ┌─────────────────┐                │
-│   │  Hooks  │───▶│    mem0ai    │───▶│    LanceDB      │                │
-│   │ Capture │    │ Orchestration│    │  (vector store) │                │
-│   └─────────┘    └──────────────┘    └─────────────────┘                │
-│        │                                       │                         │
-│        │         ┌──────────────┐               │                         │
-│        └────────▶│   Recall    │◀──────────────┘                         │
+ │   │  Hooks  │───▶│  MemPalace   │───▶│    ChromaDB     │                │
+ │   │ Capture │    │ 4-Layer Stack│    │  (vector store) │                │
+ │   └─────────┘    └──────────────┘    └─────────────────┘                │
+ │        │                                       │                         │
+ │        │         ┌──────────────┐               │                         │
+ │        └────────▶│   Recall    │◀──────────────┘                         │
 │                  │  (semantic) │                                          │
 │                  └──────────────┘                                         │
 │                        │                                                   │
@@ -139,42 +223,9 @@ This repo is the shareable starter for the workflow system. Reusable policy, pro
 ├── .agents/              # Global agent state
 │   ├── contexts/
 │   └── sessions/
-└── .agents-memory/      # Local vector memory (LanceDB)
+└── .agents-memory/      # Local vector memory (MemPalace/ChromaDB)
 ```
 
-## Data Flow
-
-```
-User Input
-    │
-    ▼
-┌─────────────────┐
-│  AI Tool        │
-│ (Claude/Codex)  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│ Command Router  │────▶│  Workflow Tier  │
-│ (commands/)     │     │  (1/2/3)        │
-└─────────────────┘     └────────┬────────┘
-                                 │
-         ┌───────────────────────┼───────────────────────┐
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────┐          ┌─────────────┐         ┌─────────────┐
-│   Execute   │          │   Plan +    │         │   Full RPI  │
-│   Direct    │          │  Implement  │         │   Workflow  │
-└─────────────┘          └─────────────┘         └──────┬──────┘
-                                                        │
-                              ┌─────────────────────────┼─────────────┐
-                              │                         │             │
-                              ▼                         ▼             ▼
-                        ┌──────────┐            ┌──────────┐  ┌──────────┐
-                        │  Memory  │            │  Verify  │  │  Result  │
-                        │  Store   │            │  Check   │  │  Output  │
-                        └──────────┘            └──────────┘  └──────────┘
-```
 
 ## What Gets Shared
 - `prompts/`, `commands/`, `rules/`, `agents/`, `skills/`, `adapters/`, `hooks/`
@@ -188,8 +239,8 @@ User Input
 - Repo-local scratch/runtime: `.planning/`, `projects/`, and `thoughts/`
 - Per-project runtime created inside a target repo:
   - `[project]/.planning/`
-  - `[project]/.agents/contexts/`
-  - `[project]/.agents/sessions/`
+  - `[project]/.omx/state/contexts/`
+  - `[project]/.omx/sessions/`
 
 The public repo is intended to be inspectable. Credentials, databases, handoffs, live plans, live research, and active project runtime state are not.
 
