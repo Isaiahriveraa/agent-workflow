@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "init:local-state": "node ./scripts/init-local-state.mjs",
+    "reset:omx-state": "node ./scripts/reset-omx-state.mjs",
+    "reset:omx-state:dry": "node ./scripts/reset-omx-state.mjs --dry-run",
     "export:public": "node ./scripts/export-public-repo.mjs",
     "memory:health": "node ./scripts/memory-health-check.mjs",
     "validate:ssot": "node ./scripts/validate-ssot.mjs",

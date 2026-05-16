@@ -182,8 +182,8 @@
         "contract": "~/.codex/AGENTS.md -> ~/.agents/AGENTS.md"
       },
       "hooks": {
-        "status": "unsupported",
-        "contract": "No hub-managed Codex hook bridge"
+        "status": "bridged",
+        "contract": "~/.codex/hooks.json registers OMX native hooks plus hub shell safety and MemPalace context hooks"
       },
       "mcp": {
         "status": "native",
