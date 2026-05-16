@@ -35,6 +35,19 @@ const runContinuityTool = (args, repoRoot, extraEnv = {}) =>
     }
   }));
 
+const writeMinimalContext = (context) => {
+  const files = {
+    [context.contextPaths.state]: `# Workflow State\n\n## Current Workflow\n- none\n\n## Current Phase\n- none\n\n## Next Step\n- none\n\n## Blockers\n- None.\n\n## Last Verified At\n- none\n\n## Related Plan\n- none\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- intake: none\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`,
+    [context.contextPaths.researchIndex]: `# Research Index\n\n## Entries\n- No project-local research artifacts recorded yet.\n\n## Entry Template\n- Topic:\n- Date:\n- Source files:\n- Artifact path:\n- Summary:\n`,
+    [context.contextPaths.sessionIndex]: `# Session Index\n\n## Active Sessions\n- No active sessions recorded.\n\n## Recent Sessions\n- No recent sessions recorded.\n\n## Entry Template\n- Session ID:\n- Date:\n- Topic:\n- Status:\n- Artifact path:\n- Related plan:\n- Next command:\n- Summary:\n`,
+    [context.contextPaths.artifacts]: `# Artifact Retrieval Context\n\n## Sources\n- intake: [project root]/.planning/intake\n- plans: [project root]/thoughts/plans\n- research: [project root]/thoughts/research\n- sessions: [project root]/.omx/sessions\n- handoffs: [project root]/thoughts/handoffs\n\n## Preferred Retrieval Order\n1. active or explicitly requested intake/session artifact\n2. related plan from the current project's state file\n3. latest matching repo-local research artifact\n4. latest matching project-local handoff artifact\n\n## Notes\n- Lightweight continuity artifacts are project-local runtime files.\n- Legacy repo-local plan paths under [project root]/.planning/plans remain readable.\n`
+  };
+  for (const [filePath, content] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, content);
+  }
+};
+
 const setWorkingSet = (stateContent, lines) =>
   stateContent.replace(
     /## Active Artifact Working Set\n[\s\S]*$/m,
@@ -44,6 +57,7 @@ const setWorkingSet = (stateContent, lines) =>
 test('continuity checkpoint creates a project-local session artifact and updates runtime state', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'checkpoint');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const uniqueId = path.basename(repoRoot);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-test-plan-${uniqueId}.md`);
   const researchPath = path.join(repoRoot, 'thoughts', 'research', 'continuity-test-research.md');
@@ -71,7 +85,7 @@ test('continuity checkpoint creates a project-local session artifact and updates
     assert.equal(result.diagnostics.contract_version, 'continuity-tools.v1');
     assert.equal(result.diagnostics.persistence_mode, 'refresh');
     assert.ok(fs.existsSync(result.artifactPath));
-    assert.match(result.artifactPath, /\/\.agents\/sessions\/general\/\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_checkpoint-topic\.md$/);
+    assert.match(result.artifactPath, /\/\.omx\/sessions\/\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_checkpoint-topic\.md$/);
 
     const sessionArtifact = fs.readFileSync(result.artifactPath, 'utf8');
     assert.match(sessionArtifact, /# Session: Checkpoint Topic/);
@@ -95,8 +109,9 @@ test('continuity checkpoint creates a project-local session artifact and updates
 test('continuity checkpoint includes execution-state metadata when active execution exists', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'execution');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-execution-plan-${path.basename(repoRoot)}.md`);
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.mkdirSync(path.dirname(executionPath), { recursive: true });
@@ -148,8 +163,10 @@ test('continuity checkpoint includes execution-state metadata when active execut
 test('continuity checkpoint surfaces cleanup guidance for terminal execution state', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'terminal-execution');
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-terminal-plan-${path.basename(repoRoot)}.md`);
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
+  const toolContext = runProjectContext(repoRoot);
+  writeMinimalContext(toolContext);
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.mkdirSync(path.dirname(executionPath), { recursive: true });
   fs.writeFileSync(planPath, '# Plan\n- [ ] first task\n- [ ] second task\n');
@@ -194,6 +211,7 @@ test('continuity checkpoint surfaces cleanup guidance for terminal execution sta
 test('continuity checkpoint preserves doctor-recommended handoff recovery when no execution state exists', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'doctor-handoff');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const uniqueId = path.basename(repoRoot);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-doctor-plan-${uniqueId}.md`);
   const handoffPath = path.join(repoRoot, 'thoughts', 'handoffs', 'general', `2026-03-29_21-00-00_doctor-handoff-${uniqueId}.md`);
@@ -254,8 +272,9 @@ test('continuity checkpoint preserves doctor-recommended handoff recovery when n
 test('continuity checkpoint defaults next command to start-work when active execution exists', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'execution-next-command');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-next-command-plan-${path.basename(repoRoot)}.md`);
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.mkdirSync(path.dirname(executionPath), { recursive: true });
@@ -297,6 +316,7 @@ test('continuity checkpoint defaults next command to start-work when active exec
 test('continuity handoff preserves authored handoff content and syncs project-local runtime state', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'handoff');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
     const uniqueId = path.basename(repoRoot);
     const handoffPath = path.join(repoRoot, 'thoughts', 'handoffs', 'general', `2026-03-06_20-00-00_continuity-test-${uniqueId}.md`);
     const planPath = path.join(root, 'thoughts', 'plans', `continuity-test-plan-${uniqueId}.md`);
@@ -368,6 +388,7 @@ test('continuity handoff preserves authored handoff content and syncs project-lo
 test('continuity checkpoint refreshes stale intake selections through helper-backed persistence', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'refresh');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const uniqueId = path.basename(repoRoot);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-refresh-plan-${uniqueId}.md`);
   const researchPath = path.join(repoRoot, 'thoughts', 'research', 'continuity-refresh-research.md');
@@ -432,6 +453,7 @@ test('continuity checkpoint refreshes stale intake selections through helper-bac
 test('continuity checkpoint derives refresh suggestions from the updated state payload', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'state-first-refresh');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const uniqueId = path.basename(repoRoot);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-state-first-plan-${uniqueId}.md`);
   const researchPath = path.join(repoRoot, 'thoughts', 'research', 'continuity-state-first-research.md');
@@ -506,6 +528,9 @@ test('continuity handoff fails closed when the authored handoff path does not ex
     '2026-03-21_18-00-00_missing-handoff.md'
   );
 
+  const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
+
   try {
     assert.throws(() => {
       runContinuityTool([
@@ -528,6 +553,7 @@ test('continuity handoff fails closed when the authored handoff path does not ex
 test('continuity handoff repairs malformed recent session entries while preserving valid history', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'handoff-repair');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const uniqueId = path.basename(repoRoot);
   const handoffPath = path.join(repoRoot, 'thoughts', 'handoffs', 'general', `2026-03-06_20-00-00_repair-test-${uniqueId}.md`);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-repair-plan-${uniqueId}.md`);
@@ -596,6 +622,7 @@ test('continuity handoff repairs malformed recent session entries while preservi
 test('continuity checkpoint then handoff keeps state and session-index aligned across the transition', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-continuity-')), 'checkpoint-to-handoff');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const uniqueId = path.basename(repoRoot);
   const handoffPath = path.join(repoRoot, 'thoughts', 'handoffs', 'general', `2026-03-06_20-00-00_transition-test-${uniqueId}.md`);
   const planPath = path.join(root, 'thoughts', 'plans', `continuity-transition-plan-${uniqueId}.md`);

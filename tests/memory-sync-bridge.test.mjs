@@ -15,7 +15,7 @@ test('shared memory-sync status exposes preferred and compatibility commands', (
   assert.deepEqual(status.diagnostics.explicit_parity_operations, ['status', 'recall', 'flush']);
   assert.ok(status.projectRoot);
   assert.ok(status.projectSlug);
-  assert.ok(status.continuity.statePath.endsWith(path.join('.agents', 'contexts', 'state.md')));
+  assert.ok(status.continuity.statePath.endsWith(path.join('.omx', 'state', 'contexts', 'state.md')));
   assert.deepEqual(status.recommendedCommands.preferred, [
     'node ~/.agents/scripts/memory-sync-bridge.mjs status',
     'node ~/.agents/scripts/memory-sync-bridge.mjs recall --workflow-stage create-plan',

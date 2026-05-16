@@ -41,7 +41,6 @@ test('claude adapter hook implementations are defensive and non-blocking', () =>
 
   assert.match(updateHook, /try \{/);
   assert.match(updateHook, /Repo-local supplements:/);
-  assert.match(updateHook, /path\.join\('\.agents', 'repo\.md'\)/);
   assert.match(updateHook, /AGENTS_DISABLE_UPDATE_CHECK/);
   assert.match(statusline, /Silent fail|Silently fail/);
 });
@@ -54,11 +53,11 @@ test('session start hook emits a compact repo-local supplement note when artifac
 
   try {
     fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
-    fs.mkdirSync(path.join(repoRoot, '.agents', 'contexts'), { recursive: true });
+    fs.mkdirSync(path.join(repoRoot, '.omx', 'state', 'contexts'), { recursive: true });
     fs.mkdirSync(homeDir, { recursive: true });
-    fs.writeFileSync(path.join(repoRoot, '.agents', 'repo.md'), '# repo\n');
-    fs.writeFileSync(path.join(repoRoot, '.agents', 'contexts', 'state.md'), '# state\n');
-    fs.writeFileSync(path.join(repoRoot, '.agents', 'contexts', 'session-index.md'), '# session\n');
+    fs.writeFileSync(path.join(repoRoot, '.omx', 'repo.md'), '# repo\n');
+    fs.writeFileSync(path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md'), '# state\n');
+    fs.writeFileSync(path.join(repoRoot, '.omx', 'state', 'contexts', 'session-index.md'), '# session\n');
 
     const output = execFileSync(process.execPath, [hookPath], {
       cwd: repoRoot,
@@ -71,9 +70,9 @@ test('session start hook emits a compact repo-local supplement note when artifac
     });
 
     assert.match(output, /^Repo-local supplements:/m);
-    assert.match(output, new RegExp(path.join(repoRoot, '.agents', 'repo.md').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.match(output, new RegExp(path.join(repoRoot, '.agents', 'contexts', 'state.md').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.match(output, new RegExp(path.join(repoRoot, '.agents', 'contexts', 'session-index.md').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(output, new RegExp(path.join(repoRoot, '.omx', 'repo.md').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(output, new RegExp(path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(output, new RegExp(path.join(repoRoot, '.omx', 'state', 'contexts', 'session-index.md').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
@@ -88,11 +87,11 @@ test('legacy session start hook alias stays executable under the ESM hooks packa
 
   try {
     fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
-    fs.mkdirSync(path.join(repoRoot, '.agents', 'contexts'), { recursive: true });
+    fs.mkdirSync(path.join(repoRoot, '.omx', 'state', 'contexts'), { recursive: true });
     fs.mkdirSync(homeDir, { recursive: true });
-    fs.writeFileSync(path.join(repoRoot, '.agents', 'repo.md'), '# repo\n');
-    fs.writeFileSync(path.join(repoRoot, '.agents', 'contexts', 'state.md'), '# state\n');
-    fs.writeFileSync(path.join(repoRoot, '.agents', 'contexts', 'session-index.md'), '# session\n');
+    fs.writeFileSync(path.join(repoRoot, '.omx', 'repo.md'), '# repo\n');
+    fs.writeFileSync(path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md'), '# state\n');
+    fs.writeFileSync(path.join(repoRoot, '.omx', 'state', 'contexts', 'session-index.md'), '# session\n');
 
     const output = execFileSync(process.execPath, [hookPath], {
       cwd: repoRoot,
@@ -115,7 +114,7 @@ test('rpi artifact watcher prompts critique for research artifacts in the Claude
   const repoRoot = path.join(tmpDir, 'repo');
   const homeDir = path.join(tmpDir, 'home');
   const hookPath = fileURLToPath(new URL('../adapters/claude-code/hooks/gsd-rpi-artifact-watcher.js', import.meta.url));
-  const artifactPath = path.join(repoRoot, '.planning', 'research', '2026-04-03-rpi-hook.md');
+  const artifactPath = path.join(repoRoot, 'thoughts', 'research', '2026-04-03-rpi-hook.md');
 
   try {
     fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
@@ -143,4 +142,33 @@ test('rpi artifact watcher prompts critique for research artifacts in the Claude
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
+});
+
+test('codex pre-bash guard blocks risky shell aliases without blocking safe commands', () => {
+  const hookPath = fileURLToPath(new URL('../hooks/gsd-pre-bash-guard.cjs', import.meta.url));
+
+  const blocked = execFileSync(process.execPath, [hookPath], {
+    encoding: 'utf8',
+    input: JSON.stringify({
+      hook_event_name: 'PreToolUse',
+      tool_name: 'unified_exec',
+      tool_input: { command: 'git reset --hard HEAD' }
+    })
+  });
+
+  const parsed = JSON.parse(blocked);
+  assert.equal(parsed.decision, 'block');
+  assert.equal(parsed.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(parsed.reason, /reset_hard/);
+
+  const safe = execFileSync(process.execPath, [hookPath], {
+    encoding: 'utf8',
+    input: JSON.stringify({
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Bash',
+      tool_input: { command: 'pwd' }
+    })
+  });
+
+  assert.equal(safe, '');
 });

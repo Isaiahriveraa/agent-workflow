@@ -21,9 +21,9 @@ const runHook = ({ cwd, payload, sessionId = 'session-1' }) =>
 
 test('subagent tracker records execution task lineage for delegated Claude-native subagent spawns', async () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-subagent-tracker-'));
-  const statePath = path.join(repoRoot, '.agents', 'contexts', 'state.md');
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
-  const notesDir = path.join(repoRoot, '.agents', 'runtime', 'execution', 'notepads', 'phase-4-plan');
+  const statePath = path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
+  const notesDir = path.join(repoRoot, '.omx', 'runtime', 'execution', 'notepads', 'phase-4-plan');
 
   try {
     fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });

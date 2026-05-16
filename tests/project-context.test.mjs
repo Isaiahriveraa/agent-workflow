@@ -60,23 +60,24 @@ test('same-named repos in different paths yield different project ids', () => {
   }
 });
 
-test('bootstrapping project context creates only runtime context files', () => {
+test('bootstrapping project context resolves correct path shape for context files', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-project-context-'));
   const repoRoot = createRepo(tmpDir, 'runtime-only');
 
   try {
     const context = runCurrent(repoRoot);
 
-    assert.ok(fs.existsSync(context.contextPaths.state));
-    assert.ok(fs.existsSync(context.contextPaths.researchIndex));
-    assert.ok(fs.existsSync(context.contextPaths.sessionIndex));
-    assert.ok(fs.existsSync(context.contextPaths.artifacts));
+    // ensureProjectContext() no longer bootstraps context files; verify path shape instead
+    assert.ok(context.contextPaths.state.endsWith(`${path.sep}.omx${path.sep}state${path.sep}contexts${path.sep}state.md`));
+    assert.ok(context.contextPaths.researchIndex.endsWith(`${path.sep}.omx${path.sep}state${path.sep}contexts${path.sep}research-index.md`));
+    assert.ok(context.contextPaths.sessionIndex.endsWith(`${path.sep}.omx${path.sep}state${path.sep}contexts${path.sep}session-index.md`));
+    assert.ok(context.contextPaths.artifacts.endsWith(`${path.sep}.omx${path.sep}state${path.sep}contexts${path.sep}artifacts.md`));
 
-    assert.equal(context.projectDir, path.join(repoRoot, '.agents'));
-    assert.equal(context.contextsDir, path.join(repoRoot, '.agents', 'contexts'));
+    assert.equal(context.projectDir, path.join(repoRoot, '.omx'));
+    assert.equal(context.contextsDir, path.join(repoRoot, '.omx', 'state', 'contexts'));
     assert.equal(context.thoughtPaths.plans, path.join(repoRoot, 'thoughts', 'plans'));
     assert.equal(context.thoughtPaths.research, path.join(repoRoot, 'thoughts', 'research'));
-    assert.equal(fs.existsSync(context.thoughtPaths.sessions), false);
+    assert.equal(context.thoughtPaths.sessions, path.join(repoRoot, '.omx', 'sessions'));
     assert.equal(context.thoughtPaths.handoffs, path.join(repoRoot, 'thoughts', 'handoffs'));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });

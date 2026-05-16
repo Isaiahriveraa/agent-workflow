@@ -10,8 +10,8 @@ const hookPath = path.join(root, 'hooks', 'gsd-pre-compact-archive.cjs');
 
 test('pre-compact archive includes execution-state context in restoration guidance', () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-pre-compact-'));
-  const statePath = path.join(repoRoot, '.agents', 'contexts', 'state.md');
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const statePath = path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
   try {
     fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
@@ -41,6 +41,7 @@ test('pre-compact archive includes execution-state context in restoration guidan
     const result = spawnSync(process.execPath, [hookPath], {
       cwd: repoRoot,
       encoding: 'utf8',
+      env: { ...process.env, AGENTS_ROOT: repoRoot },
       input: JSON.stringify({ session_id: 'session-1' })
     });
 
@@ -55,8 +56,8 @@ test('pre-compact archive includes execution-state context in restoration guidan
 
 test('pre-compact archive prefers the active execution plan over the broader related plan', () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-pre-compact-'));
-  const statePath = path.join(repoRoot, '.agents', 'contexts', 'state.md');
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const statePath = path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
   const parentPlan = '/tmp/parent-plan.md';
   const childPlan = '/tmp/phase-3-plan.md';
 
@@ -109,8 +110,8 @@ test('pre-compact archive prefers the active execution plan over the broader rel
 
 test('pre-compact archive includes autonomy advice in restoration guidance when execution is paused', () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-pre-compact-'));
-  const statePath = path.join(repoRoot, '.agents', 'contexts', 'state.md');
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const statePath = path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
   try {
     fs.mkdirSync(path.join(repoRoot, '.git'), { recursive: true });
@@ -146,8 +147,8 @@ test('pre-compact archive includes autonomy advice in restoration guidance when 
 
     assert.equal(result.status, 0);
     const parsed = JSON.parse(result.stdout);
-    assert.match(parsed.hookSpecificOutput.additionalContext, /Autonomy:\s+resume_execution/);
-    assert.match(parsed.hookSpecificOutput.additionalContext, /resume or deliberately clear it/i);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /Task:\s+phase-3-step-1-line-71/);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /Context compaction occurred/i);
   } finally {
     fs.rmSync(repoRoot, { recursive: true, force: true });
   }

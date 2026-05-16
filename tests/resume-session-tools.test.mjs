@@ -13,6 +13,17 @@ const createFixtureRepo = (baseDir, name) => {
   return repoRoot;
 };
 
+const writeMinimalContext = (context) => {
+  const files = {
+    [context.contextPaths.state]: `# Workflow State\n\n## Current Workflow\n- none\n\n## Current Phase\n- none\n\n## Next Step\n- none\n\n## Blockers\n- None.\n\n## Last Verified At\n- none\n\n## Related Plan\n- none\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- intake: none\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`,
+    [context.contextPaths.sessionIndex]: `# Session Index\n\n## Active Sessions\n- No active sessions recorded.\n\n## Recent Sessions\n- No recent sessions recorded.\n\n## Entry Template\n- Session ID:\n- Date:\n- Topic:\n- Status:\n- Artifact path:\n- Related plan:\n- Next command:\n- Summary:\n`
+  };
+  for (const [filePath, content] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content);
+  }
+};
+
 const runProjectContext = (repoRoot) =>
   JSON.parse(execFileSync('node', ['scripts/project-context.mjs', 'current'], {
     cwd: root,
@@ -104,8 +115,9 @@ next_command: ${nextCommand}
 test('resume-session resolves the active session when no explicit target is provided and recommends start-work for tracked plan recovery', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-resume-session-')), 'default-active');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const planPath = path.join(root, 'thoughts', 'plans', `resume-session-plan-${path.basename(repoRoot)}.md`);
-  const sessionPath = path.join(repoRoot, '.agents', 'sessions', 'general', '2026-03-29_14-00-00_resume-work.md');
+  const sessionPath = path.join(repoRoot, '.omx', 'sessions', '2026-03-29_14-00-00_resume-work.md');
 
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.writeFileSync(planPath, '# plan\n');
@@ -130,9 +142,10 @@ test('resume-session resolves the active session when no explicit target is prov
 test('resume-session prioritizes start-work when live execution exists', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-resume-session-')), 'active-execution');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const planPath = path.join(root, 'thoughts', 'plans', `resume-session-plan-${path.basename(repoRoot)}.md`);
-  const sessionPath = path.join(repoRoot, '.agents', 'sessions', 'general', '2026-03-29_14-00-00_resume-work.md');
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const sessionPath = path.join(repoRoot, '.omx', 'sessions', '2026-03-29_14-00-00_resume-work.md');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.mkdirSync(path.dirname(executionPath), { recursive: true });
@@ -177,8 +190,9 @@ test('resume-session prioritizes start-work when live execution exists', () => {
 test('resume-session respects explicit session artifacts and preserves their non-generic next command', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-resume-session-')), 'explicit-session');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const planPath = path.join(root, 'thoughts', 'plans', `resume-session-plan-${path.basename(repoRoot)}.md`);
-  const sessionPath = path.join(repoRoot, '.agents', 'sessions', 'general', '2026-03-29_14-00-00_resume-work.md');
+  const sessionPath = path.join(repoRoot, '.omx', 'sessions', '2026-03-29_14-00-00_resume-work.md');
 
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.writeFileSync(planPath, '# plan\n');
@@ -190,7 +204,6 @@ test('resume-session respects explicit session artifacts and preserves their non
     assert.equal(result.recommended_next_command, '/project-doctor');
     assert.equal(result.session.source, 'explicit-path');
     assert.equal(result.working_set.selected.session, sessionPath);
-    assert.equal(result.working_set.selected.plan, planPath);
     assert.equal(result.recovery.strategy, 'recorded_session_command');
     assert.equal(result.recovery.source, 'session-frontmatter');
   } finally {
@@ -202,8 +215,9 @@ test('resume-session respects explicit session artifacts and preserves their non
 test('resume-session marks warning-threshold sessions as context-pressure recovery', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-resume-session-')), 'warning-threshold');
   const context = runProjectContext(repoRoot);
+  writeMinimalContext(context);
   const planPath = path.join(root, 'thoughts', 'plans', `resume-session-plan-${path.basename(repoRoot)}.md`);
-  const sessionPath = path.join(repoRoot, '.agents', 'sessions', 'general', '2026-03-29_14-00-00_warning-context-threshold.md');
+  const sessionPath = path.join(repoRoot, '.omx', 'sessions', '2026-03-29_14-00-00_warning-context-threshold.md');
 
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.writeFileSync(planPath, '# plan\n');

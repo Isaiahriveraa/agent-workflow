@@ -34,7 +34,7 @@ test('AGENTS declares contexts, rules, and adapters as canonical layers', () => 
   assert.match(content, /learning-loop rule/);
   assert.match(content, /expert-agent routing rule/);
   assert.match(content, /expert-agent-routing-tools\.mjs route/);
-  assert.match(content, /project-local `\.agents\/sessions\/`/);
+  assert.match(content, /project-local `\.omx\/sessions\/`/);
   assert.match(content, /thoughts\/handoffs\//);
   assert.match(content, /commands\/\*\*\/\*\.md/);
   assert.match(content, /commands\/gsd\/\*\.md/);
@@ -62,7 +62,7 @@ test('gsd namespace is first-class in the shared command contract and codex adap
   assert.match(codexAdapter, /memory-sync-bridge\.mjs <status\|recall\|flush>/);
   assert.match(codexAdapter, /codex-memory-bridge\.mjs <status\|recall\|flush>/);
   assert.match(manifest.capabilities['codex-cli'].commands.contract, /command bridge/);
-  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /No hub-managed Codex hook bridge/);
+  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /~\/\.codex\/hooks\.json/);
 });
 
 test('system prompt documents enforcement-first router authority and stage contracts', () => {
@@ -80,7 +80,7 @@ test('system prompt documents enforcement-first router authority and stage contr
 test('global workflow state is a compatibility document with runtime-state pointer', () => {
   const content = read('contexts/state.md');
   assert.match(content, /shared compatibility document/);
-  assert.match(content, /\[project root\]\/\.agents\/contexts\/state\.md/);
+  assert.match(content, /\[project root\]\/\.omx\/state\/contexts\/state\.md/);
   assert.match(content, /## Active Artifact Working Set/);
   assert.match(content, /### Selected By Category/);
   assert.match(content, /### Ordered Artifacts/);
@@ -96,9 +96,9 @@ test('global research and session indexes are compatibility documents with runti
   const session = read('contexts/session-index.md');
 
   assert.match(research, /shared compatibility document/);
-  assert.match(research, /\[project root\]\/\.agents\/contexts\/research-index\.md/);
+  assert.match(research, /\[project root\]\/\.omx\/state\/contexts\/research-index\.md/);
   assert.match(session, /shared compatibility document/);
-  assert.match(session, /\[project root\]\/\.agents\/contexts\/session-index\.md/);
+  assert.match(session, /\[project root\]\/\.omx\/state\/contexts\/session-index\.md/);
   assert.match(session, /Project-local handoffs/);
 });
 
@@ -237,8 +237,8 @@ test('handoff commands keep handoffs project-local while runtime state stays pro
   assert.doesNotMatch(createHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\//);
   assert.match(resumeHandoff, /\[project root\]\/thoughts\/handoffs\/ENG-XXXX/);
   assert.match(resumeHandoff, /\/resume-handoff` resolves to the same command file/);
-  assert.match(resumeHandoff, /~\/\.agents\/thoughts\/plans/);
-  assert.match(resumeHandoff, /\.planning\/research/);
+  assert.match(resumeHandoff, /thoughts\/plans/);
+  assert.match(resumeHandoff, /thoughts\/research/);
   assert.doesNotMatch(resumeHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
   assert.match(gsd, /shared workflow resolver also accepts underscore and hyphen variants/);
 });
@@ -279,7 +279,7 @@ test('ssot validation fails when a project-local runtime state duplicates the wo
 
 Use this file as a shared compatibility document, not the live per-project runtime state source.
 
-Per-project runtime workflow state now lives at \`[project root]/.agents/contexts/state.md\`.
+Per-project runtime workflow state now lives at \`[project root]/.omx/state/contexts/state.md\`.
 Use this global file only for legacy/shared notes that are not specific to a single repo.
 
 ## Current Workflow
@@ -513,7 +513,7 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   assert.equal(capabilities['claude-code'].commands.status, 'native');
   assert.equal(capabilities['claude-code'].settings.status, 'validated-local');
   assert.equal(capabilities['codex-cli'].commands.status, 'unsupported');
-  assert.equal(capabilities['codex-cli'].hooks.status, 'unsupported');
+  assert.equal(capabilities['codex-cli'].hooks.status, 'bridged');
   assert.equal(capabilities.opencode.memory.status, 'bridged-explicit');
   assert.equal(capabilities.opencode.agents.status, 'bridged');
   assert.equal(capabilities.antigravity.entrypoint.status, 'bridged');
@@ -557,10 +557,12 @@ test('adapter directories document non-claude parity boundaries', () => {
   assert.match(claude, /CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1/);
   assert.match(codex, /~\/\.codex\/AGENTS\.md/);
   assert.match(codex, /commands: `unsupported`/);
+  assert.match(codex, /hooks: `bridged`/);
   assert.match(codex, /what the hub currently manages for Codex/);
   assert.match(codex, /AGENTS-routing compatibility/);
   assert.match(codex, /Explicit memory bridge parity only/);
-  assert.match(codex, /native hook writeback bridge/);
+  assert.match(codex, /Hook Bridge/);
+  assert.match(codex, /gsd-pre-bash-guard\.cjs/);
   assert.match(opencode, /gen-opencode-agents/);
   assert.match(opencode, /agents: `bridged`/);
   assert.match(opencode, /OpenCode upstream supports command files and plugin event hooks/);
@@ -621,7 +623,7 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   );
   assert.equal(
     settings.statusLine.command,
-    `node "${path.join(claudeDir, 'hooks/gsd-statusline.js')}"`
+    `node \${CLAUDE_CONFIG_DIR:-\$HOME/.claude}/hud/combined-statusline.mjs`
   );
   assert.equal(settings.enabledPlugins['typescript-lsp@claude-plugins-official'], true);
 });

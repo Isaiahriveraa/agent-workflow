@@ -37,10 +37,11 @@ const runDoctor = (repoRoot, extraEnv = {}) =>
 test('doctor reports execution, continuity, verification, and router diagnostics', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-doctor-')), 'report');
   const context = runProjectContext(repoRoot);
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
   try {
     fs.mkdirSync(path.dirname(executionPath), { recursive: true });
+    fs.mkdirSync(path.dirname(context.contextPaths.state), { recursive: true });
     fs.writeFileSync(path.join(repoRoot, 'package.json'), JSON.stringify({
       name: 'doctor-fixture',
       private: true,
@@ -112,6 +113,7 @@ test('doctor warns when workflow state has a related plan but no execution state
   const context = runProjectContext(repoRoot);
 
   try {
+    fs.mkdirSync(path.dirname(context.contextPaths.state), { recursive: true });
     fs.writeFileSync(context.contextPaths.state, `# Workflow State
 
 Use this file as the canonical resumable state for in-flight work in the current project.
@@ -164,10 +166,11 @@ Use this file as the canonical resumable state for in-flight work in the current
 test('doctor recommends stop-work when execution state is stale', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-doctor-')), 'stale');
   const context = runProjectContext(repoRoot);
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
 
   try {
     fs.mkdirSync(path.dirname(executionPath), { recursive: true });
+    fs.mkdirSync(path.dirname(context.contextPaths.state), { recursive: true });
     fs.writeFileSync(context.contextPaths.state, `# Workflow State
 
 Use this file as the canonical resumable state for in-flight work in the current project.

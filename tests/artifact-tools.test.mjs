@@ -22,8 +22,27 @@ const runProjectContext = (repoRoot = fixtureRepoRoot, extraEnv = {}) =>
       ...extraEnv
     }
   }));
-const execArtifactTool = (args, repoRoot = fixtureRepoRoot, extraEnv = {}) =>
-  execFileSync('node', ['scripts/artifact-tools.mjs', ...args], {
+const ensureTestContextFiles = (repoRoot) => {
+  const context = JSON.parse(execFileSync('node', ['scripts/project-context.mjs', 'current'], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, AGENTS_PROJECT_ROOT: repoRoot }
+  }));
+  const files = {
+    [context.contextPaths.state]: `# Workflow State\n\n## Current Workflow\n- none\n\n## Current Phase\n- none\n\n## Next Step\n- none\n\n## Blockers\n- None.\n\n## Last Verified At\n- none\n\n## Related Plan\n- none\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- intake: none\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`,
+    [context.contextPaths.researchIndex]: `# Research Index\n\n## Entries\n- No project-local research artifacts recorded yet.\n\n## Entry Template\n- Topic:\n- Date:\n- Source files:\n- Artifact path:\n- Summary:\n`,
+    [context.contextPaths.sessionIndex]: `# Session Index\n\n## Active Sessions\n- No active sessions recorded.\n\n## Recent Sessions\n- No recent sessions recorded.\n\n## Entry Template\n- Session ID:\n- Date:\n- Topic:\n- Status:\n- Artifact path:\n- Related plan:\n- Next command:\n- Summary:\n`,
+    [context.contextPaths.artifacts]: `# Artifact Retrieval Context\n\n## Sources\n- intake: [project root]/.planning/intake\n- plans: [project root]/thoughts/plans\n- research: [project root]/thoughts/research\n- sessions: [project root]/.omx/sessions\n- handoffs: [project root]/thoughts/handoffs\n\n## Preferred Retrieval Order\n1. active or explicitly requested intake/session artifact\n2. related plan from the current project's state file\n3. latest matching repo-local research artifact\n4. latest matching project-local handoff artifact\n\n## Notes\n- Lightweight continuity artifacts are project-local runtime files.\n- Legacy repo-local plan paths under [project root]/.planning/plans remain readable.\n`
+  };
+  for (const [filePath, content] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, content);
+  }
+};
+
+const execArtifactTool = (args, repoRoot = fixtureRepoRoot, extraEnv = {}) => {
+  ensureTestContextFiles(repoRoot);
+  return execFileSync('node', ['scripts/artifact-tools.mjs', ...args], {
     cwd: root,
     encoding: 'utf8',
     env: {
@@ -32,6 +51,23 @@ const execArtifactTool = (args, repoRoot = fixtureRepoRoot, extraEnv = {}) =>
       ...extraEnv
     }
   });
+};
+const writeContextFiles = (context) => {
+  const files = {
+    [context.contextPaths.state]: `# Workflow State\n\n## Current Workflow\n- none\n\n## Current Phase\n- none\n\n## Next Step\n- none\n\n## Blockers\n- None.\n\n## Last Verified At\n- none\n\n## Related Plan\n- none\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- intake: none\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`,
+    [context.contextPaths.researchIndex]: `# Research Index\n\n## Entries\n- No project-local research artifacts recorded yet.\n\n## Entry Template\n- Topic:\n- Date:\n- Source files:\n- Artifact path:\n- Summary:\n`,
+    [context.contextPaths.sessionIndex]: `# Session Index\n\n## Active Sessions\n- No active sessions recorded.\n\n## Recent Sessions\n- No recent sessions recorded.\n\n## Entry Template\n- Session ID:\n- Date:\n- Topic:\n- Status:\n- Artifact path:\n- Related plan:\n- Next command:\n- Summary:\n`,
+    [context.contextPaths.artifacts]: `# Artifact Retrieval Context\n\n## Sources\n- intake: [project root]/.planning/intake\n- plans: [project root]/thoughts/plans\n- research: [project root]/thoughts/research\n- sessions: [project root]/.omx/sessions\n- handoffs: [project root]/thoughts/handoffs\n\n## Preferred Retrieval Order\n1. active or explicitly requested intake/session artifact\n2. related plan from the current project's state file\n3. latest matching repo-local research artifact\n4. latest matching project-local handoff artifact\n\n## Notes\n- Lightweight continuity artifacts are project-local runtime files.\n- Legacy repo-local plan paths under [project root]/.planning/plans remain readable.\n`
+  };
+  for (const [filePath, content] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content);
+  }
+};
+
+const fixtureContext = runProjectContext(fixtureRepoRoot);
+writeContextFiles(fixtureContext);
+
 const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const setWorkingSet = (stateContent, lines) =>
@@ -140,7 +176,7 @@ test('artifact retrieval context exists with required sections', () => {
   const content = readFile(runProjectContext(fixtureRepoRoot).contextPaths.artifacts);
   assert.match(content, /## Sources/);
   assert.match(content, /## Preferred Retrieval Order/);
-  assert.match(content, /handoffs: `~\/\.agents\/thoughts\/handoffs`/);
+  assert.match(content, /handoffs: .*thoughts\/handoffs/);
   assert.match(content, /Lightweight continuity artifacts are project-local runtime files/);
 });
 
@@ -639,6 +675,7 @@ test('authoritative persistence keeps continuity-critical resume flows from adop
   withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
     const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-authoritative-')), 'resume-authority');
     const project = runProjectContext(repoRoot);
+    writeContextFiles(project);
     const sessionDir = project.thoughtPaths.sessions;
     const suggestedSessionPath = path.join(sessionDir, '2026-03-06_10-00-00_suggested.md');
     const suggestedIntakePath = path.join(repoRoot, '.planning', 'intake', 'resume-authority-intake.md');
@@ -695,6 +732,7 @@ test('authoritative persistence lets project-artifacts persist only the explicit
   withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath }) => {
     const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-project-select-')), 'project-artifacts');
     const project = runProjectContext(repoRoot);
+    writeContextFiles(project);
     const originalState = readFile(project.contextPaths.state);
     const suggestedIntakePath = path.join(repoRoot, '.planning', 'intake', 'project-artifacts-intake.md');
     const suggestedSessionPath = path.join(project.thoughtPaths.sessions, '2026-03-06_11-00-00_suggested.md');
@@ -791,6 +829,7 @@ test('artifact suggestion prefers explicit session-index artifacts over latest s
   withSeededArtifacts(fixtureRepoRoot, ({ canonicalPlanPath, researchPath, handoffPath }) => {
       const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-artifact-session-')), 'resume-target');
       const project = runProjectContext(repoRoot);
+      writeContextFiles(project);
       const sessionDir = project.thoughtPaths.sessions;
       const explicitSession = path.join(sessionDir, '2026-03-06_10-00-00_explicit.md');
       const newerFallbackSession = path.join(sessionDir, '2026-03-06_11-00-00_fallback.md');
@@ -867,6 +906,8 @@ test('artifact working sets remain isolated across two repos', () => {
       try {
         const projectA = runProjectContext(repoA);
         const projectB = runProjectContext(repoB);
+        writeContextFiles(projectA);
+        writeContextFiles(projectB);
         const originalA = readFile(projectA.contextPaths.state);
         const originalB = readFile(projectB.contextPaths.state);
 
@@ -946,6 +987,7 @@ Legacy plan without readiness frontmatter.
 
   try {
     const project = runProjectContext(repoRoot);
+    writeContextFiles(project);
     const statePath = project.contextPaths.state;
     const originalState = readFile(statePath);
     const seededState = setWorkingSet(originalState, `

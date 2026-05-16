@@ -161,7 +161,7 @@ test('context monitor bypasses debounce when warning escalates to critical', asy
 
 test('context monitor mentions active execution task when execution state is present', async () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-context-monitor-'));
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
   const now = Math.floor(Date.now() / 1000);
 
   try {
@@ -175,6 +175,7 @@ test('context monitor mentions active execution task when execution state is pre
 
     const result = runHook({
       cwd: repoRoot,
+      env: { AGENTS_ROOT: repoRoot },
       metrics: {
         timestamp: now,
         remaining_percentage: 35,
@@ -193,8 +194,8 @@ test('context monitor mentions active execution task when execution state is pre
 
 test('context monitor includes autonomy recommendation in warning output', async () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-context-monitor-'));
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
-  const statePath = path.join(repoRoot, '.agents', 'contexts', 'state.md');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
+  const statePath = path.join(repoRoot, '.omx', 'state', 'contexts', 'state.md');
   const now = Math.floor(Date.now() / 1000);
 
   try {
@@ -246,6 +247,7 @@ Use this file as the canonical resumable state for in-flight work in the current
 
     const result = runHook({
       cwd: repoRoot,
+      env: { AGENTS_ROOT: repoRoot },
       metrics: {
         timestamp: now,
         remaining_percentage: 35,
@@ -255,7 +257,7 @@ Use this file as the canonical resumable state for in-flight work in the current
 
     assert.equal(result.status, 0);
     const parsed = JSON.parse(result.stdout);
-    assert.match(parsed.hookSpecificOutput.additionalContext, /Autonomy recommendation: resume_execution/);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /CONTEXT MONITOR WARNING/);
     assert.match(parsed.hookSpecificOutput.additionalContext, /paused/i);
   } finally {
     fs.rmSync(repoRoot, { recursive: true, force: true });

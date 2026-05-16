@@ -47,8 +47,8 @@ test('orchestration contract derives conductor and executor guidance from active
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-orchestration-')), 'active');
   const context = runProjectContext(repoRoot);
   const planPath = path.join(repoRoot, '.planning', 'phase-4-plan.md');
-  const executionPath = path.join(repoRoot, '.agents', 'runtime', 'execution', 'active.json');
-  const notesDir = path.join(repoRoot, '.agents', 'runtime', 'execution', 'notepads', 'phase-4-plan');
+  const executionPath = path.join(repoRoot, '.omx', 'runtime', 'execution', 'active.json');
+  const notesDir = path.join(repoRoot, '.omx', 'runtime', 'execution', 'notepads', 'phase-4-plan');
 
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.mkdirSync(path.dirname(executionPath), { recursive: true });
@@ -185,8 +185,8 @@ test('orchestration decision delegates active execution tasks and stays conducto
   const activeRepoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-orchestration-')), 'decision-active');
   const activeContext = runProjectContext(activeRepoRoot);
   const activePlanPath = path.join(activeRepoRoot, '.planning', 'phase-4-plan.md');
-  const activeExecutionPath = path.join(activeRepoRoot, '.agents', 'runtime', 'execution', 'active.json');
-  const activeNotesDir = path.join(activeRepoRoot, '.agents', 'runtime', 'execution', 'notepads', 'phase-4-plan');
+  const activeExecutionPath = path.join(activeRepoRoot, '.omx', 'runtime', 'execution', 'active.json');
+  const activeNotesDir = path.join(activeRepoRoot, '.omx', 'runtime', 'execution', 'notepads', 'phase-4-plan');
 
   fs.mkdirSync(path.dirname(activePlanPath), { recursive: true });
   fs.mkdirSync(path.dirname(activeExecutionPath), { recursive: true });
