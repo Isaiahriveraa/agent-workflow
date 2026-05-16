@@ -142,15 +142,15 @@ Normalize to one `--model <value>`. Do not guess model defaults; use `OMX_DEFAUL
 | Role | Model | Effort | Use |
 | --- | --- | --- | --- |
 | Frontier leader | `gpt-5.4` | high | planning, orchestration, hard reasoning |
-| Spark/explore | `gpt-5.3-codex-spark` | low | fast lookup, mapping, triage |
-| Standard | `gpt-5.4-mini` | high | bounded specialist work |
+| explore | `deepseek-v4-flash` | low | fast lookup, mapping, triage |
+| Standard | `deepseek-v4-pro` | high | bounded specialist work |
 | analyst/planner | `gpt-5.4` | medium | requirements, sequencing |
 | architect/critic/code-reviewer | `gpt-5.4` | high | design, challenge, review |
 | executor/team-executor | `gpt-5.4` | high/medium | implementation |
-| debugger/build-fixer/dependency-expert/verifier | `gpt-5.4-mini` | high | diagnosis, builds, SDKs, evidence |
+| debugger/build-fixer/dependency-expert/verifier | `glm-5.1` | high | diagnosis, builds, SDKs, evidence |
 | test-engineer/security-reviewer | `gpt-5.4` | medium | testing, security |
-| writer/designer | `gpt-5.4-mini` | high | docs, UX/UI |
-| style-reviewer/vision | `gpt-5.3-codex-spark`/`gpt-5.4` | low | style, image analysis |
+| writer/designer | `kimi-k2.6` | high | docs, UX/UI |
+| style-reviewer/vision | `gpt-5.4` | low | style, image analysis |
 <!-- OMX:MODELS:END -->
 
 <verification>
