@@ -72,7 +72,6 @@ const requiredFiles = [
   'commands/project-tooling.md',
   'commands/project-verification.md',
   'commands/project-artifacts.md',
-  'scripts/session-tools.mjs',
   'scripts/package-manager-tools.mjs',
   'scripts/workflow-router-tools.mjs',
   'scripts/lesson-tools.mjs',

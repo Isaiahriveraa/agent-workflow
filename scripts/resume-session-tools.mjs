@@ -6,12 +6,18 @@ import { persistWorkingSetSelection } from './artifact-tools.mjs';
 import { writeMarkdownSections } from './runtime-state-tools.mjs';
 import { readActiveExecutionState, buildExecutionGuidance } from './execution-state-tools.mjs';
 import { buildDoctorReport } from './doctor.mjs';
-import { evaluateAutonomy } from './autonomy-tools.mjs';
 import { buildDelegationDecision } from './orchestration-contract-tools.mjs';
 
 const project = ensureProjectContext();
 
 const readFile = (filePath) => fs.readFileSync(filePath, 'utf8');
+const readJson = (filePath) => {
+  try {
+    return JSON.parse(readFile(filePath));
+  } catch {
+    return null;
+  }
+};
 
 const parseArgs = (args) => {
   const parsed = { _: [] };
@@ -30,6 +36,128 @@ const parseArgs = (args) => {
     index += 1;
   }
   return parsed;
+};
+
+const readFirstBullet = (content, heading, fallback = 'none') => {
+  const match = content.match(new RegExp(`${heading}\n-\s+(.*)`));
+  return match ? match[1].trim() : fallback;
+};
+
+const hasRunnableVerification = () => {
+  const packageJson = readJson(path.join(project.projectRoot, 'package.json'));
+  const scripts = packageJson?.scripts ?? {};
+  return typeof scripts.test === 'string' || typeof scripts['validate:ssot'] === 'string';
+};
+
+const buildAutonomyDecision = ({ recommendedAction, reason, confidence, workflowState, execution, checks }) => ({
+  recommended_action: recommendedAction,
+  reason,
+  confidence,
+  workflow_state: workflowState,
+  execution: execution
+    ? {
+        path: execution.path,
+        status: execution.state.status,
+        current_task_key: execution.state.current_task_key ?? null,
+        active_plan: execution.state.active_plan ?? null
+      }
+    : null,
+  checks
+});
+
+const evaluateAutonomy = ({
+  stateContent,
+  execution = readActiveExecutionState(),
+  contextRemaining,
+  verificationAvailable = hasRunnableVerification()
+} = {}) => {
+  const state = stateContent ?? readFile(project.contextPaths.state);
+  const workflowState = {
+    workflow: readFirstBullet(state, '## Current Workflow'),
+    phase: readFirstBullet(state, '## Current Phase'),
+    next_step: readFirstBullet(state, '## Next Step'),
+    related_plan: readFirstBullet(state, '## Related Plan')
+  };
+
+  const checks = {
+    has_active_workflow: workflowState.workflow !== 'none',
+    has_next_step: workflowState.next_step !== 'none',
+    has_related_plan: workflowState.related_plan !== 'none',
+    execution_active: execution?.state?.status === 'active',
+    execution_paused: execution?.state?.status === 'paused',
+    execution_terminal: execution ? ['completed', 'stopped'].includes(execution.state.status) : false,
+    current_task_key: execution?.state?.current_task_key ?? null,
+    context_remaining: contextRemaining,
+    verification_available: verificationAvailable
+  };
+
+  if (contextRemaining != null && contextRemaining <= 25) {
+    return buildAutonomyDecision({
+      recommendedAction: 'checkpoint',
+      reason: 'Remaining context is critically low, so the safest next step is to checkpoint or hand off before continuing.',
+      confidence: 0.96,
+      workflowState,
+      execution,
+      checks
+    });
+  }
+
+  if (checks.execution_paused) {
+    return buildAutonomyDecision({
+      recommendedAction: 'resume_execution',
+      reason: 'An execution state is paused, so the next best action is to resume or deliberately clear it before starting new work.',
+      confidence: 0.92,
+      workflowState,
+      execution,
+      checks
+    });
+  }
+
+  if (checks.execution_terminal) {
+    return buildAutonomyDecision({
+      recommendedAction: 'clear_execution',
+      reason: 'Execution state is terminal, so it should be cleared or replaced before more continuation logic runs.',
+      confidence: 0.9,
+      workflowState,
+      execution,
+      checks
+    });
+  }
+
+  if (checks.execution_active) {
+    return buildAutonomyDecision({
+      recommendedAction: 'continue',
+      reason: checks.current_task_key
+        ? `Execution is active on ${checks.current_task_key}, so work should continue on the current task.`
+        : 'Execution is active, so work should continue on the current plan before starting something new.',
+      confidence: 0.9,
+      workflowState,
+      execution,
+      checks
+    });
+  }
+
+  if (checks.has_active_workflow && checks.has_related_plan && checks.has_next_step) {
+    return buildAutonomyDecision({
+      recommendedAction: verificationAvailable ? 'resume_plan' : 'continue',
+      reason: verificationAvailable
+        ? 'Workflow state is active and verification surfaces are available, so the next step should resume the tracked plan intentionally.'
+        : 'Workflow state is active, so the next step should continue from the tracked plan state.',
+      confidence: 0.84,
+      workflowState,
+      execution,
+      checks
+    });
+  }
+
+  return buildAutonomyDecision({
+    recommendedAction: 'idle',
+    reason: 'No active workflow or execution state is present, so there is nothing to continue automatically.',
+    confidence: 0.78,
+    workflowState,
+    execution,
+    checks
+  });
 };
 
 const readSection = (content, heading) => {

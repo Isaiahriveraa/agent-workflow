@@ -3,7 +3,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ensureProjectContext } from './project-context.mjs';
-import { slugify } from './session-tools.mjs';
+
+const slugify = (value) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'session';
 
 const project = ensureProjectContext();
 const runtimeDir = path.join(project.projectDir, 'runtime', 'execution');
