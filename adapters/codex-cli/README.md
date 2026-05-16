@@ -8,7 +8,7 @@ This directory documents the Codex CLI-specific integration boundary.
 ## Capability Profile
 - commands: `unsupported`
 - agents: `bridged` through the shared `AGENTS.md` entry point
-- hooks: `unsupported`
+- hooks: `bridged` through `~/.codex/hooks.json`
 - MCP: `native`
 - approvals: `native`
 - session continuity: `bridged` through shared continuity helpers and project-local runtime state
@@ -16,11 +16,17 @@ This directory documents the Codex CLI-specific integration boundary.
 
 ## Capability Interpretation
 - This profile describes what the hub currently manages for Codex, not every upstream Codex capability.
-- Codex has native MCP and local configuration surfaces upstream, but this repo only manages the shared `AGENTS.md` entry point, continuity helpers, and the shared explicit memory bridge.
+- Codex has native MCP and local configuration surfaces upstream; this repo manages the shared `AGENTS.md` entry point, continuity helpers, the shared explicit memory bridge, and the hook scripts registered from `~/.codex/hooks.json`.
 
 ## Deliberately Not Managed
 - `~/.codex/config.toml`
 - `~/.codex/skills/.system/`
+
+## Hook Bridge
+- `~/.codex/hooks.json` registers lifecycle hooks that call hub-owned scripts.
+- Session and prompt hooks load OMX/MemPalace context.
+- PreToolUse shell hooks run `~/.agents/hooks/gsd-pre-bash-guard.cjs` before the OMX native preflight.
+- Keep matcher coverage aligned with Codex shell tool names: `Bash|shell|unified_exec|exec_command|command_execution`.
 
 ## Model Routing
 
@@ -41,7 +47,7 @@ Before running `codex exec`, the codex skill can call the router to recommend th
 - Use `gsd memory-sync`, `/gsd:memory-sync`, `gsd memory-sync status`, or `gsd memory-sync recall <create-plan|implement-plan>` when you want the shared explicit bridge from Codex command routing.
 - Preferred direct bridge path: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.
 - Compatibility alias: `node ~/.agents/scripts/codex-memory-bridge.mjs <status|recall|flush>`.
-- Codex does not have a repo-managed native hook writeback bridge in this repo, so lesson flush remains manual.
+- Codex hook writeback is limited to the registered lifecycle bridge; lesson flush remains manual unless a task adds a dedicated writeback hook.
 - The Codex adapter exists to keep the entry point pointed at the hub and to make regressions easy to validate.
 
 ## Universal Memory Access (agents-memory)

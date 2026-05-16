@@ -7,10 +7,10 @@
 // How it works:
 // 1. Receives PreToolUse event with tool_input.command on stdin
 // 2. Checks the command against dangerous patterns
-// 3. If matched, returns { decision: "block", reason: "..." }
+// 3. If matched, returns a Codex/Claude-compatible block decision.
 // 4. If safe, exits silently (allows execution)
 //
-// Only activates for Bash tool invocations.
+// Only activates for shell command tool invocations.
 
 const dangerousPatterns = [
   {
@@ -75,6 +75,25 @@ const dangerousPatterns = [
   }
 ];
 
+const shellToolNames = new Set([
+  'Bash',
+  'shell',
+  'unified_exec',
+  'exec_command',
+  'command_execution'
+]);
+
+const readCommand = (data) => {
+  const candidates = [
+    data.tool_input?.command,
+    data.tool_input?.cmd,
+    data.command,
+    data.cmd
+  ];
+
+  return candidates.find((value) => typeof value === 'string' && value.trim()) || '';
+};
+
 let input = '';
 const stdinTimeout = setTimeout(() => process.exit(0), 3000);
 process.stdin.setEncoding('utf8');
@@ -84,22 +103,30 @@ process.stdin.on('end', () => {
   try {
     const data = JSON.parse(input);
 
-    // Only inspect Bash tool invocations
-    if (data.tool_name !== 'Bash') {
+    const toolName = data.tool_name || data.toolName || data.name || '';
+
+    // Only inspect shell command invocations.
+    if (!shellToolNames.has(toolName)) {
       process.exit(0);
     }
 
-    const command = data.tool_input?.command;
-    if (!command || typeof command !== 'string') {
+    const command = readCommand(data);
+    if (!command) {
       process.exit(0);
     }
 
     // Check against all dangerous patterns
     for (const entry of dangerousPatterns) {
       if (entry.pattern.test(command)) {
+        const reason = `[pre-bash-guard:${entry.id}] ${entry.reason}`;
         const output = {
           decision: 'block',
-          reason: `[pre-bash-guard:${entry.id}] ${entry.reason}`
+          reason,
+          hookSpecificOutput: {
+            hookEventName: 'PreToolUse',
+            permissionDecision: 'deny',
+            permissionDecisionReason: reason
+          }
         };
         process.stdout.write(JSON.stringify(output));
         return;
