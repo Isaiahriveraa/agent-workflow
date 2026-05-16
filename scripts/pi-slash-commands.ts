@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const AGENTS = process.env.AGENTS_ROOT ?? join(process.env.HOME!, ".agents");
@@ -13,7 +13,7 @@ const readCmd = (name: string) => {
   }
 };
 
-const shell = async (cmd: string, ctx: ExtensionAPI): Promise<string> => {
+const shell = async (cmd: string, pi: ExtensionAPI): Promise<string> => {
   const { execSync } = await import("node:child_process");
   try {
     return execSync(cmd, { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 30000 })
@@ -26,36 +26,44 @@ const shell = async (cmd: string, ctx: ExtensionAPI): Promise<string> => {
 
 const parseArgs = (raw: string) => raw.trim();
 
-export default function (pi: ExtensionAPI) {
-  pi.registerCommand("prime", {
-    description: "Lightweight repo priming before planning or implementation",
-    handler: async (raw) => {
-      const cmd = readCmd("prime");
-      if (cmd) {
-        pi.appendEntry?.("user", cmd);
-        return;
-      }
-      const out = await shell(`node "${AGENTS}/scripts/init-local-state.mjs"`, pi);
-      pi.ui.notify(`Prime: ${out.slice(0, 120)}`, "info");
-    },
-  });
+const parseDescription = (name: string): string => {
+  const cmd = readCmd(name);
+  if (!cmd) return name;
+  const secondLine = cmd.split("\n")[1] || "";
+  const match = secondLine.match(/^description:\s*(.+)/);
+  return match?.[1]?.trim() || name;
+};
 
-  pi.registerCommand("rpi", {
-    description: "Full research → plan → implement → validate workflow",
-    handler: async (raw) => {
-      const args = parseArgs(raw);
-      const cmd = readCmd("rpi");
-      if (cmd) {
-        pi.appendEntry?.("user", cmd + (args ? `\n\nUser request: ${args}` : ""));
-        return;
-      }
-      const out = await shell(
-        `node "${AGENTS}/scripts/workflow-router-tools.mjs" activate --query "${args || 'general task'}"`,
-        pi
-      );
-      pi.ui.notify(`RPI: ${out.slice(0, 200)}`, "info");
-    },
-  });
+const discoverCommands = (): string[] => {
+  try {
+    return readdirSync(CMDS, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith(".md"))
+      .map((e) => e.name.replace(".md", ""));
+  } catch {
+    return [];
+  }
+};
+
+const CUSTOM_COMMANDS = new Set(["gsd", "doctor", "memory", "review"]);
+
+export default function (pi: ExtensionAPI) {
+  const commands = discoverCommands();
+  for (const name of commands) {
+    if (CUSTOM_COMMANDS.has(name)) continue;
+    const description = parseDescription(name);
+    pi.registerCommand(name, {
+      description,
+      handler: async (raw) => {
+        const args = parseArgs(raw);
+        const cmd = readCmd(name);
+        if (cmd) {
+          pi.appendEntry?.("user", cmd + (args ? `\n\n${args}` : ""));
+          return;
+        }
+        pi.ui.notify(`${name}: command file not found at ~/.agents/commands/${name}.md`, "warn");
+      },
+    });
+  }
 
   pi.registerCommand("gsd", {
     description: "GSD workflow: do, plan-phase, new-project, and 30+ subcommands",
@@ -76,50 +84,6 @@ export default function (pi: ExtensionAPI) {
         pi
       );
       pi.ui.notify(`GSD ${subcmd}: ${out.slice(0, 200)}`, "info");
-    },
-  });
-
-  pi.registerCommand("tutor", {
-    description: "Socratic web development tutoring mode",
-    handler: async (raw) => {
-      const cmd = readCmd("tutor");
-      if (cmd) {
-        pi.appendEntry?.("user", cmd);
-        return;
-      }
-      pi.ui.notify("Tutor: command file not found at ~/.agents/commands/tutor.md", "warn");
-    },
-  });
-
-  pi.registerCommand("pr", {
-    description: "Generate a professional GitHub PR description from branch diff",
-    handler: async (raw) => {
-      const args = parseArgs(raw);
-      const cmd = readCmd("pr");
-      if (cmd) {
-        pi.appendEntry?.("user", cmd + (args ? `\n\nContext: ${args}` : ""));
-        return;
-      }
-      const out = await shell(`gh pr create ${args} --dry-run 2>&1 || gh pr create ${args} 2>&1`, pi);
-      pi.ui.notify(`PR: ${out.slice(0, 300)}`, "info");
-    },
-  });
-
-  pi.registerCommand("review-pr-comments", {
-    description: "Fetch and summarize GitHub PR review comments with accept/reject recommendations",
-    handler: async (raw) => {
-      const pr = parseArgs(raw);
-      const cmd = readCmd("review-pr-comments");
-      if (cmd) {
-        pi.appendEntry?.("user", cmd + (pr ? `\n\nPR: ${pr}` : ""));
-        return;
-      }
-      const prArg = pr ? `--pr ${pr}` : "";
-      const out = await shell(
-        `node "${AGENTS}/scripts/review-pr-comments.mjs" ${prArg} 2>&1 || echo "Script not found"`,
-        pi
-      );
-      pi.ui.notify(`review-pr-comments: ${out.slice(0, 300)}`, "info");
     },
   });
 
