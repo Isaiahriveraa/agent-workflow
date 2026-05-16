@@ -12,6 +12,23 @@ description: >
 Write commit messages terse and exact. Conventional Commits format. No fluff.
 Why over what.
 
+## Separation of Concerns
+
+**One commit, one story.** Before writing the message, audit the diff:
+
+- Do all changed files serve a single logical purpose? If not, flag it.
+- Is there a mix of concerns (e.g., refactor + bugfix, feature + style, dep bump + logic change)? Recommend splitting.
+- When split is needed, list the distinct concerns and suggest commit messages for each.
+
+Separation boundaries (changes belong in different commits when they span):
+
+- Different types (`feat` vs `fix` vs `refactor` vs `chore`)
+- Different scopes (e.g., `nvim` vs `tmux`, `lsp` vs `keymaps`)
+- Different motivations (fixing a bug vs adding a feature vs cleaning up)
+
+Only proceed to generate a single commit message when the diff passes the
+single-concern check.
+
 ## Rules
 
 Subject line:
