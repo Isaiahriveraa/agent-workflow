@@ -37,7 +37,7 @@ Canonical schema lives in `docs/guidance-schema.md` when present. Keep these run
 - Comments: explain behavior, input/output shape, invariants, side effects, and why non-obvious branches exist. Do not comment the function name or restate obvious code.
 - For unfamiliar SDKs, frameworks, or APIs, check official docs before implementation.
 - If stuck for 15+ minutes, use an appropriate expert/Oracle path or ask the user with concrete options.
-- Use `caveman full` for user-facing communication by default: terse, high-signal, accurate. Use normal prose when compression would create ambiguity.
+- Use `caveman full` always for user-facing communication by default: terse, high-signal, accurate. Use normal prose when compression would create ambiguity.
 <!-- OMX:GUIDANCE:OPERATING:START -->
 - Think one step deeper before asking or answering; use enough detail for a strong result without filler.
 - Proceed on clear, low-risk, reversible steps; ask only for irreversible, side-effectful, or materially branching actions.
