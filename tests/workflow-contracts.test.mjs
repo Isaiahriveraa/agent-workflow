@@ -36,38 +36,8 @@ test('AGENTS declares source layers and availability', () => {
   assert.doesNotMatch(content, /Use `thoughts\/sessions\/` for ordinary workflow continuity/);
 });
 
-test('gsd namespace is first-class in the shared command contract and codex adapter', () => {
-  const agentsXml = read('AGENTS.xml');
-  const codexAdapter = read('adapters/codex-cli/README.md');
-  const manifest = readJson('manifest.json');
-
-  assert.match(agentsXml, /commands\/\*\*\/\*\.md/);
-  assert.match(agentsXml, /commands\/gsd\/\*\.md/);
-  assert.match(agentsXml, /\/gsd:help/);
-  assert.match(agentsXml, /gsd-&lt;subcommand&gt;/);
-  assert.match(codexAdapter, /gsd <subcommand>/);
-  assert.match(codexAdapter, /\/gsd:<subcommand>/);
-  assert.match(codexAdapter, /gsd memory-sync/);
-  assert.match(codexAdapter, /\/gsd:memory-sync/);
-  assert.match(codexAdapter, /recall <create-plan\|implement-plan>/);
-  assert.match(codexAdapter, /Explicit memory bridge parity only/);
-  assert.match(codexAdapter, /memory-sync-bridge\.mjs <status\|recall\|flush>/);
-  assert.match(codexAdapter, /codex-memory-bridge\.mjs <status\|recall\|flush>/);
-  assert.match(manifest.capabilities['codex-cli'].commands.contract, /command bridge/);
-  assert.match(manifest.capabilities['codex-cli'].hooks.contract, /~\/\.codex\/hooks\.json/);
-});
-
-test('system prompt documents enforcement-first router authority and stage contracts', () => {
-  const content = read('prompts/system.md');
-  assert.match(content, /<role>Enforcement-First Pair Engineering<\/role>/);
-  assert.match(content, /workflow-router-tools\.mjs activate/);
-  assert.match(content, /router remains the activation spine/);
-  assert.match(content, /Memory is advisory but mandatory to attempt for `create-plan` and `implement-plan` stages/);
-  assert.match(content, /If router activation requires the task to be substantial, run prompt optimization first/);
-  assert.match(content, /run a brief brainstorm\/clarification pass before codebase research/);
-  assert.match(content, /That explanation must separate: what the codebase proves, what memory suggests, what is inferred, and what is newly proposed/);
-  assert.match(content, /Do not implement until the user explicitly approves the plan/);
-});
+// AGENTS.xml was deleted — GSD namespace test removed
+// system.md was deleted — test removed
 
 test('workflow commands reference explicit context files', () => {
   const createPlan = read('commands/create-plan.md');
@@ -88,7 +58,6 @@ test('workflow commands reference explicit context files', () => {
 
   assert.match(createPlan, /current project's runtime `research-index\.md`/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
-  assert.match(createPlan, /workflow-router-tools\.mjs score/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
   assert.match(createPlan, /agents-memory recall create-plan/);
@@ -151,18 +120,14 @@ test('workflow commands reference explicit context files', () => {
   assert.match(promptResearchPackager, /Only return the rewritten prompt in this shape when the user explicitly asks to see it/);
   assert.match(research, /current project's `research-index\.md`/);
   assert.match(research, /project-context\.mjs current/);
-  assert.match(research, /workflow-router-tools\.mjs capture/);
   assert.match(research, /workflow-artifact-tools\.mjs grade-research/);
   assert.match(research, /research_ready_for_planning/);
   assert.match(research, /commands\/rpi-brainstorm\.md/);
   assert.match(research, /artifact-tools\.mjs sync-research/);
   assert.match(rpi, /simple frontend/);
-  assert.match(rpi, /workflow-router-tools\.mjs activate/);
   assert.match(rpi, /rpi-brainstorm\.md/);
-  assert.match(rpi, /ambiguityDetected/);
-  assert.match(rpi, /recommendedResearchEntry/);
   assert.match(rpi, /Brainstorm/);
-  assert.match(rpi, /Tier 3: run the full strict workflow/);
+  assert.match(rpi, /run the full strict workflow/);
   assert.match(rpi, /Do not auto-run git branch, push, or PR actions unless the user explicitly asks/);
   assert.match(sessionStart, /current project's `session-index\.md`/);
   assert.match(sessionStart, /ordinary pause\/resume continuity/);
@@ -438,7 +403,7 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   assert.ok(claudePromptLink);
   assert.equal(claudePromptLink.target, '~/.agents/adapters/claude-code/CLAUDE.md');
   assert.ok(openclawPromptLink);
-  assert.equal(openclawPromptLink.target, '~/.agents/prompts/system.md');
+  assert.equal(openclawPromptLink.target, '~/.agents/AGENTS.md');
   assert.ok(geminiEntrypointLink);
   assert.equal(geminiEntrypointLink.target, '~/.agents/adapters/antigravity/GEMINI.md');
   assert.ok(geminiGsdLink);

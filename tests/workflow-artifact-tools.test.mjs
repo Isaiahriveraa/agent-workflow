@@ -37,7 +37,7 @@ last_validated: 2026-03-09T04:00:00.000Z
 - We need parser-backed readiness checks before commands hand off.
 
 ## Interfaces and Contracts
-- workflow-router-tools.mjs remains intake-focused.
+- workflow-router-tools.mjs was removed (keyword-based classifier was unreliable).
 
 ## Verification Implications
 - Add contract tests and parser unit tests.

@@ -9,7 +9,6 @@ const home = path.resolve(process.env.HOME ?? path.join(root, ".."));
 
 const requiredFiles = [
 	"AGENTS.md",
-	"prompts/system.md",
 	"contexts/decisions.md",
 	"contexts/tooling.md",
 	"contexts/verification.md",
@@ -25,7 +24,6 @@ const requiredFiles = [
 	"rules/common/expert-agent-routing.md",
 	"rules/common/output-quality-gate.md",
 	"rules/common/prompt-optimization-routing.md",
-	"rules/common/workflow-router.md",
 	"rules/common/package-manager-detection.md",
 	"rules/common/session-continuity.md",
 	"rules/common/ui-ux-routing.md",
@@ -55,7 +53,6 @@ const requiredFiles = [
 	"commands/project-verification.md",
 	"commands/project-artifacts.md",
 	"scripts/package-manager-tools.mjs",
-	"scripts/workflow-router-tools.mjs",
 	"scripts/lesson-tools.mjs",
 	"scripts/verification-tools.mjs",
 	"scripts/artifact-tools.mjs",
@@ -173,12 +170,11 @@ const adapterReadmeHeadings = new Map([
 ]);
 
 const commandContracts = new Map([
-	[
-		"commands/create-plan.md",
 		[
-			"~/.agents/contexts/decisions.md",
-			"scripts/workflow-router-tools.mjs score",
-			"scripts/workflow-artifact-tools.mjs grade-research",
+			"commands/create-plan.md",
+			[
+				"~/.agents/contexts/decisions.md",
+				"scripts/workflow-artifact-tools.mjs grade-research",
 			"scripts/workflow-artifact-tools.mjs grade-plan",
 			"agents-memory recall create-plan",
 			"Do not pass advisory recall into `scripts/workflow-artifact-tools.mjs`",
@@ -193,12 +189,11 @@ const commandContracts = new Map([
 			"[project root]/thoughts/plans",
 		],
 	],
-	[
-		"commands/implement_plan.md",
 		[
-			"~/.agents/contexts/decisions.md",
-			"rules/common/workflow-router.md",
-			"scripts/workflow-artifact-tools.mjs grade-plan",
+			"commands/implement_plan.md",
+			[
+				"~/.agents/contexts/decisions.md",
+				"scripts/workflow-artifact-tools.mjs grade-plan",
 			"plan_ready_for_implementation",
 			"load it before starting work and honor its critic, grader, and memory-policy files",
 			"agents-memory recall implement-plan",
@@ -228,12 +223,11 @@ const commandContracts = new Map([
 			"scripts/lesson-tools.mjs quick-capture",
 		],
 	],
-	[
-		"commands/research_codebase.md",
 		[
-			"~/.agents/contexts/decisions.md",
-			"scripts/workflow-router-tools.mjs capture",
-			"scripts/workflow-artifact-tools.mjs grade-research",
+			"commands/research_codebase.md",
+			[
+				"~/.agents/contexts/decisions.md",
+				"scripts/workflow-artifact-tools.mjs grade-research",
 			"research_ready_for_planning",
 		],
 	],
@@ -241,9 +235,6 @@ const commandContracts = new Map([
 		"commands/rpi.md",
 		[
 			"simple frontend",
-			"workflow-router-tools.mjs activate",
-			"Tier 1: do not force full RPI",
-			"Tier 3: run the full strict workflow",
 			"rpi-brainstorm.md",
 			"research_codebase.md",
 			"create-plan.md",
