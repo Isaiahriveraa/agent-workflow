@@ -1,6 +1,6 @@
 # Agents Workflow Hub
 
-This repo is the shareable starter for the workflow system. Reusable policy, prompts, commands, adapters, skills, capsules, scripts, and tests live here. Machine-local secrets and runtime state do not.
+This repo is the shareable starter for the workflow system. Reusable policy, prompts, commands, adapters, skills, scripts, and tests live here. Machine-local secrets and runtime state do not.
 
 ## SWE Workflow
 
@@ -61,7 +61,7 @@ Each coding tool points at the same shared workflow hub:
 - Codex CLI: shared workflow docs plus bridged continuity and memory helpers
 - OpenCode, Antigravity, OpenClaw: adapter-specific integration boundaries with the same shared policy core
 
-The adapter should change ergonomics, not workflow behavior. The source of truth stays in this repo: `AGENTS.md`, `prompts/`, `commands/`, `rules/common/`, `contexts/`, and `scripts/`.
+The adapter should change ergonomics, not workflow behavior. The source of truth stays in this repo: `AGENTS.md`, `prompts/`, `commands/`, and `scripts/`.
 
 ### 2. Task Routing: Pick The Smallest Safe Process
 
@@ -204,9 +204,6 @@ If you only remember the operating model, remember this:
 │   └── gsd/              # 43 GSD subcommands
 ├── agents/               # 43 workflow expert agents
 ├── skills/               # Shared skill packs
-├── capsules/             # 2 task-class operating packs
-├── rules/common/         # 16 reusable rule cards
-├── contexts/             # Shared workspace state
 ├── scripts/              # 36 Node.js tools
 ├── hooks/                # 17 hook scripts
 ├── adapters/             # 5 provider adapters
@@ -228,9 +225,7 @@ If you only remember the operating model, remember this:
 
 
 ## What Gets Shared
-- `prompts/`, `commands/`, `rules/`, `agents/`, `skills/`, `adapters/`, `hooks/`
-- `capsules/` for task-class operating packs
-- `contexts/` for shared starter context and canonical workflow metadata
+- `prompts/`, `commands/`, `agents/`, `skills/`, `adapters/`, `hooks/`
 - `scripts/`, `tests/`, `manifest.json`, and `sync.sh`
 - onboarding and sharing docs
 

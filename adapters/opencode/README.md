@@ -9,7 +9,7 @@ This directory documents the OpenCode-specific integration boundary.
 ## Capability Profile
 - commands: `native`
 - agents: `bridged` through generated OpenCode-compatible agent files
-- hooks: `unsupported`
+- hooks: `native` through TypeScript plugins in `~/.config/opencode/plugins/`
 - MCP: `native`
 - approvals: `native`
 - session continuity: `bridged` through shared continuity helpers and project-local runtime state
@@ -17,8 +17,12 @@ This directory documents the OpenCode-specific integration boundary.
 
 ## Capability Interpretation
 - This profile describes repo-managed support, not the full upstream OpenCode feature set.
-- OpenCode upstream supports command files and plugin event hooks, but this repo currently bridges commands and generated agents only.
-- No repo-managed native hook bridge exists yet, so the explicit memory bridge stays operator-invoked in this repo.
+- OpenCode upstream supports command files and plugin event hooks. Plugins are TypeScript files auto-discovered from `~/.config/opencode/plugins/`.
+- Available plugin hooks: `chat.message`, `chat.params`, `chat.headers`, `permission.ask`, `command.execute.before`, `tool.execute.before`, `tool.execute.after`, `shell.env`, `experimental.session.compacting`, `experimental.chat.messages.transform`, `experimental.chat.system.transform`, `experimental.text.complete`.
+- The hub manages these plugins as hub-owned scripts under `~/.config/opencode/plugins/`:
+  - `mempalace-plugin.ts` — MemPalace memory automation via `tool.execute.after` and `experimental.session.compacting`
+  - `rtk.ts` — RTK command rewriting
+  - `decisions-check-plugin.ts` — undocumented-change detection via `experimental.session.compacting`
 
 ## Generator Contract
 - `sync.sh gen-opencode-agents` generates OpenCode-compatible agent frontmatter from hub agents.

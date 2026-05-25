@@ -40,7 +40,7 @@ node ~/.agents/scripts/model-router.mjs route --input "implement auth feature"
 Before running `codex exec`, the codex skill can call the router to recommend the session model based on overall task complexity. `fallback_candidates` are advisory alternatives; Codex still has one active session model at a time.
 
 ## Canonical Boundary
-- Shared workflow policy lives in `AGENTS.md`, `prompts/`, `commands/`, `contexts/`, and `rules/common/`.
+- Shared workflow policy lives in `AGENTS.md`, `prompts/`, `commands/`, and `contexts/`.
 - AGENTS-routing compatibility is bridged through `~/.codex/AGENTS.md -> ~/.agents/AGENTS.md`.
 - Explicit memory bridge parity only: `~/.agents/scripts/memory-sync-bridge.mjs` supports `status`, `recall`, and `flush`.
 - In Codex, use `gsd <subcommand>`, `gsd-<subcommand>`, or `/gsd:<subcommand>` to invoke the matching hub command document under `commands/gsd/`.
