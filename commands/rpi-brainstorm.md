@@ -1,35 +1,35 @@
 ---
-description: Clarify vague engineering requests before research so RPI starts from a concrete direction
+description: Clarify vague engineering requests so Discover lands on a concrete direction
 ---
 
 # RPI Brainstorm
 
-Use this command when an engineering request is still too vague to research cleanly.
+Use this command when an engineering request is still too vague to enter the Discover phase cleanly.
 
-This is not a replacement for research. It is the pre-research clarification pass for RPI when the user has a direction but not yet a decision-ready problem statement.
+This is not a replacement for Discover. It is the pre-Discover clarification pass when Yonie has a direction but not yet a decision-ready problem statement.
 
 ## Purpose
 
-`/rpi-brainstorm` should turn a fuzzy request into a concrete research brief:
+`/rpi-brainstorm` should turn a fuzzy request into a concrete brief that feeds the Discover phase:
 - what problem is actually being solved
 - what success looks like
 - what constraints matter
 - what options are on the table
-- what direction should research validate next
+- what direction to validate next
 
-The output is a short artifact that feeds directly into `research_codebase.md` or `/rpi`.
+The output is a short artifact that feeds directly into Discover → Research.
 
 ## When To Use
 
 Use this command when one or more are true:
 - the request is vague or under-specified
 - multiple plausible approaches exist and the codebase research target is not obvious yet
-- the user is asking design-direction questions before implementation details exist
+- Yonie is asking design-direction questions before implementation details exist
 - research would otherwise start with the wrong question
 
 Do not use this command when:
-- the user already knows what to build and only needs codebase understanding
-- a concrete research artifact already exists
+- Yonie already knows what to build and only needs codebase understanding
+- a concrete brief already exists
 - the request is a lightweight operational fix
 
 ## Initial Response
@@ -73,9 +73,18 @@ For each option, keep it short:
 
 Do not over-design. The goal is to choose a research direction, not to finish the plan.
 
-### Step 3 — Produce a Research Brief
+### Step 3 — Caveman Big Picture First
 
-Write a brief artifact to the current project's `thoughts/intake/` directory. The artifact should contain:
+Before writing anything, load the caveman skill and explain the direction in 2-4 terse sentences:
+- "We need to decide X before we can build Y"
+- "The main options are A (fast but brittle) and B (slower but flexible)"
+- "I think we should research A first because of Z"
+
+Ask: "Does that sound right before I write this up?"
+
+### Step 4 — Produce a Research Brief
+
+Only after Yonie confirms the high-level direction, write a brief artifact to the current project's `thoughts/intake/` directory. The artifact should contain:
 - the clarified goal
 - constraints
 - non-goals

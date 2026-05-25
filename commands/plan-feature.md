@@ -28,12 +28,11 @@ Then wait for the user's input.
 Before drafting the plan:
 
 1. Read `~/.agents/AGENTS.md`
-2. Read `~/.agents/contexts/decisions.md`
-3. Resolve the current project with `node ~/.agents/scripts/project-context.mjs current`
-4. Read the current project's `state.md` when existing workflow position matters
-5. Read the current project's `research-index.md` if prior relevant research exists
-6. Load only the relevant files from `~/.agents/rules/common/`
-7. Determine task size with `node $HOME/.agents/scripts/workflow-router-tools.mjs activate`
+2. Resolve the current project with `node ~/.agents/scripts/project-context.mjs current`
+3. Read the current project's `state.md` when existing workflow position matters
+4. Read the current project's `research-index.md` if prior relevant research exists
+5. Review relevant workflow policy from `~/.agents/AGENTS.md`
+6. Determine task size with `node $HOME/.agents/scripts/workflow-router-tools.mjs activate`
 
 ## Planning Flow
 

@@ -12,7 +12,6 @@ Use `/pause-session` for normal pause/resume continuity. Use this command when t
 ### 1. Filepath & Metadata
 Use the following information to understand how to create your document:
     - Resolve the current project context with `node ~/.agents/scripts/project-context.mjs current`
-    - Read `~/.agents/contexts/decisions.md`
     - Read the current project's `state.md`
     - Read the current project's `session-index.md`
     - Read any directly relevant plan, research, validation, or prior handoff artifact referenced by the current project's `state.md`
@@ -71,25 +70,13 @@ type: implementation_strategy
 { other notes, references, or useful information - e.g. where relevant sections of the codebase are, where relevant documents are, or other important things you leanrned that you want to pass on but that don't fall into the above categories}
 ```
 
-### 3. Runtime state sync
-After writing the handoff document:
-  - Update the current project's `state.md` so the workflow position, next step, blockers, and last-verified timestamp reflect the handoff point
-  - Preserve `## Related Plan`
-  - Update the current project's `session-index.md` so the latest transfer point is discoverable from normal resume flows
-  - Run `node $HOME/.agents/scripts/artifact-tools.mjs persist --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]` and include any relevant `--plan`, `--research`, or `--session` overrides needed to preserve the active artifact working set in the current project's `state.md`
-  - Treat `create-handoff` as continuity-authoritative: explicit overrides win, persisted working-set entries are reused, and heuristics stay advisory unless you intentionally request `--mode refresh`
-  - Prefer the shared continuity helper to keep runtime-state updates aligned when helper-backed flows exist:
-    - `node $HOME/.agents/scripts/continuity-tools.mjs handoff --source create-handoff --focus "[handoff focus]" --handoff [absolute handoff path]`
-  - Keep the handoff itself under `[project root]/thoughts/handoffs/`; only runtime state is project-scoped
----
-
-### 4. Confirm
+### 3. Confirm
 Confirm the handoff document was written successfully. Always report the handoff location as an absolute filesystem path.
 
 Once this is completed, you should respond to the user with the template between <template_response></template_response> XML tags. do NOT include the tags in your response.
 
 <template_response>
-Handoff created and synced!
+Handoff created!
 
 Next step
 
@@ -103,7 +90,7 @@ Use the exact absolute handoff path written in the current run. Do not replace i
 for example (between <example_response></example_response> XML tags - do NOT include these tags in your actual response to the user)
 
 <example_response>
-Handoff created and synced!
+Handoff created!
 
 Next step
 
