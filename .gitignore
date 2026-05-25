@@ -5,6 +5,7 @@ sessions/
 projects/**
 /.agents/contexts/
 /.agents/sessions/
+/.agents/runtime/execution/
 __pycache__/
 *.pyc
 node_modules/
@@ -17,6 +18,7 @@ gsd-local-patches/
 config/
 !projects/.gitkeep
 .omx/
+.omc/
 .pi-lens
 .rpiv
 .sisyphus
