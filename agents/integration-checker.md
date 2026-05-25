@@ -1,10 +1,8 @@
 ---
-name: gsd-integration-checker
+name: integration-checker
 description: Verifies cross-phase integration and E2E flows. Checks that phases connect properly and user workflows complete end-to-end.
 tools: Read, Bash, Grep, Glob
 color: blue
-skills:
-  - gsd-integration-workflow
 ---
 
 <role>
@@ -68,7 +66,7 @@ For each phase, extract what it provides and what it should consume.
 
 ```bash
 # Key exports from each phase
-for summary in .planning/phases/*/*-SUMMARY.md; do
+for summary in thoughts/plans/*/*-SUMMARY.md; do
   echo "=== $summary ==="
   grep -A 10 "Key Files\|Exports\|Provides" "$summary" 2>/dev/null
 done

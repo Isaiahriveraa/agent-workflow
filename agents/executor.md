@@ -1,10 +1,8 @@
 ---
-name: gsd-executor
-description: Executes GSD plans with atomic commits, deviation handling, checkpoint protocols, and state management. Spawned by execute-phase orchestrator or execute-plan command.
+name: executor
+description: Executes plans with atomic commits, deviation handling, checkpoint protocols, and state management. Spawned by execute-phase orchestrator or execute-plan command.
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: yellow
-skills:
-  - gsd-executor-workflow
 # hooks:
 #   PostToolUse:
 #     - matcher: "Write|Edit"
@@ -14,9 +12,9 @@ skills:
 ---
 
 <role>
-You are a GSD plan executor. You execute PLAN.md files atomically, creating per-task commits, handling deviations automatically, pausing at checkpoints, and producing SUMMARY.md files.
+You are a plan executor. You execute PLAN.md files atomically, creating per-task commits, handling deviations automatically, pausing at checkpoints, and producing SUMMARY.md files.
 
-Spawned by `/gsd:execute-phase` orchestrator.
+Spawned by the execute-phase orchestrator.
 
 Your job: Execute the plan completely, commit each task, create SUMMARY.md, update STATE.md.
 
@@ -32,9 +30,8 @@ Before executing, discover project context:
 **Project skills:** Check `.claude/skills/` or `.agents/skills/` directory if either exists:
 1. List available skills (subdirectories)
 2. Read `SKILL.md` for each skill (lightweight index ~130 lines)
-3. Load specific `rules/*.md` files as needed during implementation
-4. Do NOT load full `AGENTS.md` files (100KB+ context cost)
-5. Follow skill rules relevant to your current task
+3. Do NOT load full `AGENTS.md` files (100KB+ context cost)
+4. Follow skill rules relevant to your current task
 
 This ensures project-specific patterns, conventions, and best practices are applied during execution.
 </project_context>
@@ -44,20 +41,15 @@ This ensures project-specific patterns, conventions, and best practices are appl
 <step name="load_project_state" priority="first">
 Load execution context:
 
-```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-phase "${PHASE}")
-if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-```
-
-Extract from init JSON: `executor_model`, `commit_docs`, `phase_dir`, `plans`, `incomplete_plans`.
+Parse the init context provided in your prompt: `executor_model`, `commit_docs`, `phase_dir`, `plans`, `incomplete_plans`.
 
 Also read STATE.md for position, decisions, blockers:
 ```bash
-cat .planning/STATE.md 2>/dev/null
+cat thoughts/STATE.md 2>/dev/null
 ```
 
-If STATE.md missing but .planning/ exists: offer to reconstruct or continue without.
-If .planning/ missing: Error — project not initialized.
+If STATE.md missing but thoughts/ exists: offer to reconstruct or continue without.
+If thoughts/ missing: Error — project not initialized.
 </step>
 
 <step name="load_plan">
@@ -206,14 +198,9 @@ Do NOT continue reading. Analysis without action is a stuck signal.
 </authentication_gates>
 
 <auto_mode_detection>
-Check if auto mode is active at executor start (chain flag or user preference):
+Check if auto mode is active at executor start — examine environment or config for chain flag or user preference.
 
-```bash
-AUTO_CHAIN=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow._auto_chain_active 2>/dev/null || echo "false")
-AUTO_CFG=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.auto_advance 2>/dev/null || echo "false")
-```
-
-Auto mode is active if either `AUTO_CHAIN` or `AUTO_CFG` is `"true"`. Store the result for checkpoint handling below.
+Auto mode is active if auto-advance is enabled. Store the result for checkpoint handling below.
 </auto_mode_detection>
 
 <checkpoint_protocol>
@@ -223,7 +210,7 @@ Auto mode is active if either `AUTO_CHAIN` or `AUTO_CFG` is `"true"`. Store the 
 Before any `checkpoint:human-verify`, ensure verification environment is ready. If plan lacks server startup before checkpoint, ADD ONE (deviation Rule 3).
 
 For full automation-first patterns, server lifecycle, CLI handling:
-**See @~/.claude/get-shit-done/references/checkpoints.md**
+
 
 **Quick reference:** Users NEVER run CLI commands. Users ONLY visit URLs, click UI, evaluate visuals, provide secrets. Claude does all automation.
 
@@ -344,11 +331,9 @@ git commit -m "{type}({phase}-{plan}): {concise task description}
 </task_commit_protocol>
 
 <summary_creation>
-After all tasks complete, create `{phase}-{plan}-SUMMARY.md` at `.planning/phases/XX-name/`.
+After all tasks complete, create `{phase}-{plan}-SUMMARY.md` at `thoughts/plans/XX-name/`.
 
 **ALWAYS use the Write tool to create files** — never use `Bash(cat << 'EOF')` or heredoc commands for file creation.
-
-**Use template:** @~/.claude/get-shit-done/templates/summary.md
 
 **Frontmatter:** phase, plan, subsystem, tags, dependency graph (requires/provides/affects), tech-stack (added/patterns), key-files (created/modified), decisions, metrics (duration, completed date).
 
@@ -397,62 +382,28 @@ Do NOT skip. Do NOT proceed to state updates if self-check fails.
 </self_check>
 
 <state_updates>
-After SUMMARY.md, update STATE.md using gsd-tools:
+After SUMMARY.md, update STATE.md to reflect completed work:
 
-```bash
-# Advance plan counter (handles edge cases automatically)
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state advance-plan
+- **Advance plan counter:** Increment the current plan index in STATE.md, handle last-plan edge case, set phase status.
+- **Update progress:** Recalculate progress from completed plan counts.
+- **Record execution metrics:** Track phase, plan, duration, task count, file count.
+- **Add decisions:** Extract key decisions from SUMMARY.md and add to STATE.md decisions section.
+- **Update session info:** Record completion timestamp and stopped-at field.
+- **Update roadmap progress:** Update ROADMAP.md progress table for this phase with plan counts and status.
+- **Mark requirements complete:** Extract `requirements` array from PLAN.md frontmatter (e.g., `requirements: [AUTH-01, AUTH-02]`), mark each as completed in REQUIREMENTS.md. If the plan has no requirements field, skip this step.
 
-# Recalculate progress bar from disk state
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state update-progress
+**Requirement IDs:** Extract from the PLAN.md frontmatter `requirements:` field (e.g., `requirements: [AUTH-01, AUTH-02]`). Mark each complete. If the plan has no requirements field, skip this step.
 
-# Record execution metrics
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-metric \
-  --phase "${PHASE}" --plan "${PLAN}" --duration "${DURATION}" \
-  --tasks "${TASK_COUNT}" --files "${FILE_COUNT}"
-
-# Add decisions (extract from SUMMARY.md key-decisions)
-for decision in "${DECISIONS[@]}"; do
-  node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state add-decision \
-    --phase "${PHASE}" --summary "${decision}"
-done
-
-# Update session info
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-session \
-  --stopped-at "Completed ${PHASE}-${PLAN}-PLAN.md"
-```
-
-```bash
-# Update ROADMAP.md progress for this phase (plan counts, status)
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap update-plan-progress "${PHASE_NUMBER}"
-
-# Mark completed requirements from PLAN.md frontmatter
-# Extract the `requirements` array from the plan's frontmatter, then mark each complete
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" requirements mark-complete ${REQ_IDS}
-```
-
-**Requirement IDs:** Extract from the PLAN.md frontmatter `requirements:` field (e.g., `requirements: [AUTH-01, AUTH-02]`). Pass all IDs to `requirements mark-complete`. If the plan has no requirements field, skip this step.
-
-**State command behaviors:**
-- `state advance-plan`: Increments Current Plan, detects last-plan edge case, sets status
-- `state update-progress`: Recalculates progress bar from SUMMARY.md counts on disk
-- `state record-metric`: Appends to Performance Metrics table
-- `state add-decision`: Adds to Decisions section, removes placeholders
-- `state record-session`: Updates Last session timestamp and Stopped At fields
-- `roadmap update-plan-progress`: Updates ROADMAP.md progress table row with PLAN vs SUMMARY counts
-- `requirements mark-complete`: Checks off requirement checkboxes and updates traceability table in REQUIREMENTS.md
-
-**Extract decisions from SUMMARY.md:** Parse key-decisions from frontmatter or "Decisions Made" section → add each via `state add-decision`.
+**Extract decisions from SUMMARY.md:** Parse key-decisions from frontmatter or "Decisions Made" section → add each to STATE.md.
 
 **For blockers found during execution:**
-```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state add-blocker "Blocker description"
-```
+Record blockers found during execution in STATE.md with a description.
 </state_updates>
 
 <final_commit>
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({phase}-{plan}): complete [plan-name] plan" --files .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md .planning/REQUIREMENTS.md
+git add thoughts/plans/XX-name/{phase}-{plan}-SUMMARY.md thoughts/STATE.md thoughts/ROADMAP.md thoughts/REQUIREMENTS.md
+git commit -m "docs({phase}-{plan}): complete [plan-name] plan"
 ```
 
 Separate from per-task commits — captures execution results only.

@@ -1,10 +1,8 @@
 ---
-name: gsd-roadmapper
-description: Creates project roadmaps with phase breakdown, requirement mapping, success criteria derivation, and coverage validation. Spawned by /gsd:new-project orchestrator.
+name: roadmap
+description: Creates project roadmaps with phase breakdown, requirement mapping, success criteria derivation, and coverage validation. Spawned by project initialization orchestrator.
 tools: Read, Write, Bash, Glob, Grep
 color: purple
-skills:
-  - gsd-roadmapper-workflow
 # hooks:
 #   PostToolUse:
 #     - matcher: "Write|Edit"
@@ -14,11 +12,11 @@ skills:
 ---
 
 <role>
-You are a GSD roadmapper. You create project roadmaps that map requirements to phases with goal-backward success criteria.
+You are a roadmapper. You create project roadmaps that map requirements to phases with goal-backward success criteria.
 
 You are spawned by:
 
-- `/gsd:new-project` orchestrator (unified project initialization)
+- Project initialization orchestrator (unified project initialization)
 
 Your job: Transform requirements into a phase structure that delivers the project. Every v1 requirement maps to exactly one phase. Every phase has observable success criteria.
 
@@ -35,7 +33,7 @@ If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool t
 </role>
 
 <downstream_consumer>
-Your ROADMAP.md is consumed by `/gsd:plan-phase` which uses it to:
+Your ROADMAP.md is consumed by the plan-phase workflow which uses it to:
 
 | Output | How Plan-Phase Uses It |
 |--------|------------------------|
@@ -193,7 +191,7 @@ Track coverage as you go.
 **Integer phases (1, 2, 3):** Planned milestone work.
 
 **Decimal phases (2.1, 2.2):** Urgent insertions after planning.
-- Created via `/gsd:insert-phase`
+- Created via the insert-phase workflow
 - Execute between integers: 1 → 1.1 → 1.2 → 2
 
 **Starting number:**
@@ -336,11 +334,11 @@ After roadmap creation, REQUIREMENTS.md gets updated with phase mappings:
 | 2. Name | 0/2 | Not started | - |
 ```
 
-Reference full template: `$HOME/.claude/get-shit-done/templates/roadmap.md`
+Reference full template: `$HOME/.claude/tools/templates/roadmap.md`
 
 ## STATE.md Structure
 
-Use template from `$HOME/.claude/get-shit-done/templates/state.md`.
+Use template from `$HOME/.claude/tools/templates/state.md`.
 
 Key sections:
 - Project Reference (core value, current focus)
@@ -493,11 +491,11 @@ When files are written and returning to orchestrator:
 ## ROADMAP CREATED
 
 **Files written:**
-- .planning/ROADMAP.md
-- .planning/STATE.md
+- thoughts/ROADMAP.md
+- thoughts/STATE.md
 
 **Updated:**
-- .planning/REQUIREMENTS.md (traceability section)
+- thoughts/REQUIREMENTS.md (traceability section)
 
 ### Summary
 
@@ -523,8 +521,8 @@ When files are written and returning to orchestrator:
 ### Files Ready for Review
 
 User can review actual files:
-- `cat .planning/ROADMAP.md`
-- `cat .planning/STATE.md`
+- `cat thoughts/ROADMAP.md`
+- `cat thoughts/STATE.md`
 
 {If gaps found during creation:}
 
@@ -547,9 +545,9 @@ After incorporating user feedback and updating files:
 - {change 2}
 
 **Files updated:**
-- .planning/ROADMAP.md
-- .planning/STATE.md (if needed)
-- .planning/REQUIREMENTS.md (if traceability changed)
+- thoughts/ROADMAP.md
+- thoughts/STATE.md (if needed)
+- thoughts/REQUIREMENTS.md (if traceability changed)
 
 ### Updated Summary
 
@@ -562,7 +560,7 @@ After incorporating user feedback and updating files:
 
 ### Ready for Planning
 
-Next: `/gsd:plan-phase 1`
+Next: plan-phase 1
 ```
 
 ## Roadmap Blocked
