@@ -73,6 +73,13 @@
       "type": "directory"
     },
     {
+      "source": "~/.config/opencode/skills",
+      "target": "~/.agents/skills",
+      "tier": 1,
+      "tool": "opencode",
+      "type": "directory"
+    },
+    {
       "source": "~/.gemini/GEMINI.md",
       "target": "~/.agents/adapters/antigravity/GEMINI.md",
       "tier": 1,
@@ -202,6 +209,10 @@
         "status": "native",
         "contract": "~/.config/opencode/commands -> ~/.agents/commands"
       },
+      "skills": {
+        "status": "bridged",
+        "contract": "~/.config/opencode/skills -> ~/.agents/skills + hub skills registered by sync.sh gen-opencode-skills"
+      },
       "agents": {
         "status": "bridged",
         "contract": "Generated from ~/.agents/agents via sync.sh gen-opencode-agents"
@@ -301,15 +312,24 @@
     }
   },
   "generated": [
-    {
-      "tool": "opencode",
-      "target": "~/.config/opencode/agents",
-      "source": "~/.agents/agents",
-      "type": "adapter-output",
-      "generator": "sync.sh gen-opencode-agents",
-      "surface": "agents",
-      "note": "OpenCode agents are generated from hub agent markdown into OpenCode-compatible frontmatter."
-    },
+  {
+    "tool": "opencode",
+    "target": "~/.config/opencode/agents",
+    "source": "~/.agents/agents",
+    "type": "adapter-output",
+    "generator": "sync.sh gen-opencode-agents",
+    "surface": "agents",
+    "note": "OpenCode agents are generated from hub agent markdown into OpenCode-compatible frontmatter."
+  },
+  {
+    "tool": "opencode",
+    "target": "~/.agents/.skill-lock.json",
+    "source": "~/.agents/skills",
+    "type": "registry-update",
+    "generator": "sync.sh gen-opencode-skills",
+    "surface": "skills",
+    "note": "Hub-local skills are registered into .skill-lock.json so the OpenCode skill() tool can discover them. Run after adding new skills to skills/."
+  },
     {
       "tool": "antigravity",
       "target": "~/.gemini/commands",

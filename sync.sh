@@ -358,6 +358,7 @@ run_generator_command() {
         "sync.sh gen-antigravity-commands") cmd_gen_antigravity_commands ;;
         "sync.sh gen-antigravity-agents") cmd_gen_antigravity_agents ;;
         "sync.sh gen-openclaw-workspace") cmd_gen_openclaw_workspace ;;
+        "sync.sh gen-opencode-skills") cmd_gen_opencode_skills ;;
         "sync.sh sync-nemoclaw-skills") cmd_sync_nemoclaw_skills ;;
         *)
             echo "Unknown generator command in manifest: $1" >&2
@@ -608,6 +609,76 @@ for md_file in sorted(glob.glob(os.path.join(hub_commands, "**/*.md"), recursive
     generated += 1
 
 print(f"\nDone. {generated} commands generated, {skipped} skipped.")
+PYEOF
+}
+
+cmd_gen_opencode_skills() {
+    echo "Registering hub skills in OpenCode skill registry..."
+    echo ""
+
+    HUB="$HUB" HOME="$HOME" python3 <<'PYEOF'
+import hashlib
+import json
+import os
+import re
+
+hub = os.environ["HUB"]
+lock_path = os.path.join(hub, ".skill-lock.json")
+skills_dir = os.path.join(hub, "skills")
+
+# Load existing lock file
+if os.path.exists(lock_path):
+    with open(lock_path, "r", encoding="utf8") as f:
+        lock = json.load(f)
+else:
+    lock = {"version": 3, "skills": {}}
+
+existing = lock.setdefault("skills", {})
+now = "2026-05-25T14:00:00.000Z"
+added = 0
+
+# Scan hub skills directory for skill subdirs
+if os.path.isdir(skills_dir):
+    for entry in sorted(os.listdir(skills_dir)):
+        skill_dir = os.path.join(skills_dir, entry)
+        skill_md = os.path.join(skill_dir, "SKILL.md")
+        if not os.path.isdir(skill_dir) or not os.path.isfile(skill_md):
+            continue
+
+        # Skip if already registered
+        if entry in existing:
+            continue
+
+        # Compute folder hash
+        hasher = hashlib.sha256()
+        for root, dirs, files in sorted(os.walk(skill_dir)):
+            for fname in sorted(files):
+                fpath = os.path.join(root, fname)
+                try:
+                    with open(fpath, "rb") as fh:
+                        hasher.update(fh.read())
+                except OSError:
+                    pass
+
+        existing[entry] = {
+            "source": ".agents",
+            "sourceType": "hub",
+            "sourceUrl": f"file://{skill_dir}",
+            "skillPath": f"skills/{entry}/SKILL.md",
+            "skillFolderHash": hasher.hexdigest()[:40],
+            "installedAt": now,
+            "updatedAt": now,
+        }
+        print(f"  Registered: {entry}")
+        added += 1
+
+if added == 0:
+    print("  All hub skills already registered.")
+
+with open(lock_path, "w", encoding="utf8") as f:
+    json.dump(lock, f, indent=2, ensure_ascii=False)
+
+print(f"\nDone. {added} skills registered in {lock_path}")
 PYEOF
 }
 
@@ -993,6 +1064,7 @@ case "${1:-}" in
     migrate)                   cmd_migrate ;;
     gen-agents)                cmd_gen_agents "${@:2}" ;;
     gen-opencode-agents)       cmd_gen_opencode_agents "${@:2}" ;;
+    gen-opencode-skills)       cmd_gen_opencode_skills ;;
     gen-antigravity-commands)  cmd_gen_antigravity_commands ;;
     gen-antigravity-agents)    cmd_gen_antigravity_agents ;;
     gen-openclaw-workspace)    cmd_gen_openclaw_workspace ;;
