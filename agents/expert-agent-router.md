@@ -15,7 +15,7 @@ Route substantial workflow-system tasks to the correct workflow expert or expert
 - requests that touch continuity, parity, evals, and tooling at once
 
 ## Scope
-- `contexts/agent-catalog.md`
+- `AGENTS.md` (Source Layers section for routing guidance)
 - workflow expert selection
 - delegation boundaries and ownership splits
 

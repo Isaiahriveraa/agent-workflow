@@ -32,5 +32,5 @@ Turn verified failures, user corrections, and critic rejections into reusable le
 ## Constraints
 
 - do not speculate without evidence
-- do not silently rewrite prompts, rules, commands, or capsules
+- do not silently rewrite prompts, rules, or commands
 - prefer the smallest lesson that changes future behavior
