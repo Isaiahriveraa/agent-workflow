@@ -45,9 +45,8 @@ node ~/.agents/scripts/model-router.mjs route --input "search for files"
 - Shared workflow policy remains in the hub.
 - This adapter only covers the format and placement needed for OpenCode to consume hub-owned workflow assets.
 - Explicit memory bridge parity only: `~/.agents/scripts/memory-sync-bridge.mjs` supports `status`, `recall`, and `flush`.
-- Use `gsd memory-sync` to invoke the shared explicit memory bridge from OpenCode's bridged command surface.
-- Use `gsd memory-sync recall create-plan` or `gsd memory-sync recall implement-plan` for explicit advisory recall.
-- Preferred direct script path when you want to bypass command routing: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.
+- Preferred direct script path: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.
+- For advisory recall: `node ~/.agents/scripts/memory-sync-bridge.mjs recall <create-plan|implement-plan>`.
 
 ## Universal Memory Access (agents-memory)
 

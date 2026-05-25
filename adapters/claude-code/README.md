@@ -3,7 +3,7 @@
 This directory contains Claude Code-specific operational assets.
 
 ## Managed Surfaces
-- Symlinked to the hub: `~/.claude/CLAUDE.md`, `~/.claude/skills`, `~/.claude/agents`, `~/.claude/commands`, `~/.claude/hooks`, `~/.claude/get-shit-done`
+- Symlinked to the hub: `~/.claude/CLAUDE.md`, `~/.claude/skills`, `~/.claude/agents`, `~/.claude/commands`, `~/.claude/hooks`
 - Claude-local but contract-validated: `~/.claude/settings.json`
 - Runtime-only and unmanaged: Claude history, debug output, per-project runtime state, and other Claude-native local artifacts
 
@@ -21,7 +21,7 @@ This directory contains Claude Code-specific operational assets.
 - session continuity: `bridged` through shared continuity helpers and project-local runtime state
 
 ## Canonical Boundary
-- Workflow policy lives in `prompts/`, `commands/`, and `contexts/`.
+- Workflow policy lives in `prompts/`, `commands/`, and `AGENTS.md`.
 - Claude is the strongest repo-managed adapter boundary in this repo: native commands, native agents, native hooks, and validated local settings.
 - Files in this adapter may improve Claude Code ergonomics, but they must not become the source of truth for workflow behavior.
 - `~/.claude/settings.json` remains Claude-local configuration, but required `~/.agents` access fields are part of the validated adapter contract.
@@ -30,7 +30,7 @@ This directory contains Claude Code-specific operational assets.
 
 Claude Code's `Agent` tool accepts a `model` parameter with alias values: `"haiku"`, `"sonnet"`, `"opus"`.
 
-The model router (`scripts/model-router.mjs`) is now category-first. It returns additive routing metadata such as `category`, `intent_kind`, `tier_hint`, `primary_model`, `fallback_candidates`, and legacy compatibility fields like `tier`, `model`, and `alias`. Use `result.alias` when passing to the Agent tool:
+The model router (`scripts/model-router.mjs`) is category-first. It returns additive routing metadata such as `category`, `intent_kind`, `tier_hint`, `primary_model`, `fallback_candidates`, and legacy compatibility fields like `tier`, `model`, and `alias`. Use `result.alias` when passing to the Agent tool:
 
 ```js
 import { route } from './scripts/model-router.mjs';

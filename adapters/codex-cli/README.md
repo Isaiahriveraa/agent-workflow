@@ -40,28 +40,7 @@ node ~/.agents/scripts/model-router.mjs route --input "implement auth feature"
 Before running `codex exec`, the codex skill can call the router to recommend the session model based on overall task complexity. `fallback_candidates` are advisory alternatives; Codex still has one active session model at a time.
 
 ## Canonical Boundary
-- Shared workflow policy lives in `AGENTS.md`, `prompts/`, `commands/`, and `contexts/`.
+- Shared workflow policy lives in `AGENTS.md`, `prompts/`, and `commands/`.
 - AGENTS-routing compatibility is bridged through `~/.codex/AGENTS.md -> ~/.agents/AGENTS.md`.
 - Explicit memory bridge parity only: `~/.agents/scripts/memory-sync-bridge.mjs` supports `status`, `recall`, and `flush`.
-- In Codex, use `gsd <subcommand>`, `gsd-<subcommand>`, or `/gsd:<subcommand>` to invoke the matching hub command document under `commands/gsd/`.
-- Use `gsd memory-sync`, `/gsd:memory-sync`, `gsd memory-sync status`, or `gsd memory-sync recall <create-plan|implement-plan>` when you want the shared explicit bridge from Codex command routing.
-- Preferred direct bridge path: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.
-- Compatibility alias: `node ~/.agents/scripts/codex-memory-bridge.mjs <status|recall|flush>`.
-- Codex hook writeback is limited to the registered lifecycle bridge; lesson flush remains manual unless a task adds a dedicated writeback hook.
-- The Codex adapter exists to keep the entry point pointed at the hub and to make regressions easy to validate.
-
-## Universal Memory Access (agents-memory)
-
-All ZLIs can also access memory via shell wrappers in PATH:
-
-```bash
-# Add to PATH (optional, one-time setup)
-ln -s ~/.agents/bin ~/bin
-
-# Then use from any ZLI
-agents-memory status
-agents-memory recall create-plan --query "planning a feature"
-agents-memory flush
-```
-
-This approach works for any CLI that can execute shell commands.
+- In Codex, use the direct script path: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.

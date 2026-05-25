@@ -36,10 +36,10 @@ Startup-check verifies `rtk` binary is in PATH and warns clearly if missing.
 |---------|--------|
 | `/prime` | Injects prime command doc as user message, agent follows it |
 | `/rpi` | Injects RPI command doc + args as user context |
-| `/gsd [sub]` | Injects GSD command or subcommand doc |
 | `/tutor` | Injects tutor command doc |
 | `/pr [args]` | Injects PR command doc + args |
-| `/review-pr-comments [pr]` | Injects review command doc + PR arg |
+| `/fix` | Injects fix command doc |
+| `/plan` | Injects plan command doc |
 | `/doctor` | Runs `doctor.mjs`, shows output inline |
 | `/memory [op]` | Runs `memory-sync-bridge.mjs [status\|recall\|flush]` |
 | `/review` | Injects code-review skill guidance |
