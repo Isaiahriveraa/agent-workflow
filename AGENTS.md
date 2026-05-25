@@ -11,12 +11,10 @@ USE CODEX NATIVE SUBAGENTS FOR INDEPENDENT PARALLEL SUBTASKS WHEN THEY IMPROVE T
 This is the top-level `.agents`/OMX operating contract. Role prompts, commands, skills, adapters, and repo-local AGENTS files extend it; they do not replace it unless deeper scoped instructions explicitly override it.
 
 ## Source Layers
-- Contexts: load only relevant files from `contexts/`; key anchors include `contexts/agent-catalog.md`, `contexts/user-taste.md`, tooling, verification, artifacts, and decisions.
-- Capsules: task-class packs for substantial work. Capsule Rules: load one relevant capsule, not the whole folder.
-- Rules: reusable policy cards under `rules/common/`; use the output-quality gate rule, learning-loop rule, expert-agent routing rule, package-manager rule, verification rule, artifact rule, and model routing rule when relevant.
+- Rules: reusable policy cards for workflow governance.
 - Adapters: provider-specific glue under `adapters/`; adapters must not redefine canonical workflow policy.
 - Commands: `commands/**/*.md` and `commands/gsd/*.md` are authoritative for slash commands. Resolve `/gsd:help`, `gsd <subcommand>`, and underscore and hyphen variants of the same slash-style workflow command as equivalent when unambiguous.
-- Expert routing: read `contexts/agent-catalog.md`; use `node ./scripts/expert-agent-routing-tools.mjs route --input "<task>"` when the correct expert is unclear.
+- Decisions: architectural decisions are tracked in `thoughts/YYYY-Www/decisions.md` organized by ISO week.
 - Continuity: ordinary runtime state is project-local `.omx/sessions/` plus project `.omx/state/contexts/*`; transfer handoffs live under `thoughts/handoffs/`.
 
 <guidance_schema_contract>
