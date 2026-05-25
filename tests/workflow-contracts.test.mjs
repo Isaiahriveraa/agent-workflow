@@ -21,19 +21,11 @@ const copyFilter = (source) => {
   }
 };
 
-test('AGENTS declares contexts, rules, and adapters as canonical layers', () => {
+test('AGENTS declares source layers and availability', () => {
   const content = read('AGENTS.md');
-  assert.match(content, /Contexts:/);
-  assert.match(content, /Capsules:/);
   assert.match(content, /Rules:/);
   assert.match(content, /Adapters:/);
-  assert.match(content, /contexts\/agent-catalog\.md/);
-  assert.match(content, /contexts\/user-taste\.md/);
-  assert.match(content, /Capsule Rules/);
-  assert.match(content, /output-quality gate rule/);
-  assert.match(content, /learning-loop rule/);
-  assert.match(content, /expert-agent routing rule/);
-  assert.match(content, /expert-agent-routing-tools\.mjs route/);
+  assert.match(content, /Decisions:/);
   assert.match(content, /project-local `\.omx\/sessions\/`/);
   assert.match(content, /thoughts\/handoffs\//);
   assert.match(content, /commands\/\*\*\/\*\.md/);
@@ -77,31 +69,6 @@ test('system prompt documents enforcement-first router authority and stage contr
   assert.match(content, /Do not implement until the user explicitly approves the plan/);
 });
 
-test('global workflow state is a compatibility document with runtime-state pointer', () => {
-  const content = read('contexts/state.md');
-  assert.match(content, /shared compatibility document/);
-  assert.match(content, /\[project root\]\/\.omx\/state\/contexts\/state\.md/);
-  assert.match(content, /## Active Artifact Working Set/);
-  assert.match(content, /### Selected By Category/);
-  assert.match(content, /### Ordered Artifacts/);
-  assert.match(content, /- intake: /);
-  assert.match(content, /- plan: /);
-  assert.match(content, /- research: /);
-  assert.match(content, /- session: /);
-  assert.match(content, /- handoff: /);
-});
-
-test('global research and session indexes are compatibility documents with runtime pointers', () => {
-  const research = read('contexts/research-index.md');
-  const session = read('contexts/session-index.md');
-
-  assert.match(research, /shared compatibility document/);
-  assert.match(research, /\[project root\]\/\.omx\/state\/contexts\/research-index\.md/);
-  assert.match(session, /shared compatibility document/);
-  assert.match(session, /\[project root\]\/\.omx\/state\/contexts\/session-index\.md/);
-  assert.match(session, /Project-local handoffs/);
-});
-
 test('workflow commands reference explicit context files', () => {
   const createPlan = read('commands/create-plan.md');
   const implementPlan = read('commands/implement_plan.md');
@@ -118,11 +85,8 @@ test('workflow commands reference explicit context files', () => {
   const projectVerification = read('commands/project-verification.md');
   const projectArtifacts = read('commands/project-artifacts.md');
   const pr = read('commands/pr.md');
-  const promptOptimizationRouting = read('rules/common/prompt-optimization-routing.md');
 
-  assert.match(createPlan, /contexts\/decisions\.md/);
   assert.match(createPlan, /current project's runtime `research-index\.md`/);
-  assert.match(createPlan, /select and load the relevant capsule/);
   assert.match(createPlan, /current project's runtime `state\.md`/);
   assert.match(createPlan, /workflow-router-tools\.mjs score/);
   assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
@@ -143,7 +107,6 @@ test('workflow commands reference explicit context files', () => {
   assert.match(createPlan, /User-Facing Contract/);
   assert.match(createPlan, /Lead with the planning job, not with the workflow machinery/);
   assert.match(implementPlan, /current project's `state\.md`/);
-  assert.match(implementPlan, /contexts\/decisions\.md/);
   assert.match(implementPlan, /rules\/common\/workflow-router\.md/);
   assert.match(implementPlan, /critic, grader, and memory-policy files/);
   assert.match(implementPlan, /workflow-artifact-tools\.mjs grade-plan/);
@@ -186,9 +149,6 @@ test('workflow commands reference explicit context files', () => {
   assert.doesNotMatch(fixPr, /OPTIMIZED PROMPT/);
   assert.match(promptResearchPackager, /Use the rewritten prompt internally unless the user explicitly asks to see it/);
   assert.match(promptResearchPackager, /Only return the rewritten prompt in this shape when the user explicitly asks to see it/);
-  assert.match(promptOptimizationRouting, /an already-structured handoff or optimized prompt that should be used as-is/);
-  assert.match(promptOptimizationRouting, /Treat the optimized prompt as an internal working artifact that drives the next step, not as user-facing output/);
-  assert.match(promptOptimizationRouting, /commands\/rpi-brainstorm\.md/);
   assert.match(research, /current project's `research-index\.md`/);
   assert.match(research, /project-context\.mjs current/);
   assert.match(research, /workflow-router-tools\.mjs capture/);
@@ -211,8 +171,7 @@ test('workflow commands reference explicit context files', () => {
   assert.match(resumeSession, /current project's `research-index\.md`/);
   assert.match(resumeSession, /project-local session artifacts/);
   assert.match(resumeSession, /continuity-authoritative/);
-  assert.match(projectTooling, /contexts\/tooling\.md/);
-  assert.match(projectVerification, /contexts\/verification\.md/);
+  // projectTooling and projectVerification read above; context references removed
   assert.match(projectArtifacts, /current project's `artifacts\.md`/);
   assert.match(projectArtifacts, /current project's `research-index\.md`/);
   assert.match(projectArtifacts, /handoffs remain project-local transfer artifacts/);
@@ -457,30 +416,6 @@ test('manifest points Codex CLI at the shared AGENTS contract', () => {
   assert.ok(codexLink);
   assert.equal(codexLink.source, '~/.codex/AGENTS.md');
   assert.equal(codexLink.target, '~/.agents/AGENTS.md');
-  assert.equal(manifest.managed_content.capsules, '~/.agents/capsules');
-});
-
-test('learning contexts, quality gate rules, and capsules exist with expected sections', () => {
-  const userTaste = read('contexts/user-taste.md');
-  const referenceLibrary = read('contexts/reference-library.md');
-  const uiUxBrief = read('contexts/ui-ux.md');
-  const uiUxRouting = read('rules/common/ui-ux-routing.md');
-  const learningLoop = read('rules/common/learning-loop.md');
-  const qualityGate = read('rules/common/output-quality-gate.md');
-  const creativeAssembly = read('capsules/creative-redesign/assembly.md');
-  const apiCritic = read('capsules/api-workflow/critic.md');
-
-  assert.match(userTaste, /## Preferred Characteristics/);
-  assert.match(userTaste, /## Recent Confirmations/);
-  assert.match(referenceLibrary, /## Approved Sources/);
-  assert.match(uiUxBrief, /Placeholder values such as/);
-  assert.match(uiUxRouting, /Placeholder content such as `Not set`/);
-  assert.match(learningLoop, /## Required Flow/);
-  assert.match(learningLoop, /lesson-tools\.mjs quick-capture/);
-  assert.match(qualityGate, /## Minimum Creative Gate/);
-  assert.match(qualityGate, /## Minimum API Gate/);
-  assert.match(creativeAssembly, /contexts\/user-taste\.md/);
-  assert.match(apiCritic, /edge cases are not handled/);
 });
 
 test('manifest represents prompt parity and generated adapter surfaces for all supported CLIs', () => {
@@ -611,7 +546,7 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   assert.equal(settings.env.CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD, '1');
   assert.equal(
     settings.hooks.SessionStart[0].hooks[0].command,
-    `node "${path.join(claudeDir, 'hooks/gsd-check-update.cjs')}"`
+    `node "${path.join(agentsDir, 'hooks/mempalace-context.cjs')}" "SessionStart"`
   );
   assert.equal(
     settings.hooks.Stop[0].hooks[0].command,

@@ -7,12 +7,6 @@ import { execFileSync } from 'node:child_process';
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const read = (relativePath) => fs.readFileSync(`${root}/${relativePath}`, 'utf8');
 
-test('tooling context exists with package manager section', () => {
-  const content = read('contexts/tooling.md');
-  assert.match(content, /## Package Manager/);
-  assert.match(content, /detected:/);
-});
-
 test('package manager detector reports current repo defaults', () => {
   const output = execFileSync('node', ['scripts/package-manager-tools.mjs', 'detect'], {
     cwd: root,

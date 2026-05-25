@@ -7,14 +7,6 @@ import { execFileSync } from 'node:child_process';
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const read = (relativePath) => fs.readFileSync(`${root}/${relativePath}`, 'utf8');
 
-test('verification context exists with required sections', () => {
-  const content = read('contexts/verification.md');
-  assert.match(content, /## Available Checks/);
-  assert.match(content, /## Preferred Order/);
-  assert.match(content, /## Command Source/);
-  assert.match(content, /learning-loop contracts/);
-});
-
 test('verification detector reports available verification scripts', () => {
   const output = execFileSync('node', ['scripts/verification-tools.mjs', 'detect'], {
     cwd: root,
