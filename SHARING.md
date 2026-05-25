@@ -3,7 +3,7 @@
 This repo is split into two layers: tracked workflow assets and local runtime state.
 
 ## Tracked Shared Layer
-- Reusable workflow assets: `prompts/`, `commands/`, `skills/`, `agents/`, `adapters/`, `hooks/`
+- Reusable workflow assets: `commands/`, `skills/`, `agents/`, `adapters/`, `hooks/`
 - Helper scripts, tests, `manifest.json`, `package.json`, `sync.sh`
 - Shared contexts under `contexts/`
 - Onboarding and setup docs such as `README.md`, `SHARING.md`, and `.env.example`
@@ -26,7 +26,7 @@ This repo is split into two layers: tracked workflow assets and local runtime st
 The local runtime layer is intentionally untracked so a clone starts clean and so public publication does not expose credentials or active project state.
 
 ## Classification
-- Share as-is: `prompts/`, `commands/`, `skills/`, `agents/`, `adapters/`, `hooks/`, `scripts/`, `tests/`, `get-shit-done/`, `manifest.json`, `package.json`, `package-lock.json`
+- Share as-is: `commands/`, `skills/`, `agents/`, `adapters/`, `hooks/`, `scripts/`, `tests/`, `get-shit-done/`, `manifest.json`, `package.json`, `package-lock.json`
 - Keep tracked but generic: `contexts/*.md` and `.env.example`
 - Keep local only: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `.planning/`, `thoughts/`, `projects/`, and per-project `.omx/` runtime files
 - Generate on first setup: repo-local starter directories from `npm run init:local-state` and per-project context files from `node ~/.agents/scripts/project-context.mjs current`

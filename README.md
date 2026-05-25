@@ -61,7 +61,7 @@ Each coding tool points at the same shared workflow hub:
 - Codex CLI: shared workflow docs plus bridged continuity and memory helpers
 - OpenCode, Antigravity, OpenClaw: adapter-specific integration boundaries with the same shared policy core
 
-The adapter should change ergonomics, not workflow behavior. The source of truth stays in this repo: `AGENTS.md`, `prompts/`, `commands/`, and `scripts/`.
+The adapter should change ergonomics, not workflow behavior. The source of truth stays in this repo: `AGENTS.md`, `commands/`, and `scripts/`.
 
 ### 2. Task Routing: Pick The Smallest Safe Process
 
@@ -199,7 +199,6 @@ If you only remember the operating model, remember this:
 
 ```
 /Users/isaiahrivera/.agents/
-├── prompts/              # System prompt (core AI behavior)
 ├── commands/             # Command definitions (workflow commands)
 │   └── gsd/              # 43 GSD subcommands
 ├── agents/               # 43 workflow expert agents
@@ -225,7 +224,7 @@ If you only remember the operating model, remember this:
 
 
 ## What Gets Shared
-- `prompts/`, `commands/`, `agents/`, `skills/`, `adapters/`, `hooks/`
+- `commands/`, `agents/`, `skills/`, `adapters/`, `hooks/`
 - `scripts/`, `tests/`, `manifest.json`, and `sync.sh`
 - onboarding and sharing docs
 

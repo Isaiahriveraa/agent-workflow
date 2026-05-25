@@ -156,7 +156,7 @@
       },
       "mcp": {
         "status": "native",
-        "contract": "Tool-native MCP support; hub policy stays in prompts/commands/rules"
+        "contract": "Tool-native MCP support; hub policy stays in commands/rules"
       },
       "approvals": {
         "status": "native",
