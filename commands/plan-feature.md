@@ -32,7 +32,6 @@ Before drafting the plan:
 3. Read the current project's `state.md` when existing workflow position matters
 4. Read the current project's `research-index.md` if prior relevant research exists
 5. Review relevant workflow policy from `~/.agents/AGENTS.md`
-6. Determine task size with `node $HOME/.agents/scripts/workflow-router-tools.mjs activate`
 
 ## Planning Flow
 

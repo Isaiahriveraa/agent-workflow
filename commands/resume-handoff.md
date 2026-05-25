@@ -1,8 +1,10 @@
 ---
-description: Resume work from handoff document with context analysis and validation
+description: Resume work from handoff document with context analysis and validation (rpiv-backed)
 ---
 
 # Resume work from a handoff document
+
+This command is backed by the rpiv `skills/resume-handoff/SKILL.md` — load that skill for the authoritative workflow.
 
 You are tasked with resuming work from a handoff document through an interactive process. These handoffs contain critical context, learnings, and next steps from previous work sessions that need to be understood and continued.
 

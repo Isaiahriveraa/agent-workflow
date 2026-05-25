@@ -1,12 +1,12 @@
 ---
-description: Clarify vague engineering requests so Discover lands on a concrete direction
+description: Clarify vague engineering requests so Discover lands on a concrete direction (rpiv-backed)
 ---
 
 # RPI Brainstorm
 
-Use this command when an engineering request is still too vague to enter the Discover phase cleanly.
+This command is backed by the rpiv `skills/discover/SKILL.md` — load that skill for the authoritative workflow.
 
-This is not a replacement for Discover. It is the pre-Discover clarification pass when Yonie has a direction but not yet a decision-ready problem statement.
+Use this command when an engineering request is still too vague to enter the Discover phase cleanly.
 
 ## Purpose
 

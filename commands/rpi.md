@@ -1,5 +1,5 @@
 ---
-description: Simple front door for the full discover -> research -> design -> plan -> implement -> validate workflow
+description: Simple front door for the full rpiv workflow: discover -> research -> plan -> design -> implement -> validate -> revise
 ---
 
 # RPI
@@ -34,19 +34,19 @@ If the user already supplied a task or artifact path, start immediately.
 ## Orchestration Rules
 
 1. Treat `/rpi` as the simple frontend, not a second workflow system.
-2. Use `node ~/.agents/scripts/workflow-router-tools.mjs activate` to classify the task before choosing depth.
-3. Follow the router result exactly:
-   - Tier 1: do not force full RPI; explain that the task is lightweight and proceed directly
-   - Tier 2: route to focused planning, then implementation, then validation
-   - Tier 3: run the full strict workflow
-4. If the router output indicates `ambiguityDetected: true` or `recommendedResearchEntry: brainstorm`, insert a `Discover` phase before `Research`.
-5. Keep user-facing updates phase-based:
-   - `Discover` — what are we doing and why
-   - `Research` — what exists and what's possible
-   - `Design` — how it should work at a high level
-   - `Plan` — concrete steps to build it
-   - `Implement` — build it
-   - `Validate` — does it work
+2. Assess the task yourself: is it lightweight, moderate, or substantial?
+   - Lightweight: proceed directly
+   - Moderate: route to focused planning, then implementation, then validation
+   - Substantial: run the full strict workflow
+3. If the task feels vague or under-specified, insert a `Discover` phase before `Research`.
+5. Keep user-facing updates phase-based (rpiv pipeline):
+   - `Discover` — what are we doing and why (skills/discover/)
+   - `Research` — what exists and what's possible (skills/research/)
+   - `Plan` — concrete steps to build it (skills/plan/)
+   - `Design` — how it should work at a high level (skills/design/)
+   - `Implement` — build it (skills/implement/)
+   - `Validate` — does it work (skills/validate/)
+   - `Revise` — refine based on validation findings (skills/revise/)
 6. Keep internal rigor:
    - prompt optimization when required
    - clarification/discover when required
@@ -56,7 +56,7 @@ If the user already supplied a task or artifact path, start immediately.
    - memory recall when required
 7. Do not expose every internal helper step unless the user asks or a gate fails.
 
-When a discover phase is required, route through `commands/rpi-brainstorm.md` and do not start `research_codebase.md` until Yonie understands and agrees with the high-level direction.
+When a discover phase is required, use `skills/discover/SKILL.md` and do not move to Research until Yonie understands and agrees with the high-level direction.
 
 ## Document Explanation Contract (CRITICAL)
 
@@ -117,7 +117,7 @@ This is the first phase for any non-trivial task. Do not skip it.
 
 **Gate**: Do not proceed to Research until Yonie can paraphrase what we're building and why.
 
-If the request is still too vague to produce a brief, route through `commands/rpi-brainstorm.md` first.
+If the request is still too vague to produce a brief, run the rpiv `discover` skill first.
 
 ### Research
 
@@ -219,13 +219,14 @@ Between steps:
 Prefer this shape when announcing the workflow:
 
 ```text
-RPI flow for this task:
+RPIV flow for this task:
 1. Discover — figure out what we're building and why
 2. Research — look at what exists and what's possible
-3. Design — sketch how it should work at a high level
-4. Plan — concrete steps to build it
+3. Plan — concrete steps to build it
+4. Design — sketch how it should work at a high level
 5. Implement — build it step by step
 6. Validate — confirm it works
+7. Revise — refine based on findings
 
 Starting with Discover.
 ```
@@ -241,8 +242,8 @@ Each phase handoff should be 1-2 lines max. Use the caveman skill for phase summ
 ## Guardrails
 
 - Do not create a parallel artifact format for `/rpi`
-- Do not bypass `rpi-brainstorm` when ambiguity is still blocking clean discovery
-- Do not bypass `research_codebase`, `create-plan`, `implement_plan`, or `validate_plan` when they are required by the router
+- Do not bypass the rpiv `discover` skill when ambiguity is still blocking clean discovery
+- Use the rpiv pipeline skills (discover, research, plan, design, implement, validate, revise) for each phase
 - Do not weaken readiness, critique, grading, or validation requirements for substantial work
 - **Do not show a document without first loading the caveman skill and explaining its big picture.** This is the most important rule.
 - Do not make `/rpi` Claude-first or adapter-specific; it remains provider-agnostic
