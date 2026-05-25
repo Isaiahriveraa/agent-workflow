@@ -35,11 +35,6 @@ rooms:
   keywords:
   - adapters
   - adapters
-- name: capsules
-  description: Files from capsules/
-  keywords:
-  - capsules
-  - capsules
 - name: sessions
   description: Files from sessions/
   keywords:
@@ -60,11 +55,6 @@ rooms:
   keywords:
   - thoughts
   - thoughts
-- name: rules
-  description: Files from rules/
-  keywords:
-  - rules
-  - rules
 - name: prompts
   description: Files from prompts/
   keywords:

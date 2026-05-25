@@ -128,6 +128,5 @@ process.stdout.write(JSON.stringify({
   hookSpecificOutput: {
     hookEventName: EVENT_NAME,
     additionalContext,
-    sources: contexts.map(c => c.match(/source="([^"]+)"/)?.[1] || 'unknown').join(', '),
   }
 }));

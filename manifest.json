@@ -4,7 +4,6 @@
   "hub": "~/.agents",
   "managed_content": {
     "contexts": "~/.agents/contexts",
-    "capsules": "~/.agents/capsules",
     "thoughts": "~/.agents/thoughts",
     "skills": "~/.agents/skills",
     "agents": "~/.agents/agents",
