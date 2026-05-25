@@ -12,7 +12,7 @@ Own the response loop after a critic, checker, or grader finds issues in a resea
 ## Trigger
 - blocking or warning critique findings
 - checker feedback that requires artifact revision
-- refinement cycles after `rpi-critic`, `gsd-plan-checker`, or other workflow review agents
+- refinement cycles after `rpi-critic` or other workflow review agents
 
 ## Scope
 - critique documents and the artifact they reference
