@@ -34,14 +34,14 @@
 
   <workflow_activation>
     <item>Before planning or coding, determine the task tier with the router utility and the canonical router rule.</item>
-    <item>Use `node ./scripts/workflow-router-tools.mjs activate` as the executable authority for task routing, with `rules/common/workflow-router.md` as the canonical policy description.</item>
+    <item>Use `node ./scripts/workflow-router-tools.mjs activate` as the executable authority for task routing, with the workflow router as the canonical policy classification.</item>
     <item>The router classifies tasks into three tiers:
       - Tier 1 (trivial): Proceed directly to implementation. No research, planning, or critique required.
       - Tier 2 (moderate): Create a focused plan, then implement. Research and RPI critique are optional.
       - Tier 3 (substantial): Full strict workflow — optimize prompt, research, readiness gate, plan with critique, implement, validate.</item>
     <item>When a task can be partitioned cleanly, hand off bounded work to subagents instead of keeping everything in the main context window.</item>
     <item>For delegated bounded work, choose the smallest capable model and keep the main agent on orchestration, integration, and final decisions.</item>
-    <item>For tier 3 work, use the canonical readiness gate from `rules/common/workflow-router.md` and `rules/common/prompt-optimization-routing.md`.</item>
+    <item>For tier 3 work, use the canonical readiness gate from the workflow router.</item>
     <item>Do not invent a second activation scorecard in the prompt, commands, or adapters; the router remains the activation spine.</item>
     <item>Match the workflow depth to the tier. Do not run the full strict workflow for tier 1 or tier 2 tasks.</item>
   </workflow_activation>
@@ -80,7 +80,7 @@
     <step>If the request is still vague after optimization, run a brief brainstorm/clarification pass before codebase research.</step>
     <step>Research the current codebase before proposing implementation. Research is a hard prerequisite for coding.</step>
     <step>For substantial research intended to drive implementation, run at least one `rpi-critique` cycle on the research artifact and iterate on blocking findings.</step>
-    <step>Run the readiness gate from `rules/common/workflow-router.md`. Minimum pass conditions are total `>= 70`, clarity `>= 15`, and codebase coverage `>= 15`.</step>
+    <step>Run the readiness gate from the workflow router. Minimum pass conditions are total `>= 70`, clarity `>= 15`, and codebase coverage `>= 15`.</step>
     <step>If the readiness gate fails, continue research or ask focused questions. Do not plan or code while the gate is failing.</step>
     <step>Attempt memory recall for `create-plan` using stage-aware and layer-aware retrieval before drafting the plan.</step>
     <step>Create a decision-complete plan only after research and readiness pass.</step>
@@ -98,7 +98,7 @@
   </strict_workflow>
 
   <source_of_truth>
-    <item>Use the canonical workflow assets as authoritative: `rules/common/prompt-optimization-routing.md`, `rules/common/workflow-router.md`, `commands/optimize-prompt.md`, `commands/rpi-brainstorm.md`, `commands/research_codebase.md`, `commands/create-plan.md`, and `skills/rpi-critique`.</item>
+    <item>Use the canonical workflow assets as authoritative: the workflow router, `commands/rpi-brainstorm.md`, and `skills/rpi-critique`.</item>
     <item>If this prompt and those assets conflict, prefer the canonical workflow assets.</item>
     <item>Do not invent alternative workflow orders.</item>
   </source_of_truth>
