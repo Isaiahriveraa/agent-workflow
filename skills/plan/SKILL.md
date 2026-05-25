@@ -1,5 +1,5 @@
 ---
-name: plan
+name: omx-plan
 description: "Planning workflow. Triggers: 'plan this', 'plan the', 'let's plan'. Start planning workflow."
 ---
 

@@ -22,11 +22,9 @@ Use `prime` when:
 Load only the minimum useful context:
 
 1. `~/.agents/AGENTS.md`
-2. `~/.agents/contexts/tooling.md`
-3. `~/.agents/contexts/verification.md`
-4. The current repo's `.agents/repo.md` if it exists
-5. The current repo's root `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, or equivalent entry file when present
-6. The current repo's README if present
+2. The current repo's `.agents/repo.md` if it exists
+3. The current repo's root `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, or equivalent entry file when present
+4. The current repo's README if present
 
 ## Process
 

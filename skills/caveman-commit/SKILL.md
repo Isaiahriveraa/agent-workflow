@@ -12,22 +12,34 @@ description: >
 Write commit messages terse and exact. Conventional Commits format. No fluff.
 Why over what.
 
-## Separation of Concerns
+## Hard Gate: One Story, One Commit
 
-**One commit, one story.** Before writing the message, audit the diff:
+**ZERO TOLERANCE — ONE COMMIT, ONE STORY.** Before ANY output, audit the diff against the branch it stemmed from:
 
-- Do all changed files serve a single logical purpose? If not, flag it.
-- Is there a mix of concerns (e.g., refactor + bugfix, feature + style, dep bump + logic change)? Recommend splitting.
-- When split is needed, list the distinct concerns and suggest commit messages for each.
+- Do **all** changed files serve a single logical purpose? If not, **REJECT**.
+- Is there a mix of concerns (refactor + bugfix, feature + style, dep bump + logic change)? **MUST SPLIT**.
+- Does the subject line need "and" or "also" to describe what changed? **TOO BROAD — SPLIT.**
 
-Separation boundaries (changes belong in different commits when they span):
+**If the diff fails the single-concern check:**
+1. Print: `✗ ONE-STORY VIOLATION — Split required.`
+2. List each distinct concern with the files belonging to it.
+3. Output a separate commit message for each concern group.
+4. **STOP.** Do not proceed until each commit is truly atomic.
+
+Separation boundaries — changes MUST be in different commits when they span:
 
 - Different types (`feat` vs `fix` vs `refactor` vs `chore`)
 - Different scopes (e.g., `nvim` vs `tmux`, `lsp` vs `keymaps`)
 - Different motivations (fixing a bug vs adding a feature vs cleaning up)
 
-Only proceed to generate a single commit message when the diff passes the
-single-concern check.
+**Only generate a single commit message when the diff passes the single-concern check with zero ambiguity.**
+
+## No "And" Rule
+
+**The word "and" is banned from the entire commit message.** "And" always means multiple things are happening → you need multiple commits.
+
+- Scan subject + body for "and". If found, the commit is not atomic. Split.
+- Exception: "and" inside a proper noun or project name (rare). When unsure, split.
 
 ## Rules
 
@@ -38,6 +50,7 @@ Subject line:
 - Use imperative mood
 - Aim for 50 chars or less, hard cap 72
 - No trailing period
+- **No "and"** — if you need "and" to describe it, it's two commits
 
 Body:
 
@@ -45,6 +58,7 @@ Body:
 - Add only for non-obvious why, breaking changes, migration notes, or linked issues
 - Wrap at 72 chars
 - Use `-` for bullets
+- **No "and"** — use separate bullets or a more precise verb
 
 Never include:
 
@@ -64,5 +78,5 @@ Always include a body for:
 
 ## Boundaries
 
-Only generate the commit message. Do not stage or run `git commit`.
-Output the message ready to paste.
+Only generate commit messages. Do not stage or run `git commit`.
+Output each message ready to paste, separated by blank lines.
