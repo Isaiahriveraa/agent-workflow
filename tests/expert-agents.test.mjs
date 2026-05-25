@@ -11,7 +11,6 @@ const workflowExperts = [
   'workflow-router-auditor',
   'adapter-parity-auditor',
   'eval-engineer',
-  'failure-analyst',
   'tooling-integrator',
   'expert-agent-router'
 ];
