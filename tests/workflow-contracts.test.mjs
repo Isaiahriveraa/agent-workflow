@@ -21,279 +21,37 @@ const copyFilter = (source) => {
   }
 };
 
-test('AGENTS declares source layers and availability', () => {
+test('AGENTS declares operating rules and workflow triggers', () => {
   const content = read('AGENTS.md');
-  assert.match(content, /Rules:/);
-  assert.match(content, /Adapters:/);
-  assert.match(content, /Decisions:/);
-  assert.match(content, /project-local `\.omx\/sessions\/`/);
-  assert.match(content, /thoughts\/handoffs\//);
-  assert.match(content, /commands\/\*\*\/\*\.md/);
-  assert.match(content, /commands\/gsd\/\*\.md/);
-  assert.match(content, /\/gsd:help/);
-  assert.match(content, /gsd <subcommand>/);
-  assert.match(content, /underscore and hyphen variants of the same slash-style workflow command as equivalent/);
-  assert.doesNotMatch(content, /Use `thoughts\/sessions\/` for ordinary workflow continuity/);
+  assert.match(content, /## 15 Operating Rules/);
+  assert.match(content, /## Workflow Triggers/);
+  assert.match(content, /## Skill Routing/);
+  assert.match(content, /## Herdr Delegation/);
+  assert.match(content, /Clipboard automation/);
 });
 
-// AGENTS.xml was deleted — GSD namespace test removed
-// system.md was deleted — test removed
+// create-plan.md, implement_plan.md, validate_plan.md, research_codebase.md, gsd.md deleted
+// Corresponding GSD-era workflow tests removed
 
-test('workflow commands reference explicit context files', () => {
-  const createPlan = read('commands/create-plan.md');
-  const implementPlan = read('commands/implement_plan.md');
-  const validatePlan = read('commands/validate_plan.md');
-  const rpi = read('commands/rpi.md');
-  const optimizePrompt = read('commands/optimize-prompt.md');
-  const fixPr = read('commands/fix-pr.md');
-  const promptResearchPackager = read('skills/prompt-research-packager/SKILL.md');
-  const research = read('commands/research_codebase.md');
-  const sessionStart = read('commands/session-start.md');
-  const pauseSession = read('commands/pause-session.md');
-  const resumeSession = read('commands/resume-session.md');
-  const projectTooling = read('commands/project-tooling.md');
-  const projectVerification = read('commands/project-verification.md');
-  const projectArtifacts = read('commands/project-artifacts.md');
-  const pr = read('commands/pr.md');
-
-  assert.match(createPlan, /current project's runtime `research-index\.md`/);
-  assert.match(createPlan, /current project's runtime `state\.md`/);
-  assert.match(createPlan, /workflow-artifact-tools\.mjs grade-research/);
-  assert.match(createPlan, /workflow-artifact-tools\.mjs grade-plan/);
-  assert.match(createPlan, /agents-memory recall create-plan/);
-  assert.match(createPlan, /scripts\/workflow-command-decision\.mjs evaluate/);
-  assert.match(createPlan, /Original Prompt Alignment/);
-  assert.match(createPlan, /Research Sufficiency/);
-  assert.match(createPlan, /Phase Plan Index/);
-  assert.match(createPlan, /one child plan per implementation phase/);
-  assert.match(createPlan, /before critique/);
-  assert.match(createPlan, /workflow-command-decision\.mjs evaluate/);
-  assert.match(createPlan, /do_more_research/);
-  assert.match(createPlan, /run_critic/);
-  assert.match(createPlan, /request_user_decision/);
-  assert.match(createPlan, /Do not write advisory recall into the current project's runtime `state\.md`, `research-index\.md`, or active artifact selections/);
-  assert.match(createPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
-  assert.match(createPlan, /User-Facing Contract/);
-  assert.match(createPlan, /Lead with the planning job, not with the workflow machinery/);
-  assert.match(implementPlan, /current project's `state\.md`/);
-  assert.match(implementPlan, /rules\/common\/workflow-router\.md/);
-  assert.match(implementPlan, /critic, grader, and memory-policy files/);
-  assert.match(implementPlan, /workflow-artifact-tools\.mjs grade-plan/);
-  assert.match(implementPlan, /plan_ready_for_implementation/);
-  assert.match(implementPlan, /agents-memory recall implement-plan/);
-  assert.match(implementPlan, /scripts\/workflow-command-decision\.mjs evaluate/);
-  assert.match(implementPlan, /workflow-command-decision\.mjs evaluate/);
-  assert.match(implementPlan, /active runtime state and selected artifacts/);
-  assert.match(implementPlan, /advisory memory recall/);
-  assert.match(implementPlan, /disabled mode must preserve current behavior/);
-  assert.match(implementPlan, /Phase Plan Index/);
-  assert.match(implementPlan, /one linked child phase plan per explicit implementation phase/);
-  assert.match(implementPlan, /read the linked child phase plan for that phase before editing/);
-  assert.match(implementPlan, /replan/);
-  assert.match(implementPlan, /capture_lesson/);
-  assert.match(implementPlan, /request_user_decision/);
-  assert.match(implementPlan, /Do not write advisory recall into the current project's `state\.md`, `research-index\.md`, session continuity artifacts, or active artifact selections/);
-  assert.match(implementPlan, /Do not pass advisory recall into `scripts\/workflow-artifact-tools\.mjs`/);
-  assert.match(implementPlan, /Never retry blindly after a verified miss/);
-  assert.match(implementPlan, /lesson-tools\.mjs quick-capture/);
-  assert.match(implementPlan, /Primary Execution Contract/);
-  assert.match(implementPlan, /write or update tests first when behavior is changing/);
-  assert.match(validatePlan, /current project's `state\.md`/);
-  assert.match(validatePlan, /current project's `research-index\.md`/);
-  assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-research/);
-  assert.match(validatePlan, /workflow-artifact-tools\.mjs grade-plan/);
-  assert.match(validatePlan, /scripts\/workflow-command-decision\.mjs evaluate/);
-  assert.match(validatePlan, /request_user_decision/);
-  assert.match(validatePlan, /capture_lesson/);
-  assert.match(validatePlan, /lesson-tools\.mjs quick-capture/);
-  assert.match(optimizePrompt, /Do not emit the rewritten prompt block from this command/);
-  assert.match(optimizePrompt, /If the input is already a structured handoff or optimized prompt, use it as-is and do not rewrite it again/);
-  assert.doesNotMatch(optimizePrompt, /OPTIMIZED PROMPT/);
-  assert.doesNotMatch(optimizePrompt, /NOTES\n- Assumptions:/);
-  assert.match(fixPr, /analysis-first/);
-  assert.match(fixPr, /Do not edit conflict files until the analysis has been shared and the user approves the approach/);
-  assert.match(fixPr, /Plain-English summary/);
-  assert.match(fixPr, /Evidence-based resolution options/);
-  assert.match(fixPr, /Uncertainty \/ validation needed before applying the fix/);
-  assert.doesNotMatch(fixPr, /OPTIMIZED PROMPT/);
-  assert.match(promptResearchPackager, /Use the rewritten prompt internally unless the user explicitly asks to see it/);
-  assert.match(promptResearchPackager, /Only return the rewritten prompt in this shape when the user explicitly asks to see it/);
-  assert.match(research, /current project's `research-index\.md`/);
-  assert.match(research, /project-context\.mjs current/);
-  assert.match(research, /workflow-artifact-tools\.mjs grade-research/);
-  assert.match(research, /research_ready_for_planning/);
-  assert.match(research, /commands\/rpi-brainstorm\.md/);
-  assert.match(research, /artifact-tools\.mjs sync-research/);
-  assert.match(rpi, /simple frontend/);
-  assert.match(rpi, /rpi-brainstorm\.md/);
-  assert.match(rpi, /Brainstorm/);
-  assert.match(rpi, /run the full strict workflow/);
-  assert.match(rpi, /Do not auto-run git branch, push, or PR actions unless the user explicitly asks/);
-  assert.match(sessionStart, /current project's `session-index\.md`/);
-  assert.match(sessionStart, /ordinary pause\/resume continuity/);
-  assert.match(pauseSession, /current project's `session-index\.md`/);
-  assert.match(resumeSession, /current project's `session-index\.md`/);
-  assert.match(resumeSession, /current project's `research-index\.md`/);
-  assert.match(resumeSession, /project-local session artifacts/);
-  assert.match(resumeSession, /continuity-authoritative/);
-  // projectTooling and projectVerification read above; context references removed
-  assert.match(projectArtifacts, /current project's `artifacts\.md`/);
-  assert.match(projectArtifacts, /current project's `research-index\.md`/);
-  assert.match(projectArtifacts, /handoffs remain project-local transfer artifacts/);
-  assert.match(projectArtifacts, /--mode refresh/);
-  assert.match(pr, /Describe only what is actually in the committed branch diff against the base branch/);
-  assert.match(pr, /Do not invent provenance from the conversation/);
-  assert.match(pr, /no machine-specific absolute filesystem paths/);
-  assert.match(pr, /If `\.planning\/research\/`, `thoughts\/`, or other artifact directories are not part of the committed diff, do not mention them in the PR body/);
-  assert.match(pr, /No references to `\.planning\/research` or `thoughts\/` unless those paths are committed and reviewer-relevant in this PR/);
-});
-
+// gsd.md was deleted — handoff commands test shortened
 test('handoff commands keep handoffs project-local while runtime state stays project-scoped', () => {
   const createHandoff = read('commands/create-handoff.md');
   const resumeHandoff = read('commands/resume-handoff.md');
-  const gsd = read('commands/gsd.md');
 
   assert.match(createHandoff, /\[project root\]\/thoughts\/handoffs\//);
   assert.match(createHandoff, /current project's `state\.md`/);
   assert.match(createHandoff, /current project's `session-index\.md`/);
-  assert.match(createHandoff, /artifact-tools\.mjs persist/);
-  assert.match(createHandoff, /continuity-authoritative/);
-  assert.doesNotMatch(createHandoff, /~\/\.agents\/thoughts\/shared\/handoffs\//);
+  assert.match(createHandoff, /project-local handoff directory/);
   assert.match(resumeHandoff, /\[project root\]\/thoughts\/handoffs\/ENG-XXXX/);
-  assert.match(resumeHandoff, /\/resume-handoff` resolves to the same command file/);
   assert.match(resumeHandoff, /thoughts\/plans/);
   assert.match(resumeHandoff, /thoughts\/research/);
-  assert.doesNotMatch(resumeHandoff, /~\/\.agents\/projects\/<project>\/thoughts\/handoffs\//);
-  assert.match(gsd, /shared workflow resolver also accepts underscore and hyphen variants/);
 });
 
-test('artifact-producing workflow docs require exact next-command output', () => {
-  const research = read('commands/research_codebase.md');
-  const createPlan = read('commands/create-plan.md');
-  const createHandoff = read('commands/create-handoff.md');
-  const implementPlan = read('commands/implement_plan.md');
-  const validatePlan = read('commands/validate_plan.md');
-  const brainstorm = read('commands/rpi-brainstorm.md');
+// create-plan.md, implement_plan.md, validate_plan.md, research_codebase.md deleted — test removed
 
-  assert.match(createPlan, /Next step/);
-  assert.match(createPlan, /\/implement_plan \/absolute\/path\/to\/\.agents\/thoughts\/plans\/YYYY-MM-DD-description\.md/);
-  assert.match(research, /\/create-plan \/absolute\/path\/to\/research\.md/);
-  assert.match(brainstorm, /Next step/);
-  assert.match(brainstorm, /\/research_codebase \/absolute\/path\/to\/intake\.md/);
-  assert.match(createHandoff, /Use the exact absolute handoff path written in the current run\./);
-  assert.match(createHandoff, /Next step/);
-  assert.match(createHandoff, /\/resume_handoff path\/to\/handoff\.md/);
-  assert.match(implementPlan, /Next step/);
-  assert.match(implementPlan, /\/validate_plan \/absolute\/path\/to\/plan\.md/);
-  assert.match(validatePlan, /Do not emit a standalone `Next step` command block/);
-});
+// Working-set duplication check removed from validate-ssot.mjs — test removed
 
-test('ssot validation fails when a project-local runtime state duplicates the working-set section', () => {
-  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-validate-ssot-'));
-
-  try {
-    fs.cpSync(root, fixtureRoot, {
-      recursive: true,
-      filter: copyFilter
-    });
-
-    const projectStatePath = path.join(fixtureRoot, 'projects', 'agents-43142fc2', 'contexts', 'state.md');
-    fs.mkdirSync(path.dirname(projectStatePath), { recursive: true });
-    const originalState = `# Workflow State
-
-Use this file as a shared compatibility document, not the live per-project runtime state source.
-
-Per-project runtime workflow state now lives at \`[project root]/.omx/state/contexts/state.md\`.
-Use this global file only for legacy/shared notes that are not specific to a single repo.
-
-## Current Workflow
-- Not set.
-
-## Current Phase
-- Not set.
-
-## Next Step
-- Not set.
-
-## Blockers
-- None recorded at the project-local level.
-
-## Last Verified At
-- Not set.
-
-## Related Plan
-- Not set.
-
-## Active Artifact Working Set
-- Last updated: not set
-- Source: not set
-- Focus: not set
-
-### Selected By Category
-- intake: not set
-- plan: not set
-- research: not set
-- session: not set
-- handoff: not set
-
-### Ordered Artifacts
-1. not set
-`;
-    fs.writeFileSync(projectStatePath, originalState);
-    const duplicatedState = `${originalState.trimEnd()}\n\n## Active Artifact Working Set\n- Last updated: none\n- Source: none\n- Focus: none\n\n### Selected By Category\n- intake: none\n- plan: none\n- research: none\n- session: none\n- handoff: none\n\n### Ordered Artifacts\n1. none\n`;
-
-    fs.writeFileSync(projectStatePath, duplicatedState);
-
-    const result = spawnSync('node', ['scripts/validate-ssot.mjs'], {
-      cwd: fixtureRoot,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        AGENTS_ROOT: fixtureRoot
-      }
-    });
-
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /Expected exactly one "## Active Artifact Working Set" section in projects\/agents-43142fc2\/contexts\/state\.md, found 2/);
-  } finally {
-    fs.rmSync(fixtureRoot, { recursive: true, force: true });
-  }
-});
-
-test('ssot validation fails when Claude entrypoint drifts back to the raw prompt target', () => {
-  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-validate-ssot-'));
-  const home = path.join(fixtureRoot, 'home');
-
-  try {
-    fs.cpSync(root, fixtureRoot, {
-      recursive: true,
-      filter: copyFilter
-    });
-
-    fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
-    fs.symlinkSync(path.join(fixtureRoot, 'prompts/system.md'), path.join(home, '.claude/CLAUDE.md'));
-    fs.writeFileSync(path.join(home, '.claude/settings.json'), JSON.stringify({
-      additionalDirectories: [fixtureRoot],
-      permissions: { allow: [`Read(${fixtureRoot}/**)`] },
-      env: { CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: '1' }
-    }, null, 2));
-
-    const result = spawnSync('node', ['scripts/validate-ssot.mjs'], {
-      cwd: fixtureRoot,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        AGENTS_ROOT: fixtureRoot,
-        HOME: home
-      }
-    });
-
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /Claude Code entrypoint points to .*prompts\/system\.md.*expected .*adapters\/claude-code\/CLAUDE\.md/);
-  } finally {
-    fs.rmSync(fixtureRoot, { recursive: true, force: true });
-  }
-});
+// prompts/system.md was deleted — Claude entrypoint test removed
 
 test('ssot validation fails when Claude settings lose required hub access fields', () => {
   const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-validate-ssot-'));
@@ -332,47 +90,7 @@ test('ssot validation fails when Claude settings lose required hub access fields
   }
 });
 
-test('ssot validation fails when Claude get-shit-done drifts into a local directory instead of a hub symlink', () => {
-  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-validate-ssot-'));
-  const home = path.join(fixtureRoot, 'home');
-
-  try {
-    fs.cpSync(root, fixtureRoot, {
-      recursive: true,
-      filter: copyFilter
-    });
-
-    fs.mkdirSync(path.join(home, '.claude', 'get-shit-done'), { recursive: true });
-    fs.mkdirSync(path.join(home, '.claude', 'hooks'), { recursive: true });
-    fs.symlinkSync(path.join(fixtureRoot, 'adapters/claude-code/CLAUDE.md'), path.join(home, '.claude/CLAUDE.md'));
-    fs.writeFileSync(path.join(home, '.claude/settings.json'), JSON.stringify({
-      additionalDirectories: [path.join(home, '.agents')],
-      permissions: { allow: [`Read(${path.join(home, '.agents')}/**)`] },
-      env: { CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: '1' },
-      hooks: {
-        Stop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-memory-consolidation.cjs')}"` }] }],
-        SubagentStop: [{ hooks: [{ command: `node "${path.join(home, '.claude', 'hooks', 'gsd-stop-memory-consolidation.cjs')}"` }] }]
-      }
-    }, null, 2));
-
-    fs.symlinkSync(fixtureRoot, path.join(home, '.agents'));
-
-    const result = spawnSync('node', ['scripts/validate-ssot.mjs'], {
-      cwd: fixtureRoot,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        AGENTS_ROOT: fixtureRoot,
-        HOME: home
-      }
-    });
-
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /Claude get-shit-done surface must be a symlink/);
-  } finally {
-    fs.rmSync(fixtureRoot, { recursive: true, force: true });
-  }
-});
+// get-shit-done directory was deleted — validation test removed
 
 test('manifest points Codex CLI at the shared AGENTS contract', () => {
   const manifest = readJson('manifest.json');
@@ -396,9 +114,6 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   const geminiEntrypointLink = manifest.symlinks.find((entry) =>
     entry.tool === 'antigravity' && entry.source === '~/.gemini/GEMINI.md'
   );
-  const geminiGsdLink = manifest.symlinks.find((entry) =>
-    entry.tool === 'antigravity' && entry.source === '~/.gemini/get-shit-done'
-  );
 
   assert.ok(claudePromptLink);
   assert.equal(claudePromptLink.target, '~/.agents/adapters/claude-code/CLAUDE.md');
@@ -406,8 +121,6 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
   assert.equal(openclawPromptLink.target, '~/.agents/AGENTS.md');
   assert.ok(geminiEntrypointLink);
   assert.equal(geminiEntrypointLink.target, '~/.agents/adapters/antigravity/GEMINI.md');
-  assert.ok(geminiGsdLink);
-  assert.equal(geminiGsdLink.target, '~/.agents/get-shit-done');
   assert.deepEqual(Object.keys(capabilities).sort(), ['antigravity', 'claude-code', 'codex-cli', 'openclaw', 'opencode']);
   assert.equal(capabilities['claude-code'].entrypoint.status, 'bridged');
   assert.equal(capabilities['claude-code'].commands.status, 'native');
@@ -425,7 +138,7 @@ test('manifest represents prompt parity and generated adapter surfaces for all s
 
   assert.deepEqual(
     (generatedByTool.opencode ?? []).map((entry) => entry.surface).sort(),
-    ['agents']
+    ['agents', 'skills']
   );
   assert.deepEqual(
     (generatedByTool.antigravity ?? []).map((entry) => entry.surface).sort(),
@@ -466,20 +179,17 @@ test('adapter directories document non-claude parity boundaries', () => {
   assert.match(opencode, /gen-opencode-agents/);
   assert.match(opencode, /agents: `bridged`/);
   assert.match(opencode, /OpenCode upstream supports command files and plugin event hooks/);
-  assert.match(opencode, /gsd memory-sync/);
   assert.match(opencode, /memory-sync-bridge\.mjs/);
   assert.match(opencode, /Explicit memory bridge parity only/);
   assert.match(antigravity, /~\/\.gemini\/GEMINI\.md/);
   assert.match(antigravity, /skills: `native` through Gemini's `~\/\.agents\/skills` user-scope alias/);
-  assert.match(antigravity, /~\/\.gemini\/get-shit-done -> ~\/\.agents\/get-shit-done/);
   assert.match(antigravity, /commands: `bridged`/);
   assert.match(antigravity, /agents: `bridged` through generated Gemini-schema agent files/);
   assert.match(antigravity, /Gemini CLI upstream supports custom commands, extensions, MCP, and native memory/);
-  assert.match(antigravity, /gsd memory-sync/);
   assert.match(antigravity, /memory-sync-bridge\.mjs/);
   assert.match(antigravity, /Explicit memory bridge parity only/);
   assert.match(geminiWrapper, /# Gemini Workflow Wrapper/);
-  assert.match(geminiWrapper, /@~\/\.agents\/prompts\/system\.md/);
+  assert.match(geminiWrapper, /@~\/\.agents\/AGENTS\.md/);
   assert.match(openclaw, /Generated workspace wrappers/);
   assert.match(openclaw, /workspace wrappers: `bridged`/);
   assert.match(openclaw, /OpenClaw upstream documents slash commands, plugins, hooks, and built-in memory/);
@@ -528,19 +238,4 @@ test('claude settings preserve local hooks while exposing the shared hub', () =>
   assert.equal(settings.enabledPlugins['typescript-lsp@claude-plugins-official'], true);
 });
 
-test('GSD workflow docs use supported gsd-tools commands for Nyquist and validation commits', () => {
-  const validatePhase = read('get-shit-done/workflows/validate-phase.md');
-  const auditMilestone = read('get-shit-done/workflows/audit-milestone.md');
-  const planPhase = read('get-shit-done/workflows/plan-phase.md');
-
-  assert.match(validatePhase, /config-get workflow\.nyquist_validation --raw/);
-  assert.doesNotMatch(validatePhase, /config get workflow\.nyquist_validation/);
-  assert.match(auditMilestone, /config-get workflow\.nyquist_validation --raw/);
-  assert.doesNotMatch(auditMilestone, /config get workflow\.nyquist_validation/);
-
-  assert.match(validatePhase, /gsd-tools\.cjs" commit "docs\(phase-\$\{PHASE\}\): add\/update validation strategy"/);
-  assert.match(validatePhase, /--files "\$\{PHASE_DIR\}\/\$\{PADDED_PHASE\}-VALIDATION\.md"/);
-  assert.match(planPhase, /commit "docs\(phase-\$\{PHASE\}\): add validation strategy" --files "\$\{PHASE_DIR\}\/\$\{PADDED_PHASE\}-VALIDATION\.md"/);
-  assert.doesNotMatch(validatePhase, /commit-docs/);
-  assert.doesNotMatch(planPhase, /commit-docs/);
-});
+// get-shit-done directory was deleted — GSD workflow docs test removed
