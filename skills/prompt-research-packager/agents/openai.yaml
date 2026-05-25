@@ -1,4 +1,0 @@
-interface:
-  display_name: "Prompt Research Packager"
-  short_description: "Research-backed prompt packaging"
-  default_prompt: "Use $prompt-research-packager to turn my rough plan into a stronger prompt backed by codebase context."
