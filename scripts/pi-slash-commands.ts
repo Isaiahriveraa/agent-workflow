@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const AGENTS = process.env.AGENTS_ROOT ?? join(process.env.HOME!, ".agents");
@@ -44,7 +44,9 @@ const discoverCommands = (): string[] => {
   }
 };
 
-const CUSTOM_COMMANDS = new Set(["gsd", "doctor", "memory", "review"]);
+// Commands with custom JS handlers (not driven by a .md file).
+// Each command here must handle its own graceful degradation if backing files are missing.
+const CUSTOM_COMMANDS = new Set(["doctor", "memory", "review"]);
 
 export default function (pi: ExtensionAPI) {
   const commands = discoverCommands();
@@ -65,32 +67,17 @@ export default function (pi: ExtensionAPI) {
     });
   }
 
-  pi.registerCommand("gsd", {
-    description: "GSD workflow: do, plan-phase, new-project, and 30+ subcommands",
-    handler: async (raw) => {
-      const args = parseArgs(raw);
-      if (!args) {
-        pi.appendEntry?.("user", readCmd("gsd") || "/gsd help — see ~/.agents/commands/gsd/ for subcommands");
-        return;
-      }
-      const subcmd = args.split(/\s+/)[0];
-      const sub = readCmd(`gsd/${subcmd}`);
-      if (sub) {
-        pi.appendEntry?.("user", sub);
-        return;
-      }
-      const out = await shell(
-        `node "${AGENTS}/scripts/workflow-router-tools.mjs" activate --query "gsd ${args}"`,
-        pi
-      );
-      pi.ui.notify(`GSD ${subcmd}: ${out.slice(0, 200)}`, "info");
-    },
-  });
+  const scriptPath = (name: string) => join(AGENTS, "scripts", name);
 
   pi.registerCommand("doctor", {
     description: "Run project diagnostics — repo health, memory, execution state",
     handler: async () => {
-      const out = await shell(`node "${AGENTS}/scripts/doctor.mjs" 2>&1`, pi);
+      const script = scriptPath("doctor.mjs");
+      if (!existsSync(script)) {
+        pi.ui.notify(`doctor: script not found at ${script}. The command has been removed.`, "warn");
+        return;
+      }
+      const out = await shell(`node "${script}" 2>&1`, pi);
       pi.ui.notify(`Doctor: ${out.slice(0, 400)}`, "info");
     },
   });
@@ -98,13 +85,15 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("memory", {
     description: "Check memory bridge status or recall relevant memories",
     handler: async (raw) => {
+      const script = scriptPath("memory-sync-bridge.mjs");
+      if (!existsSync(script)) {
+        pi.ui.notify(`memory: script not found at ${script}. The command has been removed.`, "warn");
+        return;
+      }
       const args = parseArgs(raw);
       const op = args.split(/\s+/)[0] || "status";
       const rest = args.slice(op.length).trim();
-      const out = await shell(
-        `node "${AGENTS}/scripts/memory-sync-bridge.mjs" ${op} ${rest} 2>&1`,
-        pi
-      );
+      const out = await shell(`node "${script}" ${op} ${rest} 2>&1`, pi);
       pi.ui.notify(`memory ${op}: ${out.slice(0, 400)}`, "info");
     },
   });

@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 const AGENTS = process.env.AGENTS_ROOT ?? join(process.env.HOME!, ".agents");
 const BRIDGE = `${AGENTS}/scripts/memory-sync-bridge.mjs`;
+const DECISIONS_HOOK = `${AGENTS}/scripts/check-unsaved-decisions.mjs`;
 
 const inferPromptText = (payload: Record<string, unknown>): string => {
   const fields = [
@@ -68,6 +69,21 @@ export default async function (pi: ExtensionAPI) {
   pi.on("agent_end", async () => {
     try {
       await callBridge("flush");
+    } catch { /* non-blocking */ }
+
+    try {
+      const { execSync } = await import("node:child_process");
+      const result = execSync(`node "${DECISIONS_HOOK}"`, {
+        encoding: "utf-8",
+        timeout: 15000,
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+      if (result) {
+        const parsed = JSON.parse(result);
+        if (parsed.hookSpecificOutput?.additionalContext) {
+          pi.appendEntry?.("system", parsed.hookSpecificOutput.additionalContext);
+        }
+      }
     } catch { /* non-blocking */ }
   });
 
