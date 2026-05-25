@@ -6,11 +6,10 @@ The canonical workflow source lives in `{{HUB}}`.
 
 ## Read Order
 1. `{{HUB}}/AGENTS.md`
-2. `{{HUB}}/prompts/system.md`
-3. `./.agents/repo.md` if present
-4. `./SOUL.md`
-5. `./USER.md`
-6. `./TOOLS.md`
+2. `./.agents/repo.md` if present
+3. `./SOUL.md`
+4. `./USER.md`
+5. `./TOOLS.md`
 
 ## Purpose
 This wrapper keeps OpenClaw aligned with the shared workflow hub while preserving local OpenClaw context in this workspace.

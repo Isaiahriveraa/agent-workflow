@@ -3,7 +3,7 @@
 This directory contains OpenClaw-specific wrapper assets.
 
 ## Managed Surfaces
-- `~/.openclaw/CLAUDE.md -> ~/.agents/prompts/system.md`
+- `~/.openclaw/CLAUDE.md -> ~/.agents/AGENTS.md`
 - `~/.openclaw/workspace/skills -> ~/.agents/skills`
 - Generated workspace wrappers:
   - `AGENTS.md`

@@ -95,7 +95,7 @@
     },
     {
       "source": "~/.openclaw/CLAUDE.md",
-      "target": "~/.agents/prompts/system.md",
+      "target": "~/.agents/AGENTS.md",
       "tier": 1,
       "tool": "openclaw",
       "type": "file"
