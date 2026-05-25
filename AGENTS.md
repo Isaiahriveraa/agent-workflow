@@ -50,31 +50,13 @@ Canonical schema lives in `docs/guidance-schema.md` when present. Keep these run
 - Keep diffs small, reviewable, and reversible.
 - Run the relevant lint, typecheck, tests, static analysis, or targeted verification before claiming completion.
 - Final reports include changed files, simplifications, verification, and remaining risks.
-
 <lore_commit_protocol>
-Every commit message should record why the change exists.
-
-Format:
-```
-<intent line: why, not what>
-
-<short context and rationale>
-
-Constraint: <optional external constraint>
-Rejected: <optional alternative> | <reason>
-Confidence: <low|medium|high>
-Scope-risk: <narrow|moderate|broad>
-Directive: <optional future warning>
-Tested: <what ran>
-Not-tested: <known gaps>
-```
-
-Use only useful trailers. Keep `Rejected:` when it prevents repeated dead-end work. Be honest in `Not-tested:`.
+- refer to skill 'caveman-commit' for structured commit messages.
 </lore_commit_protocol>
 
 <delegation_rules>
 - Default lane: solo execute.
-- Use `$deep-interview` for unclear intent or explicit "don't assume".
+- Offer 'grill-me-with-docs' skill to check understanding before planning or executing when requirements are ambiguous or high-risk.
 - Use `$ralplan` when requirements are clear but architecture, tradeoffs, or test strategy need review.
 - Use `$team` only when coordinated parallel execution is worth the overhead.
 - Use `$ralph` only for a persistent single-owner completion/verification loop.
@@ -134,24 +116,7 @@ Team worker model precedence:
 Normalize to one `--model <value>`. Do not guess model defaults; use `OMX_DEFAULT_FRONTIER_MODEL` and `OMX_DEFAULT_SPARK_MODEL`.
 </team_model_resolution>
 
-<!-- OMX:MODELS:START -->
-## Model Capability Table
 
-| Role | Model | Effort | Use |
-| --- | --- | --- | --- |
-| Frontier leader | `gpt-5.4` | high | planning, orchestration, hard reasoning |
-| explore | `deepseek-v4-flash` | low | fast lookup, mapping, triage |
-| Standard | `deepseek-v4-pro` | high | bounded specialist work |
-| analyst/planner | `gpt-5.4` | medium | requirements, sequencing |
-| architect/critic/code-reviewer | `gpt-5.4` | high | design, challenge, review |
-| executor/team-executor | `gpt-5.4` | high/medium | implementation |
-| debugger/build-fixer/dependency-expert/verifier | `glm-5.1` | high | diagnosis, builds, SDKs, evidence |
-| test-engineer/security-reviewer | `gpt-5.4` | medium | testing, security |
-| writer/designer | `kimi-k2.6` | high | docs, UX/UI |
-| style-reviewer/vision | `gpt-5.4` | low | style, image analysis |
-<!-- OMX:MODELS:END -->
-
-<verification>
 Verify before claiming completion.
 <!-- OMX:GUIDANCE:VERIFYSEQ:START -->
 - Identify what proves the claim, run it, read the output, then report evidence.
