@@ -180,9 +180,8 @@ const orphanHooks = hookFiles.filter((f) => {
   try {
     const content = readFileSync(join(HOOKS, f), "utf-8");
     return (
-      content.includes("get-shit-done") ||
       content.includes("gsd-local-patches") ||
-      (content.includes("gsd-tools") && !exists(join(AGENTS, "get-shit-done")))
+      content.includes("gsd-tools")
     );
   } catch {
     return false;
@@ -190,9 +189,9 @@ const orphanHooks = hookFiles.filter((f) => {
 });
 
 if (orphanHooks.length > 0) {
-  console.log(`  Found ${orphanHooks.length} hooks with stale get-shit-done references:`);
+  console.log(`  Found ${orphanHooks.length} hooks with stale references:`);
   for (const f of orphanHooks) {
-    drift(`  ${f} — references deleted get-shit-done/ paths`);
+    drift(`  ${f} — references deleted paths`);
   }
 } else {
   console.log("  ✓ No stale hook references");
