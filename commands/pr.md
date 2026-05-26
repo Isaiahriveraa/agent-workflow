@@ -15,7 +15,7 @@ Use the git CLI to prepare a pull request description based on the actual branch
 - Do not mention local-only files, ignored files, dropped work, or plans/research artifacts unless reviewers can see them in the committed diff and they materially affect the change.
 - Do not invent provenance from the conversation. If it is not visible in `git log`, `git diff --stat`, `git diff --name-only`, or the inspected diff, leave it out.
 - Keep reviewer-facing text repo-clean: no machine-specific absolute filesystem paths, no local home-directory references, and no host-specific environment details unless the diff explicitly introduces a portable path contract.
-- If `.planning/research/`, `thoughts/`, or other artifact directories are not part of the committed diff, do not mention them in the PR body.
+- If `thoughts/` or other artifact directories are not part of the committed diff, do not mention them in the PR body.
 - Keep the structure consistent across PRs.
 - Scale the amount of explanation to the size and risk of the change.
 - Small PRs should be brief and direct.
@@ -136,7 +136,7 @@ Even for large PRs:
 - Prefer concrete nouns and verbs over abstractions.
 - No references to uncommitted plans, local scratch notes, or ignored files.
 - No absolute paths from the current machine in the PR body.
-- No references to `.planning/research` or `thoughts/` unless those paths are committed and reviewer-relevant in this PR.
+- No references to `thoughts/` unless those paths are committed and reviewer-relevant in this PR.
 
 ## Output Format
 

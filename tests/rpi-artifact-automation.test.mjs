@@ -11,8 +11,6 @@ const createTempProject = () => {
   const projectRoot = path.join(tmpDir, 'project');
   fs.mkdirSync(path.join(projectRoot, 'thoughts', 'research'), { recursive: true });
   fs.mkdirSync(path.join(projectRoot, 'thoughts', 'plans'), { recursive: true });
-  fs.mkdirSync(path.join(projectRoot, '.planning', 'research'), { recursive: true });
-  fs.mkdirSync(path.join(projectRoot, '.planning', 'plans'), { recursive: true });
   return { tmpDir, projectRoot };
 };
 

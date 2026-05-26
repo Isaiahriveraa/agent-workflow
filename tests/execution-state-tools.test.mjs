@@ -25,7 +25,7 @@ const runExecutionTool = (args, repoRoot) =>
 
 test('execution-state create initializes active execution and notes for a plan checklist', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-execution-')), 'create');
-  const planPath = path.join(repoRoot, '.planning', 'plan.md');
+  const planPath = path.join(repoRoot, 'plan.md');
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.writeFileSync(planPath, [
     '# Plan',
@@ -54,7 +54,7 @@ test('execution-state create initializes active execution and notes for a plan c
 
 test('execution-state update-progress and task-session lineage update deterministically', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-execution-')), 'progress');
-  const planPath = path.join(repoRoot, '.planning', 'plan.md');
+  const planPath = path.join(repoRoot, 'plan.md');
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.writeFileSync(planPath, [
     '# Plan',
@@ -89,7 +89,7 @@ test('execution-state update-progress and task-session lineage update determinis
 
 test('execution-state pause, resume, complete, and clear preserve lifecycle meaning', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-execution-')), 'lifecycle');
-  const planPath = path.join(repoRoot, '.planning', 'plan.md');
+  const planPath = path.join(repoRoot, 'plan.md');
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.writeFileSync(planPath, '# Plan\n- [ ] only task\n');
 
@@ -116,7 +116,7 @@ test('execution-state pause, resume, complete, and clear preserve lifecycle mean
 
 test('execution-state advise reports reminder and cleanup guidance for active and terminal states', () => {
   const repoRoot = createFixtureRepo(fs.mkdtempSync(path.join(os.tmpdir(), 'agents-execution-')), 'advise');
-  const planPath = path.join(repoRoot, '.planning', 'plan.md');
+  const planPath = path.join(repoRoot, 'plan.md');
   fs.mkdirSync(path.dirname(planPath), { recursive: true });
   fs.writeFileSync(planPath, [
     '# Plan',
