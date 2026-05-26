@@ -1,6 +1,5 @@
 .DS_Store
 thoughts/
-.planning/
 sessions/
 projects/**
 
@@ -16,7 +15,6 @@ gsd-local-patches/
 config/
 !projects/.gitkeep
 .omx/
-.omc/
 .pi-lens
 .rpiv
 .sisyphus

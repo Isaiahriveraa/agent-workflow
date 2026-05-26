@@ -11,9 +11,7 @@
     "hooks": "~/.agents/hooks",
     "adapters": "~/.agents/adapters",
     "rules": "~/.agents/rules",
-    "prompts": "~/.agents/prompts",
-    "bin": "~/.agents/bin",
-    "get-shit-done": "~/.agents/get-shit-done"
+    "bin": "~/.agents/bin"
   },
   "symlinks": [
     {
@@ -40,13 +38,6 @@
     {
       "source": "~/.claude/hooks",
       "target": "~/.agents/hooks",
-      "tier": 1,
-      "tool": "claude-code",
-      "type": "directory"
-    },
-    {
-      "source": "~/.claude/get-shit-done",
-      "target": "~/.agents/get-shit-done",
       "tier": 1,
       "tool": "claude-code",
       "type": "directory"
@@ -86,13 +77,7 @@
       "tool": "antigravity",
       "type": "file"
     },
-    {
-      "source": "~/.gemini/get-shit-done",
-      "target": "~/.agents/get-shit-done",
-      "tier": 1,
-      "tool": "antigravity",
-      "type": "directory"
-    },
+
     {
       "source": "~/.openclaw/workspace/skills",
       "target": "~/.agents/skills",

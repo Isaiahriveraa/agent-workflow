@@ -55,11 +55,6 @@ rooms:
   keywords:
   - thoughts
   - thoughts
-- name: prompts
-  description: Files from prompts/
-  keywords:
-  - prompts
-  - prompts
 - name: commands
   description: Files from commands/
   keywords:
@@ -70,11 +65,6 @@ rooms:
   keywords:
   - skills
   - skills
-- name: get_shit_done
-  description: Files from get-shit-done/
-  keywords:
-  - get_shit_done
-  - get-shit-done
 - name: planning
   description: Files from specs/
   keywords:
