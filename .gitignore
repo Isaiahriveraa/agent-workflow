@@ -3,9 +3,7 @@ thoughts/
 .planning/
 sessions/
 projects/**
-/.agents/contexts/
-/.agents/sessions/
-/.agents/runtime/execution/
+
 __pycache__/
 *.pyc
 node_modules/

@@ -316,45 +316,7 @@ const explicitOutputContracts = new Map([
 ]);
 
 const continuityContracts = new Map([
-	["AGENTS.md", ["project-local `.agents/sessions/`", "thoughts/handoffs/"]],
-	[
-		"rules/common/artifact-retrieval.md",
-		[".agents/sessions/", "thoughts/handoffs/"],
-	],
-	[
-		"contexts/artifacts.md",
-		["project-local runtime files", "[project root]/thoughts/handoffs"],
-	],
-	[
-		"contexts/research-index.md",
-		[
-			"shared compatibility document",
-			"[project root]/.agents/contexts/research-index.md",
-		],
-	],
-	[
-		"contexts/session-index.md",
-		[
-			"shared compatibility document",
-			"[project root]/.agents/contexts/session-index.md",
-			"Project-local handoffs",
-		],
-	],
-	[
-		"commands/session-start.md",
-		[
-			"ordinary pause/resume continuity",
-			".agents/sessions/general/YYYY-MM-DD_HH-MM-SS_slug.md",
-		],
-	],
-	[
-		"commands/resume-session.md",
-		["project-local session artifacts", "project-local transfer artifact"],
-	],
-	[
-		"commands/project-artifacts.md",
-		["handoffs remain project-local transfer artifacts"],
-	],
+	// All former `.agents/` contract entries removed (directory deleted).
 ]);
 
 let hasError = false;
