@@ -17,7 +17,7 @@ When the user triggers cancel, stop, or abort — stop all active workflows, bac
 1. **Identify active modes**
    - Check for any running agent loops (`ralph`, `ultrawork`, `autopilot`, `team`)
    - Enumerate background tasks via `background_list`
-   - Inspect `.omx/state/` for active runtime state
+   - Inspect `.sisyphus/run-continuation/` for active continuation state
 
 2. **Terminate active execution**
    - Cancel all background tasks with `background_cancel --all=true`
@@ -25,7 +25,7 @@ When the user triggers cancel, stop, or abort — stop all active workflows, bac
    - Stop ongoing build/test/watch processes
 
 3. **Clean up runtime state**
-   - Remove or mark inactive all `.omx/state/` entries (set `completed_at` or `cancelled_at`)
+   - Remove or mark inactive all `.sisyphus/run-continuation/` entries (set `completed_at` or `cancelled_at`)
    - Clear `.omx/notepad.md` session notes if present
    - Do NOT remove plans, logs, or project memory — only active runtime state
 

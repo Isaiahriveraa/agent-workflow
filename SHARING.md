@@ -20,8 +20,7 @@ This repo is split into two layers: tracked workflow assets and local runtime st
   - `node_modules/`
 - Per-project runtime generated inside the target repo:
   - `[project]/.planning/`
-  - `[project]/.omx/state/contexts/`
-  - `[project]/.omx/sessions/`
+  - `[project]/.sisyphus/run-continuation/`
 
 The local runtime layer is intentionally untracked so a clone starts clean and so public publication does not expose credentials or active project state.
 

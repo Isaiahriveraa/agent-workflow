@@ -182,9 +182,9 @@ Lightweight continuity artifacts are project-local runtime files. Project-local 
 - intake: \`thoughts/intake\`
 - plans: \`thoughts/plans\`
 - research: \`thoughts/research\`
-- sessions: \`.omx/sessions\`
+- sessions: (removed — use \`.sisyphus/run-continuation/\`)
 - handoffs: \`thoughts/handoffs\`
-- active working set metadata: \`.omx/state/contexts/state.md\`
+- active working set metadata: (removed — use \`.sisyphus/run-continuation/\`)
 
 ## Preferred Retrieval Order
 1. active or explicitly requested intake/session artifact from the current project's runtime state
@@ -264,24 +264,8 @@ if (FLAGS.full && !FLAGS.keepSpecs) {
 	log("── Preserving specs ──");
 }
 
-// 5. Clean stale JSON state files in .omx/state/
-log("── Cleaning stale state JSON ──");
-const stateDir = path.join(omxDir, "state");
-if (fs.existsSync(stateDir)) {
-	const entries = fs.readdirSync(stateDir);
-	for (const entry of entries) {
-		const fullPath = path.join(stateDir, entry);
-		const stat = fs.statSync(fullPath);
-
-		// Keep contexts/ directory, clean everything else
-		if (entry === "contexts") continue;
-		if (stat.isDirectory()) {
-			rmDir(fullPath);
-		} else if (entry.endsWith(".json")) {
-			rmFile(fullPath);
-		}
-	}
-}
+// 5. State directory removed — .sisyphus/run-continuation/ is the replacement
+log("── State directory removed (use .sisyphus/run-continuation/) ──");
 
 // 6. Clean metrics.json (reset to zero)
 log("── Resetting metrics ──");

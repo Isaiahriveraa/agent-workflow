@@ -16,9 +16,7 @@ Keep workflow continuity coherent across session artifacts, handoffs, runtime st
 - Resume/pause continuity issues
 
 ## Scope
-- `.omx/state/contexts/state.md`
-- `.omx/state/contexts/session-index.md`
-- `.omx/sessions/`
+- `.sisyphus/run-continuation/` (replaces former `.omx/state/` and `.omx/sessions/`)
 - project-local handoff flow under `thoughts/handoffs/`
 - continuity helper scripts and tests
 
