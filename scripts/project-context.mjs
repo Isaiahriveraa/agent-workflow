@@ -47,7 +47,6 @@ export const getProjectContext = (options = {}) => {
 		path.basename(projectRoot);
 	const projectSlug = `${slugify(slugBase)}-${hashProjectRoot(projectRoot)}`;
 	const projectDir = path.join(projectRoot, ".omx");
-	const planningDir = path.join(projectRoot, ".planning");
 	const thoughtsDir = path.join(projectRoot, "thoughts");
 	const sessionsDir = path.join(projectDir, "sessions");
 
@@ -56,9 +55,8 @@ export const getProjectContext = (options = {}) => {
 		projectRoot,
 		projectSlug,
 		projectDir,
-		planningDir,
 		thoughtPaths: {
-			intake: path.join(planningDir, "intake"),
+			intake: path.join(thoughtsDir, "intake"),
 			plans: path.join(thoughtsDir, "plans"),
 			research: path.join(thoughtsDir, "research"),
 			lessons: path.join(thoughtsDir, "lessons"),

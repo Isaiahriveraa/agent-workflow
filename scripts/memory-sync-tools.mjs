@@ -62,27 +62,9 @@ if (command === 'flush') {
     process.exit(0);
   }
 
-  // If "all", we just trigger a generic flush or simulate it if the underlying script needs explicit files.
-  // For the reinvented script, we keep it completely synchronous and explicit.
+  // `.planning/` removed — lessons live in `thoughts/lessons/`
   if (target === 'all') {
-    const lessonsDir = path.join(process.cwd(), '.planning', 'lessons');
-    if (fs.existsSync(lessonsDir)) {
-      const files = fs.readdirSync(lessonsDir).filter(f => f.endsWith('.md') && !f.startsWith('queue') && !f.startsWith('pending'));
-      
-      let syncedCount = 0;
-      for (const file of files) {
-        const fullPath = path.join(lessonsDir, file);
-        try {
-          const result = spawnSync('node', [lessonTools, 'flush', '--file', fullPath], { encoding: 'utf8' });
-          if (result.status === 0) syncedCount++;
-        } catch (err) {
-          console.error(`[Memory Sync] Failed to sync ${file}:`, err.message);
-        }
-      }
-      console.log(`[Memory Sync] Sync complete. Flushed ${syncedCount} lesson(s) to the cognitive index natively.`);
-    } else {
-      console.log(`[Memory Sync] No .planning/lessons directory found. Nothing to sync.`);
-    }
+    console.log(`[Memory Sync] .planning/ removed. Use thoughts/lessons/ directly.`);
   } else {
     // Sync specific file
     try {

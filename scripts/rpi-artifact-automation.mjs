@@ -17,8 +17,6 @@ const DEFAULT_COOLDOWN_MS = 30_000;
 const ARTIFACT_DIRS = [
   ['research', 'thoughts/research'],
   ['plan', 'thoughts/plans'],
-  ['legacy-research', '.planning/research'],
-  ['legacy-plan', '.planning/plans']
 ];
 
 const parseArgs = (args) => {

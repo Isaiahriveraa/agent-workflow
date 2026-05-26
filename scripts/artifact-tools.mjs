@@ -16,7 +16,6 @@ const repoLocalArtifactRoots = {
 	plans: project.thoughtPaths.plans,
 	research: project.thoughtPaths.research,
 };
-const legacyPlanRoot = path.join(project.planningDir, "plans");
 const sharedArtifactRoots = {
 	handoffs: project.thoughtPaths.handoffs,
 };
@@ -63,9 +62,7 @@ const listFiles = (dir) => {
 };
 
 const listPlanFiles = () => {
-	const canonical = listFiles(project.thoughtPaths.plans);
-	if (canonical.length > 0) return canonical;
-	return listFiles(legacyPlanRoot);
+	return listFiles(project.thoughtPaths.plans);
 };
 
 const safeReadFile = (filePath) => {
