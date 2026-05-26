@@ -269,13 +269,24 @@ herdr wait output 1-3 --match "ready" --timeout 30000
 herdr pane read 1-3 --source recent-unwrapped --lines 40
 ```
 
-### spawn a new agent and give it a task
+### spawn a new opencode agent with a specific model (RECOMMENDED)
+
+**NOTE: The full recipe collection is at [`AGENT-SPAWN-RECIPES.md`](./AGENT-SPAWN-RECIPES.md).**
+**Read that first before hacking — it has the hardened patterns.**
+
+Key differences from `claude`:
+- opencode has a rich TUI (no `>` prompt) — use `sleep 5` instead of `wait output --match ">"`
+- `pane run` may paste without submitting — always follow with `herdr pane send-keys PANE_ID Enter`
+- Use `--model openai/gpt-5.4` flag to pick a model
+
+Minimal working pattern:
 
 ```bash
-herdr pane split 1-2 --direction right --no-focus
-herdr pane run 1-3 "claude"
-herdr wait output 1-3 --match ">" --timeout 15000
-herdr pane run 1-3 "review the test coverage in src/api/"
+NEW_PANE=$(herdr pane split "$(herdr pane list | python3 -c 'import sys,json;d=json.load(sys.stdin)["result"]["panes"];print([p["pane_id"] for p in d if p["focused"]][0])')" --direction right --no-focus | python3 -c 'import sys,json;print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')
+herdr pane run "$NEW_PANE" "opencode --model openai/gpt-5.4"
+sleep 5
+herdr pane run "$NEW_PANE" "review the test coverage in src/api/"
+herdr pane send-keys "$NEW_PANE" Enter
 ```
 
 ### coordinate with another agent
