@@ -385,7 +385,7 @@ run_manifest_generators() {
 }
 
 migrate_legacy_claude_content() {
-    mkdir -p "$HUB"/{agents,commands,hooks,prompts,skills,get-shit-done}
+    mkdir -p "$HUB"/{agents,commands,hooks,skills}
 
     if [ -d "$HOME/.claude/skills" ] && [ ! -L "$HOME/.claude/skills" ]; then
         cp -rn "$HOME/.claude/skills/." "$HUB/skills/" 2>/dev/null || true
@@ -421,15 +421,6 @@ migrate_legacy_claude_content() {
         ok "Hooks migrated"
     else
         info "Hooks: already symlinked or doesn't exist"
-    fi
-
-    if [ -d "$HOME/.claude/get-shit-done" ] && [ ! -L "$HOME/.claude/get-shit-done" ]; then
-        cp -rn "$HOME/.claude/get-shit-done/." "$HUB/get-shit-done/" 2>/dev/null || true
-        rm -rf "$HOME/.claude/get-shit-done"
-        ln -s "$HUB/get-shit-done" "$HOME/.claude/get-shit-done"
-        ok "GSD migrated"
-    else
-        info "GSD: already symlinked or doesn't exist"
     fi
 
     if [ -f "$HOME/.claude/CLAUDE.md" ] && [ ! -L "$HOME/.claude/CLAUDE.md" ]; then
@@ -560,11 +551,7 @@ hub_commands = os.path.join(os.environ["HUB"], "commands")
 out_base = os.path.expanduser("~/.gemini/commands")
 
 def rewrite_for_gemini(value):
-    return (
-        value
-        .replace("~/.claude/get-shit-done", "~/.gemini/get-shit-done")
-        .replace("$HOME/.claude/get-shit-done", "$HOME/.gemini/get-shit-done")
-    )
+    return value
 
 generated = 0
 skipped = 0
@@ -847,11 +834,7 @@ def yaml_quote(value):
     return f'"{escaped}"'
 
 def rewrite_for_gemini(value):
-    return (
-        value
-        .replace("~/.claude/get-shit-done", "~/.gemini/get-shit-done")
-        .replace("$HOME/.claude/get-shit-done", "$HOME/.gemini/get-shit-done")
-    )
+    return value
 
 def map_tools(value):
     mapped = []

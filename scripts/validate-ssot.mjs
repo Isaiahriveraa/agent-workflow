@@ -456,12 +456,6 @@ if (fs.existsSync(manifestPath)) {
 		(entry) =>
 			entry.tool === "claude-code" && entry.source === "~/.claude/CLAUDE.md",
 	);
-	const claudeGsdLink = manifest.symlinks?.find(
-		(entry) =>
-			entry.tool === "claude-code" &&
-			entry.source === "~/.claude/get-shit-done",
-	);
-
 	if (!claudePromptLink) {
 		console.error(
 			"Manifest is missing the Claude Code CLAUDE.md symlink contract",
@@ -496,45 +490,6 @@ if (fs.existsSync(manifestPath)) {
 				if (actualTarget !== expectedTarget) {
 					console.error(
 						`Claude Code entrypoint points to ${actualTarget} but expected ${expectedTarget}`,
-					);
-					hasError = true;
-				}
-			}
-		}
-	}
-
-	if (!claudeGsdLink) {
-		console.error(
-			"Manifest is missing the Claude get-shit-done symlink contract",
-		);
-		hasError = true;
-	} else {
-		if (claudeGsdLink.target !== "~/.agents/get-shit-done") {
-			console.error(
-				`Claude get-shit-done must target ~/.agents/get-shit-done, found ${claudeGsdLink.target}`,
-			);
-			hasError = true;
-		}
-
-		const claudeGsdPath = expandHomePath(claudeGsdLink.source);
-		const expectedGsdTarget = expandHomePath(claudeGsdLink.target);
-		if (!fs.existsSync(claudeGsdPath)) {
-			console.error(
-				`Claude get-shit-done surface is missing: ${claudeGsdPath}`,
-			);
-			hasError = true;
-		} else {
-			const stats = fs.lstatSync(claudeGsdPath);
-			if (!stats.isSymbolicLink()) {
-				console.error(
-					`Claude get-shit-done surface must be a symlink: ${claudeGsdPath}`,
-				);
-				hasError = true;
-			} else {
-				const actualTarget = fs.readlinkSync(claudeGsdPath);
-				if (actualTarget !== expectedGsdTarget) {
-					console.error(
-						`Claude get-shit-done surface points to ${actualTarget} but expected ${expectedGsdTarget}`,
 					);
 					hasError = true;
 				}
