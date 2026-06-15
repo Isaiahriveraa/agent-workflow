@@ -60,7 +60,6 @@ Each AI coding tool connects through an adapter directory:
 | `adapters/antigravity/` | Antigravity/Gemini | `GEMINI.md` → `AGENTS.md` |
 | `adapters/openclaw/` | OpenClaw | Workspace wrapper templates |
 | `adapters/pi/` | Pi | Pi-specific integration |
-| `adapters/claurst/` | Claurst | Claurst-specific integration |
 
 The adapter changes ergonomics, not workflow behavior. The source of truth stays in this repo.
 
@@ -86,15 +85,16 @@ Memory flows: hooks capture signals → MemPalace processes → recall feeds con
 | `/plan-feature` | Lightweight feature planning for scoped work |
 | `/review` | Senior PR review — correctness, structure, failure modes, tests |
 | `/review-diff` | Strict diff review — concerns, assumptions, edge cases |
-| `/pr` | PR description generator — sized to the actual diff |
-| `/pr-split` | Split work into small, reviewable PRs |
+|| `/pr` | PR description generator — sized to the actual diff |
+|| `/pr-split` | Split work into small, reviewable PRs |
+|| `/pr-refine` | **NEW** — Split a dirty branch into clean stacked draft PRs with `gh` CLI |
 | `/fix` | Systematic debugging — identify, reproduce, fix, verify |
 | `/elite-mode` | TDD + SOLID + senior SWE workflow |
 | `/ping-pong` | Two-model debate planning |
 | `/tutor` | Guided web development tutoring |
 | `/commit` | Professional commit message generator |
-| `/create-handoff` | Create handoff document for session transfer |
-| `/resume-handoff` | Resume work from a handoff document |
+| `/handoff` | Create handoff document for session transfer |
+| `/recall` | Resume work from a handoff document |
 | `/capture-decision` | Document architectural decisions at decision time |
 | `/read-code` | Read and analyze code before changing it |
 
@@ -150,11 +150,10 @@ Memory flows: hooks capture signals → MemPalace processes → recall feeds con
 │   ├── antigravity/
 │   ├── openclaw/
 │   ├── pi/
-│   └── claurst/
 └── thoughts/              # Research, plans, handoffs, decisions
-    ├── handoffs/
-    ├── plans/
-    ├── research/
+    ├── {Month-Name}-{Year}/W{week-num}/handoffs/
+    ├── {Month-Name}-{Year}/W{week-num}/reflections/
+    ├── {Month-Name}-{Year}/W{week-num}/grill/
     └── YYYY-Www/          # ISO week decision records
 ```
 
@@ -168,7 +167,7 @@ Memory flows: hooks capture signals → MemPalace processes → recall feeds con
 
 - Secrets and caches: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `node_modules/`
 - Per-project runtime inside a target repo:
-  - `[project]/thoughts/handoffs/`
+  - `[project]/thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/`
   - `[project]/thoughts/plans/`
   - `[project]/thoughts/research/`
 

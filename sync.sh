@@ -553,6 +553,36 @@ out_base = os.path.expanduser("~/.gemini/commands")
 def rewrite_for_gemini(value):
     return value
 
+# ---- Clean stale TOML files ----
+# Build set of expected .toml paths from hub .md files
+expected = set()
+for md_file in sorted(glob.glob(os.path.join(hub_commands, "**/*.md"), recursive=True)):
+    if md_file.endswith(".bak") or ".bak." in md_file:
+        continue
+    with open(md_file, 'r', encoding='utf8') as handle:
+        content = handle.read()
+    frontmatter = re.match(r'^---\n(.*?)\n---\n', content, re.DOTALL)
+    if not frontmatter:
+        continue
+    if not re.search(r'^description:\s*(.+)$', frontmatter.group(1), re.MULTILINE):
+        continue
+    rel = os.path.relpath(md_file, hub_commands)
+    expected.add(os.path.splitext(rel)[0] + ".toml")
+
+# Remove stale TOML files (present in out dir but not in hub commands)
+existing = set()
+for current_root, _, filenames in os.walk(out_base):
+    for filename in filenames:
+        if filename.endswith(".toml"):
+            rel = os.path.relpath(os.path.join(current_root, filename), out_base)
+            existing.add(rel)
+
+for stale in sorted(existing - expected):
+    stale_path = os.path.join(out_base, stale)
+    os.remove(stale_path)
+    print(f"  RM    {stale} (stale, no hub source)")
+
+# ---- Generate TOML commands ----
 generated = 0
 skipped = 0
 
@@ -598,7 +628,6 @@ for md_file in sorted(glob.glob(os.path.join(hub_commands, "**/*.md"), recursive
 print(f"\nDone. {generated} commands generated, {skipped} skipped.")
 PYEOF
 }
-
 cmd_gen_opencode_skills() {
     echo "Registering hub skills in OpenCode skill registry..."
     echo ""
