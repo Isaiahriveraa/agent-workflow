@@ -1,4 +1,4 @@
-# CONTEXT.md Format
+# Glossary Format (.rpiv/glossary.md / CONTEXT.md)
 
 ## Structure
 
@@ -32,9 +32,17 @@ _Avoid_: Client, buyer, account
 - **Group terms under subheadings** when natural clusters emerge. If all terms belong to a single cohesive area, a flat list is fine.
 - **Write an example dialogue.** A conversation between a dev and a domain expert that demonstrates how the terms interact naturally and clarifies boundaries between related concepts.
 
+## Location resolution
+
+The skill writes to the first existing path in this order:
+1. `.rpiv/glossary.md` — rpiv canonical (created lazily at `.rpiv/` root)
+2. `CONTEXT.md` — legacy fallback (created at project root)
+
+Both use the same format. The rpiv mode should be preferred when `.rpiv/` exists.
+
 ## Single vs multi-context repos
 
-**Single context (most repos):** One `CONTEXT.md` at the repo root.
+**Single context (most repos):** One file at the resolved path.
 
 **Multiple contexts:** A `CONTEXT-MAP.md` at the repo root lists the contexts, where they live, and how they relate to each other:
 
@@ -57,7 +65,6 @@ _Avoid_: Client, buyer, account
 The skill infers which structure applies:
 
 - If `CONTEXT-MAP.md` exists, read it to find contexts
-- If only a root `CONTEXT.md` exists, single context
-- If neither exists, create a root `CONTEXT.md` lazily when the first term is resolved
-
-When multiple contexts exist, infer which one the current topic relates to. If unclear, ask.
+- If `.rpiv/glossary.md` exists, single rpiv context
+- If a root `CONTEXT.md` exists, single legacy context
+- If none exist, create lazily

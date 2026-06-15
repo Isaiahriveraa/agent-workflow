@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: Build a throwaway prototype to flesh out a design before committing to it. Routes between two branches — a runnable terminal app for state/business-logic questions, or several radically different UI variations toggleable from one route. Use when the user wants to prototype, sanity-check a data model or state machine, mock up a UI, explore design options, or says "prototype this", "let me play with it", "try a few designs".
+description: Build a throwaway prototype to flesh out a design before committing to it. RPIV-aware — captures findings back to .rpiv/artifacts/decisions/ or .rpiv/artifacts/designs/. Routes between two branches — a runnable terminal app for state/business-logic questions, or several radically different UI variations toggleable from one route. Use when the user wants to prototype, sanity-check a data model or state machine, mock up a UI, explore design options, or says "prototype this", "let me play with it", "try a few designs".
 ---
 
 # Prototype
@@ -27,4 +27,15 @@ The two branches produce very different artifacts — getting this wrong wastes 
 
 ## When done
 
-The _answer_ is the only thing worth keeping from a prototype. Capture it somewhere durable (commit message, ADR, issue, or a `NOTES.md` next to the prototype) along with the question it was answering. If the user is around, that capture is a quick conversation; if not, leave the placeholder so they (or you, on the next pass) can fill in the verdict before deleting the prototype.
+The _answer_ is the only thing worth keeping from a prototype. Capture it somewhere durable (commit message, ADR, issue, or a `NOTES.md` next to the prototype) along with the question it was answering.
+
+### rpiv capture path
+
+If `.rpiv/` exists at the project root, route the answer to the appropriate rpiv artifact:
+
+- **Logic/state decision validated** → write to `.rpiv/artifacts/decisions/NNNN-slug.md` with the verdict and the question it answered
+- **Design decision validated** → fold into `.rpiv/artifacts/designs/` if a design artifact exists for this feature
+- **Research question answered** → note findings in `.rpiv/artifacts/research/` as a research addendum
+- **Negative result (prototype disproved approach)** → still worth capturing in `.rpiv/artifacts/decisions/` as a rejected alternative — prevents re-exploration
+
+If the user is around, that capture is a quick conversation; if not, leave the placeholder so they (or you, on the next pass) can fill in the verdict before deleting the prototype.

@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates documentation (CONTEXT.md, ADRs) inline as decisions crystallise. Use when user wants to stress-test a plan against their project's language and documented decisions.
+description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates the plan in-place after each question. Autowrites glossary/ADR entries and logs grill transcripts to thoughts/glossary.md, thoughts/adr/, and thoughts/{Month-Year}/W{week}/grill/ via new-handoff.py.
 ---
 
 <what-to-do>
@@ -17,45 +17,51 @@ If a question can be answered by exploring the codebase, explore the codebase in
 
 ## Domain awareness
 
-During codebase exploration, also look for existing documentation:
-
-### File structure
-
-Most repos have a single context:
+During codebase exploration, look for existing documentation under `thoughts/`:
 
 ```
 /
-├── CONTEXT.md
-├── docs/
-│   └── adr/
-│       ├── 0001-event-sourced-orders.md
-│       └── 0002-postgres-for-write-model.md
-└── src/
+├── thoughts/
+│   ├── glossary.md              ← domain glossary
+│   ├── adr/                     ← Architecture Decision Records
+│   │   ├── 0001-slug.md
+│   │   └── 0002-slug.md
+│   ├── {Month-Name}-{Year}/
+│   │   └── W{week-num}/
+│   │       ├── handoffs/
+│   │       ├── reflections/
+│   │       └── grill/
 ```
 
-If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The map points to where each one lives:
+- **`thoughts/glossary.md`** — Canonical domain glossary for the project. Created lazily when the first term is resolved.
+- **`thoughts/adr/`** — Architecture Decision Records. Numbered: `0001-slug.md`, `0002-slug.md`, etc. Created lazily when the first ADR is needed.
+- **`thoughts/{Month-Name}-{Year}/W{week-num}/grill/`** — Grill session outputs and Q&A transcript handoffs created via `new-handoff.py`.
 
-```
-/
-├── CONTEXT-MAP.md
-├── docs/
-│   └── adr/                          ← system-wide decisions
-├── src/
-│   ├── ordering/
-│   │   ├── CONTEXT.md
-│   │   └── docs/adr/                 ← context-specific decisions
-│   └── billing/
-│       ├── CONTEXT.md
-│       └── docs/adr/
-```
+Create files lazily — only when you have something to write.
 
-Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+### Glossary path resolution
+
+- If `thoughts/glossary.md` exists → use it as the canonical glossary
+- If it doesn't exist → create `thoughts/glossary.md` when first term is resolved
+
+### ADR path resolution
+
+- If `thoughts/adr/` exists → use it for ADRs
+- If it doesn't exist → create `thoughts/adr/` when first ADR is needed
 
 ## During the session
 
 ### Challenge against the glossary
 
-When the user uses a term that conflicts with the existing language in `CONTEXT.md`, call it out immediately. "Your glossary defines 'cancellation' as X, but you seem to mean Y — which is it?"
+When the user uses a term that conflicts with the existing language in the glossary (`thoughts/glossary.md`), call it out immediately. "Your glossary defines 'cancellation' as X, but you seem to mean Y — which is it?"
+
+### Cross-reference with thoughts artifacts
+
+Before accepting a plan or design claim, check:
+1. **`thoughts/glossary.md`** — does the claim conflict with established domain language?
+2. **`thoughts/adr/`** — was an ADR written that this plan contradicts?
+
+If a contradiction is found, surface it: "ADR-0004 decided we're using event sourcing for orders, but your plan assumes a relational write model — which is right?"
 
 ### Sharpen fuzzy language
 
@@ -69,11 +75,11 @@ When domain relationships are being discussed, stress-test them with specific sc
 
 When the user states how something works, check whether the code agrees. If you find a contradiction, surface it: "Your code cancels entire Orders, but you just said partial cancellation is possible — which is right?"
 
-### Update CONTEXT.md inline
+### Update glossary inline
 
-When a term is resolved, update `CONTEXT.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
+When a term is resolved, update `thoughts/glossary.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
 
-`CONTEXT.md` should be totally devoid of implementation details. Do not treat `CONTEXT.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
+The glossary should be totally devoid of implementation details. Do not treat it as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 
 ### Offer ADRs sparingly
 
@@ -84,5 +90,27 @@ Only offer to create an ADR when all three are true:
 3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
 
 If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](./ADR-FORMAT.md).
+
+ADRs go to `thoughts/adr/NNNN-slug.md`.
+
+### Auto-write after each question
+
+After the user answers each question:
+
+1. **Modify the plan artifact being grilled in-place**: Edit the plan itself to reflect the resolved decision — updated terminology, corrected assumptions, clarified scope, reordered priorities, whatever the answer changed. Read the relevant sections, apply the changes, and save. The artifact IS the source of truth of what we agreed on; don't let it become stale while side-files accumulate the real decisions.
+
+2. **If a term was resolved**: Immediately update `thoughts/glossary.md` with the resolved term using the format: `- **{term}**: {definition}`. Append it to the file, creating it if needed.
+
+3. **If an ADR criterion was met** (hard to reverse, surprising, real trade-off): Immediately create `thoughts/adr/{incrementing-number}-{slug}.md` with the decision. Use the ADR format from [ADR-FORMAT.md](./ADR-FORMAT.md).
+
+4. **Log the Q&A pair**: append to a temp session transcript in `thoughts/{Month-Name}-{Year}/W{week-num}/grill/` using:
+   ```
+   python3 ~/.agents/scripts/new-handoff.py --type grill "<topic>"
+   ```
+   The script handles path creation. After calling it, fill in the generated file with the Q&A session content.
+
+Do NOT batch these writes. Write immediately after each question-answer round.
+
+At session end, call `python3 ~/.agents/scripts/new-handoff.py --type grill "<topic>"` to capture the grill session output, then fill in the generated file with the final grill session summary.
 
 </supporting-info>

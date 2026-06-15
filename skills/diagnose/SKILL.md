@@ -1,13 +1,23 @@
 ---
 name: diagnose
-description: Disciplined diagnosis loop for hard bugs and performance regressions. Reproduce → minimise → hypothesise → instrument → fix → regression-test. Use when user says "diagnose this" / "debug this", reports a bug, says something is broken/throwing/failing, or describes a performance regression.
+description: Disciplined diagnosis loop for hard bugs and performance regressions. RPIV-aware — checks .rpiv/glossary.md, decisions, and research artifacts for context before diagnosing. Reproduce → minimise → hypothesise → instrument → fix → regression-test. Use when user says "diagnose this" / "debug this", reports a bug, says something is broken/throwing/failing, or describes a performance regression.
 ---
 
 # Diagnose
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
 
-When exploring the codebase, use the project's domain glossary to get a clear mental model of the relevant modules, and check ADRs in the area you're touching.
+### Pre-flight: rpiv context
+
+Before starting diagnosis, check for existing rpiv artifacts that may provide context on the area being debugged:
+
+- **`.rpiv/glossary.md`** or **`CONTEXT.md`** — domain glossary for module mental model
+- **`.rpiv/artifacts/decisions/`** or **`docs/adr/`** — ADRs touching the affected modules
+- **`.rpiv/artifacts/research/`** — research docs that may explain intended behavior vs observed behavior
+- **`.rpiv/artifacts/discover/`** — FRDs specifying expected behavior of the feature
+- **`.rpiv/agent/memory/MEMORY.md`** — pi memory for previous bug patterns and decisions
+
+Use these to distinguish "bug" from "misunderstood design." A fix that contradicts an ADR is a regression waiting to happen.
 
 ## Phase 1 — Build a feedback loop
 
