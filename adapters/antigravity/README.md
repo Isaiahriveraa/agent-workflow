@@ -50,3 +50,12 @@ agents-memory flush
 ```
 
 This approach works for any CLI that can execute shell commands, including Gemini.
+
+## CLI Triggers
+
+This adapter supports two CLI triggers sharing `~/.gemini/`:
+- **`agy`** (antigravity) at `~/.local/bin/agy` (v1.0.5+)
+- **`gemini`** (Gemini CLI) at `/opt/homebrew/bin/gemini`
+
+Both consume `~/.gemini/GEMINI.md` as their entrypoint, which symlinks to
+this adapter. The hub at `~/.agents/` is SSOT for both.

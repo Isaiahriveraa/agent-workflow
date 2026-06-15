@@ -98,6 +98,20 @@
       "tier": 1,
       "tool": "universal",
       "type": "directory"
+    },
+    {
+      "source": "~/.gemini/skills",
+      "target": "~/.agents/skills",
+      "tier": 1,
+      "tool": "antigravity",
+      "type": "directory"
+    },
+    {
+      "source": "~/.gemini/antigravity-cli/plugins/hub/skills",
+      "target": "~/.agents/skills",
+      "tier": 1,
+      "tool": "antigravity",
+      "type": "directory"
     }
   ],
   "not_managed": [
@@ -125,7 +139,7 @@
   "auto_discovery": {
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
-    "antigravity_skills": "Auto-discovers from ~/.agents/skills/ as the user-scope alias — no ~/.gemini/skills symlink needed",
+    "antigravity_skills": "Symlinked to ~/.gemini/skills/ and ~/.gemini/antigravity-cli/plugins/hub/skills/ — both point to ~/.agents/skills/",
     "nemoclaw_skills": "Auto-discovers from /sandbox/.agents/skills/ inside the sandbox — synced by sync.sh sync-nemoclaw-skills"
   },
   "capabilities": {
@@ -229,8 +243,8 @@
         "contract": "~/.gemini/GEMINI.md -> ~/.agents/adapters/antigravity/GEMINI.md"
       },
       "skills": {
-        "status": "native",
-        "contract": "Auto-discovers user skills from ~/.agents/skills without a mirrored ~/.gemini/skills directory"
+        "status": "bridged",
+        "contract": "Symlinked via ~/.gemini/skills/ -> ~/.agents/skills/ (shared) and ~/.gemini/antigravity-cli/plugins/hub/skills/ -> ~/.agents/skills/ (agy plugin discovery)"
       },
       "commands": {
         "status": "bridged",
