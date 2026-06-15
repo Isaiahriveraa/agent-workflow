@@ -261,12 +261,12 @@ const commandContracts = new Map([
 
 const handoffContracts = new Map([
 	[
-		"commands/create-handoff.md",
+		"commands/handoff.md",
 		[
-			"[project root]/thoughts/handoffs/",
-			"current project's `state.md`",
-			"current project's `session-index.md`",
-			"scripts/artifact-tools.mjs persist",
+			"[project root]/thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/{Mon-DD}_{time}--<topic>.md",
+			"node ~/.agents/scripts/project-context.mjs current",
+			"python3 ~/.agents/scripts/new-handoff.py --type handoffs \"<topic>\"",
+			"/recall /absolute/path/to/thoughts/June-2026/W1/handoffs/Jun-05_7-30pm--topic.md",
 		],
 	],
 	[
@@ -296,11 +296,11 @@ const explicitOutputContracts = new Map([
 		],
 	],
 	[
-		"commands/create-handoff.md",
+		"commands/handoff.md",
 		[
-			"Use the exact absolute handoff path written in the current run.",
+			"After writing the file, respond with the exact absolute path:",
 			"Next step",
-			"/resume_handoff path/to/handoff.md",
+			"/recall /absolute/path/to/thoughts/June-2026/W1/handoffs/Jun-05_7-30pm--topic.md",
 		],
 	],
 	[

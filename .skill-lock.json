@@ -293,11 +293,11 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
-    "create-handoff": {
+    "handoff": {
       "source": ".agents",
       "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/create-handoff",
-      "skillPath": "skills/create-handoff/SKILL.md",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/handoff",
+      "skillPath": "skills/handoff/SKILL.md",
       "skillFolderHash": "fbef4a58a672bab39a6e47839d99ba88232b1d9e",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
@@ -672,6 +672,15 @@
       "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
+    "prompt-master": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/prompt-master",
+      "skillPath": "skills/prompt-master/SKILL.md",
+      "skillFolderHash": "0c9071e72de3f5fdeba545f4990a1e74f6b300ac",
+      "installedAt": "2026-05-28T03:31:13.000Z",
+      "updatedAt": "2026-05-28T03:31:13.000Z"
+    }
   "dismissed": {
     "findSkillsPrompt": true
   },

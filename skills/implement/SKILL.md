@@ -90,7 +90,7 @@ Please review the diff and let me know if anything should reopen a phase.
 
 ---
 
-💬 Follow-up: surface code/plan mismatches inline via the `ask_user_question` flow ("Follow the plan / Skip this change / Update the plan") — that is implement's only in-skill follow-up surface. For plan-level changes run `/skill:revise <plan-path>`; for session pauses run `/skill:create-handoff`.
+💬 Follow-up: surface code/plan mismatches inline via the `ask_user_question` flow ("Follow the plan / Skip this change / Update the plan") — that is implement's only in-skill follow-up surface. For plan-level changes run `/skill:revise <plan-path>`; for session pauses run `/skill:handoff`.
 
 **Next step:** `/skill:validate .rpiv/artifacts/plans/{filename}.md` — verify the implementation against the plan's success criteria before committing.
 
@@ -112,7 +112,7 @@ Please review what landed and let me know if anything needs to change before res
 
 💬 Follow-up: surface code/plan mismatches inline via the `ask_user_question` flow ("Follow the plan / Skip this change / Update the plan") — that is implement's only in-skill follow-up surface. For plan-level changes run `/skill:revise <plan-path>` first.
 
-**Next step:** `/skill:create-handoff` — capture in-flight state so the next session can resume cleanly via `/skill:resume-handoff`.
+**Next step:** `/skill:handoff` — capture in-flight state so the next session can resume cleanly via `/skill:recall`.
 
 > 🆕 Tip: start a fresh session with `/new` first — chained skills work best with a clean context window.
 ```
@@ -121,5 +121,5 @@ Please review what landed and let me know if anything needs to change before res
 
 - **Implement does not own the plan.** Source-file edits happen in implement; plan edits do not. Never patch the plan artifact from inside implement.
 - **For plan-level changes.** Run `/skill:revise <plan-path>` first — it appends a timestamped Follow-up section to the plan and preserves history. Then resume implement at the affected phase.
-- **For session pauses.** Run `/skill:create-handoff` to capture in-flight state, then `/new` and `/skill:resume-handoff` in the next session.
-- **Mismatch handling stays inline.** When code reality diverges from the plan, use the inline `ask_user_question` flow ("Follow the plan / Skip this change / Update the plan") — that is implement's only follow-up surface; everything else escalates to revise or create-handoff.
+- **For session pauses.** Run `/skill:handoff` to capture in-flight state, then `/new` and `/skill:recall` in the next session.
+- **Mismatch handling stays inline.** When code reality diverges from the plan, use the inline `ask_user_question` flow ("Follow the plan / Skip this change / Update the plan") — that is implement's only follow-up surface; everything else escalates to revise or handoff.

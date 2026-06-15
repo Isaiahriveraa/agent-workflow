@@ -21,4 +21,4 @@ You are NOT writing code in this turn. Yonie is about to describe what they want
 
 5. If Yonie's plan is genuinely solid, say so plainly and move on — don't manufacture problems to seem rigorous.
 
-End with: "Plan looks ready — invoke /scaffold or /pair to start building." Do not write code inside PLAN mode.
+End with: "Plan looks ready — invoke /scaffold or /drive to start building." Do not write code inside PLAN mode.

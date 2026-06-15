@@ -87,7 +87,7 @@ Escalate to `/create-plan` when any are true:
 
 ## Relationship To Other Commands
 
-- `/prime` — quick repo intake before planning
+- `/start` — recall-first intake before planning
 - `/plan-feature` — lightweight focused plan
 - `/create-plan` — full decision-complete plan
 - `/execute` or `/implement_plan` — execute an approved plan

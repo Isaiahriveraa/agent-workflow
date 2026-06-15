@@ -35,13 +35,13 @@ test('AGENTS declares operating rules and workflow triggers', () => {
 
 // gsd.md was deleted — handoff commands test shortened
 test('handoff commands keep handoffs project-local while runtime state stays project-scoped', () => {
-  const createHandoff = read('commands/create-handoff.md');
+  const createHandoff = read('commands/handoff.md');
   const resumeHandoff = read('commands/resume-handoff.md');
 
-  assert.match(createHandoff, /\[project root\]\/thoughts\/handoffs\//);
-  assert.match(createHandoff, /current project's `state\.md`/);
-  assert.match(createHandoff, /current project's `session-index\.md`/);
-  assert.match(createHandoff, /project-local handoff directory/);
+  assert.match(createHandoff, /\[project root\]\/thoughts\/\{Month-Name\}-\{Year\}\/W\{week-num\}\/handoffs\/\{Mon-DD\}_\{time\}--<topic>\.md/);
+  assert.match(createHandoff, /node ~\/\.agents\/scripts\/project-context\.mjs current/);
+  assert.match(createHandoff, /python3 ~\/\.agents\/scripts\/new-handoff\.py --type handoffs "<topic>"/);
+  assert.match(createHandoff, /\/recall \/absolute\/path\/to\/thoughts\/June-2026\/W1\/handoffs\/Jun-05_7-30pm--topic\.md/);
   assert.match(resumeHandoff, /\[project root\]\/thoughts\/handoffs\/ENG-XXXX/);
   assert.match(resumeHandoff, /thoughts\/plans/);
   assert.match(resumeHandoff, /thoughts\/research/);

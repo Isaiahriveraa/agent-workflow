@@ -1,6 +1,6 @@
 ---
-name: create-handoff
-description: Create a context-preserving handoff document for session transitions, compacting the current task, decisions made, in-flight changes, and open questions into a single concise file so a fresh session can pick up where this one left off. Use when the user invokes /create-handoff, says context is getting large, asks to wrap up the session, or wants to hand off work to another session.
+name: handoff
+description: Create a context-preserving handoff document for session transitions, compacting the current task, decisions made, in-flight changes, and open questions into a single concise file so a fresh session can pick up where this one left off. Use when the user invokes /handoff, says context is getting large, asks to wrap up the session, or wants to hand off work to another session.
 argument-hint: [description]
 allowed-tools: Read, Write, Bash(git *), Glob, Grep
 disable-model-invocation: true
@@ -31,7 +31,7 @@ Copy values verbatim — do not reformat the timezone offset or any other field.
 ### 1. Filepath & frontmatter mapping
 
 From the Metadata block above:
-- `<slug>` → filename prefix: `.rpiv/artifacts/handoffs/<slug>_<description>.md` (`<description>` is a kebab-case slug from `$ARGUMENTS`).
+- `<slug>` → filename prefix: `thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/{Mon-DD}_{time}--<description>.md` (`<description>` is a kebab-case slug from `$ARGUMENTS`).
 - `<iso>` → frontmatter `date:` and `last_updated:`.
 - `repo:` → frontmatter `repository:`.
 - `branch:` / `commit:` → matching frontmatter fields.
@@ -88,15 +88,15 @@ Once this is completed, you should respond to the user with the template between
 
 <template_response>
 Handoff written to:
-`.rpiv/artifacts/handoffs/YYYY-MM-DD_HH-MM-SS_description.md`
+`thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/{Mon-DD}_{time}--description.md`
 
 Replace the path below with your actual handoff file path before running.
 
 ---
 
-💬 Follow-up: describe extra context in chat to append to this handoff before chaining; re-run `/skill:create-handoff` for a fresh handoff document.
+💬 Follow-up: describe extra context in chat to append to this handoff before chaining; re-run `/skill:handoff` for a fresh handoff document.
 
-**Next step:** `/skill:resume-handoff .rpiv/artifacts/handoffs/YYYY-MM-DD_HH-MM-SS_description.md` — pick up where this session left off in a fresh context.
+**Next step:** `/skill:recall thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/{Mon-DD}_{time}--description.md` — pick up where this session left off in a fresh context.
 
 > 🆕 Tip: start a fresh session with `/new` first — chained skills work best with a clean context window.
 </template_response>

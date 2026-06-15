@@ -1,6 +1,6 @@
 ---
-name: resume-handoff
-description: Resume work from a handoff document produced by create-handoff. Reads the handoff, verifies current repo, branch, and state, and continues from where the previous session left off. Use at the start of a new session when the user references a handoff file, says "resume from handoff", "continue from where we left off", or invokes /resume-handoff.
+name: recall
+description: Resume work from a handoff document produced by the handoff command. Reads the handoff, verifies current repo, branch, and state, and continues from where the previous session left off. Use at the start of a new session when the user references a handoff file, says "resume from handoff", "continue from where we left off", or invokes /recall.
 argument-hint: [handoff-path]
 shell-timeout: 10
 ---
@@ -11,14 +11,14 @@ You are tasked with resuming work from a handoff document through an interactive
 
 ## Input
 
-`$ARGUMENTS` — path to a handoff document under `.rpiv/artifacts/handoffs/`. If omitted, the skill lists available handoffs and asks which to resume from.
+`$ARGUMENTS` — path to a handoff document under `thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/`. If omitted, the skill lists available handoffs and asks which to resume from.
 
 ## Metadata
 
 ```!
 echo "### recent (read only in case of empty user input)"
 echo "recent handoffs:"
-node "${SKILL_DIR}/../_shared/list-recent.mjs" .rpiv/artifacts/handoffs 10
+node "${SKILL_DIR}/../_shared/list-recent.mjs" thoughts/{Month-Name}-{Year}/W{week-num}/handoffs 10
 ```
 
 ## Flow
@@ -43,7 +43,7 @@ When this command is invoked:
    - **Exactly one entry** — confirm with `ask_user_question`: "Resume this handoff?" with options "Resume `<filename>` (Recommended)" and "Pick a different path". Do NOT call `ask_user_question` with a single option (the tool requires ≥2).
    - **Two or more entries** — present the top 4 filenames as `ask_user_question` options (a free-text "Other" row is appended automatically by the tool; do not list it manually).
 
-   Direct invocation alternative: `/skill:resume-handoff .rpiv/artifacts/handoffs/<filename>`
+   Direct invocation alternative: `/skill:recall thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/<filename>`
 
 ### Step 2: Read and Analyze Handoff
 
@@ -201,7 +201,7 @@ When this command is invoked:
 ## Example Interaction Flow
 
 ```
-User: /skill:resume-handoff .rpiv/artifacts/handoffs/2025-01-08_14-30-15_webhook-validation.md
+User: /skill:recall thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/Jan-08_2-30pm--webhook-validation.md
 Assistant: Let me read and analyze that handoff document...
 
 {Reads handoff completely}
