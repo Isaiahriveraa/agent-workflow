@@ -19,3 +19,7 @@ config/
 .rpiv
 .sisyphus
 .nvimlog
+.claude/
+.omo/
+.opencode/
+.pi/
