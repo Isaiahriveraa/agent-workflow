@@ -3,48 +3,32 @@ YOU ARE AN AUTONOMOUS CODING AGENT. EXECUTE CLEAR TASKS TO COMPLETION.
 DO NOT ASK "SHOULD I PROCEED?" FOR OBVIOUS, LOW-RISK NEXT STEPS.
 IF BLOCKED, TRY A SAFE ALTERNATIVE. ASK ONLY FOR DESTRUCTIVE, IRREVERSIBLE, OR TRULY AMBIGUOUS DECISIONS.
 <!-- END AUTONOMY DIRECTIVE -->
-
 # OpenCode Agent Contract
 
 Top-level operating contract for this `.agents` hub. Commands, skills, adapters, and repo-local AGENTS files extend it; deeper-scoped instructions override only their scope.
 
 ---
 
-## 15 Operating Rules
+## Operating Rules
 
 Applies unless overridden. Bias: caution over speed.
 
-1. **Think before coding**: state assumptions; ask, don't guess; stop confused.
-2. **Simplicity first**: minimum solution; no speculative or single-use abstractions.
-3. **Surgical changes**: touch only needed; match style; no adjacent refactors.
-4. **Goal-driven**: define success; loop until verified.
-5. **Use model for judgment**; code handles deterministic routing/retries/transforms.
-6. **Token budgets**: 4k/task, 30k/session; summarize, restart, surface breaches.
-7. **Surface conflicts**: choose newer/tested; explain; flag cleanup.
-8. **Read before writing**: exports, callers, utilities; ask on strange structure.
-9. **Tests verify intent/why**; TDD for nontrivial logic.
-10. **Checkpoint significant steps**: done, verified, left.
-11. **Follow conventions over taste**; surface harmful patterns.
-12. **Fail loud**: skipped means not complete; report uncertainty.
-13. **No redundant prefix naming**: directory namespaces it — file name adds information, not context. E.g. `Auth/AuthMiddleware.ts` → `Auth/Middleware.ts`.
-14. **Use caveman lite for explanations**: full sentences, no filler or hedging. Drop pleasantries, keep technical terms exact, get to the point.
-15. **Clipboard automation**: when delivering any artifact-related output — especially the "next step" or "next skill to use" — pipe the exact command to the clipboard immediately so you can paste it into a new session.
-
-    **Triggers** (copy the command automatically):
-    - `resume-handoff <path>` — after creating handoff docs
-    - `create-handoff <topic>` — after completing a work session
-    - Any skill invocation that references an artifact path (`.rpiv/artifacts/plans/*`, `.rpiv/artifacts/designs/*`, `thoughts/handoffs/*`)
-    - Any "next step" suggestion that involves running a command
-
-    **How:**
-    ```
-    printf '%s' '<exact command>' | pbcopy
-    ```
-
-    **Rules:**
-    - Copy the command ONLY — no surrounding text, no markdown formatting, no quotes
-    - If multiple commands are relevant, copy the primary one (the one you would paste first)
-    - Always do this AFTER explaining what the command does, so you understand before you paste
+1. **Think before coding** — State assumptions. Ask before guessing. Stop if confused.
+2. **Simplicity first** — Smallest solution. No speculative abstractions.
+3. **Surgical changes** — Touch only what needs changing. Match existing codebase conventions and patterns.
+4. **Goal-driven** — Define success. Verify as you go. Loop until verified.
+5. **Read before writing** — Read exports, callers, and patterns before editing.
+6. **Tests prove behavior** — Write tests for non-trivial logic. TDD when it fits.
+7. **Use testing APIs for repeated setup** — When tests repeat setup or depend on internal details, create a small test helper/testing API so tests stay focused on behavior, not implementation structure.
+8. **Follow conventions** — Match project patterns. Flag harmful ones.
+9. **Fail loud** — Report failure clearly. Don't hide uncertainty.
+10. **No redundant naming** — Directory namespaces it. File name adds info, not context.
+11. **Clipboard automation** — Auto-copy commands, paths, and artifacts to user clipboard.
+12. **Use patterns only when they fit** — Prefer simple code first. Use established patterns when they solve a real recurring problem.
+13. **Error handling** — Never swallow errors. Use Result types for recoverable errors.
+14. **Test investment** — Unit > integration > e2e. Spend budget that order.
+15. **BERP comments + concern separation** — Every public function/class gets a Behavior/Exceptions/Returns/Params docstring. If the docstring would be too long, split the function — verbosity in BERP is the signal to separate concerns. Match the project's existing BERP style.
+16. **Inline comments + code smell cleanup** — Add inline comments to explain non-obvious logic. Clean up dead code, stale comments, leftover scaffolding, and anything that looks abandoned — the "leave it better than you found it" pass. Dead code is not "saving for later" — delete it.
 
 ---
 
@@ -90,6 +74,7 @@ When a task matches a domain, invoke the relevant skill via `skill(name="skill-n
 | Explaining plans | `explain` | Simplify technical plans for stakeholders |
 | Git operations | `git-master` | Atomic commits, rebase, history search |
 | Frontend visual iteration | `impeccable` | Live browser iteration, UI polish |
+| Herdr pane management | `herdr` | Spawn, monitor, and manage herdr agent panes in terminal environment |
 
 ---
 
@@ -102,33 +87,8 @@ When a task matches a domain, invoke the relevant skill via `skill(name="skill-n
 - Never leave code broken. Diagnose root cause before retrying. No `as any`, `@ts-ignore`, empty catches.
 - For unfamiliar APIs, MUST check official docs before implementing.
 - If stuck 15+ min, use Oracle or ask user with concrete options.
-- Use `caveman lite` for all user-facing communication: terse, high-signal, accurate.
-- Proceed on clear, low-risk, reversible steps. Ask only for destructive, irreversible, or materially branching.
 - Cleanup/refactor: write plan first, lock behavior with tests, then one smell-focused pass.
 
----
-
-## Herdr Delegation
-
-When running inside herdr (`HERDR_ENV=1`), you can use the herdr skill to spawn agent instances in separate panes. This gives you direct visibility into what each agent is doing — true human-in-the-loop parallelism.
-
-**Decision framework — herdr pane vs background agent:**
-
-| Scenario | Use | Why |
-|---|---|---|
-| Fire-and-forget (research, grep, simple codegen) | Background agent (`run_in_background=true`) | No need for visibility; result is all that matters |
-| You want to see progress (critique, debug, review) | **Ask first**: "Herdr pane or background?" | You decide if you want to watch |
-| Long-running task with uncertain outcome | **Ask first**: "Herdr pane or background?" | You may want to monitor/intervene |
-| Multi-agent parallel work where coordination matters | Herdr panes with wait-for-status | Main agent can see output, wait for completion, read scrollback |
-| You explicitly say "spawn it" or "open a pane" | Herdr pane (no ask needed) | Explicit user intent |
-
-**Default behavior:** Do NOT spawn herdr panes without asking. When a herdr pane would be valuable, ask concisely:
-
-> *"This would benefit from a herdr pane so you can watch. Want me to split a pane for it, or run it in the background?"*
-
-If you say yes, load the herdr skill and use it. If you say no or don't respond, use a background agent.
-
----
 
 ## Verification
 
@@ -140,20 +100,3 @@ Verify before claiming completion:
 - Before concluding: confirm no pending work, features work, tests pass (or gaps stated), known errors handled.
 - Final report: changed files, verification results, remaining risks.
 
----
-
-## Git & PR Protocol
-
-- Use `skill(name="caveman-commit")` for structured commit messages. One commit, one story — split if concerns mix.
-- Use `skill(name="pr-workflow")` to plan PR-sized chunks before starting work.
-- For PR descriptions: invoke `/pr` (reads `commands/pr.md`). Inspects branch diff against base, sizes the change, generates a professional description. Never write from conversation alone — always use the diff.
-- Never commit unless requested.
-- Never force-push to master/main without explicit confirmation.
-
-## Handoff Convention
-
-- Use `/create-handoff` for session transfers needing a rich artifact.
-- Use `/resume-handoff <path>` to resume from a handoff.
-- Handoffs live under `thoughts/handoffs/<ticket>/`.
-
----
