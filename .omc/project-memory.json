@@ -1,0 +1,249 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1782241624011,
+  "projectRoot": "/Users/isaiahrivera/.agents",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "npm test",
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {
+      "init:local-state": "node ./scripts/init-local-state.mjs",
+      "reset:omx-state": "node ./scripts/reset-omx-state.mjs",
+      "reset:omx-state:dry": "node ./scripts/reset-omx-state.mjs --dry-run",
+      "memory:health": "node ./scripts/memory-health-check.mjs",
+      "validate:ssot": "node ./scripts/validate-ssot.mjs",
+      "test:workflows": "node --test ./tests/workflow-contracts.test.mjs ./tests/handoff-tools.test.mjs ./tests/expert-agents.test.mjs ./tests/expert-agent-routing-tools.test.mjs",
+      "test:adapters": "node --test ./tests/adapter-generation.test.mjs ./tests/memory-sidecar-adapter.test.mjs ./tests/memory-health-check.test.mjs",
+      "test:sessions": "node --test ./tests/session-tools.test.mjs ./tests/continuity-tools.test.mjs ./tests/execution-state-tools.test.mjs",
+      "test:tooling": "node --test ./tests/package-manager-tools.test.mjs ./tests/lesson-tools.test.mjs ./tests/memory-sidecar-contract.test.mjs ./tests/workflow-command-decision.test.mjs ./tests/memory-sync-bridge.test.mjs ./tests/memory-quality-gate.test.mjs ./tests/project-context.test.mjs ./tests/rpi-artifact-automation.test.mjs",
+      "test:plans": "node --test ./tests/workflow-plan-tools.test.mjs",
+      "test:verification": "node --test ./tests/verification-tools.test.mjs ./tests/doctor.test.mjs ./tests/autonomy-tools.test.mjs",
+      "test:artifacts": "node --test ./tests/artifact-tools.test.mjs",
+      "test:model-router": "node --test ./tests/model-router.test.mjs",
+      "test": "npm run test:workflows && npm run test:adapters && npm run test:sessions && npm run test:tooling && npm run test:verification && npm run test:artifacts && npm run test:plans && npm run test:model-router"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "bin",
+      "scripts",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "master",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "adapters": {
+      "path": "adapters",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1782241623926,
+      "keyFiles": []
+    },
+    "agents": {
+      "path": "agents",
+      "purpose": null,
+      "fileCount": 43,
+      "lastAccessed": 1782241623927,
+      "keyFiles": [
+        "adapter-parity-auditor.md",
+        "analyst.md",
+        "architect.md",
+        "artifact-code-reviewer.md",
+        "artifact-coverage-reviewer.md"
+      ]
+    },
+    "bin": {
+      "path": "bin",
+      "purpose": "Executable scripts",
+      "fileCount": 7,
+      "lastAccessed": 1782241623996,
+      "keyFiles": [
+        "agents-memory",
+        "agents-memory-flush",
+        "agents-memory-inject",
+        "agents-memory-recall",
+        "agents-memory-status"
+      ]
+    },
+    "commands": {
+      "path": "commands",
+      "purpose": null,
+      "fileCount": 21,
+      "lastAccessed": 1782241624004,
+      "keyFiles": [
+        "capture-decision.md",
+        "commit.md",
+        "elite-mode.md",
+        "enforce.md",
+        "fix.md"
+      ]
+    },
+    "hooks": {
+      "path": "hooks",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1782241624005,
+      "keyFiles": [
+        "gsd-pre-bash-guard.cjs",
+        "gsd-stop-memory-consolidation.cjs",
+        "herdr-agent-state.sh",
+        "herdr-multiplexer.mjs",
+        "herdr-repatch.sh"
+      ]
+    },
+    "plugins": {
+      "path": "plugins",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1782241624005,
+      "keyFiles": [
+        "marketplace.json"
+      ]
+    },
+    "projects": {
+      "path": "projects",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1782241624005,
+      "keyFiles": []
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 39,
+      "lastAccessed": 1782241624006,
+      "keyFiles": [
+        "artifact-tools.mjs",
+        "autonomy-dispatcher.mjs",
+        "check-unsaved-decisions.mjs",
+        "codex-memory-bridge.mjs",
+        "continuity-tools.mjs"
+      ]
+    },
+    "sessions": {
+      "path": "sessions",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1782241624006,
+      "keyFiles": []
+    },
+    "skills": {
+      "path": "skills",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1782241624007,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 22,
+      "lastAccessed": 1782241624008,
+      "keyFiles": [
+        "adapter-generation.test.mjs",
+        "doctor.test.mjs",
+        "execution-state-tools.test.mjs",
+        "expert-agent-routing-tools.test.mjs",
+        "expert-agents.test.mjs"
+      ]
+    },
+    "thoughts": {
+      "path": "thoughts",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1782241624008,
+      "keyFiles": [
+        "workflow-critique-automation-research.md",
+        "workflow-improvement-research-2026-03-10.md"
+      ]
+    },
+    "tests/fixtures": {
+      "path": "tests/fixtures",
+      "purpose": "Test fixtures",
+      "fileCount": 1,
+      "lastAccessed": 1782241624011,
+      "keyFiles": [
+        "memory-sidecar-evaluation.json"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "AGENTS.md",
+      "accessCount": 10,
+      "lastAccessed": 1782244433235,
+      "type": "file"
+    },
+    {
+      "path": ".skill-lock.json",
+      "accessCount": 5,
+      "lastAccessed": 1782244391355,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 2,
+      "lastAccessed": 1782242189626,
+      "type": "file"
+    },
+    {
+      "path": "manifest.json",
+      "accessCount": 1,
+      "lastAccessed": 1782241943268,
+      "type": "file"
+    },
+    {
+      "path": "sync.sh",
+      "accessCount": 1,
+      "lastAccessed": 1782241976381,
+      "type": "file"
+    },
+    {
+      "path": "skills/flutter-add-widget-test/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1782242067595,
+      "type": "file"
+    },
+    {
+      "path": "skills/shadcn/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1782242067913,
+      "type": "file"
+    },
+    {
+      "path": "skills/code-review/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1782242068220,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
