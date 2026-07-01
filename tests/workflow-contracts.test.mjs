@@ -34,17 +34,15 @@ test('AGENTS declares operating rules and workflow triggers', () => {
 // Corresponding GSD-era workflow tests removed
 
 // gsd.md was deleted — handoff commands test shortened
-test('handoff commands keep handoffs project-local while runtime state stays project-scoped', () => {
-  const createHandoff = read('commands/handoff.md');
-  const resumeHandoff = read('commands/resume-handoff.md');
+test('handoff skill uses new-handoff.py for path creation and writes obsidian-friendly content', () => {
+  const handoffSkill = read('skills/handoff/SKILL.md');
 
-  assert.match(createHandoff, /\[project root\]\/thoughts\/\{Month-Name\}-\{Year\}\/W\{week-num\}\/handoffs\/\{Mon-DD\}_\{time\}--<topic>\.md/);
-  assert.match(createHandoff, /node ~\/\.agents\/scripts\/project-context\.mjs current/);
-  assert.match(createHandoff, /python3 ~\/\.agents\/scripts\/new-handoff\.py --type handoffs "<topic>"/);
-  assert.match(createHandoff, /\/recall \/absolute\/path\/to\/thoughts\/June-2026\/W1\/handoffs\/Jun-05_7-30pm--topic\.md/);
-  assert.match(resumeHandoff, /\[project root\]\/thoughts\/handoffs\/ENG-XXXX/);
-  assert.match(resumeHandoff, /thoughts\/plans/);
-  assert.match(resumeHandoff, /thoughts\/research/);
+  assert.match(handoffSkill, /python3 ~\/\.agents\/scripts\/new-handoff\.py --type handoffs/);
+  assert.match(handoffSkill, /> \[!summary\]/);
+  assert.match(handoffSkill, /> \[!todo\]/);
+  assert.match(handoffSkill, /> \[!question\]/);
+  assert.match(handoffSkill, /```mermaid/);
+  assert.match(handoffSkill, /\[\[note-name\]\]/);
 });
 
 // create-plan.md, implement_plan.md, validate_plan.md, research_codebase.md deleted — test removed
