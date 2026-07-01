@@ -22,8 +22,8 @@ If Yonie says "I don't know", reject it. Make him reach. This is the ownership b
 Once all five answers are clean:
 
 1. Synthesize a one-paragraph topic.
-2. Run `python3 ~/.agents/scripts/new-handoff.py --type reflections "<synthesized topic>"`.
+2. Run `python3 ~/.agents/scripts/new-artifact.py --type reflections "<synthesized topic>"`.
 3. Fill the created file with the cleaned answers.
-4. Report the path in this shape: `thoughts/{Month-Name}-{Year}/W{week-num}/reflections/{Mon-DD}_{time}--{topic}.md`.
+4. Report the path in this shape: `thoughts/reflections/{Month-Name}/{Day_ord}_{time}_{topic}.md`.
 
 If Yonie invokes `/reflect <topic>` with enough detail to write directly, skip the interview only when the five answers are already present. Otherwise use the interview.

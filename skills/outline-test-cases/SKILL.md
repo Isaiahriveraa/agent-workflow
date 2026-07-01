@@ -1,6 +1,6 @@
 ---
 name: outline-test-cases
-description: Discover testable features in a project (frontend-first) and create a folder outline under .rpiv/test-cases/ with per-feature metadata. Incremental runs reuse the existing outline for smarter discovery and diff-based checkpoints. Use before write-test-cases to map project scope, when the user wants to plan or inventory test coverage, asks to "outline test cases", or wants a test-case scaffold generated for a project.
+description: Discover testable features in a project (frontend-first) and create a folder outline on the plan server with per-feature metadata. Incremental runs reuse the existing outline for smarter discovery and diff-based checkpoints. Use before write-test-cases to map project scope, when the user wants to plan or inventory test coverage, asks to "outline test cases", or wants a test-case scaffold generated for a project.
 argument-hint: [target-directory]
 shell-timeout: 10
 allowed-tools: Agent, Read, Write, Edit, Glob, Grep
@@ -8,7 +8,7 @@ allowed-tools: Agent, Read, Write, Edit, Glob, Grep
 
 # Outline Test Cases
 
-You are tasked with discovering all testable features in a project and creating a folder outline under `.rpiv/test-cases/`. Each feature gets its own folder with a `_meta.md` file containing discovered routes, endpoints, scope decisions, and domain context. A root `README.md` summarizes the full project outline. No test case content is generated — use `write-test-cases` per feature to fill the folders.
+You are tasked with discovering all testable features in a project and creating a folder outline under `plan server `. Each feature gets its own folder with a `_meta.md` file containing discovered routes, endpoints, scope decisions, and domain context. A root `README.md` summarizes the full project outline. No test case content is generated — use `write-test-cases` per feature to fill the folders.
 
 Two modes: **Fresh** (no existing outline — full discovery and checkpoint) and **Incremental** (existing outline found — discovery with prior context, diff-based checkpoint). Discovery always runs in both modes.
 
@@ -35,7 +35,7 @@ node "${SKILL_DIR}/../_shared/now.mjs"
 When this command is invoked, respond with:
 ```
 I'll discover all testable features in this project and create a folder outline
-under .rpiv/test-cases/. Let me check for existing outlines and analyze the codebase.
+under plan server . Let me check for existing outlines and analyze the codebase.
 ```
 
 Use the current working directory as the target project by default. If the user provides a specific directory path as an argument, use that instead.
@@ -48,7 +48,7 @@ Use the current working directory as the target project by default. If the user 
 
 Check for existing outline data:
 
-1. **Glob** for `**/_meta.md` with path set to `.rpiv/test-cases/` in the target directory (dot-prefixed directories must be targeted directly)
+1. **Glob** for `**/_meta.md` with path set to `plan server ` in the target directory (dot-prefixed directories must be targeted directly)
 2. If no `_meta.md` files found → **Fresh mode**. Proceed to Step 2.
 3. If `_meta.md` files found → **Incremental mode**. Read them ALL and extract:
    - Existing feature list (names, slugs, modules, routes, endpoints)
@@ -70,7 +70,7 @@ Spawn the following agents in parallel using the Agent tool. Wait for ALL agents
 - Use the **codebase-locator** agent to find all registered routes, navigation menus, and page entry points
 - Use the **codebase-locator** agent to find all frontend HTTP API call sites — report each call-site `file:line` and the literal URL template string found at the call site (e.g., ``${base}/users/${id}``). Frontend-to-backend URL correlation happens orchestrator-side in Step 3's Cross-Reference synthesis (`skills/outline-test-cases/SKILL.md:71-79`) using the backend-controller findings from the next agent.
 - Use the **codebase-locator** agent to find all backend API controllers and route handlers
-- Use the **test-case-locator** agent to find existing test cases in `.rpiv/test-cases/` to avoid duplicates
+- Use the **test-case-locator** agent to find existing test cases in `plan server ` to avoid duplicates
 
 Include in your prompts for the three codebase-locator agents:
 - Target directory and detected framework
@@ -188,7 +188,7 @@ Total backend endpoints: ~{N} across {M} controllers
 {etc.}
 
 ### Already Covered (will skip):
-- {Feature} — {N} existing TCs in .rpiv/test-cases/{slug}/
+- {Feature} — {N} existing TCs in plan server {slug}/
 
 ### Backend-Only Endpoints (no frontend exposure):
 - {Controller/endpoint group} — {reason: platform API / webhook / deprecated}
@@ -248,7 +248,7 @@ After all questions are answered, present the full feature list summary (same fo
 
 #### Fresh Mode — creating new files
 
-1. **Create directories** — for each confirmed feature, create `.rpiv/test-cases/{feature-slug}/`
+1. **Create directories** — for each confirmed feature, create `plan server {feature-slug}/`
 
 2. **Write `_meta.md` per feature** — one file per folder:
 
@@ -260,7 +260,7 @@ After all questions are answered, present the full feature list summary (same fo
    - `## Test Data Requirements` — from checkpoint answers that mention data needs. Leave section with `- None identified` if nothing surfaced.
    - `## Checkpoint History` — all Q&A pairs from the checkpoint that affect this feature, under a date header (`### YYYY-MM-DD`)
 
-3. **Write root `README.md`** at `.rpiv/test-cases/README.md`:
+3. **Write root `README.md`** at `plan server README.md`:
 
    Read the full outline README template at `templates/outline-readme.md`. Follow the template exactly, populating fields from the confirmed feature list.
 
@@ -274,7 +274,7 @@ After all questions are answered, present the full feature list summary (same fo
    | reports/ | RPT | Admin | 2 | 15 | pending |
    | {etc.} | | | | | |
 
-   Output: `.rpiv/test-cases/`
+   Output: `plan server `
    Total: {N} feature folders + {N} _meta.md files + 1 README.md
    Phantom features skipped: {list or "none"}
 
@@ -320,7 +320,7 @@ After all questions are answered, present the full feature list summary (same fo
    Changes:
    - {List of what changed: "Added payments feature", "Flagged legacy-reports as removed", "Updated scope for users", etc.}
 
-   Output: `.rpiv/test-cases/`
+   Output: `plan server `
 
    Note: this outline is a starting point based on code analysis — re-run or add features manually as the project evolves.
 
@@ -374,4 +374,4 @@ Skill-specific verbs:
   - ALWAYS get user confirmation before writing folders (Step 4 → Step 5)
   - NEVER write folders or metadata with placeholder values
 - **Duplicate avoidance**: Always check existing TCs via test-case-locator before creating folders.
-- **Idempotent re-runs**: If `.rpiv/test-cases/` already has folders with TCs, mark them accordingly — do not overwrite existing TC content. Only update `_meta.md` and `README.md`.
+- **Idempotent re-runs**: If `plan server ` already has folders with TCs, mark them accordingly — do not overwrite existing TC content. Only update `_meta.md` and `README.md`.

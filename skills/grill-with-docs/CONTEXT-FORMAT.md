@@ -1,13 +1,14 @@
-# Glossary Format (.rpiv/glossary.md / CONTEXT.md)
+The skill writes to the plan server glossary by default:
+`~/Documents/plan-server/projects/{project}/glossary/glossary.md`
 
-## Structure
+Use the helper:
+```bash
+python3 ~/.agents/scripts/new-artifact.py --project <project> --type glossary --topic "<term>"
+```
 
-```md
-# {Context Name}
+If the plan server is not available, fall back to `CONTEXT.md` at the project root.
 
-{One or two sentence description of what this context is and why it exists.}
-
-## Language
+## Single vs multi-context repos
 
 **Order**:
 {A one or two sentence description of the term}
@@ -35,10 +36,10 @@ _Avoid_: Client, buyer, account
 ## Location resolution
 
 The skill writes to the first existing path in this order:
-1. `.rpiv/glossary.md` — rpiv canonical (created lazily at `.rpiv/` root)
-2. `CONTEXT.md` — legacy fallback (created at project root)
+1. Plan server glossary (created lazily at `glossary/glossary.md`)
+2. `CONTEXT.md` — project-local fallback (created at project root)
 
-Both use the same format. The rpiv mode should be preferred when `.rpiv/` exists.
+The plan server glossary should be preferred when available.
 
 ## Single vs multi-context repos
 
@@ -65,6 +66,6 @@ Both use the same format. The rpiv mode should be preferred when `.rpiv/` exists
 The skill infers which structure applies:
 
 - If `CONTEXT-MAP.md` exists, read it to find contexts
-- If `.rpiv/glossary.md` exists, single rpiv context
+- If plan server glossary exists, single context
 - If a root `CONTEXT.md` exists, single legacy context
 - If none exist, create lazily

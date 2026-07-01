@@ -98,17 +98,15 @@ chore/what-updated           # Config, deps, tooling
 ## PR Description Template
 
 ```markdown
-## Summary
-[1-2 sentences describing what this PR does]
+#### Summary
+A paragraph describing what this PR does — scope, approach, main change.
 
-## Changes
-- [Bullet list of changes]
+#### Rationale
+- Why each change exists — context, constraints, tradeoffs
 
-## Testing
-- [ ] [How to test]
-
-## Screenshots (if UI)
-[Add screenshots for visual changes]
+#### Tests
+- What was tested and how (manual, unit, integration)
+- What was NOT tested and why
 ```
 
 ---

@@ -12,7 +12,7 @@ You are tasked with validating that an implementation plan was correctly execute
 
 ## Input
 
-`$ARGUMENTS` — optional path to a plan in `.rpiv/artifacts/plans/`. If omitted, branch on the recent-plans list in the Metadata block.
+`$ARGUMENTS` — optional path to a plan in `plan server artifacts/plans/`. If omitted, branch on the recent-plans list in the Metadata block.
 
 ## Metadata
 
@@ -21,7 +21,7 @@ node "${SKILL_DIR}/../_shared/git-context.mjs"
 echo
 echo "### recent (read only in case of empty user input)"
 echo "recent plans:"
-node "${SKILL_DIR}/../_shared/list-recent.mjs" .rpiv/artifacts/plans 10
+node "${SKILL_DIR}/../_shared/list-recent.mjs" plan server artifacts/plans 10
 ```
 
 ## Steps
@@ -37,7 +37,7 @@ When invoked:
 2. **Locate the plan**:
    - If plan path provided, use it.
    - Otherwise, branch on the `recent plans:` listing in the Metadata block:
-     - **Empty** — no plans under `.rpiv/artifacts/plans/`; ask the user for a path in prose.
+     - **Empty** — no plans under `plan server artifacts/plans/`; ask the user for a path in prose.
      - **Exactly one entry** — confirm with `ask_user_question`: "Validate this plan?" with options "Validate `<filename>` (Recommended)" and "Pick a different path".
      - **Two or more entries** — present the top 4 filenames as `ask_user_question` options (a free-text "Other" row is appended automatically).
 
@@ -191,3 +191,7 @@ Recommended workflow:
 The validation works best after commits are made, as it can analyze the git history to understand what was implemented.
 
 Remember: Good validation catches issues before they reach production. Be constructive but thorough in identifying gaps or improvements.
+
+## Clipboard
+
+After writing the validation report, immediately run `bash` with `pbcopy <absolute-path>` (using the path you wrote to) so the user's clipboard has the file path.

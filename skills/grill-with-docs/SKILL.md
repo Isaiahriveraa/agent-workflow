@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates the plan in-place after each question. Autowrites glossary/ADR entries and logs grill transcripts to thoughts/glossary.md, thoughts/adr/, and thoughts/{Month-Year}/W{week}/grill/ via new-handoff.py.
+description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates the plan in-place after each question. Autowrites glossary/ADR entries and logs grill transcripts. Glossary, ADRs, and grill files are written under the project's plan server directory at ~/Documents/plan-server/projects/{project}/ when available.
 ---
 
 <what-to-do>
@@ -15,6 +15,13 @@ If a question can be answered by exploring the codebase, explore the codebase in
 
 <supporting-info>
 
+
+> **Plan Server Integration**: Glossary, ADRs, and grill files can also be written to `~/Documents/plan-server/projects/{project}/` for browser viewing. When running `new-artifact.py`, use `--dest "$HOME/Documents/plan-server" --project <project>` to write to the plan server. The project name is inferred from the git repo name.
+>
+> The plan server serves these files at:
+> - Glossary: `http://localhost:3456/project/{project}/glossary`
+> - ADRs: `http://localhost:3456/project/{project}/adr`
+> - Handoffs: `http://localhost:3456/project/{project}/handoffs`
 ## Domain awareness
 
 During codebase exploration, look for existing documentation under `thoughts/`:
@@ -27,7 +34,7 @@ During codebase exploration, look for existing documentation under `thoughts/`:
 │   │   ├── 0001-slug.md
 │   │   └── 0002-slug.md
 │   ├── {Month-Name}-{Year}/
-│   │   └── W{week-num}/
+│   │   └── W{month-week}/
 │   │       ├── handoffs/
 │   │       ├── reflections/
 │   │       └── grill/
@@ -35,7 +42,7 @@ During codebase exploration, look for existing documentation under `thoughts/`:
 
 - **`thoughts/glossary.md`** — Canonical domain glossary for the project. Created lazily when the first term is resolved.
 - **`thoughts/adr/`** — Architecture Decision Records. Numbered: `0001-slug.md`, `0002-slug.md`, etc. Created lazily when the first ADR is needed.
-- **`thoughts/{Month-Name}-{Year}/W{week-num}/grill/`** — Grill session outputs and Q&A transcript handoffs created via `new-handoff.py`.
+- **`thoughts/grill/{Month-Name}/`** — Grill session outputs and Q&A transcript handoffs created via `new-artifact.py`.
 
 Create files lazily — only when you have something to write.
 
@@ -103,14 +110,10 @@ After the user answers each question:
 
 3. **If an ADR criterion was met** (hard to reverse, surprising, real trade-off): Immediately create `thoughts/adr/{incrementing-number}-{slug}.md` with the decision. Use the ADR format from [ADR-FORMAT.md](./ADR-FORMAT.md).
 
-4. **Log the Q&A pair**: append to a temp session transcript in `thoughts/{Month-Name}-{Year}/W{week-num}/grill/` using:
-   ```
-   python3 ~/.agents/scripts/new-handoff.py --type grill "<topic>"
-   ```
+4. **Log the Q&A pair**: append to a temp session transcript in `thoughts/grill/{Month-Name}/` using:
    The script handles path creation. After calling it, fill in the generated file with the Q&A session content.
 
 Do NOT batch these writes. Write immediately after each question-answer round.
-
-At session end, call `python3 ~/.agents/scripts/new-handoff.py --type grill "<topic>"` to capture the grill session output, then fill in the generated file with the final grill session summary.
+At session end, call `python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project "$(basename $(git rev-parse --show-toplevel 2>/dev/null || echo 'general'))" --type grill "<topic>"` to capture the grill session output, then fill in the generated file with the final grill session summary.
 
 </supporting-info>

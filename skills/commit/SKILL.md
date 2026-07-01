@@ -1,77 +1,85 @@
 ---
 name: commit
-description: Create structured git commits by analyzing staged and unstaged changes and grouping them logically into one or more commits with clear, descriptive messages. Use when the user asks to commit, says "commit this" or "commit my changes", wants help writing a commit message, or has finished a chunk of work that needs committing.
-argument-hint: [message]
-allowed-tools: Bash(git *), Read, Glob, Grep
-shell-timeout: 10
+description: >
+  Commit message generator with strict single-story enforcement. Produces
+  terse, atomic commit messages in Conventional Commits format. Splits mixed
+  concerns into separate commits automatically. Use when the user says "write
+  a commit", "commit message", "generate commit", or wants to stage work into
+  clean, reviewable commits.
 ---
 
-# Commit Changes
+# Commit
 
-You are tasked with creating git commits for repository changes.
+Write commit messages terse and exact. Conventional Commits format. No fluff.
+Why over what.
 
-## Input
+## Hard Gate: One Story, One Commit
 
-`$ARGUMENTS` — optional commit message hint. Empty/literal → infer from history and `git diff`.
+**ONE COMMIT, ONE STORY.** Before ANY output, audit the diff:
 
-## Metadata
+- Do **all** changed files serve a single logical purpose? If not, **SPLIT**.
+- Is there a mix of concerns (refactor + bugfix, feature + style, dep bump + logic change)? **SPLIT**.
+- Does the subject line need "and" or "also" to describe what changed? **SPLIT**.
 
-```!
-node "${SKILL_DIR}/../_shared/git-changes.mjs"
-echo "---recent-subjects---"
-git log --pretty=%s -n 20 2>/dev/null || true
-```
+**If the diff fails the single-concern check:**
+1. Print: `✗ ONE-STORY VIOLATION — Split required.`
+2. List each distinct concern with the files belonging to it.
+3. Output a separate commit message for each concern group — each presented with its type, scope, and the files it covers so the developer can review before committing.
+4. **STOP.** Do not proceed until each commit is truly atomic.
 
-`git-changes.mjs` output — `in_repo:` line, then `---status---` (capped `git status --short`), then `---diffstat---` (`git diff HEAD --stat` of staged + unstaged changes; full per-file diff is intentionally NOT included to stay under the output budget).
+Separation boundaries — changes MUST be in different commits when they span:
 
-`---recent-subjects---` — up to 20 most recent commit subject lines, used in Step 2 to match the repository's existing commit-message style. Empty on a no-HEAD initial repo.
+- Different types (`feat` vs `fix` vs `refactor` vs `chore`)
+- Different scopes (e.g., `api` vs `ui`, `backend` vs `frontend`)
+- Different motivations (fixing a bug vs adding a feature vs cleaning up)
 
-## Context:
-- **In-session**: If there's conversation history, use it to understand what was built/changed
-- **Standalone**: If no context available, rely entirely on git state and file inspection
+**Only generate a single commit message when the diff passes the single-concern check with zero ambiguity.**
 
-## Process:
+## No "And" Rule
 
-0. **Check git availability:**
-   - If `in_repo:` in the Metadata block is `no`, tell the user: "This directory is not a git repository. Run `git init` to initialize one." Stop — do not proceed.
+**The word "and" is banned from the entire commit message.** "And" always means multiple things are happening → you need multiple commits.
 
-1. **Think about what changed:**
-   - **If in-session**: Review the conversation history to understand what was accomplished.
-   - The Metadata block gives you the file list and per-file diffstat (insertions/deletions). For files with a small diffstat (≲5 lines), the line counts alone are enough to write the message — skip `git diff`. Run `git diff <path>` only for files where the change is large or the intent isn't obvious from filename + line counts.
-   - For untracked directories shown in status (e.g. `?? path/`), assume their contents are the change unless the directory has many files; do NOT `cat`/`head` files to verify obvious purpose.
-   - Consider whether changes should be one commit or multiple logical commits.
+- Scan subject + body for "and". If found, the commit is not atomic. Split.
+- Exception: "and" inside a proper noun or project name (rare). When unsure, split.
 
-2. **Plan your commit(s):**
-   - Identify which files belong together
-   - Draft clear, descriptive commit messages
-   - Use imperative mood in commit messages
-   - **Match the subject style observed in `---recent-subjects---`** — same prefix convention (e.g. `feat:` / `fix(scope):` / `docs:` for Conventional Commits, gitmoji, bare sentence-case, ticket-prefixed, etc.), same length budget, same casing. If the sample is empty (initial repo) or mixed, default to imperative sentence-case with no prefix.
-   - Focus on why the changes were made, not just what
-   - Check for sensitive information (API keys, credentials) before committing
+## Rules
 
-3. **Present your plan to the user:**
-   - List the files you plan to add for each commit
-   - Show the commit message(s) you'll use
-   - Use the `ask_user_question` tool to confirm the commit plan. Question: "{N} commit(s) with {M} files. Proceed?". Header: "Commit". Options: "Commit (Recommended)" (Create the commit(s) as planned); "Adjust" (Change the grouping or commit messages); "Review files" (Show me the full diff before committing).
+Subject line:
 
-4. **Execute upon confirmation:**
-   - Use `git add` with specific files (never use `-A` or `.`)
-   - Create commits with your planned messages
-   - Show the result with `git log --oneline -n X` (where X = number of commits you just created)
+- Format: `<type>(<scope>): <imperative summary>` with optional scope
+- Types: `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `build`, `ci`, `style`, `revert`
+- Use imperative mood
+- Aim for 50 chars or less, hard cap 72
+- No trailing period
+- **No "and"** — if you need "and" to describe it, it's two commits
 
-## Important:
+Body:
 
-- **NEVER add co-author information or Claude attribution**
-- Commits should be authored solely by the user
-- Do not include any "Generated with Claude" messages
-- Do not add "Co-Authored-By" lines
-- Write commit messages as if the user wrote them
+- Skip when subject is self-explanatory
+- Add only for non-obvious why, breaking changes, migration notes, or linked issues
+- Wrap at 72 chars
+- Use `-` for bullets
+- **No "and"** — use separate bullets or a more precise verb
 
-## Remember:
+Never include:
 
-- Adapt your approach: use conversation context if available, otherwise infer from git state
-- In-session: you have full context of what was done; Standalone: infer from git analysis
-- Group related changes by purpose (feature, fix, refactor, docs)
-- Keep commits atomic: one logical change per commit
-- Split into multiple commits if: different features, mixing bugs with features, or unrelated concerns
-- The user trusts your judgment - they asked you to commit
+- AI attribution
+- filler like "this commit"
+- restating obvious file names
+- emoji unless repo convention requires it
+
+## Auto-Clarity
+
+Always include a body for:
+
+- breaking changes
+- security fixes
+- data migrations
+- reverts
+
+## Boundaries
+
+Only generate commit messages. Do not stage or run `git commit`.
+Output each message ready to paste, separated by blank lines. When multiple
+commits result from a split, present each with its type, scope, and the
+files it covers so the developer understands the grouping before applying.

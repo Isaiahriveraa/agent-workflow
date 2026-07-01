@@ -217,7 +217,7 @@ herdr pane run "$NEW_PANE" "opencode --model openai/gpt-5.4"
 sleep 5
 
 # Step 4: Send query + force submit
-herdr pane run "$NEW_PANE" "Read .rpiv/artifacts/handoffs/2026-05-25_prs-1-3-complete-pr4-ready.md and critique it. Modify the plan file if needed."
+herdr pane run "$NEW_PANE" "Read the latest handoff in the plan server for this project and critique it. Modify the plan file if needed."
 herdr pane send-keys "$NEW_PANE" Enter
 
 # Step 5: Wait

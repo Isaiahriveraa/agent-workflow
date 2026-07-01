@@ -33,7 +33,7 @@ Build prompts one at a time, ready to paste.
 **Output format — Follow this format**
 
 Output format:
-1. A single copyable prompt block ready to paste into the target tool
+1. A single copyable prompt block ready to paste into the target tool. After outputting, run pbcopy to automatically copy the prompt to the user's clipboard.
 2. 🎯 Target: [tool name],💡 [One sentence — what was optimized and why]
 3. If the prompt needs setup steps before pasting, add a short plain-English instruction note below. 1-2 lines max. ONLY when genuinely needed.
 
@@ -433,6 +433,8 @@ For prompts targeting agentic tools (Claude Code, Devin, Cursor, Windsurf, Cline
 4. Has every fabricated technique been removed?
 5. Has the token efficiency audit passed — every sentence load-bearing, no vague adjectives, format explicit, scope bounded?
 6. Would this prompt produce the right output on the first attempt?
+
+7. Has the prompt been copied to the clipboard via pbcopy automatically?
 
 **Success criteria**
 The user pastes the prompt into their target tool. It works on the first try. Zero re-prompts needed. That is the only metric.

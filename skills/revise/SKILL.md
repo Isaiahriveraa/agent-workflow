@@ -1,6 +1,6 @@
 ---
 name: revise
-description: Surgically update an existing implementation plan in .rpiv/artifacts/plans/ based on review feedback, mid-implementation discoveries, or new constraints, preserving structure and quality rather than rewriting. Use when the user wants a plan adjusted after code-review feedback, has hit a blocker mid-implement, scope changed, or asks to "revise the plan".
+description: Surgically update an existing implementation plan on the plan server based on review feedback, mid-implementation discoveries, or new constraints, preserving structure and quality rather than rewriting. Use when the user wants a plan adjusted after code-review feedback, has hit a blocker mid-implement, scope changed, or asks to "revise the plan".
 argument-hint: "[plan-path] [feedback]"
 shell-timeout: 10
 ---
@@ -11,7 +11,7 @@ You are tasked with updating existing implementation plans based on user feedbac
 
 ## Input
 
-`$ARGUMENTS` — plan path plus feedback, e.g. `.rpiv/artifacts/plans/2025-10-16_09-00-00_feature.md "Split Phase 2 into two phases"`.
+`$ARGUMENTS` — plan path plus feedback, e.g. `plan server 2025-10-16_09-00-00_feature.md "Split Phase 2 into two phases"`.
 
 ## Metadata
 
@@ -20,7 +20,7 @@ node "${SKILL_DIR}/../_shared/now.mjs"
 echo
 echo "### recent (read only in case of empty user input)"
 echo "recent plans:"
-node "${SKILL_DIR}/../_shared/list-recent.mjs" .rpiv/artifacts/plans 10
+echo "(artifact listing: check plan server)"
 ```
 
 - `now.mjs` (line 1) — `<iso>\t<slug>` tab-separated.
@@ -29,7 +29,7 @@ node "${SKILL_DIR}/../_shared/list-recent.mjs" .rpiv/artifacts/plans 10
 
 1. Input → 2. Research if needed → 3. Present approach → 4. Update plan → 5. Sync & review → 6. Follow-ups
 
-The revised artifact stays in `.rpiv/artifacts/plans/` for `/skill:implement` to resume.
+The revised artifact stays in `plan server ` for `/skill:implement` to resume.
 
 ## Steps
 
@@ -38,8 +38,8 @@ The revised artifact stays in `.rpiv/artifacts/plans/` for `/skill:implement` to
 When this command is invoked:
 
 1. **Parse the input to identify**:
-   - Plan file path (e.g., `.rpiv/artifacts/plans/2025-10-16_09-00-00_feature.md`)
-   - Whether the user accidentally provided a review artifact path instead (e.g., `.rpiv/artifacts/reviews/2025-10-16_10-00-00_feature.md`)
+   - Plan file path (e.g., `plan server 2025-10-16_09-00-00_feature.md`)
+   - Whether the user accidentally provided a review artifact path instead (e.g., `plan server 2025-10-16_10-00-00_feature.md`)
    - Requested changes/feedback
 
 2. **Handle different input scenarios**:
@@ -51,12 +51,12 @@ When this command is invoked:
    If you want to act on code-review findings, provide the target plan path plus the changes to make.
 
    Example:
-   `/skill:revise .rpiv/artifacts/plans/2025-10-16_09-00-00_feature.md "Address the findings from .rpiv/artifacts/reviews/2025-10-16_10-00-00_feature.md by tightening validation in Phase 2 and expanding success criteria."`
+   `/skill:revise plan server 2025-10-16_09-00-00_feature.md "Address the findings from plan server 2025-10-16_10-00-00_feature.md by tightening validation in Phase 2 and expanding success criteria."`
    ```
    Wait for user input.
 
    **If NO plan file provided**, branch on the `recent plans:` listing in the Metadata block:
-   - **Empty** — no plans under `.rpiv/artifacts/plans/`; tell the user and suggest running `/skill:plan` first.
+   - **Empty** — no plans under `plan server `; tell the user and suggest running `/skill:plan` first.
    - **Exactly one entry** — confirm with `ask_user_question`: "Revise this plan?" with options "Revise `<filename>` (Recommended)" and "Pick a different path".
    - **Two or more entries** — present the top 4 filenames as `ask_user_question` options.
 
@@ -100,7 +100,7 @@ If the user's feedback requires understanding new code patterns or validating as
    - Use the **codebase-pattern-finder** agent to find similar patterns
 
    **For historical context:**
-   - Use the **artifacts-locator** agent to find related research or decisions in `.rpiv/artifacts/`
+   - Use the **artifacts-locator** agent to find related research or decisions in `plan server `
    - Use the **artifacts-analyzer** agent to extract insights from documents
 
    **Be EXTREMELY specific about directories**:
@@ -160,7 +160,7 @@ Use the `ask_user_question` tool to confirm before editing. Question: "{Summary 
 
 1. **Present the changes made**:
    ```
-   Plan updated at `.rpiv/artifacts/plans/{filename}.md`
+   Plan updated at `plan server {filename}.md`
 
    Changes made:
    - {Specific change 1}
@@ -176,7 +176,7 @@ Use the `ask_user_question` tool to confirm before editing. Question: "{Summary 
 
    💬 Follow-up: describe further plan changes in chat — each `/skill:revise` call appends another timestamped Follow-up section, history is preserved.
 
-   **Next step:** `/skill:implement .rpiv/artifacts/plans/{filename}.md Phase {N}` — resume execution at the affected phase (or omit `Phase {N}` to run all phases sequentially).
+   **Next step:** `/skill:implement plan server {filename}.md Phase {N}` — resume execution at the affected phase (or omit `Phase {N}` to run all phases sequentially).
 
    > 🆕 Tip: start a fresh session with `/new` first — chained skills work best with a clean context window.
    ```
@@ -260,13 +260,13 @@ When spawning research agents:
 
 **Scenario 1: User provides everything upfront**
 ```
-User: /skill:revise .rpiv/artifacts/plans/2025-10-16_09-00-00_feature.md - add phase for error handling
+User: /skill:revise plan server 2025-10-16_09-00-00_feature.md - add phase for error handling
 Assistant: {Reads plan, researches error handling patterns, updates plan}
 ```
 
 **Scenario 2: User provides just plan file**
 ```
-User: /skill:revise .rpiv/artifacts/plans/2025-10-16_09-00-00_feature.md
+User: /skill:revise plan server 2025-10-16_09-00-00_feature.md
 Assistant: I've found the plan. What changes would you like to make?
 User: Split Phase 2 into two phases - one for backend, one for frontend
 Assistant: {Proceeds with update}
@@ -276,7 +276,7 @@ Assistant: {Proceeds with update}
 ```
 User: /skill:revise
 Assistant: Which plan would you like to update? Please provide the path...
-User: .rpiv/artifacts/plans/2025-10-16_09-00-00_feature.md
+User: plan server 2025-10-16_09-00-00_feature.md
 Assistant: I've found the plan. What changes would you like to make?
 User: Add more specific success criteria
 Assistant: {Proceeds with update}
@@ -284,8 +284,12 @@ Assistant: {Proceeds with update}
 
 **Scenario 4: User passes a review artifact instead of a plan**
 ```
-User: /skill:revise .rpiv/artifacts/reviews/2025-10-16_10-00-00_feature.md
+User: /skill:revise plan server 2025-10-16_10-00-00_feature.md
 Assistant: `revise` updates implementation plans, not review artifacts. Please provide the target plan path plus the changes to make.
-User: /skill:revise .rpiv/artifacts/plans/2025-10-16_09-00-00_feature.md "Address the review findings by splitting Phase 2 and adding validation coverage"
+User: /skill:revise plan server 2025-10-16_09-00-00_feature.md "Address the review findings by splitting Phase 2 and adding validation coverage"
 Assistant: {Proceeds with update}
 ```
+
+## Clipboard
+
+After editing the plan file, immediately run `bash` with `pbcopy <absolute-path>` (the path of the plan file you edited) so the user's clipboard has the file path.

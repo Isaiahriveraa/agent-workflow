@@ -1,13 +1,14 @@
-# ADR Format
+ADRs are written to the plan server project directory:
+`~/Documents/plan-server/projects/{project}/adr/`
 
-## Location resolution
+Create them with the helper script:
+```bash
+python3 ~/.agents/scripts/new-artifact.py --project <project> --type adr --topic "<decision title>"
+```
 
-ADRs are written to the first existing path in this order:
-1. `.rpiv/artifacts/decisions/` — rpiv canonical (created lazily)
-2. `docs/adr/` — legacy fallback
+Scan the directory for the highest existing number and increment by one.
 
-Use sequential numbering: `0001-slug.md`, `0002-slug.md`, etc.
-
+## When to offer an ADR
 Create the directory lazily — only when the first ADR is needed.
 
 ## Template
@@ -30,7 +31,7 @@ Only include these when they add genuine value. Most ADRs won't need them.
 
 ## Numbering
 
-Scan the resolved directory (`.rpiv/artifacts/decisions/` or `docs/adr/`) for the highest existing number and increment by one.
+Scan the plan server `adr/` directory for the highest existing number and increment by one.
 
 ## When to offer an ADR
 

@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Convert a design artifact into a phased implementation plan with parallelized atomic phases and explicit success criteria, written to .rpiv/artifacts/plans/. Use after the design skill when the user wants a design turned into an actionable, phase-by-phase plan to hand to the implement skill. Prefer plan when a straightforward phased breakdown is sufficient, and prefer blueprint when iterative vertical-slice micro-checkpoints between phases are needed.
+description: Convert a design artifact into a phased implementation plan with parallelized atomic phases and explicit success criteria, written to the plan server. Use after the design skill when the user wants a design turned into an actionable, phase-by-phase plan to hand to the implement skill. Prefer plan when a straightforward phased breakdown is sufficient, and prefer blueprint when iterative vertical-slice micro-checkpoints between phases are needed.
 argument-hint: "[design artifact path]"
 shell-timeout: 10
 ---
@@ -11,7 +11,7 @@ You are tasked with creating phased implementation plans from design artifacts. 
 
 ## Input
 
-`$ARGUMENTS` — path to a design artifact (`.rpiv/artifacts/designs/*.md`).
+`$ARGUMENTS` — path to a design artifact (`plan server *.md`).
 
 ## Metadata
 
@@ -39,7 +39,7 @@ When this command is invoked:
 
 1. **Determine input mode**:
 
-   **Design artifact provided** (path to a `.md` file in `.rpiv/artifacts/designs/`):
+   **Design artifact provided** (path to a `.md` file in `plan server `):
    - Read the design artifact FULLY using the Read tool WITHOUT limit/offset
    - Extract: Architecture (the code changes), **`## Slices` (slice boundaries + per-slice Success Criteria — authored by `/skill:design` Step 6.1, verified by slice-verifier at 6.2)**, File Map, Ordering Constraints, Verification Notes, Performance Considerations, Scope
    - These are the inputs for phasing. `## Slices` is the phase contract: each `### Slice N: {name}` becomes `## Phase N: {name}` with the same `**Files**:` list and the same Success Criteria. No reauthoring.
@@ -50,7 +50,7 @@ When this command is invoked:
    ```
    I'll create an implementation plan from a design artifact. Please provide the path:
 
-   `/skill:plan .rpiv/artifacts/designs/2025-01-20_09-30-00_feature.md`
+   `/skill:plan plan server 2025-01-20_09-30-00_feature.md`
 
    Run `/skill:design` first to produce the design artifact. There is no standalone path.
    ```
@@ -86,7 +86,7 @@ No developer question — boundary changes are out of scope for plan. If the dev
 
 Write the plan **incrementally** — skeleton first, then fill each phase. Code comes from the design's `## Architecture` (file-grouped); Success Criteria come from the design's `## Slices` section **unchanged** — no reauthoring, no re-derivation from Verification Notes.
 
-1. **Write the plan skeleton** to `.rpiv/artifacts/plans/<slug>_<description>.md` (use `<slug>` from the Metadata block's `now.mjs` line 1; copy `<iso>` verbatim into frontmatter `date:` and `last_updated:`).
+1. **Write the plan skeleton** to `plan server <slug>_<description>.md` (use `<slug>` from the Metadata block's `now.mjs` line 1; copy `<iso>` verbatim into frontmatter `date:` and `last_updated:`).
    - Format: `<slug>_<description>.md` where:
      - `<slug>` comes from `now.mjs` (second tab-separated field on line 1)
      - description is a brief kebab-case description (may include ticket number)
@@ -186,8 +186,8 @@ last_updated_by: {`author:` from Metadata block}
 
 ## References
 
-- Design: `.rpiv/artifacts/designs/{file}.md`
-- Research: `.rpiv/artifacts/research/{file}.md`
+- Design: `plan server {file}.md`
+- Research: `plan server {file}.md`
 - Original ticket: `thoughts/me/tickets/{file}.md`
 ```
 
@@ -292,10 +292,12 @@ The 8-column header is retained when only one source returns; only rows from the
 3. **Present the plan location** (after triage is complete):
    ```
    Implementation plan written to:
-   `.rpiv/artifacts/plans/{filename}.md`
+   `plan server {filename}.md`
 
    {N} phases, {M} total file changes. {T} reviewer findings triaged at Step 5 ({A} applied, {D} deferred, {DD} dismissed). If either reviewer hit Step 4.4's per-agent failure-fallback, render this line as `Step 4 {code|coverage|both} review unavailable — proceeded with available findings.`
 
+
+> 💡 **Browser viewing**: To view this plan in the plan server, run: `/skill:plan-server --title "Plan Title" --project <project>`. The plan server serves plans at `http://localhost:3456/project/{project}/plans`.
    Please review:
    - Are the phases properly scoped for worktree execution?
    - Are the success criteria specific enough?
@@ -305,7 +307,7 @@ The 8-column header is retained when only one source returns; only rows from the
 
    💬 Follow-up: describe the change in chat to append a timestamped Follow-up section to this artifact, or use `/skill:revise <plan-path>` for surgical phase edits. Re-run `/skill:plan` for a fresh artifact.
 
-   **Next step:** `/skill:implement .rpiv/artifacts/plans/{filename}.md Phase 1` — start execution at Phase 1 (omit `Phase 1` to run all phases sequentially).
+   **Next step:** `/skill:implement plan server {filename}.md Phase 1` — start execution at Phase 1 (omit `Phase 1` to run all phases sequentially).
 
    > 🆕 Tip: start a fresh session with `/new` first — chained skills work best with a clean context window.
    ```
@@ -403,3 +405,7 @@ Both reviewers dispatch in parallel against the final artifact (code + Success C
 - ALWAYS hold `status: in-review` from Step 4.0 through Step 5; flip to `ready` only after every row has a `resolution` (or the table is empty)
 - Code in the plan comes from the design artifact's Architecture section — do not invent new code
 - **Frontmatter consistency**: Always include frontmatter, use snake_case for multi-word fields, keep tags relevant
+
+## Clipboard
+
+After writing the plan artifact to disk, immediately run `bash` with `pbcopy <absolute-path>` (using the Write tool's resolved file path) so the user's clipboard has the file path.

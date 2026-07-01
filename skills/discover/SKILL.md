@@ -1,6 +1,6 @@
 ---
 name: discover
-description: Interview the developer one question at a time to extract feature intent and requirements, then synthesize into a Feature Requirements Document at .rpiv/artifacts/discover/. The first question is intent-only and runs before any codebase probe; subsequent questions ground in evidence the probe surfaces. Use as the canonical entry point of the pipeline before research, or to stress-test a feature idea before codebase discovery. The FRD's Decisions block is consumed by `research` and propagates through Developer Context into `design`.
+description: Interview the developer one question at a time to extract feature intent and requirements, then synthesize into a Feature Requirements Document on the plan server. The first question is intent-only and runs before any codebase probe; subsequent questions ground in evidence the probe surfaces. Use as the canonical entry point of the pipeline before research, or to stress-test a feature idea before codebase discovery. The FRD's Decisions block is consumed by research and propagates through Developer Context into design.
 argument-hint: "[free-text feature description | existing artifact path]"
 shell-timeout: 10
 ---
@@ -45,7 +45,7 @@ The final artifact is research-compatible — its Decisions block is translated 
    Then wait for input.
 
 2. **Detect input shape** — parse the input:
-   - If the argument is an existing file path (resolves to a readable `.md` under `.rpiv/artifacts/`, or any path the user mentions for refinement context), read it FULLY using the Read tool WITHOUT limit/offset. Treat its content as baseline context — the interview surfaces gaps, missing requirements, and unstated assumptions relative to what's already documented.
+   - If the argument is an existing file path (resolves to a readable `.md` under `plan server `, or any path the user mentions for refinement context), read it FULLY using the Read tool WITHOUT limit/offset. Treat its content as baseline context — the interview surfaces gaps, missing requirements, and unstated assumptions relative to what's already documented.
    - Otherwise → fresh-feature mode: the entire argument is the free-text feature description.
 
 3. **Read any other files mentioned** in the prompt (tickets, docs, related artifacts, explicit `path:line` references) FULLY before proceeding.
@@ -116,7 +116,7 @@ Walk the lazy tree depth-first, parent before child. Expand the next layer (buil
 1. **Classify the question by tier**:
    - **`intent`** — already done in Step 2. Do not re-ask intent in this loop.
    - **`scope`** (goals · non-goals · functional reqs · non-functional reqs · constraints) — recommendation grounded in stated intent. `file:line` citations only when an option references existing code; otherwise state "no codebase precedent" in the option description.
-   - **`shape`** (architectural choice — which seam, which pattern, which integration point) — frame **dialectically**: name the tradeoff axis, not a winner. Each option's `description` MUST state what it optimizes for AND what it sacrifices, in the form "optimizes <X>, loses <Y>" (or "optimizes <X>, costs <Y>"). The lead option still carries `(Recommended)` with a one-line rationale, but the framing forces the developer to pick a side of an explicit tension rather than rubber-stamp a winner. Generate at least 2 candidate options before scoring — never present a single option masquerading as a choice. `file:line` citations required on every option that references existing code. Mirrors the `packages/rpiv-pi/skills/research/SKILL.md:103-142` checkpoint pattern. If no precedent exists, switch to ungrounded mode and label options as "convention A / convention B" with explicit "no codebase precedent" — the dialectic framing (X vs Y tradeoff) still applies.
+   - **`shape`** (architectural choice — which seam, which pattern, which integration point) — frame **dialectically**: name the tradeoff axis, not a winner. Each option's `description` MUST state what it optimizes for AND what it sacrifices, in the form "optimizes <X>, loses <Y>" (or "optimizes <X>, costs <Y>"). The lead option still carries `(Recommended)` with a one-line rationale, but the framing forces the developer to pick a side of an explicit tension rather than rubber-stamp a winner. Generate at least 2 candidate options before scoring — never present a single option masquerading as a choice. `file:line` citations required on every option that references existing code. Mirrors the `design skill documentation` checkpoint pattern. If no precedent exists, switch to ungrounded mode and label options as "convention A / convention B" with explicit "no codebase precedent" — the dialectic framing (X vs Y tradeoff) still applies.
 
      **Anti-rescoping**: if the probe finds something that could substitute for the requested build (e.g., feature already exists but isn't wired up), surface as an `intent` question with `file:line` — never silently redirect. Offer both "use what's there" and "build as asked".
    - **`detail`** (acceptance criteria · routine sub-decisions inside any branch) — batchable when 2-4 sibling leaves are independent.
@@ -160,7 +160,7 @@ Compile interview output into the FRD. The interview's logical order (problem �
 - **Non-Functional Requirements** — perf, security, UX, accessibility, reliability constraints.
 - **Constraints & Assumptions** — environmental, technical, schedule, organizational.
 - **Acceptance Criteria** — observable pass conditions a reviewer can check. Each MUST name a concrete command, output, or visible behavior (e.g., "running `npm test` exits 0", "`/skill:X` writes `path/to/Y`"). Reject vague phrasing like "feature works correctly" or "UX is acceptable".
-- **Recommended Approach** — 1-2 sentences naming the architectural shape implied by the decisions (e.g., "new command in `packages/rpiv-pi/extensions/`, output to stdout, no persistence"). This text is what `research` passes to `scope-tracer` as the topic for breadth grounding.
+- **Recommended Approach** — 1-2 sentences naming the architectural shape implied by the decisions (e.g., "new command in `plan server`, output to stdout, no persistence"). This text is what `research` passes to `scope-tracer` as the topic for breadth grounding.
 - **Decisions** — full Q/A log per decision: `### [title]` + `**Question**:` (text as asked, or "Pre-resolved from codebase evidence — confirmed in Step 4") + `**Recommended**:` (or "n/a — `intent` question") + `**Chosen**:` (developer's pick or evidence-derived answer) + `**Rationale**:` (1 line — why, or `evidence: path/to/file.ext:line + confirmed` for codebase-derived). This block is the inheritance hook into research's Developer Context.
 - **Open Questions** — only items the developer explicitly deferred.
 - **Suggested Follow-ups** — related-but-out-of-scope items surfaced during the probe or interview that the developer did NOT add to scope (per the Step 5 scope-creep guardrail). One line per item: what was observed and where (`file:line` when applicable). Omit the section entirely if empty.
@@ -169,7 +169,7 @@ Compile interview output into the FRD. The interview's logical order (problem �
 ### Step 7: Write Artifact, Present, Chain
 
 1. **Determine metadata** (from the Metadata block above):
-   - Filename: `.rpiv/artifacts/discover/<slug>_<topic>.md` — `<slug>` is the second tab-separated field on `now.mjs` line 1; `<topic>` is a kebab-case slug from the settled feature concept.
+   - Filename: `plan server <slug>_<topic>.md` — `<slug>` is the second tab-separated field on `now.mjs` line 1; `<topic>` is a kebab-case slug from the settled feature concept.
    - `repository:` ← `repo:` label; `branch:` / `commit:` ← matching labels.
    - `date:` / `last_updated:` ← `<iso>` (first tab-separated field on `now.mjs` line 1, offset verbatim).
    - Interviewer: `author:` from the Metadata block (fallback: `unknown`).
@@ -179,7 +179,7 @@ Compile interview output into the FRD. The interview's logical order (problem �
 3. **Present and chain**:
    ```
    Intent captured to:
-   `.rpiv/artifacts/discover/<YYYY-MM-DD_HH-MM-SS>_<topic>.md`
+   `plan server <YYYY-MM-DD_HH-MM-SS>_<topic>.md`
 
    {N} requirements, {M} decisions, {K} open questions.
 
@@ -189,7 +189,7 @@ Compile interview output into the FRD. The interview's logical order (problem �
 
    💬 Follow-up: discover writes a fresh FRD per call — re-invoke `/skill:discover` to iterate (the prior FRD stays unchanged on disk).
 
-   **Next step:** `/skill:research .rpiv/artifacts/discover/<YYYY-MM-DD_HH-MM-SS>_<topic>.md` — ground the intent in codebase reality.
+   **Next step:** `/skill:research plan server <YYYY-MM-DD_HH-MM-SS>_<topic>.md` — ground the intent in codebase reality.
 
    > 🆕 Tip: start a fresh session with `/new` first — chained skills work best with a clean context window.
    ```
@@ -228,3 +228,7 @@ These reinforce the critical rules from the steps above — listed here so they 
   - NEVER skip the developer-facing interview — it's the entire point of this skill
   - NEVER ask a final "looks good / want to adjust" rubber-stamp question (anti-pattern per `a93e591`)
   - NEVER dispatch agents before Step 2's `intent` question is answered
+
+## Clipboard
+
+After writing the FRD to disk at Step 7, immediately run `bash` with `pbcopy <absolute-path>` (using the Write tool's resolved file path) so the user's clipboard has the file path.

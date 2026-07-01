@@ -11,14 +11,20 @@ You are tasked with resuming work from a handoff document through an interactive
 
 ## Input
 
-`$ARGUMENTS` — path to a handoff document under `thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/`. If omitted, the skill lists available handoffs and asks which to resume from.
+`$ARGUMENTS` — path to a handoff document (e.g. from plan server: `~/Documents/plan-server/projects/{project}/handoffs/{Month-Name}/<filename>.md`). If omitted, the skill lists available handoffs from the plan server and asks which to resume from.
 
 ## Metadata
 
 ```!
 echo "### recent (read only in case of empty user input)"
 echo "recent handoffs:"
-node "${SKILL_DIR}/../_shared/list-recent.mjs" thoughts/{Month-Name}-{Year}/W{week-num}/handoffs 10
+PLAN_SERVER_HANDOFFS="$HOME/Documents/plan-server/projects/*/handoffs/${Month-Name:-$(date '+%B')}"
+# List handoffs from all projects
+for dir in $PLAN_SERVER_HANDOFFS; do
+  if [ -d "$dir" ]; then
+    ls -t "$dir"/*.md 2>/dev/null | head -5
+  fi
+done
 ```
 
 ## Flow
@@ -34,7 +40,7 @@ When this command is invoked:
 1. **If the path to a handoff document was provided**:
    - If a handoff document path was provided as a parameter, skip the default message
    - Immediately read the handoff document FULLY using the Read tool
-   - Immediately read any research or plan documents that it links to under `.rpiv/artifacts/plans` or `.rpiv/artifacts/research` or `.rpiv/artifacts/solutions`. Read these critical files DIRECTLY using the Read tool - do NOT invoke skills for this initial reading phase.
+   - Immediately read any research or plan documents it links to on the plan server. Read these critical files DIRECTLY using the Read tool - do NOT invoke skills for this initial reading phase.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
@@ -43,7 +49,7 @@ When this command is invoked:
    - **Exactly one entry** — confirm with `ask_user_question`: "Resume this handoff?" with options "Resume `<filename>` (Recommended)" and "Pick a different path". Do NOT call `ask_user_question` with a single option (the tool requires ≥2).
    - **Two or more entries** — present the top 4 filenames as `ask_user_question` options (a free-text "Other" row is appended automatically by the tool; do not list it manually).
 
-   Direct invocation alternative: `/skill:recall thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/<filename>`
+   Direct invocation alternative: `/skill:recall ~/Documents/plan-server/projects/{project}/handoffs/{Month-Name}/<filename>`
 
 ### Step 2: Read and Analyze Handoff
 
@@ -201,7 +207,7 @@ When this command is invoked:
 ## Example Interaction Flow
 
 ```
-User: /skill:recall thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/Jan-08_2-30pm--webhook-validation.md
+User: /skill:recall thoughts/handoffs/January/8th_2_30_PM_webhook-validation.md
 Assistant: Let me read and analyze that handoff document...
 
 {Reads handoff completely}

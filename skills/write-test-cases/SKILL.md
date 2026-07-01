@@ -1,6 +1,6 @@
 ---
 name: write-test-cases
-description: Generate manual test-case specifications for a single feature by analyzing the implementing code in parallel, producing flow-based test cases plus a regression suite and project-wide coverage map under .rpiv/test-cases/{feature}/. Consumes an outline-test-cases _meta.md when available for warm-start. Use when the user wants test cases written for a specific feature, asks for QA specs, or has run outline-test-cases and is ready to flesh out a feature.
+description: Generate manual test-case specifications for a single feature by analyzing the implementing code in parallel, producing flow-based test cases plus a regression suite and project-wide coverage map on the plan server. Consumes an outline-test-cases _meta.md when available for warm-start. Use when the user wants test cases written for a specific feature, asks for QA specs, or has run outline-test-cases and is ready to flesh out a feature.
 argument-hint: "[feature name, component path, feature slug, or _meta.md path] [additional instructions]"
 shell-timeout: 10
 ---
@@ -38,11 +38,11 @@ I'll generate test cases for this feature. Let me discover the relevant code and
 
 Parse the user's input to determine the feature under test. Handle these input forms:
 
-1. **_meta.md path** (e.g., `.rpiv/test-cases/users/_meta.md`):
+1. **_meta.md path** (e.g., `plan server users/_meta.md`):
    - Read the file. Extract `feature` from frontmatter. Mark as **has _meta.md**.
 
-2. **Feature folder or slug** (e.g., `.rpiv/test-cases/order-management/` or `order-management`):
-   - Check if `.rpiv/test-cases/{input}/_meta.md` exists
+2. **Feature folder or slug** (e.g., `plan server order-management/` or `order-management`):
+   - Check if `plan server {input}/_meta.md` exists
    - If yes: read it, extract `feature`, mark as **has _meta.md**
    - If no: treat as feature name
 
@@ -51,7 +51,7 @@ Parse the user's input to determine the feature under test. Handle these input f
 
 4. **Feature name with optional instructions** (e.g., `Order Management focus on refund edge cases`):
    - Parse as `{feature identifier} [additional instructions]`
-   - Check if `.rpiv/test-cases/{slugified-name}/_meta.md` exists — if yes, read it and mark as **has _meta.md**
+   - Check if `plan server {slugified-name}/_meta.md` exists — if yes, read it and mark as **has _meta.md**
    - Store additional instructions as supplemental context for agent prompts and checkpoint
 
 5. **No arguments provided**:
@@ -60,7 +60,7 @@ Parse the user's input to determine the feature under test. Handle these input f
    1. A feature name: `/skill:write-test-cases Order Management`
    2. A component path: `/skill:write-test-cases src/orders/`
    3. A feature slug: `/skill:write-test-cases order-management`
-   4. A _meta.md path: `/skill:write-test-cases .rpiv/test-cases/orders/_meta.md`
+   4. A _meta.md path: `/skill:write-test-cases plan server orders/_meta.md`
 
    Add instructions after the feature: `/skill:write-test-cases Order Management focus on refund edge cases`
    ```
@@ -96,7 +96,7 @@ Spawn the following agents in parallel using the Agent tool. Wait for ALL agents
 
 **Agent B — Existing Test Cases:**
 - subagent_type: `test-case-locator`
-- Prompt: "Search for existing test cases related to {feature name} in .rpiv/test-cases/. Report any existing TCs with their IDs, titles, and priorities so we can avoid duplicates."
+- Prompt: "Search for existing test cases related to {feature name} in plan server . Report any existing TCs with their IDs, titles, and priorities so we can avoid duplicates."
 
 Wait for both agents to complete before proceeding.
 
@@ -255,7 +255,7 @@ What makes these examples good:
 ### Step 7: Write Files & Update Artifacts
 
 1. **Determine output directory**:
-   - Target: `.rpiv/test-cases/{feature-slug}/` in the current working directory
+   - Target: `plan server {feature-slug}/` in the current working directory
    - Feature slug: from _meta.md (when available) or kebab-case from feature name
    - Create the directory if it doesn't exist
 
@@ -270,10 +270,10 @@ What makes these examples good:
    - Update `date` to `<iso>` from the Metadata block (first tab-separated field on `now.mjs` line 1)
    - Append new checkpoint Q&A pairs to `## Checkpoint History` under a new date header — only if new Q&A occurred during Step 5
 
-4. **Rebuild root coverage map** at `.rpiv/test-cases/_coverage-map.md`:
+4. **Rebuild root coverage map** at `plan server _coverage-map.md`:
    - Read the coverage map template at `templates/coverage-map.md`
-   - Glob for all `_regression-suite.md` files across `.rpiv/test-cases/*/`
-   - Glob for all `_meta.md` files across `.rpiv/test-cases/*/`
+   - Glob for all `_regression-suite.md` files across `plan server */`
+   - Glob for all `_meta.md` files across `plan server */`
    - Read each file's key data (frontmatter, summary stats, coverage map, smoke subset)
    - Aggregate into the coverage map template
    - Write the file (if only one feature exists, the map shows just that feature — it grows over time)
@@ -289,7 +289,7 @@ What makes these examples good:
    | _regression-suite.md | — | Feature summary (N TCs, ~Xm execution) |
    | _coverage-map.md | — | Project-wide coverage (N features, M TCs) |
 
-   Output: `.rpiv/test-cases/{feature-slug}/`
+   Output: `plan server {feature-slug}/`
    Total: {N} test cases + 1 regression suite + 1 coverage map
 
    Review the generated test cases and let me know if you'd like adjustments.

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Conduct comprehensive code reviews of pending changes, a branch, or a PR using parallel specialist agents that audit the diff, compare against peer code, and verify claims. Use when the user asks to 'review this', wants pending changes, a PR, a branch, or a diff reviewed, or asks for a code review. Produces review documents in .rpiv/artifacts/reviews/. Internal mechanics like row-only agent contracts and Gap-Finder set arithmetic are documented in the skill body."
+description: "Conduct comprehensive code reviews of pending changes, a branch, or a PR using parallel specialist agents that audit the diff, compare against peer code, and verify claims. Use when the user asks to 'review this', wants pending changes, a PR, a branch, or a diff reviewed, or asks for a code review. Produces review documents on the plan server.
 argument-hint: "[scope]"
 shell-timeout: 10
 ---
@@ -385,7 +385,7 @@ No agent dispatch. Compute inline while 4a / 4b run:
        • *{entity reaches state X} + {no event on that transition} + {consumer filter excludes X}* = **silent stranded state**
        • *{check-then-act on shared resource} + {no ordering primitive} + {retry/replay path}* = **duplicate-processing cascade**
        • *{spec A accepts Y} + {spec B rejects Y} + {workflow depends on both}* = **contradictory-predicate deadlock**
-     Also check `.rpiv/artifacts/reviews/*.md` and Precedents: if a prior review names a cascade whose constituents appear in current findings, cite it and assert reproduction. Missed cascades are the biggest historical quality regression; prefer false positives here.
+     Also check `plan server *.md` and Precedents: if a prior review names a cascade whose constituents appear in current findings, cite it and assert reproduction. Missed cascades are the biggest historical quality regression; prefer false positives here.
 
 ### Step 6: Verify Findings
 
@@ -434,7 +434,7 @@ Before writing the artifact, spawn ONE `claim-verifier` whose sole job is to gro
 ### Step 7: Write the Review Document
 
 1. **Determine metadata** (from the Metadata block at the top of this skill):
-   - Filename: `.rpiv/artifacts/reviews/<slug>_<scope-kebab>.md` — `<slug>` is the second tab-separated field on `now.mjs` line 1.
+   - Filename: `plan server <slug>_<scope-kebab>.md` — `<slug>` is the second tab-separated field on `now.mjs` line 1.
    - `repository:` ← `repo:` label; `branch:` / `commit:` ← matching labels (fallbacks `no-branch` / `no-commit` already substituted).
    - `date:` ← `<iso>` (first tab-separated field on `now.mjs` line 1, offset verbatim).
    - Reviewer: `author:` from the Metadata block (fallback: `unknown`).
@@ -458,13 +458,13 @@ Before writing the artifact, spawn ONE `claim-verifier` whose sole job is to gro
 
 **Advisor prose**, when advisor ran, is pasted verbatim as a blockquote at the top of `## Recommendation`, not as a standalone section.
 
-**Template shape**: Read the full template at `templates/review.md` (house pattern per `.rpiv/guidance/skills/architecture.md:66` — `templates/` subfolder, runtime-read, never inlined). At emission time: Read `templates/review.md`, fill every `{placeholder}` with reconciled-and-verified values from Steps 5 and 6, apply the section-omission rules above (delete the whole section AND its trailing separator line when its input is empty), strip the leading `<!-- -->` comment, and Write the result to the target path.
+**Template shape**: Read the full template at `templates/review.md` (house pattern per `plan server guidance/skills/architecture.md:66` — `templates/` subfolder, runtime-read, never inlined). At emission time: Read `templates/review.md`, fill every `{placeholder}` with reconciled-and-verified values from Steps 5 and 6, apply the section-omission rules above (delete the whole section AND its trailing separator line when its input is empty), strip the leading `<!-- -->` comment, and Write the result to the target path.
 
 ### Step 8: Present Summary
 
 ```
 Review written to:
-`.rpiv/artifacts/reviews/{filename}.md`
+`plan server {filename}.md`
 
 Severity:     {C} critical · {I} important · {S} suggestions
 Lenses:       {Q} quality · {Se} security · {D} dependencies
@@ -483,7 +483,7 @@ Ask follow-ups, or chain forward.
 
 💬 Follow-up: describe the question in chat to append a timestamped Follow-up section. Retired IDs stay retired; re-run `/skill:code-review` for a fresh review.
 
-**Next step:** `/skill:design "Address findings from .rpiv/artifacts/reviews/{filename}.md"` — run the design phase over the review document to produce a fix plan (only when status is `needs_changes` or `requesting_changes`).
+**Next step:** `/skill:design "Address findings from plan server {filename}.md"` — run the design phase over the review document to produce a fix plan (only when status is `needs_changes` or `requesting_changes`).
 
 > 🆕 Tip: start a fresh session with `/new` first — chained skills work best with a clean context window.
 ```
@@ -505,18 +505,18 @@ Ask follow-ups, or chain forward.
   - When Quality's `Predicate-set coherence` surface returns ≥2 rows with mismatched values on the same enum/type, the 4b sweep MUST evaluate categories 7–9 against those rows.
   - **File orientation is load-bearing**: patches MUST use `-U30` (or `-U10` fallback for >1MB patches), never `-U0`. The Discovery Map's semantic file map (clusters + role tags + symbols-touched hint) is the orientation primitive, not per-hunk line ranges. Lens prompts organise findings per file (`### file/path.ext`), not per hunk. Agents SHOULD NOT issue extra `Read` calls for files already represented in the patch unless specifically needed for a cross-file trace.
   - **Wave-2 context isolation**: Quality and Security prompts MUST NOT include Wave-1 background-agent output (precedent-locator, Dependencies, CVE) even when those agents have finished before Wave-2 dispatches. Summary context from those agents causes the lens agents to narrativise instead of independently analyse the diff — the observed failure mode is a ~5× speedup coupled with hallucinated findings and mis-cited line numbers. Pass only Discovery Map + patch file path.
-  - ALWAYS emit `## Pre-Adjudication Findings` to the main branch BEFORE calling `advisor()` — advisor reads `getBranch()` (main-thread-only, `packages/rpiv-advisor/advisor.ts:336`).
-  - ALWAYS probe advisor availability before calling it (strip-when-unconfigured at `packages/rpiv-advisor/advisor.ts:463-472`).
+  - ALWAYS emit `## Pre-Adjudication Findings` to the main branch BEFORE calling `advisor()` — advisor reads `getBranch()` (main-thread-only, `skills/advisor:336`).
+  - ALWAYS probe advisor availability before calling it (strip-when-unconfigured at `skills/advisor:463-472`).
   - NEVER call `advisor()` from a sub-agent (branch invisible to advisor).
   - NEVER parse advisor prose — paste verbatim as a blockquote at the top of `## Recommendation`.
   - ALWAYS wait for 4a / 4b AND the Precedents agent to complete before Step 5 — Wave-3's hard barrier. 4c is synchronous (orchestrator). Dependencies + CVE wait here too when running, but are not individually hard-gated.
   - ALWAYS run Step 6 (verification pass) between reconciliation and artifact write. It is the only mechanism that catches lens agents asserting claims they never opened a file to confirm, and the only mechanism that validates `resolved-by` annotations against the actual branch via `git merge-base --is-ancestor`. Skipping Step 6 silently re-admits the failure mode this skill was designed to prevent.
   - PRESERVE severity emoji/naming and frontmatter keys verbatim — `artifacts-locator` / `artifacts-analyzer` grep these.
-  - Bundled row-only specialists at narrativisation-prone sites: `diff-auditor` (Wave-2 Q+S), `peer-comparator` (Wave-1 PM), `claim-verifier` (Step 6). See `.rpiv/guidance/agents/architecture.md`.
+  - Bundled row-only specialists at narrativisation-prone sites: `diff-auditor` (Wave-2 Q+S), `peer-comparator` (Wave-1 PM), `claim-verifier` (Step 6). See `plan server guidance/agents/architecture.md`.
   - **Scope strategy is load-bearing at both ends**: Step 1 sets `strategy` and `FP_FLAG`; Step 6 pre-filters the reconciled severity map against `InScopeFiles` before `claim-verifier` dispatch. `--first-parent` is orthogonal to `--no-merges` / `-U30` — additive, not a replacement. Agent contracts (`claim-verifier.md:11-30` in particular) stay scope-blind by design; orchestrator owns scope.
 - **Agent roles**:
   - `integration-scanner` (Wave-1) — inbound/outbound refs, auth-boundary crossings.
-  - `precedent-locator` (Wave-1) — git history + `.rpiv/artifacts/`.
+  - `precedent-locator` (Wave-1) — git history + `plan server `.
   - `codebase-analyzer` ×1 (Wave-1, `ManifestChanged`) — dependencies parse.
   - `web-search-researcher` (Wave-1, `ManifestChanged`) — CVE/advisory lookups with LINKS.
   - `peer-comparator` ×1 (Wave-1, gated on `len(PeerPairs) > 0`) — peer-mirror check; tags Mirrored/Missing/Diverged/Intentionally-absent.
@@ -525,3 +525,7 @@ Ask follow-ups, or chain forward.
   - `codebase-analyzer` ×1 (Step 4b, gated) — interaction sweep.
   - *(Step 4c, gated)* — gap-finder runs inline in the orchestrator (set arithmetic over coverage map; no agent).
   - `claim-verifier` ×1 (Step 6, always) — verification pass (grounds every reconciled finding at its cited `file:line`; tags Verified / Weakened / Falsified; Falsified dropped, Weakened demoted one tier).
+
+## Clipboard
+
+After writing the code review artifact to disk at Step 7, immediately run `bash` with `pbcopy <absolute-path>` (using the path from `new-artifact.py` or the Write tool) so the user's clipboard has the file path.

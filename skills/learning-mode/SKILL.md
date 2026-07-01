@@ -39,7 +39,7 @@ Other CLIs can reuse the vocabulary without copying Pi-specific slash-command be
 ## File Conventions
 
 ```text
-thoughts/{Month-Name}-{Year}/W{week-num}/{handoffs,reflections,grill}/{Mon-DD}_{time}--<topic>.md
+thoughts/{handoffs,reflections,grill}/{Month-Name}/{Day_ord}_{time}_{topic}.md
 ```
 
 - Handoffs: session transfer.

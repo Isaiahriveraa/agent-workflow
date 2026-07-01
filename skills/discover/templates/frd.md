@@ -47,7 +47,7 @@ last_updated_by: {`author:` from Metadata block}
 - [ ] {Criterion 2}
 
 ## Recommended Approach
-{1-2 sentences. The architectural shape implied by the decisions — e.g., "New command in `packages/rpiv-pi/extensions/`, writes JSON to stdout, no persistence layer." The downstream `research` skill validates this against the codebase and passes this text to `scope-tracer` as the topic.}
+{1-2 sentences. The architectural shape implied by the decisions — e.g., "New command in `plan server`, writes JSON to stdout, no persistence layer." The downstream `research` skill validates this against the codebase and passes this text to `scope-tracer` as the topic.}
 
 ## Decisions
 
@@ -75,4 +75,4 @@ last_updated_by: {`author:` from Metadata block}
 
 ## References
 - {Input file or ticket}
-- {Related artifact, e.g., `.rpiv/artifacts/research/<YYYY-MM-DD_HH-MM-SS>_<topic>.md`}
+- {Related artifact, e.g., `plan server <YYYY-MM-DD_HH-MM-SS>_<topic>.md`}
