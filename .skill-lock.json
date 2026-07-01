@@ -464,15 +464,6 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
-    "impeccable": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/impeccable",
-      "skillPath": "skills/impeccable/SKILL.md",
-      "skillFolderHash": "18e5ccb6f52da80c968d1c92a3fd90263e7f447a",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
-    },
     "implement": {
       "source": ".agents",
       "sourceType": "hub",
