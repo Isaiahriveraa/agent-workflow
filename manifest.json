@@ -112,6 +112,13 @@
       "tier": 1,
       "tool": "antigravity",
       "type": "directory"
+    },
+    {
+      "source": "~/.pi/agent/skills",
+      "target": "~/.agents/skills",
+      "tier": 1,
+      "tool": "pi",
+      "type": "directory"
     }
   ],
   "not_managed": [
@@ -137,10 +144,11 @@
     }
   ],
   "auto_discovery": {
-    "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
-    "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed",
-    "antigravity_skills": "Symlinked to ~/.gemini/skills/ and ~/.gemini/antigravity-cli/plugins/hub/skills/ — both point to ~/.agents/skills/",
-    "nemoclaw_skills": "Auto-discovers from /sandbox/.agents/skills/ inside the sandbox — synced by sync.sh sync-nemoclaw-skills"
+    "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
+    "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
+    "antigravity_skills": "Symlinked to ~/.gemini/skills/ and ~/.gemini/antigravity-cli/plugins/hub/skills/ — both point to ~/.agents/skills/.",
+    "pi_skills": "~/.pi/agent/skills -> ~/.agents/skills/ — directory symlink, hub-managed.",
+    "nemoclaw_skills": "Auto-discovers from /sandbox/.agents/skills/ inside the sandbox — synced by sync.sh sync-nemoclaw-skills."
   },
   "capabilities": {
     "claude-code": {
@@ -188,7 +196,7 @@
       },
       "hooks": {
         "status": "bridged",
-        "contract": "~/.codex/hooks.json registers OMX native hooks plus hub shell safety and MemPalace context hooks"
+        "contract": "~/.codex/hooks.json registers OMX native hooks plus hub shell safety hooks"
       },
       "mcp": {
         "status": "native",

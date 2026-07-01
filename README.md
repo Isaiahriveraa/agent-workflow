@@ -78,25 +78,10 @@ Memory flows: hooks capture signals → MemPalace processes → recall feeds con
 
 | Command | Description |
 |---------|-------------|
-| `/rpi` | Full workflow front door — discover → research → design → plan → implement → validate |
-| `/rpi-brainstorm` | Intake clarification before research |
-| `/prime` | Fast repo priming — load minimum useful context before planning |
+| `/pr` | PR workflow — generate descriptions, split branches by concern, or refine dirty branches into stacked draft PRs (`/pr split`, `/pr refine`) |
 | `/plan` | Yonie writes the design, you critique it |
-| `/plan-feature` | Lightweight feature planning for scoped work |
-| `/review` | Senior PR review — correctness, structure, failure modes, tests |
-| `/review-diff` | Strict diff review — concerns, assumptions, edge cases |
-|| `/pr` | PR description generator — sized to the actual diff |
-|| `/pr-split` | Split work into small, reviewable PRs |
-|| `/pr-refine` | **NEW** — Split a dirty branch into clean stacked draft PRs with `gh` CLI |
-| `/fix` | Systematic debugging — identify, reproduce, fix, verify |
 | `/elite-mode` | TDD + SOLID + senior SWE workflow |
-| `/ping-pong` | Two-model debate planning |
-| `/tutor` | Guided web development tutoring |
-| `/commit` | Professional commit message generator |
-| `/handoff` | Create handoff document for session transfer |
-| `/recall` | Resume work from a handoff document |
 | `/capture-decision` | Document architectural decisions at decision time |
-| `/read-code` | Read and analyze code before changing it |
 
 ## Expert Agents
 
@@ -151,10 +136,10 @@ Memory flows: hooks capture signals → MemPalace processes → recall feeds con
 │   ├── openclaw/
 │   ├── pi/
 └── thoughts/              # Research, plans, handoffs, decisions
-    ├── {Month-Name}-{Year}/W{week-num}/handoffs/
-    ├── {Month-Name}-{Year}/W{week-num}/reflections/
-    ├── {Month-Name}-{Year}/W{week-num}/grill/
-    └── YYYY-Www/          # ISO week decision records
+    ├── {Month-Name}-{Year}/W{month-week}/handoffs/
+    ├── {Month-Name}-{Year}/W{month-week}/reflections/
+    ├── {Month-Name}-{Year}/W{month-week}/grill/
+    └── adr/                # Architecture Decision Records
 ```
 
 ## What Gets Shared
@@ -167,7 +152,7 @@ Memory flows: hooks capture signals → MemPalace processes → recall feeds con
 
 - Secrets and caches: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `node_modules/`
 - Per-project runtime inside a target repo:
-  - `[project]/thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/`
+  - `[project]/thoughts/{Month-Name}-{Year}/W{month-week}/handoffs/`
   - `[project]/thoughts/plans/`
   - `[project]/thoughts/research/`
 

@@ -24,7 +24,7 @@ This directory documents the Codex CLI-specific integration boundary.
 
 ## Hook Bridge
 - `~/.codex/hooks.json` registers lifecycle hooks that call hub-owned scripts.
-- Session and prompt hooks load OMX/MemPalace context.
+- Session and prompt hooks load OMX context.
 - PreToolUse shell hooks run `~/.agents/hooks/gsd-pre-bash-guard.cjs` before the OMX native preflight.
 - Keep matcher coverage aligned with Codex shell tool names: `Bash|shell|unified_exec|exec_command|command_execution`.
 

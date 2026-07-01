@@ -19,5 +19,7 @@
     "test:model-router": "node --test ./tests/model-router.test.mjs",
     "test": "npm run test:workflows && npm run test:adapters && npm run test:sessions && npm run test:tooling && npm run test:verification && npm run test:artifacts && npm run test:plans && npm run test:model-router"
   },
-  "dependencies": {}
+  "dependencies": {
+    "oh-my-openagent": "^4.12.1"
+  }
 }
