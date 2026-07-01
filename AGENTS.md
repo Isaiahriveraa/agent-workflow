@@ -54,27 +54,28 @@ When a task matches a domain, invoke the relevant skill via `skill(name="skill-n
 
 | Task Domain | Skill(s) | Why |
 |---|---|---|
-| Frontend UI/UX, styling, design | `ui-ux-pro-max` + `og-frontend-skill` | High-quality UI generation, 50 styles, component design. `og-frontend-skill` lives at `skills/frontend-design/` |
+| Frontend UI/UX, styling, design | `ui-ux-pro-max` + `frontend-design` | High-quality UI generation, 50 styles, component design |
 | Layout issues, responsive design | `flutter-build-responsive-layout`, `flutter-fix-layout-issues` | Flutter-specific layout debugging |
 | Architecture, refactoring | `improve-codebase-architecture` | Deepening, interface design, language refinement |
 | Prototyping | `prototype` | Throwaway prototypes before committing |
 | Debugging, hard bugs | `diagnose` | Structured reproduce→minimise→fix loop |
-| Code review | `caveman-review`, `receiving-code-review` | Terse, actionable review comments |
-| Commit messages | `caveman-commit` | Ultra-compressed Conventional Commits |
-| Testing (JS/TS) | `javascript-testing-patterns` | Jest/Vitest/Testing Library patterns |
+| Code review | `code-review`, `code-critique`, `persona-critique` | Comprehensive review, senior critique, multi-lens analysis |
+| Commit messages | `commit` | Conventional Commits with single-story enforcement |
+| Testing (JS/TS) | `tdd` | Test-driven development workflow |
 | Testing (E2E) | `e2e-testing-patterns` | Playwright/Cypress reliability |
 | Security audit | `security-review` | Security audit workflow |
 | Performance | `performance` | Load time, Core Web Vitals, bundling |
-| Node.js backend | `nodejs-backend-patterns` | Express/Fastify, middleware, auth patterns |
+| Node.js backend | `diagnose` | Debugging and root-cause analysis |
 | Next.js | `next-best-practices` | App Router, RSC, caching, metadata |
 | Flutter | `flutter-apply-architecture-best-practices`, `flutter-setup-declarative-routing`, `flutter-add-widget-test`, `flutter-add-integration-test`, `flutter-use-http-package`, `flutter-implement-json-serialization`, `flutter-setup-localization` | Full Flutter stack |
 | Supabase/Postgres | `supabase-postgres-best-practices` | Query optimization, schema design |
 | Requirements gathering | `deep-interview` | Socratic questioning before implementation |
 | Plan stress-testing | `grill-with-docs`, `ping-pong` | Challenge plans against domain model |
 | Explaining plans | `explain` | Simplify technical plans for stakeholders |
-| Git operations | `git-master` | Atomic commits, rebase, history search |
-| Frontend visual iteration | `impeccable` | Live browser iteration, UI polish |
+| Git operations | `pr-workflow`, `commit` | PR discipline, commit hygiene |
+| Frontend visual iteration | `frontend-design`, `ui-ux-pro-max` | UI polish, visual design iteration |
 | Herdr pane management | `herdr` | Spawn, monitor, and manage herdr agent panes in terminal environment |
+| Handoff documents | `handoff` (via `/ch`) | Shortcut for creating context-preserving session handoffs |
 
 ---
 
