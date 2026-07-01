@@ -57,16 +57,13 @@ function getChangedFiles(cwd) {
   }
 }
 
-function getCurrentWeek() {
+function getCurrentMonth() {
   const now = new Date();
-
-  // ISO week calculation
-  const dayNum = (now.getDay() + 6) % 7;
-  const jan4 = new Date(now.getFullYear(), 0, 4);
-  const daysSinceJan4 = Math.floor((now - jan4) / 86400000);
-  const weekNum = Math.ceil((daysSinceJan4 - ((jan4.getDay() + 6) % 7) + 1) / 7);
-
-  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+  const months = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December'
+  ];
+  return `${months[now.getMonth()]}-${now.getFullYear()}`;
 }
 
 function findAgentsRoot(cwd) {
@@ -92,8 +89,8 @@ function main() {
   const agentsRoot = findAgentsRoot(cwd);
   if (!agentsRoot) return;
 
-  const week = getCurrentWeek();
-  const decisionsPath = path.join(agentsRoot, 'thoughts', week, 'decisions.md');
+  const month = getCurrentMonth();
+  const decisionsPath = path.join(agentsRoot, 'thoughts', month, 'decisions.md');
 
   if (!fs.existsSync(decisionsPath)) {
     // No decisions file for this week — nothing to check against

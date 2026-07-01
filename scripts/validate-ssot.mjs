@@ -263,18 +263,18 @@ const handoffContracts = new Map([
 	[
 		"commands/handoff.md",
 		[
-			"[project root]/thoughts/{Month-Name}-{Year}/W{week-num}/handoffs/{Mon-DD}_{time}--<topic>.md",
+			"[project root]/thoughts/handoffs/{Month-Name}/{Day_ord}_{time}_{topic}.md",
 			"node ~/.agents/scripts/project-context.mjs current",
 			"python3 ~/.agents/scripts/new-handoff.py --type handoffs \"<topic>\"",
-			"/recall /absolute/path/to/thoughts/June-2026/W1/handoffs/Jun-05_7-30pm--topic.md",
+			"/recall /absolute/path/to/thoughts/handoffs/June/24th_3_28_PM_topic.md",
 		],
 	],
 	[
-		"commands/resume-handoff.md",
+		"skills/recall/SKILL.md",
 		[
-			"[project root]/thoughts/handoffs/",
-			"current project's `thoughts/plans`",
-			"current project's `thoughts/research`",
+			"thoughts/handoffs/{Month-Name}/",
+			"list-recent.mjs",
+			"-> Continue work",
 		],
 	],
 ]);
