@@ -671,7 +671,98 @@
       "skillFolderHash": "0c9071e72de3f5fdeba545f4990a1e74f6b300ac",
       "installedAt": "2026-05-28T03:31:13.000Z",
       "updatedAt": "2026-05-28T03:31:13.000Z"
+    },
+    "code-critique": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/code-critique",
+      "skillPath": "skills/code-critique/SKILL.md",
+      "skillFolderHash": "15c184e82ad50969be5f6a8a8e92237d030a4961",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "flutter-animations": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-animations",
+      "skillPath": "skills/flutter-animations/SKILL.md",
+      "skillFolderHash": "58db7ebf983ee93fe96731332bf87f6b03affbf5",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "framer-motion-animator": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/framer-motion-animator",
+      "skillPath": "skills/framer-motion-animator/SKILL.md",
+      "skillFolderHash": "91a9fb1b8bbd3228d304960bc645841065599cbe",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "learning-mode": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/learning-mode",
+      "skillPath": "skills/learning-mode/SKILL.md",
+      "skillFolderHash": "dbb2a5b189a7f7ebce2f7e0612f1e0e95da6a1bf",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "persona-critique": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/persona-critique",
+      "skillPath": "skills/persona-critique/SKILL.md",
+      "skillFolderHash": "980d4a969428280cb940c3de0ddcb513c7e94144",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "plan-server": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan-server",
+      "skillPath": "skills/plan-server/SKILL.md",
+      "skillFolderHash": "c8ae3cff94d28ae490b56ef236e24beff1425fae",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "recall": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/recall",
+      "skillPath": "skills/recall/SKILL.md",
+      "skillFolderHash": "2d0ed30c0663e9865c17399ed8debd7baffc8803",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "reflect": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/reflect",
+      "skillPath": "skills/reflect/SKILL.md",
+      "skillFolderHash": "25f9713c8bbd32a8b529f7411e0381b81da1cd21",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "shadcn": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/shadcn",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "skillFolderHash": "0d653cce62e29c0e7a5725d3f30a3339b9fc66d5",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "supacode-cli": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/supacode-cli",
+      "skillPath": "skills/supacode-cli/SKILL.md",
+      "skillFolderHash": "9bfc354c953a6b0e178411e890369b2a0d4be634",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
+  },
   "dismissed": {
     "findSkillsPrompt": true
   },
