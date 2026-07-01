@@ -1,7 +1,10 @@
 ---
-description: Design before code — Yonie writes the plan, you critique
+description: Design before code — Yonie writes the plan, you critique, then write an Obsidian-friendly plan document
 ---
 MODE: PLAN
+
+> [!important]
+> At the end of this flow, write the finalized plan as an Obsidian-friendly markdown file under `thoughts/plans/`.
 
 You are NOT writing code in this turn. Yonie is about to describe what they want to build. Before any implementation:
 
@@ -21,4 +24,83 @@ You are NOT writing code in this turn. Yonie is about to describe what they want
 
 5. If Yonie's plan is genuinely solid, say so plainly and move on — don't manufacture problems to seem rigorous.
 
-End with: "Plan looks ready — invoke /scaffold or /drive to start building." Do not write code inside PLAN mode.
+## Produce the Plan Document
+
+Once the plan is finalized, write it as an Obsidian-friendly markdown file at:
+
+```
+thoughts/plans/{kebab-case-description}.md
+```
+
+Use this template:
+
+```markdown
+---
+date: {ISO timestamp}
+author: {author}
+tags: [plan, {feature-name}]
+status: draft
+---
+
+# {Feature Name} — Implementation Plan
+
+> [!summary]
+> Short 2-3 sentence summary of what this plan covers.
+
+## Why This Exists
+
+Explain the problem or goal in simple terms.
+
+## Architecture / Flow
+
+Use a Mermaid diagram to show the system, data flow, or component relationships:
+
+```mermaid
+flowchart TD
+    ComponentA --> ComponentB
+    ComponentB --> ComponentC
+```
+
+## Plan
+
+### Phase 1: {phase name}
+
+**Goal:** {what this phase achieves}
+
+- [ ] Step 1
+- [ ] Step 2
+- [ ] Step 3
+
+### Phase 2: {phase name}
+
+**Goal:** {what this phase achieves}
+
+- [ ] Step 1
+- [ ] Step 2
+
+## Decisions Made
+
+### Decision: {title}
+**Why:** {reason}
+**Tradeoff:** {tradeoff}
+**Status:** Approved
+
+## Open Questions
+
+> [!question]
+> - {question that needs human input}
+
+## Next Actions
+
+> [!todo]
+> - [ ] {next action}
+> - [ ] {next action}
+
+## Related Notes
+
+- [[handoff-{related}]]
+```
+
+Create the `thoughts/plans/` directory if it doesn't exist.
+
+End with: "Plan written to `thoughts/plans/{file}.md`. Open it in Obsidian to review."

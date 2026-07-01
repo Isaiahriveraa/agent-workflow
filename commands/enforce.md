@@ -109,5 +109,31 @@ After all sub-agents complete:
 - Do not enforce on `node_modules/`, `.git/`, `vendor/`, `dist/`, `build/`, `__pycache__/`, `.venv/`, or any generated directory
 - Do not modify `.md` config files — only source code
 - Do not enforce on files larger than 500 lines in one pass (split into sub-agents per section instead)
-- Prefer smaller sub-agent batches (2-4 at a time) for quality over throughput
+
+## Output Format
+
+When reporting results, write the report as an Obsidian-friendly file at:
+
+```
+thoughts/enforce-{date}-{scope}.md
+```
+
+Use this structure:
+> [!summary]
+> What rules were enforced, which files were touched, and what the result was.
+
+### Summary
+| Module | Files Changed | Issues Fixed | Status |
+|--------|--------------|--------------|--------|
+| {module} | {n} | {n} | {pass/fail} |
+> [!todo]
+> **Remaining Issues** (if any)
+> - [ ] {issue to address}
+
+### Per-Module Details
+
+{for each module, list key changes made}
+
+### Related Notes
+- [[handoff-{related}]]
 - Prefer smaller sub-agent batches (2-4 at a time) for quality over throughput
