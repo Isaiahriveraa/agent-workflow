@@ -661,8 +661,7 @@
       "skillFolderHash": "3b05cc30997750c6d06a560060a0bd7a13b8b88d",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
-    }
-  },
+    },
     "prompt-master": {
       "source": ".agents",
       "sourceType": "hub",
