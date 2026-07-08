@@ -23,7 +23,6 @@ Applies unless overridden. Bias: caution over speed.
 8. **Follow conventions** — Match project patterns. Flag harmful ones.
 9. **Fail loud** — Report failure clearly. Don't hide uncertainty.
 10. **No redundant naming** — Directory namespaces it. File name adds info, not context.
-11. **Clipboard automation** — Auto-copy commands, paths, and artifacts to user clipboard.
 12. **Use patterns only when they fit** — Prefer simple code first. Use established patterns when they solve a real recurring problem.
 13. **Error handling** — Never swallow errors. Use Result types for recoverable errors.
 14. **Test investment** — Unit > integration > e2e. Spend budget that order.
@@ -59,6 +58,7 @@ correct for that on every change.
   until every test you defined is green; it isn't done until they all pass (Rule 6).
 - **Then read your diff as the reviewer.** Could a competent engineer who's never seen this
   approve it *and* extend it without rewriting what you wrote? If not, it isn't done.
+- **Use clear, simple, and descriptive names for variables, functions, and files. Avoid overly verbose names.**
 
 ---
 
