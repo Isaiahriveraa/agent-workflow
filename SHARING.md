@@ -3,43 +3,35 @@
 This repo is split into two layers: tracked workflow assets and local runtime state.
 
 ## Tracked Shared Layer
-- Reusable workflow assets: `commands/`, `skills/`, `agents/`, `adapters/`, `hooks/`
-- Helper scripts, tests, `manifest.json`, `package.json`, `sync.sh`
-- Shared contexts under `contexts/`
-- Onboarding and setup docs such as `README.md`, `SHARING.md`, and `.env.example`
+- Reusable workflow assets: `commands/`, `skills/`, `agents/`, `adapters/`
+- Helper scripts and `manifest.json`, `package.json`, `sync.sh`
+- Onboarding docs: `README.md`, `SHARING.md`, `.env.example`
 
 ## Local Runtime Layer
-- Root-local files ignored in this repo:
-  - `.env`
-  - `.env.local`
-  - `.agents-memory/`
-  - `memory.db`
-  - `thoughts/`
-  - `projects/`
-  - `node_modules/`
-- Per-project runtime generated inside the target repo:
-  - `[project]/.sisyphus/run-continuation/`
+Things that stay local and are gitignored:
+- `.env`, `.env.local`
+- `node_modules/`
+- Tool runtime state: `.omc/`, `.omo/`, `.omx/`, `.sisyphus/`, `.opencode/node_modules/`
+- Per-project runtime: plan server content at `~/Documents/plan-server/projects/{project}/`
 
-The local runtime layer is intentionally untracked so a clone starts clean and so public publication does not expose credentials or active project state.
+The local runtime layer is intentionally untracked so a clone starts clean and public publication does not expose credentials or active project state.
 
 ## Classification
-- Share as-is: `commands/`, `skills/`, `agents/`, `adapters/`, `hooks/`, `scripts/`, `tests/`, `manifest.json`, `package.json`, `package-lock.json`
-- Keep tracked but generic: `contexts/*.md` and `.env.example`
-- Keep local only: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `thoughts/`, `projects/`, and per-project `.omx/` runtime files
-- Generate on first setup: repo-local starter directories from `npm run init:local-state` and per-project context files from `node ~/.agents/scripts/project-context.mjs current`
+- Share as-is: `commands/`, `skills/`, `agents/`, `adapters/`, `scripts/`, `manifest.json`, `package.json`
+- Keep local only: `.env`, `.env.local`, `node_modules/`, tool runtime state directories
+- Generate on first setup: `npm run init:local-state`
 
 ## Safety Checklist
-- Do not commit `.env`, `.env.local`, `memory.db`, `.agents-memory/`, or force-added files from ignored runtime paths
-- Keep tracked `contexts/` generic and free of live operator history
-- Keep docs and examples on `~/.agents` or repo-relative paths, not personal home-directory paths
-- Review `git status --ignored` if your working copy has local `thoughts/` artifacts you do not want lingering on disk
+- Do not commit `.env`, `.env.local`, or tool runtime state directories
+- Keep docs and examples on repo-relative paths, not personal home-directory paths
+- Review `git status --ignored` before publishing
 
 ## Safest Publish Path
 - Do not push the full existing git history if earlier commits may contain private runtime state
-- Export a fresh public snapshot with `npm run export:public -- --dest ../agents-workflow-hub-public --init-git`
-- Publish the exported directory as a new repo or from a fresh root commit
+- Export a fresh public snapshot with a shallow clone or fresh root commit
 
 ## Verification Before Publishing
-Run the repo's actual checks:
-1. `npm run validate:ssot`
-2. `npm test`
+Run the hub's validation:
+```bash
+npm run validate:ssot
+```
