@@ -1,39 +1,35 @@
 # Agents Workflow Hub
 
-Shared operating contract for AI-assisted software development across multiple coding tools. Policy, commands, agents, skills, adapters, scripts, hooks, and tests live here. Machine-local secrets and runtime state do not.
+Shared operating contract for AI-assisted coding across multiple tools. Commands, agents, skills, and adapters live here. Machine-local state does not.
 
 ## About
 
-This is not a prompt pack. It is an **opinionated delivery workflow** — a layered system where adapters bridge tool ergonomics, a shared contract (`AGENTS.md`) governs behavior, and skill-driven pipelines make every session start fresh and finish clean.
+This is an opinionated delivery workflow — adapters bridge tool ergonomics, `AGENTS.md` governs agent behavior, and skill pipelines route work from fuzzy idea to clean commit.
 
-The hub works across Claude Code, Codex CLI, OpenCode, Antigravity, OpenClaw, Pi, and Claurst — all consuming the same commands, agents, skills, and hooks through tool-specific adapters.
+The hub serves Claude Code, Codex CLI, OpenCode, Antigravity/Gemini, OpenClaw, and Pi from the same commands, agents, and skills.
 
 ```
-                  ┌──────────────────────┐
-                  │   Claude Code        │
-                  │   Codex CLI          │
-                  │   OpenCode           │
-                  │   Antigravity/Gemini │
-                  │   OpenClaw           │
-                  │   Pi                 │
-                  │   Claurst            │
-                  └────────┬─────────────┘
-                           │
-                  ┌────────▼─────────────┐
-                  │      ADAPTER         │  ergonomics, same contract
-                  │   (adapters/)        │
-                  └────────┬─────────────┘
-                           │
-                  ┌────────▼─────────────┐
-                  │      AGENTS.md       │  single source of truth
-                  │   commands/ agents/  │  shared workflow contract
-                  │   skills/ scripts/   │
-                  └──────────────────────┘
+┌──────────────────────────────┐
+│  Claude Code                 │
+│  Codex CLI / OpenCode        │
+│  Antigravity / OpenClaw / Pi │
+└──────────┬───────────────────┘
+           │
+┌──────────▼───────────────────┐
+│  adapters/                   │  tool-specific ergonomics
+│  (symlinks, wrappers, gen)   │  same contract underneath
+└──────────┬───────────────────┘
+           │
+┌──────────▼───────────────────┐
+│  AGENTS.md                   │  single source of truth
+│  commands/  agents/ skills/  │  shared workflow contract
+│  scripts/  manifest.json     │
+└──────────────────────────────┘
 ```
 
 ## Workflow
 
-The pipeline routes work through stages. Depth depends on complexity — a trivial fix goes straight to implement; a feature uses the full chain; a huge foggy effort starts with wayfinder.
+The pipeline routes work through stages. Depth depends on complexity:
 
 ```
 lightweight:   implement → tdd → code-review → commit
@@ -42,7 +38,7 @@ moderate:      research → plan → implement → tdd → code-review → commi
 
 full:          discover → research → explore → plan → implement → tdd → code-review → commit
 
-team/huge:     wayfinder → to-tickets → (team works tickets) → implement → tdd → code-review → commit
+team/huge:     wayfinder → to-tickets → implement → tdd → code-review → commit
 
 spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review → commit
 ```
@@ -51,112 +47,106 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 
 | Stage | Skill | What it produces | Where |
 |-------|-------|------------------|-------|
-| **Clarify** | `grill-with-docs` + `domain-modeling` | Sharpened plan, glossary terms, ADRs | Plan server |
-| **Spec** | `to-spec` | Spec issue with Problem/Stories/Decisions/OutOfScope | GitHub Issue (`spec` label) |
-| **Discover** | `discover` | Feature Requirements Document (FRD) | Plan server (`frd/`) |
-| **Research** | `research` | Background subagent investigates, main agent writes findings | Plan server (`research/`) |
-| **Explore** | `explore` | Solution options with pros/cons/trade-offs | Plan server (`solutions/`) |
-| **Prototype** | `prototype` | Throwaway code answering a design question | In-repo + plan server |
-| **Plan** | `plan` | Phased implementation plan with success criteria | Plan server (`plans/`) |
-| **Wayfinder** | `wayfinder` | Investigation ticket map for huge/foggy efforts | GitHub Issues (`wayfinder:*` labels) |
-| **Tickets** | `to-tickets` | Tracer-bullet tickets with blocking edges | GitHub Issues (`ticket` label) |
-| **Implement** | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
-| **TDD** | `tdd` | Tests + implementation, one red-green cycle at a time | Test files + source |
-| **Review** | `code-review` / `review` | Code review report | Plan server (`reviews/`) |
-| **Commit** | `commit` | Atomic commit message | Git commit |
+| Clarify | `grill-with-docs` + `domain-modeling` | Glossary, ADRs, sharpened plan | Plan server |
+| Spec | `to-spec` | Spec issue (Problem/Stories/Decisions/OutOfScope) | GitHub Issue |
+| Discover | `discover` | Feature Requirements Document (FRD) | Plan server |
+| Research | `research` | Subagent codebase investigation | Plan server |
+| Explore | `explore` | Solution options with pros/cons/trade-offs | Plan server |
+| Prototype | `prototype` | Throwaway code answering a design question | In-repo |
+| Plan | `to-plan` | Phased implementation plan | Plan server |
+| Wayfinder | `wayfinder` | Investigation ticket map for huge/foggy efforts | GitHub Issues |
+| Tickets | `to-tickets` | Tracer-bullet tickets with blocking edges | GitHub Issues |
+| Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
+| TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
+| Review | `code-review` / `review` | Code review report | Plan server |
+| Commit | `commit` | Atomic commit message | Git commit |
 
 ### How to choose
 
-1. **I know what to build, it's small** → `/skill:implement`. Use `/skill:tdd` at seams, `/skill:code-review` when done, `/skill:commit` to land it.
-2. **I know the feature but need a plan** → `/skill:research` → `/skill:plan` → `/skill:implement`.
-3. **I need to clarify requirements first** → `/skill:discover` → research → explore → plan → implement.
-4. **I need to compare approaches** → `/skill:explore` (feeds directly into plan).
-5. **I need a prototype to answer a design question** → `/skill:prototype`.
-6. **I need a spec for the team** → `/skill:to-spec` → publishes as a GitHub Issue.
-7. **I need to split work for the team** → `/skill:to-tickets` → publishes tracer-bullet issues with blocking edges.
-8. **It's a huge foggy effort, more than one session** → `/skill:wayfinder` — creates a map issue on GitHub, work one investigation ticket per session.
-9. **I want to sharpen my idea against the codebase** → `/skill:grill-with-docs` — live interview, writes glossary and ADRs.
-10. **Ask me which skill to use** → `/skill:ask-yonie`.
+1. **Small, known fix** → `/skill:implement`
+2. **Need a plan first** → `/skill:research` → `/skill:to-plan` → `/skill:implement`
+3. **Need to clarify requirements** → `/skill:discover` → research → explore → plan → implement
+4. **Comparing approaches** → `/skill:explore`
+5. **Need a prototype** → `/skill:prototype`
+6. **Writing a spec** → `/skill:to-spec`
+7. **Splitting work for the team** → `/skill:to-tickets`
+8. **Huge foggy effort** → `/skill:wayfinder`
+9. **Sharpening an idea** → `/skill:grill-with-docs`
+10. **Ask me which skill** → `/skill:ask-yonie`
 
-### Artifact locations
+## Commands
 
-| What | Where |
-|------|-------|
-| Research docs, plans, solutions, designs, reviews | `~/Documents/plan-server/projects/{project}/` (MDX/MD, served at `localhost:3456`) |
-| Specs, tickets, wayfinder maps | GitHub Issues on the project repo |
-| Prototype code | In-repo, next to what it's prototyping |
-| Glossary, ADRs, grill transcripts | Plan server (`glossary/`, `adr/`, `grill/`) |
-| Session handoffs | Plan server (`handoffs/`) |
+Slash commands in `commands/` extend the tool's native surface:
+
+| Command | Description |
+|---------|-------------|
+| `/pr` | PR workflow — descriptions, branch splitting, stacked draft PRs (`/pr split`, `/pr stack`) |
+| `/plan` | Design interview — critique the developer's plan before they code |
+| `/ch` | Create a handoff document to resume work in a future session |
+| `/spawn` | Decompose complex work into parallel sub-agents with full context |
+| `/enforce` | Enforce hub operating rules from AGENTS.md on the current project |
 
 ## Adapters
 
-Each AI coding tool connects through an adapter directory:
+Each AI tool connects through an adapter directory:
 
 | Adapter | Tool | Entry Point |
 |---------|------|-------------|
 | `adapters/claude-code/` | Claude Code | `CLAUDE.md` → `AGENTS.md` |
-| `adapters/codex-cli/` | Codex CLI | `~/.codex/AGENTS.md → AGENTS.md` |
+| `adapters/codex-cli/` | Codex CLI | Config under `~/.codex/` |
 | `adapters/opencode/` | OpenCode | Native config discovery |
-| `adapters/antigravity/` | Antigravity/Gemini | `GEMINI.md` → `AGENTS.md` |
+| `adapters/antigravity/` | Antigravity / Gemini | `GEMINI.md` bridge |
 | `adapters/openclaw/` | OpenClaw | Workspace wrapper templates |
 | `adapters/pi/` | Pi | Pi-specific integration |
 
-The adapter changes ergonomics, not workflow behavior. The source of truth stays in this repo.
+Adapters change ergonomics, not behavior. Source of truth stays in this repo.
 
-## Memory: MemPalace
-
-Persistent memory uses **MemPalace** (Python), not ChromaDB.
-
-- **Hooks**: `hooks/mempalace-hook.cjs` captures lifecycle events; `hooks/mempalace-context.cjs` injects wake-up context at session start.
-- **CLI**: `bin/agents-memory` — `status \| recall \| flush \| inject`
-- **Config**: `mempalace.yaml` defines rooms (contexts, commands, skills, agents) with keyword maps.
-- **Backend**: `scripts/memory-mempalace-backend.mjs`, `scripts/mempalace-bridge.mjs`
-
-Memory flows: hooks capture signals → MemPalace processes → recall feeds context back into sessions. Compatible with Claude Code, Codex CLI, and OpenCode session lifecycles.
-
-## Day-to-Day Commands
-
-| Command | Description |
-|---------|-------------|
-| `/pr` | PR workflow — generate descriptions, split branches by concern, or refine dirty branches into stacked draft PRs (`/pr split`, `/pr refine`) |
-| `/plan` | Yonie writes the design, you critique it |
-| `/elite-mode` | TDD + SOLID + senior SWE workflow |
-| `/capture-decision` | Document architectural decisions at decision time |
+`sync.sh migrate` regenerates all adapter outputs and verifies parity.
 
 ## Skills
 
-61 skill packs in `skills/` covering the full workflow — discover, research, explore, prototype, plan, implement, tdd, code-review, review, commit, grill-with-docs, domain-modeling, wayfinder, to-spec, to-tickets — plus domain-specific packs for Flutter, testing, UI/UX, security, performance, and more.
-
-Key skills and their role in the pipeline:
+Skills live in `skills/` covering the full pipeline and domain specialties. Key pipeline skills:
 
 | Skill | Role |
 |-------|------|
 | `discover/` | Requirements extraction → FRD |
-| `research/` | Subagent-enforced codebase investigation → plan-server doc |
+| `research/` | Subagent codebase investigation → plan-server doc |
 | `explore/` | Solution option comparison → trade-off analysis |
 | `prototype/` | Throwaway code to answer a design question |
-| `plan/` | Research/explore → phased implementation plan |
+| `to-plan/` | Research/explore → phased implementation plan |
 | `wayfinder/` | Huge foggy efforts → GitHub Issues map |
-| `to-spec/` | Conversation → spec issue on GitHub |
-| `to-tickets/` | Plan/spec → tracer-bullet issues with blocking edges |
-| `implement/` | Thin orchestrator: tdd → code-review → commit |
+| `to-spec/` | Conversation → spec issue |
+| `to-tickets/` | Plan/spec → tracer-bullet tickets |
+| `implement/` | Orchestrator: tdd → code-review → commit |
 | `tdd/` | Red-green-refactor with seam discipline |
 | `code-review/` | Parallel specialist agent review |
 | `review/` | Two-axis review (standards + spec) |
-| `grill-with-docs/` | Relentless interview, writes glossary + ADRs to plan server |
+| `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
-| `commit/` | Atomic commit message generation |
+| `commit/` | Atomic commit messages |
+| `handoff/` | Session handoff documents |
+| `recall/` | Resume from handoff |
+| `plan-server/` | Local MDX plan server |
+| `explain/` | Visual explanations with Mermaid |
+| `revise/` | Surgical plan updates |
+| `codebase-design/` | Deep module design |
+| `pr-workflow/` | PR discipline |
+| `diagnose/` | Bug and performance diagnosis |
+| `learning-mode/` | Socratic learning workflow |
+| `cancel/` | Cancel active modes |
+| `herdr/` | herdr workspace management |
+| `omc-reference/` | OMC agent/tool catalog |
+| `prompt-master/` | Prompt engineering |
+| `split-plan/` | Break big plans into smaller phases |
+| `resolving-merge-conflicts/` | Merge conflict resolution |
+| `improve-codebase-architecture/` | Codebase deepening |
+| `frontend-design/` | Visual design guidance |
+| `ui-ux-pro-max/` | UI/UX design intelligence |
+| `flutter-animations/` | Flutter motion effects |
+| `framer-motion-animator/` | Framer Motion animations |
+| `shadcn/` | shadcn/ui component management |
 
-## Sync Pipeline
-
-`sync.sh` manages adapter outputs across all supported CLIs:
-
-- Generates agent files, command wrappers, and configs per adapter
-- Registers hub-local skills into `.skill-lock.json`
-- Repairs symlinks and verifies parity across all 7 adapters
-- Entry point: `sync.sh migrate` — fixes everything, then verifies
-
-`manifest.json` is the single source of truth for symlink contracts, adapter capabilities, and generated surfaces.
+Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase-analyzer, claim-verifier, diff-auditor, artifact-reviewer, and more.
 
 ## Directory Structure
 
@@ -164,13 +154,12 @@ Key skills and their role in the pipeline:
 ~/.agents/
 ├── AGENTS.md              # Source of truth — workflow contract
 ├── manifest.json          # Hub manifest — symlinks, capabilities
-├── mempalace.yaml         # MemPalace room definitions
-├── package.json           # Node package — test runner + scripts
+├── package.json           # Node package — scripts
 ├── sync.sh                # Multi-CLI sync pipeline
 ├── .skill-lock.json       # Skill registry
-├── commands/              # Workflow commands
-├── agents/                # Expert agents
-├── skills/                # 61 skill packs
+├── commands/              # Slash commands (pr, plan, ch, spawn, enforce)
+├── agents/                # Specialist expert agents
+├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules
 │   ├── discover/          # Pipeline skills
 │   ├── research/
@@ -184,41 +173,48 @@ Key skills and their role in the pipeline:
 │   ├── commit/
 │   ├── grill-with-docs/
 │   ├── domain-modeling/
-│   ├── wayfinder/         # Team / large-effort skills
+│   ├── wayfinder/
 │   ├── to-spec/
 │   ├── to-tickets/
-│   └── ...                # Domain-specific skills
-├── scripts/               # Node.js tooling scripts
-├── hooks/                 # Lifecycle hooks
-├── bin/                   # CLI wrappers
-├── tests/                 # Test suites
-├── adapters/              # 7 CLI adapters
-└── thoughts/              # Legacy — content migrated to plan server
+│   ├── handoff/
+│   ├── recall/
+│   ├── plan-server/
+│   ├── diagnose/
+│   ├── explain/
+│   ├── revise/
+│   ├── split-plan/
+│   ├── codebase-design/
+│   ├── resolving-merge-conflicts/
+│   ├── pr-workflow/
+│   ├── learning-mode/
+│   ├── omc-reference/
+│   ├── prompt-master/
+│   ├── frontend-design/
+│   ├── ui-ux-pro-max/
+│   ├── flutter-animations/
+│   ├── framer-motion-animator/
+│   ├── shadcn/
+│   ├── herdr/
+│   ├── ultrawork/
+│   └── ...                # Additional domain skills
+├── scripts/               # Tooling scripts (init, reset, memory sync, etc.)
+├── adapters/              # 6 CLI adapter configs
+└── .omc/                  # OH MY PI runtime state
 ```
 
 ## What Gets Shared
 
-- `commands/`, `agents/`, `skills/`, `adapters/`, `hooks/`
-- `scripts/`, `tests/`, `manifest.json`, `mempalace.yaml`, `package.json`, `sync.sh`
-- Onboarding docs (`README.md`, `SHARING.md`, `.env.example`)
+- `commands/`, `agents/`, `skills/`, `adapters/`
+- `scripts/`, `manifest.json`, `package.json`, `sync.sh`
+- Onboarding docs (`README.md`, `SHARING.md`)
 
 ## What Stays Local
 
-- Secrets and caches: `.env`, `.env.local`, `.agents-memory/`, `memory.db`, `node_modules/`
+- Secrets: `.env`, `.env.local`
+- Dependencies: `node_modules/`, `.skill-lock.json`
 - Per-project runtime: plan server content at `~/Documents/plan-server/projects/{project}/`
 
-The public repo is intended to be inspectable. Credentials, databases, handoffs, live plans, and active project runtime state are not.
-
-## Testing
-
-```bash
-npm test                         # Run all test suites
-npm run test:workflows           # Workflow contract + handoff + agent tests
-npm run test:adapters            # Adapter generation + memory tests
-npm run test:sessions            # Session + continuity tests
-npm run test:tooling             # Package manager + lesson + artifact tests
-npm run test:verification        # Verification + doctor + autonomy tests
-```
+The public repo is inspectable. Credentials, handoffs, live plans, and active project runtime state are intentionally excluded.
 
 ## Quick Start
 
@@ -226,11 +222,11 @@ npm run test:verification        # Verification + doctor + autonomy tests
 # Clone into ~/.agents
 git clone <this-repo> ~/.agents
 
-# Run sync to set up adapter symlinks
+# Set up adapter symlinks
 cd ~/.agents && bash sync.sh migrate
 
-# Verify with tests
-npm test
+# Initialize local state
+npm run init:local-state
 ```
 
-Each adapter's README covers tool-specific setup. Start with your tool's adapter directory in `adapters/`.
+Each adapter's README covers tool-specific setup. Start with your tool's directory under `adapters/`.
