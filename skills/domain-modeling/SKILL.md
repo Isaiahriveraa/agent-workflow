@@ -22,10 +22,10 @@ Create files lazily — only when you have something to write. Use the helper sc
 
 ```bash
 # Create a glossary entry
-python3 ~/.agents/scripts/new-artifact.py --project <project> --type glossary --topic "<term>"
+python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type glossary --topic "<term>"
 
 # Create an ADR
-python3 ~/.agents/scripts/new-artifact.py --project <project> --type adr --topic "<decision title>"
+python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type adr --topic "<decision title>"
 ```
 
 ## During the session

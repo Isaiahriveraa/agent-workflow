@@ -19,7 +19,7 @@ function usage() {
 
 Options:
   --title <text>       Plan title. Defaults from the prompt.
-  --project <name>     Project name (e.g. koda, opencode). Default: general.
+  --project <name>     Project name. Auto-detected from git/cwd when using default. Default: general.
   --tag <tag>          Add a tag. Can be repeated.
   --status <status>    draft, review, approved, in-progress, complete. Default: draft.
   --question <text>    Add an open question. Can be repeated.
@@ -124,6 +124,43 @@ function gitContext() {
   }
 }
 
+function autoDetectProject() {
+  const projectsDir = join(PLAN_SERVER_DIR, 'projects')
+  if (!existsSync(projectsDir)) return null
+  const cwd = process.cwd()
+
+  // 1. Check if cwd is inside a plan server project dir
+  const projects = readdirSync(projectsDir, { withFileTypes: true })
+    .filter(d => d.isDirectory() && !d.name.startsWith('.'))
+    .map(d => d.name)
+  for (const name of projects) {
+    const projectPath = join(projectsDir, name)
+    if (cwd.startsWith(projectPath + '/') || cwd === projectPath) {
+      return name
+    }
+  }
+
+  // 2. Walk up from git top-level checking parent dir names against projects
+  const root = git(['rev-parse', '--show-toplevel'], '')
+  if (root) {
+    let walk = root
+    while (walk !== '/') {
+      const name = basename(walk)
+      if (name && projects.includes(name)) {
+        return name
+      }
+      walk = dirname(walk)
+    }
+  }
+
+  // 3. Check AGENTS_PROJECT_SLUG env var
+  if (process.env.AGENTS_PROJECT_SLUG && projects.includes(process.env.AGENTS_PROJECT_SLUG)) {
+    return process.env.AGENTS_PROJECT_SLUG
+  }
+
+  return null
+}
+
 function yamlString(value) {
   return JSON.stringify(String(value))
 }
@@ -219,7 +256,6 @@ async function ensureServer(port) {
     env: { ...process.env, PORT: String(port) },
     stdio: ['ignore', out, out],
   })
-  child.unref()
 
   for (let i = 0; i < 20; i += 1) {
     await new Promise(resolve => setTimeout(resolve, 400))
@@ -256,7 +292,7 @@ async function main() {
     throw new Error(`Plan server directory not found: ${PLAN_SERVER_DIR}`)
   }
 
-  const project = opts.project || 'general'
+  const project = (opts.project === 'general' ? (autoDetectProject() || 'general') : opts.project)
   const projectDir = getProjectDir(project)
   const plansDir = join(projectDir, 'plans')
   mkdirSync(plansDir, { recursive: true })

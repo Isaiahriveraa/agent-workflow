@@ -77,10 +77,20 @@ Present the two reports under `## Standards` and `## Spec` headings, verbatim or
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
 
+## Quality Standard
+
+Before writing, read the **Plan Server Document Quality Standard** for the Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, alternatives, necessity, coupling, etc.):
+
+```bash
+cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
+```
+
+Apply the checklist before declaring the document complete.
+
 ### Write review to plan server
 
 ```bash
-python3 ~/.agents/scripts/new-artifact.py --project <project> --type reviews --topic "<review topic>"
+python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type reviews --topic "<review topic>"
 ```
 
 Fill the generated file with the full review.

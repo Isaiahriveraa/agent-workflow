@@ -5,6 +5,24 @@ argument-hint: "[what to plan]"
 shell-timeout: 20
 ---
 
+
+# Quality Standard
+
+Every plan server document MUST also satisfy the **Plan Server Document Quality Standard**:
+
+```bash
+cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
+```
+
+Reference this before writing any plan server document. The quality standard defines:
+- Available MDX components and when to use each
+- The Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, etc.)
+- Document-type-specific required sections for plans, handoffs, research, design, explore, discover, reviews
+- Mermaid diagram best practices for every diagram type
+- Frontmatter format and status lifecycle
+- Writing style rules (lead with conclusion, file:line everywhere, tables over prose)
+
+Always reference the quality standard checklist before declaring a document complete.
 # Plan Server
 
 Default path: use the script. It writes valid MDX, adds metadata from the current repo, and writes to `~/Documents/plan-server/projects/{project}/plans/`. Defaults to project `general` unless `--project` is specified. Checks whether the server is running, starts it if needed, and prints the exact plan URL.
@@ -13,18 +31,20 @@ Default path: use the script. It writes valid MDX, adds metadata from the curren
 node "${SKILL_DIR}/scripts/plan-server.mjs" "$ARGUMENTS"
 ```
 
-For a stronger one-shot plan from an agent, pass a concise plan brief as the argument and specify the project:
+
+For a stronger one-shot plan from an agent, pass a concise plan brief as the argument:
 
 ```bash
 node "${SKILL_DIR}/scripts/plan-server.mjs" \
   --title "Dashboard Widgets Refactor" \
-  --project koda \
   --tag frontend \
   --tag dashboard \
   --question "Should layout state live in localStorage or the backend?" \
   --question "What fallback is required for browsers without subgrid?" \
   "$ARGUMENTS"
 ```
+
+The project is auto-detected from git/cwd. Override with `--project <name>`.
 
 To open the created plan in the browser automatically:
 
@@ -35,7 +55,7 @@ node "${SKILL_DIR}/scripts/plan-server.mjs" --open "$ARGUMENTS"
 The script accepts prompt text from stdin too:
 
 ```bash
-printf '%s\n' "$ARGUMENTS" | node "${SKILL_DIR}/scripts/plan-server.mjs" --title "Implementation Plan" --project koda
+printf '%s\n' "$ARGUMENTS" | node "${SKILL_DIR}/scripts/plan-server.mjs" --title "Implementation Plan"
 ```
 
 
@@ -87,8 +107,7 @@ Frontmatter is required. `project` field is optional but encouraged:
 ---
 title: "Descriptive plan title"
 status: draft
-created: 2026-06-20
-project: "koda"
+project: "project-name"
 tags: [frontend, dashboard]
 repo: "repo-name"
 author: "author"
@@ -182,3 +201,44 @@ All plans: http://localhost:3456/
 ## Clipboard
 
 After the script creates the plan file, immediately run `bash` with `pbcopy <absolute-path>` (using the `file` value from JSON output, or the path from Step 5) so the user's clipboard has the file path.
+
+
+## Rich Document Guide
+
+### When to Use Each MDX Component
+
+Every component registered in the plan server frontend (see `src/components/index.jsx`):
+
+```
+<Steps>                           Numbered implementation steps
+<Callout type="info|warning|danger|success|neutral">  Highlighted callouts
+<FileTree>                        File/directory structure visualization
+<Tag color="#hex">                Inline status labels
+<FileChangeList>                  Compact file-change summaries
+
+<SummaryBlock>    <AssumptionsBlock>     <NextStepsBlock>
+<KeyReferences>   <OpenQuestionsBlock>   <DecisionBlock>
+<RiskBlock>       <VerificationBlock>
+```
+
+### Open Questions — Interactive UI Feature
+
+The plan server detects `## Open Questions` sections and renders each `- ` bullet as an interactive answer box. Users type answers and click "Copy Prompt" to feed them back. **Always** use this section when the document needs human input.
+
+### Mermaid Diagram Support
+
+Mermaid ```` ```mermaid ```` code blocks render as interactive SVGs in the plan server UI. Supported types: `flowchart TD | LR`, `sequenceDiagram`, `stateDiagram-v2`, `classDiagram`, `gantt`, `pie`, `gitGraph`.
+
+**Always include at least one Mermaid diagram** showing how the proposed work fits into the system architecture.
+
+### Status Lifecycle Convention
+
+Use the standard lifecycle from the quality standard. Applies to every plan server artifact.
+
+### Writing Rules
+
+- Lead each section with its conclusion, then evidence.
+- Use `path/to/file.ext:line` references (not inline code blocks) for codebase claims.
+- Tables for comparisons and trade-offs. Mermaid for flows. Callouts for risk.
+- Compress, don't truncate — a thorough 300-line doc beats a 50-line summary that omits details.
+- No filler: "As previously mentioned", "It is worth noting that", "In conclusion" — delete them all.

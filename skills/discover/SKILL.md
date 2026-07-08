@@ -168,6 +168,16 @@ Compile interview output into the FRD. The interview's logical order (problem �
 
 ### Step 7: Write Artifact, Present, Chain
 
+### Quality Standard
+
+Before writing, read the **Plan Server Document Quality Standard** for the Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, alternatives, necessity, coupling, etc.):
+
+```bash
+cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
+```
+
+Apply the checklist before declaring the document complete.
+
 1. **Determine metadata** (from the Metadata block above):
    - Filename: `plan server <slug>_<topic>.md` — `<slug>` is the second tab-separated field on `now.mjs` line 1; `<topic>` is a kebab-case slug from the settled feature concept.
    - `repository:` ← `repo:` label; `branch:` / `commit:` ← matching labels.

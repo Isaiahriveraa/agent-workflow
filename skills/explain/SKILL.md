@@ -5,7 +5,7 @@ description: Turn a plan or change into a concise, visual explanation with ratio
 
 # Explain
 
-Take a plan, spec, PRD, diff, or change and produce a focused explanation. Not a summary — a reasoned breakdown of why this path was chosen, what was traded off, and how it fits.
+Take a plan, spec, PRD, diff, or change and produce a focused explanation. Not a summary — a reasoned breakdown of why this path was chosen, what was traded off, and how it fits. Documents trade-offs, alternatives, security implications, and architecture fit with Mermaid diagrams, keeping the human in the loop.
 
 ## Output
 
@@ -16,6 +16,16 @@ python3 ~/.agents/scripts/new-artifact.py --dest ~/Documents/plan-server --proje
 ```
 
 Fill the generated file with the explanation.
+
+## Quality Standard
+
+Before writing, read the **Plan Server Document Quality Standard** for the Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, alternatives, necessity, coupling, etc.):
+
+```bash
+cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
+```
+
+Apply the checklist before declaring the explanation complete.
 
 ## Structure
 

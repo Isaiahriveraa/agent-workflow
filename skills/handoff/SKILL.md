@@ -32,23 +32,54 @@ Copy values verbatim — do not reformat the timezone offset.
 
 ### 1. Create the file
 
-Run this to create the handoff file under the plan server project structure:
+Determine the correct plan server project, then create the handoff.
+
+**Project resolution**: The script needs to know which plan server project
+directory to write to. The git repo name doesn't always match the plan server
+project (e.g. `backend/` repo belongs to the `KodaProject` project). Resolve by
+walking up from the git top-level, checking each directory name against existing
+plan server projects. The first match (closest to the repo root) wins.
+
+Run this to create the handoff file:
 
 ```bash
 PLAN_SERVER="$HOME/Documents/plan-server"
+
+# Resolve project by walking up from git top-level
+PROJECT="general"
+git_top=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+if [ -n "$git_top" ]; then
+  walk="$git_top"
+  while [ "$walk" != "/" ]; do
+    name=$(basename "$walk")
+    if [ -d "$PLAN_SERVER/projects/$name" ]; then
+      PROJECT="$name"
+      break
+    fi
+    walk=$(dirname "$walk")
+  done
+fi
+
 python3 ~/.agents/scripts/new-artifact.py \
   --dest "$PLAN_SERVER" \
-  --project "$(basename $(git rev-parse --show-toplevel 2>/dev/null || echo 'general'))" \
+  --project "$PROJECT" \
   --type handoffs \
   "<description>"
 ```
 
-Where `<description>` is a short slug of what you were working on (from `$ARGUMENTS`, or auto-generated from context). If `$ARGUMENTS` is empty, use a brief topic summary. The project name is inferred from the git repo name; override with `--project <name>` if needed.
+Where `<description>` is a short slug of what you were working on (from `$ARGUMENTS`, or auto-generated from context). If `$ARGUMENTS` is empty, use a brief topic summary. The project is resolved by walking up from the git repo root — override with `--project <name>` if needed.
 
-The script creates the file and prints its path. **Do not construct the path yourself** — use the path the script returns.
+## Quality Standard
 
-The handoff will be viewable in the plan server at:
-`http://localhost:3456/project/{project}/handoffs`
+Before writing, read the **Plan Server Document Quality Standard** for the Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, alternatives, necessity, coupling, etc.):
+
+```bash
+cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
+```
+
+Apply the checklist before declaring the handoff complete.
+
+- [ ] Satisfies the Plan Server Document Quality Standard (Human-in-the-Loop Checklist)
 
 ### 2. Write content
 
@@ -169,7 +200,7 @@ Handoff written to:
 - **more information, not less**. This is a guideline that defines the minimum of what a handoff should be. Always feel free to include more information if necessary.
 - **be thorough and precise**. include both top-level objectives, and lower-level details as necessary.
 - **avoid excessive code snippets**. While a brief snippet to describe some key change is important, avoid large code blocks or diffs; do not include one unless it's necessary (e.g. pertains to an error you're debugging). Prefer using `/path/to/file.ext:line` references that an agent can follow later when it's ready, e.g. `packages/dashboard/src/app/dashboard/page.tsx:12-24`
-- The `new-artifact.py` script handles path construction, date math, and month-local week numbering. Do not construct paths yourself.
+- The `new-artifact.py` script handles path construction and ISO timestamp generation. Do not construct paths yourself.
 
 ## Clipboard
 
