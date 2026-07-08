@@ -29,6 +29,10 @@ The two branches produce very different artifacts — getting this wrong wastes 
 
 The _answer_ is the only thing worth keeping from a prototype. Capture it somewhere durable — commit message, ADR, issue, or a NOTES.md next to the prototype — along with the question it was answering.
 
+### Wayfinder context
+
+When the prototype is part of a wayfinding effort, the answer also serves as that ticket's resolution. Post the finding as a resolution comment on the wayfinder ticket and link the prototype artifact (plan-server or repo path) there. Close the ticket — the prototype answered its question.
+
 ### Plan server capture path
 
 Route the answer to the plan server under the appropriate project:

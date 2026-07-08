@@ -1,119 +1,47 @@
 ---
 name: grill-with-docs
-description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates the plan in-place after each question. Autowrites glossary/ADR entries and logs grill transcripts. Glossary, ADRs, and grill files are written under the project's plan server directory at ~/Documents/plan-server/projects/{project}/ when available.
+description: A relentless interview to sharpen a plan or design, which also creates docs (ADRs and glossary) on the plan server as we go.
+disable-model-invocation: true
 ---
 
-<what-to-do>
+Run a relentless grilling session. Delegate the domain modeling (glossary, ADRs, term resolution) to the `/domain-modeling` skill.
+
+## The interview
 
 Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
 
-Ask the questions one at a time, waiting for feedback on each question before continuing.
+Ask questions one at a time, waiting for feedback on each before continuing.
 
 If a question can be answered by exploring the codebase, explore the codebase instead.
 
-</what-to-do>
-
-<supporting-info>
-
-
-> **Plan Server Integration**: Glossary, ADRs, and grill files can also be written to `~/Documents/plan-server/projects/{project}/` for browser viewing. When running `new-artifact.py`, use `--dest "$HOME/Documents/plan-server" --project <project>` to write to the plan server. The project name is inferred from the git repo name.
->
-> The plan server serves these files at:
-> - Glossary: `http://localhost:3456/project/{project}/glossary`
-> - ADRs: `http://localhost:3456/project/{project}/adr`
-> - Handoffs: `http://localhost:3456/project/{project}/handoffs`
-## Domain awareness
-
-During codebase exploration, look for existing documentation under `thoughts/`:
-
-```
-/
-├── thoughts/
-│   ├── glossary.md              ← domain glossary
-│   ├── adr/                     ← Architecture Decision Records
-│   │   ├── 0001-slug.md
-│   │   └── 0002-slug.md
-│   ├── {Month-Name}-{Year}/
-│   │   └── W{month-week}/
-│   │       ├── handoffs/
-│   │       ├── reflections/
-│   │       └── grill/
-```
-
-- **`thoughts/glossary.md`** — Canonical domain glossary for the project. Created lazily when the first term is resolved.
-- **`thoughts/adr/`** — Architecture Decision Records. Numbered: `0001-slug.md`, `0002-slug.md`, etc. Created lazily when the first ADR is needed.
-- **`thoughts/grill/{Month-Name}/`** — Grill session outputs and Q&A transcript handoffs created via `new-artifact.py`.
-
-Create files lazily — only when you have something to write.
-
-### Glossary path resolution
-
-- If `thoughts/glossary.md` exists → use it as the canonical glossary
-- If it doesn't exist → create `thoughts/glossary.md` when first term is resolved
-
-### ADR path resolution
-
-- If `thoughts/adr/` exists → use it for ADRs
-- If it doesn't exist → create `thoughts/adr/` when first ADR is needed
-
-## During the session
-
-### Challenge against the glossary
-
-When the user uses a term that conflicts with the existing language in the glossary (`thoughts/glossary.md`), call it out immediately. "Your glossary defines 'cancellation' as X, but you seem to mean Y — which is it?"
-
-### Cross-reference with thoughts artifacts
-
-Before accepting a plan or design claim, check:
-1. **`thoughts/glossary.md`** — does the claim conflict with established domain language?
-2. **`thoughts/adr/`** — was an ADR written that this plan contradicts?
-
-If a contradiction is found, surface it: "ADR-0004 decided we're using event sourcing for orders, but your plan assumes a relational write model — which is right?"
-
-### Sharpen fuzzy language
-
-When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account' — do you mean the Customer or the User? Those are different things."
-
-### Discuss concrete scenarios
-
-When domain relationships are being discussed, stress-test them with specific scenarios. Invent scenarios that probe edge cases and force the user to be precise about the boundaries between concepts.
-
-### Cross-reference with code
-
-When the user states how something works, check whether the code agrees. If you find a contradiction, surface it: "Your code cancels entire Orders, but you just said partial cancellation is possible — which is right?"
-
-### Update glossary inline
-
-When a term is resolved, update `thoughts/glossary.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
-
-The glossary should be totally devoid of implementation details. Do not treat it as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
-
-### Offer ADRs sparingly
-
-Only offer to create an ADR when all three are true:
-
-1. **Hard to reverse** — the cost of changing your mind later is meaningful
-2. **Surprising without context** — a future reader will wonder "why did they do it this way?"
-3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
-
-If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](./ADR-FORMAT.md).
-
-ADRs go to `thoughts/adr/NNNN-slug.md`.
-
-### Auto-write after each question
+## After each answer
 
 After the user answers each question:
 
-1. **Modify the plan artifact being grilled in-place**: Edit the plan itself to reflect the resolved decision — updated terminology, corrected assumptions, clarified scope, reordered priorities, whatever the answer changed. Read the relevant sections, apply the changes, and save. The artifact IS the source of truth of what we agreed on; don't let it become stale while side-files accumulate the real decisions.
+1. **Modify the plan artifact** being grilled in-place — edit the plan itself to reflect the resolved decision (updated terminology, corrected assumptions, clarified scope, reordered priorities). The artifact IS the source of truth; don't let it go stale while side-files accumulate.
 
-2. **If a term was resolved**: Immediately update `thoughts/glossary.md` with the resolved term using the format: `- **{term}**: {definition}`. Append it to the file, creating it if needed.
+2. **If a term was resolved** or an ADR criterion was met, use `/domain-modeling` to capture it. It handles glossary updates and ADR creation on the plan server with the right format and location.
 
-3. **If an ADR criterion was met** (hard to reverse, surprising, real trade-off): Immediately create `thoughts/adr/{incrementing-number}-{slug}.md` with the decision. Use the ADR format from [ADR-FORMAT.md](./ADR-FORMAT.md).
-
-4. **Log the Q&A pair**: append to a temp session transcript in `thoughts/grill/{Month-Name}/` using:
-   The script handles path creation. After calling it, fill in the generated file with the Q&A session content.
+3. **Log the Q&A pair** to the plan server for the project. Infer the project from `git rev-parse --show-toplevel`:
+   ```bash
+   python3 ~/.agents/scripts/new-artifact.py \
+     --dest "$HOME/Documents/plan-server" \
+     --project "$(basename $(git rev-parse --show-toplevel 2>/dev/null || echo 'general'))" \
+     --type grill \
+     --topic "<session topic>"
+   ```
+   Fill in the generated file with the Q&A transcript.
 
 Do NOT batch these writes. Write immediately after each question-answer round.
-At session end, call `python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project "$(basename $(git rev-parse --show-toplevel 2>/dev/null || echo 'general'))" --type grill "<topic>"` to capture the grill session output, then fill in the generated file with the final grill session summary.
 
-</supporting-info>
+## Location convention
+
+All artifacts land on the plan server:
+
+```
+~/Documents/plan-server/projects/{project}/
+├── glossary/glossary.md       ← domain glossary (via domain-modeling)
+├── adr/NNNN-slug.md           ← ADRs (via domain-modeling)
+├── grill/                     ← Q&A transcripts
+└── plans/                     ← plan artifacts (modified in-place)
+```
