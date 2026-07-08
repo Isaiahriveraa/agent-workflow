@@ -1,17 +1,17 @@
 ---
 name: plan
-description: Convert a design artifact into a phased implementation plan with parallelized atomic phases and explicit success criteria, written to the plan server. Use after the design skill when the user wants a design turned into an actionable, phase-by-phase plan to hand to the implement skill. Prefer plan when a straightforward phased breakdown is sufficient, and prefer blueprint when iterative vertical-slice micro-checkpoints between phases are needed.
-argument-hint: "[design artifact path]"
+description: Convert a research or explore artifact into a phased implementation plan with parallelized atomic phases and explicit success criteria, written to the plan server. Use when you need an actionable, phase-by-phase plan to hand to the implement skill.
+argument-hint: "[research or explore artifact path]"
 shell-timeout: 10
 ---
 
 # Plan
 
-You are tasked with creating phased implementation plans from design artifacts. The design artifact contains all architectural decisions, full implementation code, and ordering constraints. Your job is to decompose that design into parallelized atomic phases with success criteria that implement can execute.
+You are tasked with creating phased implementation plans from research or explore artifacts. The source artifact contains architectural decisions and ordering constraints. Your job is to decompose that into parallelized atomic phases with success criteria that implement can execute.
 
 ## Input
 
-`$ARGUMENTS` — path to a design artifact (`plan server *.md`).
+`$ARGUMENTS` — path to a research or explore artifact (`plan server *.md`).
 
 ## Metadata
 
@@ -81,6 +81,16 @@ Proceeding to write the plan artifact.
 ```
 
 No developer question — boundary changes are out of scope for plan. If the developer wants different boundaries, they revisit `/skill:design` and re-decompose. (This guarantees blueprint-equivalent slice-verified atomicity throughout.)
+
+## Quality Standard
+
+Before writing, read the **Plan Server Document Quality Standard** for the Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, alternatives, necessity, coupling, etc.):
+
+```bash
+cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
+```
+
+Apply the checklist before declaring the document complete.
 
 ### Step 3: Write Plan
 

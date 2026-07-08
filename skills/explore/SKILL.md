@@ -1,13 +1,13 @@
 ---
 name: explore
-description: Analyze solution options for a feature or change, comparing approaches with pros, cons, trade-offs, and a recommended path. Use when the user is weighing approaches, asks "what are the options" or "how should we approach X", wants approaches compared, says "explore solutions", or faces a decision with multiple valid implementations. Produces solutions documents in the plan server, which can feed the design skill.
+description: Analyze solution options for a feature or change, comparing approaches with pros, cons, trade-offs, and a recommended path. Use when the user is weighing approaches, asks "what are the options" or "how should we approach X", wants approaches compared, says "explore solutions", or faces a decision with multiple valid implementations. Produces solutions documents on the plan server for downstream consumption.
 argument-hint: "[feature/change description]"
 shell-timeout: 10
 ---
 
 # Explore
 
-You are tasked with analyzing solution options for new features or changes by invoking parallel skills and synthesizing their findings into actionable recommendations optimized for design consumption.
+You are tasked with analyzing solution options for new features or changes by invoking parallel skills and synthesizing their findings into actionable recommendations. The output feeds into plan or wayfinder.
 
 ## Input
 
@@ -137,6 +137,15 @@ Wait for ALL agents to complete before proceeding.
 - Apply the fit filter qualitatively per candidate: a candidate "clears" when no kept dimension surfaces a blocking concern (integration-risk that breaks load-bearing seams, migration-cost that exceeds the topic's scope, verification-cost with no path to coverage).
 - **If ≥1 candidate clears the fit filter**: pick the strongest, document rationale with evidence, and explain why alternatives weren't chosen. Identify conditions that would change the recommendation.
 - **If every candidate fails the fit filter**: produce a "no-fit" recommendation — list each candidate's blocking dimension with evidence, recommend re-scoping the question or expanding the candidate pool, and set Step 7 frontmatter `confidence: low` and `status: blocked`.
+## Quality Standard
+
+Before writing, read the **Plan Server Document Quality Standard** for the Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, alternatives, necessity, coupling, etc.):
+
+```bash
+cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
+```
+
+Apply the checklist before declaring the document complete.
 
 ### Step 6: Determine Metadata and Filename
 
