@@ -95,15 +95,15 @@ Generate a PR description based on the actual branch diff. Sized to the change.
 
 ### Structure
 
-Every PR body uses the same three sections regardless of size — each **must** be a markdown header (`####`) in the output body text:
+Every PR body uses the same three sections regardless of size — each **must** be a markdown header (`###`) in the output body text:
 
-#### Summary
+### Summary
 A paragraph describing what this PR does — scope, approach, main change.
 
-#### Rationale
+### Rationale
 - Why each change exists — context, constraints, tradeoffs
 
-#### Tests
+### Tests
 - What was tested and how (manual, unit, integration)
 - What was NOT tested and why
 

@@ -112,28 +112,70 @@ After all sub-agents complete:
 
 ## Output Format
 
-When reporting results, write the report as an Obsidian-friendly file at:
+When reporting results, write the report to the plan server.
 
+### 1. Create the file
+
+Run this to create the enforce report under the plan server project structure:
+
+```bash
+PLAN_SERVER="$HOME/Documents/plan-server"
+python3 ~/.agents/scripts/new-artifact.py \
+  --dest "$PLAN_SERVER" \
+  --type reviews \
+  "enforce-{scope}"
 ```
-thoughts/enforce-{date}-{scope}.md
-```
+
+Where `{scope}` is a short slug of what was enforced. The project is auto-detected from the current directory and git context; override with `--project <name>` if needed.
+
+The script creates the file and prints its path. **Do not construct the path yourself** — use the path the script returns.
+
+The report will be viewable in the plan server at:
+`http://localhost:3456/project/{project}/reviews`
+
+### 2. Write content
+
+Open the generated file and replace the template content with the full report.
+
+The report must be **Obsidian-friendly** — easy for a human to open in Obsidian, scan quickly, and stay in the loop. Use headings, callouts, checklists, and Obsidian links.
 
 Use this structure:
+
+```markdown
+---
+date: {ISO timestamp}
+author: {Author name}
+tags: [enforce, {relevant-tags}]
+type: review
+---
+
+# Enforce Report: {scope}
+
 > [!summary]
 > What rules were enforced, which files were touched, and what the result was.
 
-### Summary
+## Summary
+
 | Module | Files Changed | Issues Fixed | Status |
 |--------|--------------|--------------|--------|
-| {module} | {n} | {n} | {pass/fail} |
+| {module} | {n} | {n} | pass/fail |
+
 > [!todo]
 > **Remaining Issues** (if any)
 > - [ ] {issue to address}
 
-### Per-Module Details
+## Per-Module Details
 
 {for each module, list key changes made}
 
-### Related Notes
+## Related Notes
 - [[handoff-{related}]]
-- Prefer smaller sub-agent batches (2-4 at a time) for quality over throughput
+```
+
+### 3. Approve
+
+Save the document.
+
+### 4. Clipboard
+
+After writing the report file, immediately run `bash` with `pbcopy <absolute-path>` (using the path from the script output) so the user's clipboard has the file path.
