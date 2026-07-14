@@ -95,17 +95,55 @@ Generate a PR description based on the actual branch diff. Sized to the change.
 
 ### Structure
 
-Every PR body uses the same three sections regardless of size — each **must** be a markdown header (`###`) in the output body text:
+Every PR body uses the same four sections regardless of size — each **must** be a markdown header (`##`) in the output body text. HTML comments with guiding questions are included in the output to surface them.
 
-### Summary
-A paragraph describing what this PR does — scope, approach, main change.
+## Summary
 
-### Rationale
-- Why each change exists — context, constraints, tradeoffs
+<!-- What changed and what observable outcome does it produce? -->
 
-### Tests
-- What was tested and how (manual, unit, integration)
-- What was NOT tested and why
+## Why
+
+<!--
+- What problem or limitation existed?
+- What happens without this change?
+- How does this move the project toward its larger goal?
+-->
+
+## Approach
+
+<!--
+- What solution was chosen?
+- What meaningful alternatives were considered?
+- Why was this option selected?
+- What tradeoff did we accept?
+-->
+
+## Architecture and Contracts
+
+<!--
+Describe only material changes to:
+- responsibilities or module boundaries
+- dependency direction
+- APIs, interfaces, schemas, events, or shared types
+- runtime, state, or data flow
+
+Add a focused Mermaid diagram when it makes the change easier to understand.
+Do not add one for trivial changes.
+
+Recommended diagram types:
+- flowchart: components, ownership, dependencies
+- sequenceDiagram: runtime communication
+- stateDiagram-v2: lifecycle or state transitions
+- erDiagram: persistent data relationships
+
+Write "No material architecture or contract changes" when none exist.
+-->
+
+```mermaid
+flowchart LR
+    A[Existing Component] --> B[New Boundary]
+    B --> C[Dependent Component]
+```
 
 ### Writing Standard
 
