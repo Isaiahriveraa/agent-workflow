@@ -352,7 +352,7 @@ Each document type has specific required sections beyond the universal checklist
 
 ### 5.1. Plan Documents
 
-Used by: plan skill, blueprint skill, split-plan skill
+Used by: to-plan skill, blueprint skill, split-plan skill
 
 **Structure:**
 - Overview (what and why)
@@ -372,21 +372,25 @@ Used by: plan skill, blueprint skill, split-plan skill
 
 Used by: handoff skill
 
+**Purpose:** Transfer clean, verified, implementation-relevant context into a new agent session. Not a human-facing summary.
+
 **Structure:**
-- Summary (2-3 sentences for the next agent)
-- What Was Being Built
-- Architecture / Flow (with Mermaid)
-- Current State (completed / in-progress / not-started)
-- Key Changes Made (with file:line references)
-- Decisions Made (with rationale and trade-offs)
-- Learnings
-- Action Items & Next Steps
-- Related Notes
-- Assumptions
+- Active Goal (user's latest confirmed objective, linked plans/artifacts)
+- Current State (verified facts vs assumptions)
+- Latest User Intent (resolved requirements, with corrections noted)
+- Locked Decisions (decision + reason + constraint)
+- Do Not Repeat (rejected approaches that would waste time)
+- Work Completed (change + why + files + verification)
+- Relevant Files (path + status + role + changes + next use)
+- Remaining Work (ordered tasks with dependency, verification, done-when)
+- Resume Here (exact next action)
+- Open Questions or Blockers
+- Verification Status (tests passed/failed/unverified)
+- Success Criteria (binary completion checklist)
 
-**Key Principle:** Be thorough but concise — code snippets are the exception, file:line references are the norm. The handoff must let a fresh agent pick up without re-reading prior context.
+**Key Principle:** Optimize for a coding agent who must continue without the original conversation. Compact but complete. verified facts separated from assumptions. Rejected approaches explicitly flagged. Next action explicit.
 
-**Mermaid Usage:** Required if the work involves multi-component flows. Use `flowchart TD` or `sequenceDiagram` to show the current architecture state.
+**Mermaid Usage:** Only if essential for complex multi-component data flow. Do not add Mermaid by default.
 
 ### 5.3. Research Documents
 

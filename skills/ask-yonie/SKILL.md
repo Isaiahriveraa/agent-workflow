@@ -15,9 +15,9 @@ Most work travels this route:
 1. **`/skill:grill-with-docs`** — sharpen the idea by interview against the codebase. Writes to plan server glossary and ADRs.
 2. **Need a prototype?** → **`/skill:prototype`** — throwaway code to answer a design question. Route findings to plan server.
 3. **Need a spec?** → **`/skill:to-spec`** — synthesize conversation into a spec issue on GitHub.
-4. **Need tickets?** → **`/skill:to-tickets`** — break the plan/spec into vertical-slice issues with blocking edges.
-5. **Need a phased plan?** → **`/skill:plan`** — decompose research/explore docs into phases with success criteria.
-6. **Need discovery first?** → **`/skill:discover`** → **`/skill:research`** → **`/skill:explore`** → **`/skill:plan`**
+4. **Need issues?** → **`/skill:to-issues`** — break the plan/spec into vertical-slice issues with blocking edges.
+5. **Need a phased plan?** → **`/skill:to-plan`** — decompose research/explore docs into phases with success criteria.
+6. **Need discovery first?** → **`/skill:discover`** → **`/skill:research`** → **`/skill:explore`** → **`/skill:to-plan`**
 7. **Huge foggy effort?** → **`/skill:wayfinder`** — map as investigation tickets on GitHub Issues, resolve one per session.
 8. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), review changes (`/skill:code-review` or `/skill:review`), commit (`/skill:commit`).
 
@@ -43,7 +43,7 @@ Most work travels this route:
 - **Interview requirements** → **`/skill:discover`** — one-question-at-a-time interview → FRD on plan server.
 - **Research the codebase** → **`/skill:research`** — background subagent → synthesized findings on plan server.
 - **Explore solution options** → **`/skill:explore`** — compare approaches with pros/cons/tradeoffs.
-- **Make a phased plan** → **`/skill:plan`** — decompose research/explore into phases with success criteria.
+- **Make a phased plan** → **`/skill:to-plan`** — decompose research/explore into phases with success criteria.
 - **Revise a plan** → **`/skill:revise`** — surgically update an existing plan.
 - **Split a plan** → **`/skill:split-plan`** — break a big plan into simpler phases.
 - **Wayfinder** → **`/skill:wayfinder`** — huge effort too big for one session. Map on GitHub Issues, work one ticket per session.

@@ -38,7 +38,7 @@ moderate:      research → plan → implement → tdd → code-review → commi
 
 full:          discover → research → explore → plan → implement → tdd → code-review → commit
 
-team/huge:     wayfinder → to-tickets → implement → tdd → code-review → commit
+team/huge:     wayfinder → to-issues → implement → tdd → code-review → commit
 
 spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review → commit
 ```
@@ -55,7 +55,7 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 | Prototype | `prototype` | Throwaway code answering a design question | In-repo |
 | Plan | `to-plan` | Phased implementation plan | Plan server |
 | Wayfinder | `wayfinder` | Investigation ticket map for huge/foggy efforts | GitHub Issues |
-| Tickets | `to-tickets` | Tracer-bullet tickets with blocking edges | GitHub Issues |
+| Issues | `to-issues` | Tracer-bullet issues with blocking edges | GitHub Issues |
 | Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
 | TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
 | Review | `code-review` / `review` | Code review report | Plan server |
@@ -69,7 +69,7 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 4. **Comparing approaches** → `/skill:explore`
 5. **Need a prototype** → `/skill:prototype`
 6. **Writing a spec** → `/skill:to-spec`
-7. **Splitting work for the team** → `/skill:to-tickets`
+7. **Splitting work for the team** → `/skill:to-issues`
 8. **Huge foggy effort** → `/skill:wayfinder`
 9. **Sharpening an idea** → `/skill:grill-with-docs`
 10. **Ask me which skill** → `/skill:ask-yonie`
@@ -116,7 +116,8 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `to-plan/` | Research/explore → phased implementation plan |
 | `wayfinder/` | Huge foggy efforts → GitHub Issues map |
 | `to-spec/` | Conversation → spec issue |
-| `to-tickets/` | Plan/spec → tracer-bullet tickets |
+| `to-issues/` | Plan/spec → tracer-bullet issues |
+| `issue-delivery/` | One GitHub issue → isolated sibling worktree, verified draft PR |
 | `implement/` | Orchestrator: tdd → code-review → commit |
 | `tdd/` | Red-green-refactor with seam discipline |
 | `code-review/` | Parallel specialist agent review |
@@ -175,7 +176,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── domain-modeling/
 │   ├── wayfinder/
 │   ├── to-spec/
-│   ├── to-tickets/
+│   ├── to-issues/
 │   ├── handoff/
 │   ├── recall/
 │   ├── plan-server/

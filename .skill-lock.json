@@ -270,11 +270,11 @@
       "skillPath": "skills/ping-pong/SKILL.md",
       "skillFolderHash": "179443ced9e9be4947b5357394a361b8aae38c8d"
     },
-    "plan": {
+    "to-plan": {
       "source": ".agents",
       "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan/SKILL.md",
-      "skillPath": "skills/plan/SKILL.md",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-plan/SKILL.md",
+      "skillPath": "skills/to-plan/SKILL.md",
       "skillFolderHash": "03b6809bc61173b7aeb7e3c989c55e759aadb1bf"
     },
     "plan-server": {
@@ -408,12 +408,12 @@
       "skillPath": "skills/to-spec/SKILL.md",
       "skillFolderHash": "a0282a6e1a2278d90192c721c3813da90c0899aa"
     },
-    "to-tickets": {
+    "to-issues": {
       "source": ".agents",
       "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-tickets/SKILL.md",
-      "skillPath": "skills/to-tickets/SKILL.md",
-      "skillFolderHash": "2978cce4026bcca60a59a35839bb364fb854918b"
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-issues/SKILL.md",
+      "skillPath": "skills/to-issues/SKILL.md",
+      "skillFolderHash": "eba191237608f5ccc0146bfec3f5d8b18e060f47"
     },
     "tutor": {
       "source": ".agents",
@@ -444,6 +444,15 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/wayfinder/SKILL.md",
       "skillPath": "skills/wayfinder/SKILL.md",
       "skillFolderHash": "de2db976433f14700aa8508132e216c6596e2407"
+    },
+    "issue-delivery": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/issue-delivery",
+      "skillPath": "skills/issue-delivery/SKILL.md",
+      "skillFolderHash": "e3c95e67a0de1ae405a9ac28ef2ca88a12d65e4f",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
   "dismissed": {

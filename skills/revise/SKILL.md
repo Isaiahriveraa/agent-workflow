@@ -56,7 +56,7 @@ When this command is invoked:
    Wait for user input.
 
    **If NO plan file provided**, branch on the `recent plans:` listing in the Metadata block:
-   - **Empty** — no plans under `plan server `; tell the user and suggest running `/skill:plan` first.
+   - **Empty** — no plans under `plan server `; tell the user and suggest running `/skill:to-plan` first.
    - **Exactly one entry** — confirm with `ask_user_question`: "Revise this plan?" with options "Revise `<filename>` (Recommended)" and "Pick a different path".
    - **Two or more entries** — present the top 4 filenames as `ask_user_question` options.
 
