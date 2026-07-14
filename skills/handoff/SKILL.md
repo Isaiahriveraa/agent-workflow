@@ -1,15 +1,24 @@
 ---
 name: handoff
-description: Create a context-preserving handoff document for session transitions, compacting the current task, decisions made, in-flight changes, and open questions into a single concise file so a fresh session can pick up where this one left off. Use when the user invokes /handoff, says context is getting large, asks to wrap up the session, or wants to hand off work to another session.
+description: Transfer clean, verified, implementation-relevant context into a new agent session. Generates a handoff document that another agent can read and continue from without re-reading the original conversation. Use when context is large, session is ending, or /handoff is invoked.
 argument-hint: [description]
 allowed-tools: Read, Write, Bash(git *), Glob, Grep
 disable-model-invocation: true
 shell-timeout: 10
 ---
 
-# Create Handoff
+# Create Agent Handoff
 
-You are tasked with writing a handoff document to hand off your work to another agent in a new session. You will create a handoff document that is thorough, but also **concise**. The goal is to compact and summarize your context without losing any of the key details of what you're working on.
+You are tasked with writing a handoff document — a context-preserving transfer to another agent in a new session. This is NOT a human-facing summary. The handoff will be read by a coding agent that needs to continue the work accurately.
+
+The handoff must be:
+
+- **Compact** — remove discussion that does not affect future work.
+- **Rich** — preserve all details required to continue correctly.
+- **Accurate** — represent the latest verified project state only.
+- **Intent-stable** — preserve the user's final intent, not early confusion.
+- **Actionable** — the next action must be obvious.
+- **Low-drift** — avoid speculative advice or reinterpretation.
 
 ## Input
 
@@ -69,25 +78,25 @@ python3 ~/.agents/scripts/new-artifact.py \
 
 Where `<description>` is a short slug of what you were working on (from `$ARGUMENTS`, or auto-generated from context). If `$ARGUMENTS` is empty, use a brief topic summary. The project is resolved by walking up from the git repo root — override with `--project <name>` if needed.
 
-## Quality Standard
+### 2. Recover context
 
-Before writing, read the **Plan Server Document Quality Standard** for the Human-in-the-Loop Checklist (trade-offs, security, architecture diagrams, alternatives, necessity, coupling, etc.):
+Before writing, gather the essential information:
 
-```bash
-cat "${SKILL_DIR}/../_shared/plan-server-doc-quality.md"
-```
+1. **Active Goal** — Restate the user's latest confirmed objective. What single task does the next agent need to complete?
+2. **Current project state** — What works, what doesn't, what's verified?
+3. **Changes made** — Specific files and why.
+4. **Decisions locked** — What's been decided and why.
+5. **Rejected approaches** — What was tried and discarded.
+6. **Remaining work** — What still needs doing.
+7. **Verification state** — What tests/checks have been run and their results.
 
-Apply the checklist before declaring the handoff complete.
+Also check if the session produced or referenced **plan server artifacts** (plans, research, design, FRD, solutions, ADRs) from this session or earlier. Include them in the handoff so the next agent can read them for broader context.
 
-- [ ] Satisfies the Plan Server Document Quality Standard (Human-in-the-Loop Checklist)
-
-### 2. Write content
+### 3. Write content
 
 Open the generated file and replace the template content with the full handoff.
 
-The handoff must be **Obsidian-friendly** — easy for a human to open in Obsidian, scan quickly, and stay in the loop. Use headings, callouts, diagrams, checklists, and Obsidian links.
-
-Use this structure:
+Use the following structure. Write in plain Markdown — no callout syntax, no Obsidian wiki-links, no Mermaid unless essential for data flow understanding. Mermaid is acceptable ONLY for complex multi-component flows where a diagram conveys more than prose.
 
 ```markdown
 ---
@@ -97,110 +106,231 @@ commit: {Current commit hash}
 branch: {Current branch name}
 repository: {Repository name}
 topic: "{Feature/Task Name} - Handoff"
-tags: [handoff, {relevant-tags}]
+tags: [handoff]
 status: complete
 last_updated: {Same ISO timestamp}
 last_updated_by: {Author name}
 type: handoff
 ---
 
-# Handoff: {concise description}
+# Agent Handoff: {Concise Active Task}
 
-> [!summary]
-> Short 2-3 sentence summary of what was being worked on, what state it's in, and what the next agent needs to know to pick up immediately.
+## Active Goal
 
-## What Was Being Built
+A short, direct description of the user's latest confirmed objective.
+What the next agent is expected to complete.
 
-Explain the task or problem in plain terms. What was the goal? What approach was taken?
+If the session produced a plan, FRD, design document, or other spec artifact on
+the plan server, link it here:
 
-## Architecture / Flow
-
-If the work involves a system, data flow, agent flow, or multiple components, include a Mermaid diagram:
-
-```mermaid
-flowchart TD
-    ComponentA --> ComponentB
-    ComponentB --> ComponentC
-```
-
-> [!important]
-> **Critical References:** {list 2-3 key file paths or documents the next agent MUST read first}
+- Plan: `{path/to/plan.mdx}`
+- Research: `{path/to/research.md}`
+- ADR: `{path/to/adr.md}`
 
 ## Current State
 
-Describe the current state of the work:
-- What's completed
-- What's in progress
-- What hasn't been started yet
+Describe what is true right now — code state, behavior, test results.
 
-### Key Changes Made
+- What works:
+- What is incomplete:
+- What is broken or known-buggy:
+- What has been verified (and how):
+- What is assumed but not verified:
 
-{describe recent changes using `path/to/file.ext:line` references}
+Separate verified facts from assumptions.
 
+## Latest User Intent
+
+The user's final resolved requirements. Only include the latest confirmed
+intent, not the full history. Earlier corrections should NOT appear here.
+
+If the user changed their mind during the session:
+
+- **Original intent:** (briefly, only if relevant context)
+- **Correction:** (what the user said to change)
+- **Active intent:** (what to do now)
+
+## Locked Decisions
+
+For each locked decision that affects implementation:
+
+- **Decision:** {what was decided}
+- **Why:** {reason}
+- **Constraint:** {what this means for the next agent}
+
+Keep entries short. Omit this section if no decisions were made.
+
+## Do Not Repeat
+
+List previously attempted, rejected, or corrected approaches that the next
+agent might otherwise repeat. Be specific about why each was wrong.
+
+- {Approach} — {why rejected}
+
+Omit this section if none exist.
+
+## Work Completed
+
+### {Change Name}
+
+**What changed:** {one-line description}
+**Why:** {rationale}
+**Files:** `{path/to/file.ext}`
+**Verification:** {test/command/manual check result, or "Not yet verified"}
+
+Repeat for each meaningful completed change. Do not list cosmetic or
+unimportant edits.
+
+## Relevant Files
+
+### `{path/to/file.ext}`
+**Status:** Read | Created | Modified | Deleted
+**Role:** {what this file controls}
+**Changes:** {what changed — only if modified}
+**Next use:** {inspect, modify, no further changes expected}
+
+Only include files relevant to continuing the active task.
+
+## Remaining Work
+
+Tasks are ordered by dependency. Each must be immediately executable.
+
+### Task N: {Action-Oriented Name}
+
+**Objective:** {specific result}
+**Files:** `{path/to/file}`
+**Depends on:** {prior task or None}
+**Notes:** {essential implementation details only}
+**Verify:** {exact check}
+**Done when:** {binary completion condition}
+
+## Resume Here
+
+State the exact next action, file to open, and what to do.
+
+> {The single next step. Example: Open `skills/handoff/SKILL.md` and replace the current template with the agent-handoff structure. After editing, run `cargo test` to verify compatibility.}
+
+## Open Questions or Blockers
+
+Include only unresolved questions that prevent or materially change implementation.
+
+- **Question:** {what}
+- **Why it matters:** {why the answer changes the approach}
+- **Default:** {safest assumption if unanswered}
+- **Blocked:** {yes/no — can work continue without an answer?}
+
+Omit this section if none exist.
+
+## Verification Status
+
+- Tests passed: {list}
+- Tests failed: {list}
+- Commands run: {list}
+- Manual checks: {list}
+- Unverified: {areas not yet checked}
+
+Never state that something works unless it was actually verified.
+
+## Success Criteria
+
+Checklist for the active task:
+
+- [ ] {criterion 1}
+- [ ] {criterion 2}
 ```
-- `src/feature/api.ts:12-24` — added endpoint handler
-- `src/feature/model.ts:45` — fixed edge case with empty input
-```
 
-## Decisions Made
-
-Use this format for important decisions:
-
-### Decision: {title}
-**Why:** {reason}
-**Tradeoff:** {what was given up}
-**Status:** Approved / Pending
-
-> [!question]
-> **Open Questions:** {anything still unclear or needing human input}
-
-## Learnings
-
-{important patterns, root causes, or insights discovered. Use `path/to/file.ext:line` references.}
-
-> [!todo]
-> **Action Items & Next Steps**
-> - [ ] {concrete next step for the next agent}
-> - [ ] {another step}
-> - [ ] {yet another step}
-
-## Related Notes
-
-{Obsidian links to related documents — use `[[note-name]]` even if the file doesn't exist yet}
-
-- [[architecture-overview]]
-- [[plan-{feature-name}]]
-- [[decision-{topic}]]
-
-> [!warning]
-> **Assumptions:** {any assumptions the work was based on that might not hold}
-```
-
-### 3. Approve
+### 4. Approve
 
 Save the document.
 
-Once this is completed, you should respond to the user with the template between `<template_response></template_response>` XML tags. Do NOT include the tags in your response.
+Once this is completed, respond with:
 
-<template_response>
+```
 Handoff written to:
 `{path-from-script}`
 
----
+**Next step:** `/skill:recall {path-from-script}`
+```
 
-💬 Follow-up: describe extra context in chat to append to this handoff before chaining; re-run `/skill:handoff` for a fresh handoff document.
+## Context Selection Rules
 
-**Next step:** `/skill:recall {path-from-script}` — pick up where this session left off in a fresh context.
+### Preserve
 
-> 🆕 Tip: start a fresh session with `/new` first — chained skills work best with a clean context window.
-</template_response>
+Include information that affects future implementation:
 
----
-## Additional Notes & Instructions
-- **more information, not less**. This is a guideline that defines the minimum of what a handoff should be. Always feel free to include more information if necessary.
-- **be thorough and precise**. include both top-level objectives, and lower-level details as necessary.
-- **avoid excessive code snippets**. While a brief snippet to describe some key change is important, avoid large code blocks or diffs; do not include one unless it's necessary (e.g. pertains to an error you're debugging). Prefer using `/path/to/file.ext:line` references that an agent can follow later when it's ready, e.g. `packages/dashboard/src/app/dashboard/page.tsx:12-24`
-- The `new-artifact.py` script handles path construction and ISO timestamp generation. Do not construct paths yourself.
+- User's latest confirmed goal.
+- Current project state (verified behavior, architecture).
+- Completed and partially completed work.
+- Files changed and why.
+- Architecture and implementation decisions.
+- Constraints and rejected approaches.
+- Unresolved blockers and next steps.
+- Verification state and acceptance criteria.
+- Exact user preferences that affect implementation.
+- **Plan server artifacts** from this or related sessions (plans, research, ADRs, designs, FRDs, solutions).
+
+### Remove
+
+Exclude content that does not help the next agent:
+
+- Repeated explanations.
+- Conversational filler.
+- Abandoned brainstorming.
+- Early misunderstandings later corrected (except in Do Not Repeat).
+- Options considered but never selected (except in Do Not Repeat).
+- Generic best practices.
+- Duplicated status information.
+- Human-facing review language.
+- Speculative future ideas outside the active scope.
+
+## Intent Resolution
+
+When earlier and later instructions conflict:
+
+1. Prefer the latest explicit user correction.
+2. Preserve the final decision as the active requirement.
+3. Record the earlier approach only if the next agent might accidentally repeat it (under "Do Not Repeat").
+4. Never present rejected and active decisions as equally valid.
+
+## Compression Rules
+
+- Prefer concise factual statements.
+- Merge repeated decisions.
+- Remove conversational chronology unless sequence affects implementation.
+- Do not preserve every message.
+- Do not summarize unrelated parts of the session.
+- Use exact file paths when known.
+- Keep details that would otherwise require rediscovery.
+- Remove detail that can be trivially recovered and does not affect correctness.
+
+## Accuracy Rules
+
+- Do not invent file changes.
+- Do not claim tests passed unless they were run.
+- Mark uncertainty explicitly.
+- Separate verified facts from assumptions.
+- Prefer repository evidence over conversational guesses.
+- Preserve exact constraints and final user corrections.
+- Do not reinterpret the task into a new design direction.
+
+## Continuity Rules
+
+- The handoff must be understandable without the original conversation.
+- The handoff must not require the previous agent's memory.
+- The next action must be explicit.
+- The next agent should continue without asking the user to repeat context.
+- Include enough rationale to prevent regressions, but not a full design essay.
+
+## What NOT to Include
+
+- Obsidian wiki-links (`[[note]]`).
+- Obsidian callouts (`> [!summary]`, `> [!warning]`, etc.) — use plain markdown.
+- Human-facing explanation or review language.
+- Mermaid diagrams unless they are essential for data flow understanding.
+- The Plan Server Document Quality Standard checklist — handoffs do not need Human-in-the-Loop review.
+- Security implications, necessity assessment, coupling analysis, or readability audits.
+- "Related Notes" sections with wiki-link placeholders.
+- Decorative formatting or question cards for user discussion.
 
 ## Clipboard
 

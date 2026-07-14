@@ -54,13 +54,16 @@ When this command is invoked:
 
 1. **Read handoff document completely**:
    - Use the Read tool WITHOUT limit/offset parameters
-   - Extract all sections:
-     - Task(s) and their statuses
-     - Recent changes
-     - Learnings
-     - Artifacts
-     - Action items and next steps
-     - Other notes
+   - Active Goal and linked plan/artifact references
+   - Current State (verified vs assumed)
+   - Latest User Intent and any intent corrections
+   - Locked Decisions and Do Not Repeat items
+   - Work Completed and verification results
+   - Relevant Files with their roles
+   - Remaining Work (ordered tasks)
+   - Resume Here (exact next step)
+   - Open Questions or Blockers
+   - Verification Status and Success Criteria
 
 2. **Spawn focused research agents**:
    After reading all critical handoff/plan/research documents directly, spawn the agents below in parallel using the Agent tool. Wait for ALL agents to complete before proceeding.
@@ -68,19 +71,19 @@ When this command is invoked:
    ```
    Task 1 - Gather artifact context:
    Read all artifacts mentioned in the handoff.
-   1. Read feature documents listed in "Artifacts"
+   1. Read plans, research, ADRs, designs, and FRDs listed in "Active Goal" or "Relevant Files"
    2. Read implementation plans referenced
    3. Read any research documents mentioned
-   4. Extract key requirements and decisions
+   4. Read ADRs linked in Locked Decisions
+   5. Extract key requirements and decisions
    Use tools: Read
    Return: Summary of artifact contents and key decisions
    ```
 
 3. **Wait for ALL agents to complete** before proceeding
-
 4. **Verify current state**:
-   - Read files from "Learnings" section completely to validate patterns still apply
-   - Read files from "Recent changes" to verify modifications are still present
+   - Read files from "Work Completed" section completely to validate changes are still present
+   - Read files from "Relevant Files" to verify listed paths and roles match current state
    - Use git log or git diff if needed to check commit history since handoff
    - Re-read implementation files mentioned to confirm current state matches handoff expectations
    - Read any new related files discovered during research
@@ -91,21 +94,25 @@ When this command is invoked:
    ```
    I've analyzed the handoff from {date} by {author}. Here's the current situation:
 
-   **Original Tasks:**
-   - {Task 1}: {Status from handoff} → {Current verification}
-   - {Task 2}: {Status from handoff} → {Current verification}
+   **Active Goal:**
+   - {Goal from handoff}: {Verified unchanged / Changed}
+   - Linked plans/artifacts: {verified accessible}
 
-   **Key Learnings Validated:**
-   - {Learning with file:line reference} - {Still valid/Changed}
-   - {Pattern discovered} - {Still applicable/Modified}
+   **Locked Decisions / Do Not Repeat:**
+   - {Decision or rejected approach} - {Still applicable / Avoided}
+   - {Another decision} - {Still applicable}
 
-   **Recent Changes Status:**
+   **Work Completed Status:**
    - {Change 1} - {Verified present/Missing/Modified}
    - {Change 2} - {Verified present/Missing/Modified}
 
    **Artifacts Reviewed:**
    - {Document 1}: {Key takeaway}
    - {Document 2}: {Key takeaway}
+
+   **Remaining Work:**
+   - {Task 1}: {Status from handoff} → {Current verification}
+   - {Task 2}: {Status from handoff} → {Current verification}
 
    **Recommended Next Actions:**
    Based on the handoff's action items and current state:
@@ -159,7 +166,7 @@ When this command is invoked:
    - Adapt based on current state vs handoff state
 
 3. **Leverage Handoff Wisdom**:
-   - Pay special attention to "Learnings" section
+   - Pay special attention to "Locked Decisions" and "Do Not Repeat" sections
    - Apply documented patterns and approaches
    - Avoid repeating mistakes mentioned
    - Build on discovered solutions
@@ -182,8 +189,8 @@ When this command is invoked:
 ### Scenario 1: Clean Continuation
 - All changes from handoff are present
 - No conflicts or regressions
-- Clear next steps in action items
-- Proceed with recommended actions
+- Clear "Resume Here" section with exact next step
+- Proceed with the action specified in Resume Here
 
 ### Scenario 2: Diverged Codebase
 - Some changes missing or modified
