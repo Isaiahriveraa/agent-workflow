@@ -75,3 +75,40 @@ test("calculateTotal sums line items", () => {
   expect(calculateTotal([{ price: 10 }, { price: 5 }])).toBe(15);
 });
 ```
+
+## Testing APIs
+
+When setup repeats across tests, extract a factory so each test only shows what makes it unique.
+
+```typescript
+// BEFORE: every test repeats the same construction
+test("defaults to customer role", () => {
+  const user = new User("Alice", "alice@example.com", "customer");
+  expect(user.role).toBe("customer");
+});
+
+test("admin can moderate", () => {
+  const user = new User("Bob", "bob@example.com", "admin");
+  expect(canModerate(user)).toBe(true);
+});
+
+// AFTER: setup lives in one place
+function makeUser(overrides = {}) {
+  return new User(
+    overrides.name ?? "Test User",
+    overrides.email ?? "test@example.com",
+    overrides.role ?? "customer"
+  );
+}
+
+test("defaults to customer role", () => {
+  expect(makeUser().role).toBe("customer");
+});
+
+test("admin can moderate", () => {
+  const user = makeUser({ role: "admin" });
+  expect(canModerate(user)).toBe(true);
+});
+```
+
+Each test calls a one-liner. When `User`'s constructor changes, only `makeUser` needs updating.

@@ -29,6 +29,59 @@ Ask: "What's the public interface, and which seams should we test?"
 - **Tautological** — the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`, a snapshot derived by hand the same way, a constant asserted equal to itself), so it passes by construction and can never disagree with the code. Expected values must come from an independent source of truth — a known-good literal, a worked example, the spec.
 - **Horizontal slicing** — writing all tests first, then all implementation. Bulk tests verify _imagined_ behavior: you test the _shape_ of things rather than user-facing behavior, the tests go insensitive to real changes, and you commit to test structure before understanding the implementation. Work in **vertical slices** instead — one test → one implementation → repeat, each test a **tracer bullet** that responds to what the last cycle taught you.
 
+## Testing APIs
+
+When three or more tests repeat the same setup — constructing the same object, wiring the same dependencies, seeding the same data — extract it into a **testing API**: a factory function or builder that captures the shared setup behind a simple call.
+
+Testing APIs make tests cheaper to write and maintain:
+
+- Constructor signatures change in one place, not thirty.
+- Each test shows only what's unique about it — the setup noise is hidden.
+- New tests are trivial to add because the factory offers a path of least resistance.
+
+### Anatomy
+
+Good testing APIs use **sensible defaults** with **explicit overrides**:
+
+```typescript
+// Testing API — a factory with defaults
+function makeUser(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    name: "Default User",
+    email: "user@example.com",
+    role: "customer",
+    ...overrides,
+  };
+}
+
+// Tests only mention what matters
+test("admin can delete any post", () => {
+  const admin = makeUser({ role: "admin" });
+  expect(canDelete(admin, anyPost)).toBe(true);
+});
+
+test("customer can delete own post", () => {
+  const owner = makeUser();
+  const post = makePost({ authorId: owner.id });
+  expect(canDelete(owner, post)).toBe(true);
+});
+```
+
+Default values should be valid but obviously fake — `"Test User"`, `0`, `crypto.randomUUID()`. A test that uses the default shouldn't accidentally conflate the value with something meaningful.
+
+### When to extract
+
+- **3+ tests** repeat the same constructor or setup block → extract.
+- **Setup chain** (create user → create cart → add items → create payment method) → extract each step as a factory for composition.
+- **`beforeEach` is doing real work** → extract into a named factory. `beforeEach` is for resetting state, not constructing domain objects.
+
+### What NOT to do
+
+- **Don't share test helpers between test files when they encode file-specific assumptions.** Keep them local or in a `test-utils.ts` at the module level. Moving a factory into a shared file means naming it precisely (`makeAdminUser`, not `makeUser`) and committing to its API across consumers.
+- **Don't expose test helpers from your library's public API.** They belong in the test suite, not to external consumers.
+- **Don't hide the critical value.** If a test is about a specific email address, pass it as an override, not buried in a default.
+
 ## Rules of the loop
 
 - **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
@@ -87,3 +140,4 @@ After all tests are green, look for refactoring opportunities:
 - [ ] Expected values are independent literals, not recomputed from the code
 - [ ] Code is minimal for this test
 - [ ] No speculative features added
+- [ ] Setup duplication extracted into a testing API when 3+ tests share it
