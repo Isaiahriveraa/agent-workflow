@@ -169,7 +169,7 @@ The worker follows this sequence:
 1. Review the final diff against the approved Scope packet. Measure PR size as the insertion-plus-deletion total from `rtk git diff --numstat <base>...HEAD`. A diff that contains another concern, an unexpected file, or more than 700 changed lines returns to Scope Approval with a split proposal.
 2. Invoke `commit` for each logical unit before staging it. The message must pass the single-story check and contain no `and`.
 3. Stage only the audited logical unit in the issue worktree. Use file-level staging when the concerns are file-separated. For an intra-file split, use interactive patch staging only when the session supports it; otherwise re-sequence the edits so each commit can be staged safely. Re-check the remaining diff before the next commit.
-4. Invoke `/pr` against the resolved base branch. Derive title/body solely from the committed branch diff.
+4. Invoke `skill(pr-workflow)` `/pr` against the resolved base branch. Derive title/body solely from the committed branch diff.
 5. The PR proposal must include:
 
 ```markdown

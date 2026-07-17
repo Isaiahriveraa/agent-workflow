@@ -1,22 +1,23 @@
 ---
-description: Read ~/.agents/AGENTS.md and enforce its rules on the current project using spawn protocol
+name: enforce
+description: "Read hub AGENTS.md and enforce its rules on the current project using spawn protocol"
 ---
 
 # Enforce
 
-Read `~/.agents/AGENTS.md` (the hub's master operating contract), extract its operating rules, and use the `/spawn` protocol to enforce them on the current project — BERP comments, code smell cleanup, convention conformance, and any other policies defined in that file. Not a project-local AGENTS.md — the hub file is the single source of truth.
+Read `~/.agents/AGENTS.md` (the hub's master operating contract), extract its operating rules, and use the `skill(name="spawn")` protocol to enforce them on the current project — BERP comments, code smell cleanup, convention conformance, and any other policies defined in that file. Not a project-local AGENTS.md — the hub file is the single source of truth.
 
 ---
 
 ## Purpose
 
-`/enforce` bridges hub policy (what `~/.agents/AGENTS.md` says) with project execution (making it real). Instead of manually auditing files, it reads the master rules from the hub, then decomposes the current project's codebase into parallel sub-agents that each enforce the rules on their assigned scope.
+`skill(name="enforce")` bridges hub policy (what `~/.agents/AGENTS.md` says) with project execution (making it real). Instead of manually auditing files, it reads the master rules from the hub, then decomposes the current project's codebase into parallel sub-agents that each enforce the rules on their assigned scope.
 
 ---
 
-## When To Use
+## When To Use This Skill
 
-| Use `/enforce` | Don't `/enforce` |
+| Use enforce | Don't enforce |
 |---|---|
 | After adding new rules to AGENTS.md | On a codebase with no AGENTS.md |
 | Before a major review or release | For a single file — just edit it |
@@ -48,9 +49,9 @@ For each module group, create one sub-agent task. The tasks are:
 - **Bounded** — each covers a manageable number of files (5-15 files per agent)
 - **Self-contained** — each has the full AGENTS.md ruleset and its file list
 
-### Step 4 — Spawn (via spawn protocol)
+### Step 4 — Spawn (via spawn skill)
 
-Each sub-agent gets a prompt structured like this:
+Each sub-agent gets a prompt structured like this, using the spawn skill's 7-section format:
 
 ```
 ──────────────────────────────────────────────

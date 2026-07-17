@@ -1,5 +1,6 @@
 ---
-description: Max-context sub-agent decomposition — split tasks along natural seams, give each agent full context, spawn in parallel
+name: spawn
+description: "Max-context sub-agent decomposition — split tasks along natural seams, give each agent full context, spawn in parallel"
 ---
 
 # Spawn
@@ -10,13 +11,13 @@ Split a complex task into atomically independent work units, write an exhaustive
 
 ## Purpose
 
-`/spawn` turns one high-level task into parallel sub-agents that each have **everything they need** to ship independently. No follow-up questions. No "where does X live?" No "what pattern should I follow?" The orchestrator absorbs the full context burden so each sub-agent can execute cleanly.
+`skill(name="spawn")` turns one high-level task into parallel sub-agents that each have **everything they need** to ship independently. No follow-up questions. No "where does X live?" No "what pattern should I follow?" The orchestrator absorbs the full context burden so each sub-agent can execute cleanly.
 
 ---
 
-## When To Use
+## When To Use This Skill
 
-| Use `/spawn` | Don't `/spawn` |
+| Use spawn | Don't spawn |
 |---|---|
 | Multi-file features (3+ files) | Single-file typo or trivial fix |
 | Clear natural seams (API/DB/UI layers) | Tightly coupled work (one context needed) |
@@ -90,11 +91,11 @@ For each sub-agent result, review against:
 
 1. The original user request.
 2. The current plan/spec/artifact.
-3. The sub-agent’s assigned TASK.
-4. The sub-agent’s EXPECTED OUTPUT.
-5. The sub-agent’s MUST DO list.
-6. The sub-agent’s MUST NOT DO list.
-7. The sub-agent’s DONE WHEN checklist.
+3. The sub-agent's assigned TASK.
+4. The sub-agent's EXPECTED OUTPUT.
+5. The sub-agent's MUST DO list.
+6. The sub-agent's MUST NOT DO list.
+7. The sub-agent's DONE WHEN checklist.
 8. Existing codebase conventions.
 9. `.agents` rules where relevant.
 10. Simplicity, maintainability, and future extensibility.

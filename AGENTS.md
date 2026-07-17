@@ -50,7 +50,7 @@ Maximize subagent use for independent implementation work so the main agent pres
 
 - The main agent decomposes work, defines boundaries, coordinates dependencies, integrates results, and verifies the whole system.
 - Subagents should write scoped code rather than duplicate planning already owned by the main agent.
-- Use the `spawn` skill before delegation to give each subagent complete context: goal, scope, constraints, relevant files, interfaces, repository rules, tests, expected output, and explicit non-goals.
+- Use the spawn skill before delegation to give each subagent complete context: goal, scope, constraints, relevant files, interfaces, repository rules, tests, expected output, and explicit non-goals.
 - Split work only when tasks can proceed independently or have clear ownership boundaries.
 - Prevent overlapping edits unless coordination is explicit.
 - Require each subagent to report decisions, files changed, verification, assumptions, and unresolved risks.
@@ -69,6 +69,8 @@ Maximize subagent use for independent implementation work so the main agent pres
 | `security review` | Security audit — threats, dependencies, OWASP |
 | `analyze`, `investigate` | Investigation — reproduce, inspect, isolate root cause |
 | `cancel`, `stop`, `abort` | Stop cleanly and report current state |
+| `spawn`, `decompose`, `parallel tasks` | Spawn — split into parallel sub-agents with full context |
+| `enforce`, `enforce rules` | Enforce — apply hub AGENTS.md rules to project code |
 
 ## Skill Routing
 
@@ -76,8 +78,7 @@ Invoke matching skills with `skill(name="skill-name")`.
 
 | Domain | Skill(s) |
 |---|---|
-| Delegation/context enforcement | `enforce` |
-| Subagent implementation review | `subagent-implementation-review` |
+| Delegation/context enforcement | `spawn`, `enforce` |
 | Frontend UI/UX | `ui-ux-pro-max`, `frontend-design` |
 | Flutter layout | `flutter-build-responsive-layout`, `flutter-fix-layout-issues` |
 | Architecture/refactoring | `improve-codebase-architecture` |

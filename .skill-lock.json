@@ -453,6 +453,42 @@
       "skillFolderHash": "e3c95e67a0de1ae405a9ac28ef2ca88a12d65e4f",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "parallel-dev": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/parallel-dev",
+      "skillPath": "skills/parallel-dev/SKILL.md",
+      "skillFolderHash": "9cbb1647fb7e8a52ada07b9856b980a1f5889c88",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "subagent-implementation-review": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/subagent-implementation-review",
+      "skillPath": "skills/subagent-implementation-review/SKILL.md",
+      "skillFolderHash": "2d8a0d7e57135f3276b108c92ffe2834ee2d7fc7",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "spawn": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/spawn",
+      "skillPath": "skills/spawn/SKILL.md",
+      "skillFolderHash": "c9c4986ac4e7ebcb9a39dd79c20afd5e0df012a9",
+      "installedAt": "2026-07-16T00:00:00.000Z",
+      "updatedAt": "2026-07-16T00:00:00.000Z"
+    },
+    "enforce": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/enforce",
+      "skillPath": "skills/enforce/SKILL.md",
+      "skillFolderHash": "69ad129406fc8c4f86635a2264c33922b13d83ff",
+      "installedAt": "2026-07-16T00:00:00.000Z",
+      "updatedAt": "2026-07-16T00:00:00.000Z"
     }
   },
   "dismissed": {
