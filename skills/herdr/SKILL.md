@@ -99,21 +99,22 @@ herdr wait agent-status 1-1 --status done --timeout 120000
 herdr pane read 1-1 --source recent --lines 100
 ```
 
-### Spawn opencode agent (model-flagged)
+### Spawn omp agent (model-flagged)
 
-See [`AGENT-SPAWN-RECIPES.md`](./AGENT-SPAWN-RECIPES.md) for hardened patterns. Key differences from `claude`:
-- opencode has a rich TUI — use `sleep 5` instead of `wait output --match ">"`
-- `pane run` may paste without submitting — always follow with `herdr pane send-keys PANE_ID Enter`
-- Use `--model openai/gpt-5.4` flag
+See [`AGENT-SPAWN-RECIPES.md`](./AGENT-SPAWN-RECIPES.md) for hardened patterns. Key characteristics of `omp`:
+- OMP launches an interactive terminal UI; allow it to initialize before sending the task
+- Accepts `--model` for explicit model selection and `--thinking` for reasoning budget (Luna 5.6 default: `--thinking high`)
+- Herdr has a native OMP integration for agent lifecycle reporting
 
 ```bash
 CURRENT=$(herdr pane list | python3 -c 'import sys,json;d=json.load(sys.stdin)["result"]["panes"];print([p["pane_id"] for p in d if p["focused"]][0])')
 NEW=$(herdr pane split "$CURRENT" --direction right --no-focus | python3 -c 'import sys,json;print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')
-herdr pane run "$NEW" "opencode --model openai/gpt-5.4" && sleep 5
+herdr pane run "$NEW" "omp --model openai-codex/gpt-5.6-luna --thinking high"
+sleep 10
 herdr pane run "$NEW" "your task here"
 herdr pane send-keys "$NEW" Enter
-herdr wait agent-status "$NEW" --status done --timeout 300000
-herdr pane read "$NEW" --source recent --lines 100
+herdr wait agent-status "$NEW" --status done --timeout 600000
+herdr pane read "$NEW" --source recent --lines 200
 ```
 
 ## Notes

@@ -8,26 +8,24 @@ sending them tasks, and collecting results. These are hardened from real usage
 
 | Goal | Pattern |
 |------|---------|
-| Spawn opencode agent with model | `herdr pane run PANE_ID "opencode --model openai/gpt-5.4"` |
-| Wait for TUI to initialize | `sleep 5` (can't match a prompt string — opencode has a rich TUI) |
-| Send query + submit | `herdr pane run PANE_ID "QUERY"` then `herdr pane send-keys PANE_ID Enter` |
-| Wait for work to finish | `herdr wait agent-status PANE_ID --status done --timeout 300000` |
-| Read output | `herdr pane read PANE_ID --source recent --lines 100` |
+| Spawn omp agent with model | `herdr pane run PANE_ID "omp --model openai-codex/gpt-5.6-luna --thinking high"` |
+| Wait for OMP to initialize | `sleep 10` |
+| Wait for work to finish | `herdr wait agent-status PANE_ID --status done --timeout 600000` |
+| Read output | `herdr pane read PANE_ID --source recent --lines 200` |
 
 ---
 
-## Recipe 1: Spawn an opencode Agent With a Specific Model
+## Recipe 1: Spawn an omp Agent With a Specific Model
 
-This is the core pattern. Works for `opencode` (the TUI agent — NOT plain `claude`).
+This is the core pattern. `omp` is the supported worker runtime and has
+native Herdr integration for agent lifecycle reporting.
 
-### Problem
+### Background
 
-`opencode` uses a rich terminal UI (not a simple `>` prompt). The existing
-"spawn a new agent" recipe in SKILL.md assumes `claude` which outputs `>`
-when ready. With opencode you cannot `wait output --match ">"` because the
-TUI doesn't print a shell prompt.
+`omp` launches an interactive terminal UI by default. Allow it to initialize
+before sending the task; do not rely on a shell prompt or output matching.
 
-### Solution — sleep-based wait
+### Steps
 
 ```bash
 # 1. Get your current pane ID
@@ -37,26 +35,24 @@ MY_PANE=$(herdr pane list | python3 -c 'import sys,json; d=json.load(sys.stdin)[
 NEW_PANE=$(herdr pane split "$MY_PANE" --direction right --no-focus | \
   python3 -c 'import sys,json; print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')
 
-# 3. Launch opencode with a specific model
-herdr pane run "$NEW_PANE" "opencode --model openai/gpt-5.4"
+# 3. Launch omp with a specific model
+herdr pane run "$NEW_PANE" "omp --model openai-codex/gpt-5.6-luna --thinking high"
 
-# 4. Wait for the TUI to initialize (cannot match a prompt — use sleep)
-sleep 5
+# 4. Wait for the interactive OMP UI to initialize
+sleep 10
 
-# 5. Send the query (this pastes text + presses Enter, but opencode TUI
-#    may only paste without submitting — always follow up with send-keys)
+# 5. Send the query
 herdr pane run "$NEW_PANE" "Your task query here"
 herdr pane send-keys "$NEW_PANE" Enter
 
 # 6. Wait for completion
-herdr wait agent-status "$NEW_PANE" --status done --timeout 300000
+herdr wait agent-status "$NEW_PANE" --status done --timeout 600000
 
 # 7. Read the results
-herdr pane read "$NEW_PANE" --source recent --lines 100
+herdr pane read "$NEW_PANE" --source recent --lines 200
 ```
 
 ---
-
 ## Recipe 2: Full Chain Command (One-shot)
 
 All-in-one bash script. Use this when you want to fire and forget.
@@ -68,7 +64,7 @@ d=json.load(sys.stdin)["result"]["panes"]
 print([p["pane_id"] for p in d if p["focused"]][0])
 ')
 
-MODEL="openai/gpt-5.4"
+MODEL="openai-codex/gpt-5.6-luna"
 
 QUERY="Read the file at some/path.md and critique it. Identify gaps and issues.
 Then modify the file to fix any problems found. Be thorough."
@@ -77,8 +73,8 @@ Then modify the file to fix any problems found. Be thorough."
 NEW_PANE=$(herdr pane split "$CURRENT_PANE" --direction right --no-focus | \
   python3 -c 'import sys,json; print(json.load(sys.stdin)["result"]["pane"]["pane_id"])') && \
 echo "Pane: $NEW_PANE" && \
-herdr pane run "$NEW_PANE" "opencode --model $MODEL" && \
-sleep 5 && \
+herdr pane run "$NEW_PANE" "omp --model $MODEL --thinking high" && \
+sleep 10 && \
 herdr pane run "$NEW_PANE" "$QUERY" && \
 herdr pane send-keys "$NEW_PANE" Enter && \
 echo "=== Query sent to $NEW_PANE ==="
@@ -87,8 +83,8 @@ echo "=== Query sent to $NEW_PANE ==="
 To then wait and read results:
 
 ```bash
-herdr wait agent-status "$NEW_PANE" --status done --timeout 300000 && \
-herdr pane read "$NEW_PANE" --source recent --lines 100
+herdr wait agent-status "$NEW_PANE" --status done --timeout 600000 && \
+herdr pane read "$NEW_PANE" --source recent --lines 200
 ```
 
 ---
@@ -104,8 +100,8 @@ import sys,json; d=json.load(sys.stdin)["result"]["panes"];
 print([p["pane_id"] for p in d if p["focused"]][0])')
 NEW_PANE=$(herdr pane split "$MY_PANE" --direction right --no-focus | \
   python3 -c 'import sys,json; print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')
-herdr pane run "$NEW_PANE" "opencode --model openai/gpt-5.4"
-sleep 5
+herdr pane run "$NEW_PANE" "omp --model openai-codex/gpt-5.6-luna --thinking high"
+sleep 10
 herdr pane run "$NEW_PANE" "Your long task description"
 herdr pane send-keys "$NEW_PANE" Enter
 echo "Agent spawned in pane $NEW_PANE"
@@ -114,7 +110,7 @@ echo "Agent spawned in pane $NEW_PANE"
 
 # Check back later
 herdr pane list  # see if status is "done"
-herdr pane read "$NEW_PANE" --source recent --lines 100
+herdr pane read "$NEW_PANE" --source recent --lines 200
 ```
 
 ---
@@ -123,7 +119,7 @@ herdr pane read "$NEW_PANE" --source recent --lines 100
 
 ```bash
 # Returns immediately if already done, blocks until done or timeout
-if herdr wait agent-status "$NEW_PANE" --status done --timeout 300000; then
+if herdr wait agent-status "$NEW_PANE" --status done --timeout 600000; then
   echo "=== Agent finished ==="
   herdr pane read "$NEW_PANE" --source recent --lines 150
 else
@@ -159,49 +155,47 @@ check_agent w65299eff6919fc-2
 
 | Model String | Description |
 |---|---|
-| `openai/gpt-5.4` | OpenAI GPT-5.4 (latest) |
+| `openai-codex/gpt-5.6-luna` | Luna 5.6 (default worker; use with `--thinking high`) |
+| `openai/gpt-5.4` | OpenAI GPT-5.4 |
 | `openai/gpt-4.7` | OpenAI GPT-4.7 |
 | `anthropic/claude-sonnet-4` | Claude Sonnet 4 |
 | `anthropic/claude-opus-4` | Claude Opus 4 |
 | `google/gemini-2.5-pro` | Gemini 2.5 Pro |
 
-Usage: `opencode --model openai/gpt-5.4`
-
+Usage: `omp --model openai-codex/gpt-5.6-luna --thinking high`
 ---
 
 ## Pitfalls & Gotchas
 
-1. **`pane run` doesn't always submit in opencode TUI**
-   - opencode's TUI treats `pane run` pasted text differently than a raw shell
+1. **`pane run` may paste without submitting in agent panes**
+   - Some agent CLIs treat `pane run` pasted text differently than a raw shell
    - Always follow with `herdr pane send-keys PANE_ID Enter` to guarantee submission
 
-2. **Cannot `wait output --match ">"` for opencode**
-   - opencode has a rich TUI — no simple shell prompt
-   - Use `sleep 5` after launching instead
-
-3. **Pane IDs change when tabs close**
+2. **Pane IDs change when tabs close**
    - Always re-read pane IDs from `herdr pane list` — don't hardcode them
    - IDs compact when other panes/tabs are closed
 
-4. **Agent status lifecycle**
+3. **Agent status lifecycle**
    - `idle` → agent is alive, waiting for input
    - `working` → agent is processing a task
    - `done` → agent finished, results ready to read
    - `blocked` → agent needs user input (waiting for you)
 
-5. **`--no-focus` is critical**
+4. **`--no-focus` is critical**
    - Without it, focus jumps to the new pane and your terminal gets disrupted
    - Always pass `--no-focus` when splitting from your active pane
 
-6. **Queries with special characters**
+5. **Queries with special characters**
    - Use single-quoted heredocs or escaped strings for multi-line queries
    - Avoid unescaped `$`, backticks, and quotes in inline strings
 
----
+6. **Readiness wait pattern varies by agent**
+   - For `omp` and other TUI agents, use `sleep 10` after launch (Luna 5.6 may need extra initialization)
+   - For non-interactive CLIs, use `herdr wait output PANE_ID --match "ready" --timeout 30000`
 
 ## Example: Complete Working Automation
 
-This is the exact pattern verified to work:
+This is the exact pattern verified to work with `omp`:
 
 ```bash
 CURRENT_PANE="w65299eff6919fc-1"  # from herdr pane list
@@ -210,19 +204,19 @@ CURRENT_PANE="w65299eff6919fc-1"  # from herdr pane list
 NEW_PANE=$(herdr pane split "$CURRENT_PANE" --direction right --no-focus | \
   python3 -c 'import sys,json; print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')
 
-# Step 2: Launch
-herdr pane run "$NEW_PANE" "opencode --model openai/gpt-5.4"
+# Step 2: Launch omp with Luna 5.6 at high thinking
+herdr pane run "$NEW_PANE" "omp --model openai-codex/gpt-5.6-luna --thinking high"
 
-# Step 3: Wait for TUI
-sleep 5
+# Step 3: Wait for the interactive OMP UI to initialize
+sleep 10
 
-# Step 4: Send query + force submit
+# Step 4: Send query + submit
 herdr pane run "$NEW_PANE" "Read the latest handoff in the plan server for this project and critique it. Modify the plan file if needed."
 herdr pane send-keys "$NEW_PANE" Enter
 
-# Step 5: Wait
-herdr wait agent-status "$NEW_PANE" --status done --timeout 300000
+# Step 5: Wait for completion (10 min timeout for high-thinking Luna)
+herdr wait agent-status "$NEW_PANE" --status done --timeout 600000
 
-# Step 6: Read
-herdr pane read "$NEW_PANE" --source recent --lines 100
+# Step 6: Read results
+herdr pane read "$NEW_PANE" --source recent --lines 200
 ```
