@@ -55,7 +55,7 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 | Prototype | `prototype` | Throwaway code answering a design question | In-repo |
 | Plan | `to-plan` | Phased implementation plan | Plan server |
 | Wayfinder | `wayfinder` | Investigation ticket map for huge/foggy efforts | GitHub Issues |
-| Issues | `to-issues` | Tracer-bullet issues with blocking edges | GitHub Issues |
+58:| Issues | `to-issues` | Tracer-bullet issues with blocking edges | Local issue drafts + YAML manifest |
 | Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
 | TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
 | Review | `code-review` / `review` | Code review report | Plan server |

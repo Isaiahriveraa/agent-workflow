@@ -23,3 +23,5 @@ config/
 .omo/
 .opencode/
 .pi/
+.herdr/state.yaml
+.herdr/reports/

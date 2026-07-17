@@ -27,10 +27,10 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
 15. **Keep the repository clean** — Remove dead code, stale comments, abandoned scaffolding, and artifacts exposed by the change without expanding scope.
 16. **Refactor safely** — Preserve observable behavior with tests and small reversible steps; do not mix unrelated features into refactors.
 17. **Prefer evidence over confidence** — Never claim success when a relevant test, command, or runtime check can verify it.
-18. **Fail clearly** — Report uncertainty, failed checks, incomplete work, and known risks directly.
-19. **Use authoritative sources** — Check official documentation for unfamiliar or changing APIs before implementation.
+18. **Fail clearly** — Report uncertainty, failed checks, incomplete work, and known risks directly. 19. **Use authoritative sources** — Check official documentation for unfamiliar or changing APIs before implementation.
 20. **Never bypass correctness** — No unsafe casts, ignored type errors, empty catches, or equivalent suppression.
 21. **Escalate prolonged blockers** — After sustained investigation, use Oracle or ask with concrete options and evidence.
+22. **Be extremely concise** — When reporting to the user, sacrifice grammar for concision. Shortest path from facts to understanding.
 
 ## Human in the Loop
 
@@ -100,7 +100,10 @@ Invoke matching skills with `skill(name="skill-name")`.
 | Requirements | `deep-interview` |
 | Plan stress-testing | `grill-with-docs`, `ping-pong` |
 | Explanations | `explain` |
-| Git/PRs | `pr-workflow`, `commit` |
+| Git/PRs | `pr-workflow` /pr /pr-split /pr-stack, `commit` |
+| Parallel issue-driven development, agents, worktrees, orchestration | `parallel-dev` |
+| Planning | `to-plan`, `explore`, `discover` |
+| Issue decomposition, publication | `to-issues` |
 | Herdr panes | `herdr` |
 | Session handoff | `handoff` via `/ch` |
 
