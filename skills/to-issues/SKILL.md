@@ -1,163 +1,171 @@
 ---
 name: to-issues
-description: Convert an approved plan, spec, issue, or conversation into concise GitHub Issues for human engineers and coding agents, with verified codebase context, one implementation issue per PR, explicit dependencies, and optional Mermaid diagrams.
-disable-model-invocation: true
+description: Convert a validated implementation plan into focused, human-readable Markdown issue drafts plus a machine-readable YAML execution manifest for Herdr, with verified decomposition, dependency graph, and self-validation.
 ---
 
 # To Issues
 
-Convert an approved plan, specification, GitHub issue, or conversation into a small graph of **self-contained, implementation-ready GitHub Issues**.
+Convert a validated implementation plan into **local issue drafts + execution manifest** for human approval and downstream execution by Herdr.
 
-The issues serve two equal audiences:
+The workflow is:
 
-- A human engineer who should understand the issue in roughly 30 seconds.
-- A fresh coding-agent session that needs enough verified context to implement it safely.
+```text
+to-plan → validated technical implementation plan
+→ to-issues → local issue drafts + execution manifest
+→ human approval → to-issues publishes approved issues → Herdr launches workers
+```
 
-Optimize for **load-bearing context**, not maximum detail. Include information only when it affects scope, correctness, coordination, or verification.
+to-issues owns issue decomposition, issue-writing quality, and approved‑issue publication. It does not assign, branch, or execute.
+
+## Four mandatory outputs
+
+Every invocation produces exactly four outputs:
+
+1. **Markdown issue drafts** — one per issue, written to `local://` URIs or the plan server.
+2. **YAML execution manifest** — `version: 1` schema, complete dependency graph, ownership data.
+3. **Mermaid dependency and parallelism graph** — showing waves, foundation work, parallel branches, and integration.
+4. **Decomposition analysis** — explaining boundary choices, parallelism, ownership collisions, and scope confidence.
+
+The YAML manifest is the machine-readable source of truth. The Markdown is the human explanation. Before finishing, verify both representations agree.
 
 ## Hard contracts
 
 ### Issue-to-PR contract
 
 - Every **implementation issue** MUST produce exactly one focused PR.
-- A PR MUST resolve one implementation issue only.
-- A **parent issue** is a tracking container and requires no PR.
-- A parent closes when all implementation sub-issues close.
-- If work cannot fit into one reviewable PR, split it automatically before presenting the draft.
-- Do not split one coherent change merely because it touches multiple files or layers.
+- One PR MUST NOT resolve multiple issues.
+- A PR for a non-terminal issue MUST NOT close the source branch.
 
 ### Boundary contract
 
 Prefer a narrow, complete vertical slice through every required layer.
 
-Create a separate foundation issue only when later issues cannot safely start or be verified without a shared prerequisite, such as a contract, migration, fixture, public interface, compatibility layer, or required setup.
-
-Foundation issues MUST stay limited to the prerequisite. They MUST NOT absorb feature behavior.
+Create a separate shared/foundation issue only when later issues cannot safely start or be verified without a shared prerequisite (a contract, migration, fixture, public interface, compatibility layer, or required setup). Foundation issues MUST stay limited to the prerequisite. They MUST NOT absorb feature behavior.
 
 ### Context contract
 
 Every implementation issue must explain:
 
 1. What changes and why.
-2. The exact behavior owned by this PR.
-3. What is in and out of scope.
-4. What proves completion.
-5. Which verified systems, interfaces, or constraints matter.
-6. Which issues genuinely block or are blocked by it.
+2. The boundary owned by this PR.
+3. What observable behavior or system state proves completion.
+4. How to verify.
+5. Explicit dependencies and ownership.
 
 Do not require the assignee to know this skill, the original chat, or plan-server conventions.
 
 ### Authority contract
 
-- The approved plan or specification is the authority for **intended behavior**.
-- The codebase is the authority for **current implementation reality**.
-- Codebase inspection may refine issue boundaries but MUST NOT silently change product intent.
-- When the source and codebase conflict, mark it `Needs decision` and explain the impact.
+The validated implementation plan is the authority for **intended behavior**.
 
-### Approval contract
+The inspected codebase is the authority for **current behavior**, **existing structure**, and **implementable paths**.
 
-Draft and present the complete issue graph first. Do not publish or modify GitHub Issues until the user approves it.
+Never invent paths, commands, interfaces, or dependencies.
 
-## Resolve the repository
+### Publish-after-approval contract
 
-Use this order:
+This skill produces local output until the human approves the issue set. After approval:
 
-1. First argument in `owner/repo` form.
-2. `git remote get-url origin` from the current working directory.
-3. Ask for `owner/repo` before publishing if neither works.
+- Publish approved GitHub issues.
+- Record returned issue numbers and URLs for the execution manifest.
 
-Drafting may continue without a resolved repository when enough source context exists.
+This skill must not:
+
+- Publish GitHub issues before human approval.
+- Assign GitHub users automatically.
+- Create branches or worktrees.
+- Launch Herdr or OMP agents.
+- Create pull requests.
+- Implement code.
+
+Publication, branching, worktree creation, and agent launch all happen after human approval, ordered by this sequence.
+
+### Dependency contract
+
+- Every dependency MUST explain why it exists.
+- Differentiate: **hard dependency** (cannot start safely), **integration dependency** (can start but cannot verify), **no dependency** (fully parallel).
+- The dependency graph MUST be acyclic.
 
 ## Gather the source
 
 Prefer the most concrete source available:
 
-1. `to-plan` artifact or plan-server URL
-2. Folder-bundle plan
-3. GitHub issue number or URL
-4. Specification or requirements document
-5. Current conversation
+1. `to-plan` artifact or plan-server URL.
+2. A validated specification or FRD.
+3. A conversation or brief with confirmed decisions.
 
-For a plan artifact:
+For a plan artifact: read the full file. For a plan-server plan: read the root MDX and every concern file referenced in it.
 
-- Read the full file.
-- For a bundle, read `index.mdx` and every linked concern file in numeric order.
-- Treat explicit goals, scope, dependencies, risks, verification, and definition of done as authoritative.
-- Preserve the source path or URL for traceability.
-- Local artifacts are not required reading; each issue must remain self-contained.
+## Inspect the relevant codebase
 
-For a GitHub issue:
+Codebase inspection is mandatory before decomposition. Inspect the smallest relevant area deeply enough to verify:
 
-```bash
-gh issue view <number> --repo <owner/repo> --comments
-```
-
-Do not modify or close the original specification issue unless explicitly requested.
-
-## Required workflow
-
-### 1. Build a concise feature brief
-
-Extract only:
-
-- Current state
-- Target state
-- Why the feature matters
-- Locked decisions and invariants
-- In scope / out of scope
-- Known risks and unresolved decisions
-- Expected verification
-
-Do not copy the entire source.
-
-### 2. Inspect the relevant codebase
-
-Codebase inspection is mandatory before decomposition.
-
-Inspect the smallest relevant area deeply enough to verify:
-
-- Current behavior and data flow
-- Existing domain vocabulary and architecture
-- Relevant modules, routes, schemas, interfaces, components, jobs, and workflows
-- Existing tests, fixtures, and focused commands
-- ADRs and scoped agent instructions
-- Shared files or contracts that create coordination risk
-- Existing functionality that changes or eliminates proposed work
+- Current behavior and data flow.
+- Existing types, interfaces, schemas, and entry points.
+- File and module boundaries.
+- Tightly coupled modules.
+- Existing tests and test infrastructure.
+- Known ownership patterns.
 
 Read callers and consumers before treating a symbol as a stable boundary.
 
 Classify findings as:
 
 - **Required** — locked by the approved source.
-- **Verified context** — confirmed in the repository and useful to implementation.
-- **Guidance** — optional direction the assignee may change.
-- **Needs decision** — unresolved conflict or product choice.
+- **Implied** — necessary for correctness or verification but not stated.
+- **Discretionary** — assignable design decisions.
+- **Conflicting** — the plan asserts something the codebase contradicts; flag for human resolution.
 
-Never invent paths, commands, interfaces, or dependencies.
+## Build a concise feature brief
 
-### 3. Decompose into two issue types
+Extract only:
 
-#### Parent tracking issue
+- Current state (one to two sentences).
+- Target behavior (two to three sentences).
+- Key design constraints.
+- Which plan sections map to which subsystems.
 
-Create a parent only when two or more implementation issues share one larger outcome.
+Do not copy the entire source.
 
-A parent:
+## Decompose into issues
 
-- Explains the complete feature outcome.
-- Shows the issue map.
-- Tracks child completion.
-- Owns no implementation and requires no PR.
+### One issue = one focused PR
 
-#### Implementation issue
+Each issue must represent one coherent, independently understandable outcome.
 
-An implementation issue:
+Apply this test:
 
-- Owns one coherent, independently verifiable outcome.
-- Fits in one fresh coding-agent context and one focused review.
-- Produces exactly one PR.
-- Stands alone without the parent or siblings.
+> Could a reviewer understand, verify, approve, or reject this PR without needing unrelated changes from another PR?
 
-### 4. Apply the automatic split test
+Do not optimize for the largest number of issues or active agents.
+
+### Prefer behavior-complete boundaries
+
+Avoid splitting exclusively by implementation layer when each resulting PR would be incomplete.
+
+**Bad:**
+
+```text
+Issue 1: Add table
+Issue 2: Add repository method
+Issue 3: Add service method
+Issue 4: Add endpoint
+```
+
+**Better when reasonably scoped:**
+
+```text
+Issue 1: Persist device registration end-to-end
+  - approved schema change
+  - repository behavior
+  - service behavior
+  - endpoint behavior
+  - focused tests
+```
+
+Do not force a vertical slice when it creates an oversized PR, unsafe ownership overlap, or an unreviewable change. Use reviewer clarity and separation of responsibility as the deciding criteria.
+
+### Apply the automatic split test
 
 Split proposed work when any of these are true:
 
@@ -168,7 +176,7 @@ Split proposed work when any of these are true:
 - It combines a shared foundation with feature behavior.
 - Safe review would require multiple PRs.
 
-Do not split by file count or technical layer alone. A vertical slice may include schema, backend, UI, and tests when all are required for one observable behavior.
+Do not split by file count or technical layer alone.
 
 For wide mechanical refactors, use expand-contract:
 
@@ -178,82 +186,252 @@ For wide mechanical refactors, use expand-contract:
 
 Each batch is one implementation issue with explicit blockers.
 
-### 5. Build the issue graph
+### Protect file and module ownership
 
-A blocking edge exists only when an issue cannot safely start or cannot be verified until another issue closes.
+For every issue, identify:
 
-Do not use blockers for preferred order, convenience, or parent-child grouping.
+- Likely files.
+- Likely directories.
+- Tightly coupled modules.
+- Shared contracts.
+- Possible ownership collisions.
+
+Two issues that likely modify the same file or tightly coupled module MUST NOT be marked as concurrently executable unless the overlap is explicitly justified.
+
+Resolve overlap by:
+
+- Changing issue boundaries.
+- Creating a dependency.
+- Identifying an upstream contract issue.
+- Marking the conflict for human review.
+
+### Make dependencies explicit
 
 Record for every issue:
 
-- Parent or children
-- Blocked by
-- Blocks
-- Status: `parallel-ready`, `blocked`, `coordination needed`, or `needs decision`
+- `Depends on` — issue keys it blocks on.
+- `Blocks` — issue keys it gates.
+- `Blocks` — issue keys it gates.
+- Dependency reason — why the dependency exists.
+- Dependency type — `hard`, `integration`, or `none`.
 
-When multiple issues or non-trivial dependencies exist, include a concise Mermaid graph in the draft.
+### Build the issue graph
 
-### 6. Write layered issue bodies
+A blocking edge exists only when an issue cannot safely start or cannot be verified until another issue closes. Do not use blockers for preferred order, convenience, or parent-child grouping.
 
-Order implementation issues for progressive reading:
+The dependency graph MUST be acyclic.
 
-1. **Summary and PR boundary**
-2. **Feature context and outcome**
-3. **Scope and acceptance criteria**
-4. **Implementation context and coordination**
-5. **Verification and relationships**
+## Write issue drafts
 
-#### Acceptance criteria
+Use the required template below. Every issue must contain enough context for a coworker to understand what the agent is doing without copying the entire implementation plan.
 
-Acceptance criteria MUST describe observable outcomes and required invariants.
+### Issue draft template
 
-Do not use coding activities as the primary criteria:
+```markdown
+# <Focused outcome title>
+
+## Why
+<Problem, user/developer impact, and why this work is needed>
+
+## Target behavior
+<Observable behavior that must exist after completion>
+
+## Scope
+- <Responsibility owned by this issue>
+
+## Out of scope
+- <Responsibility explicitly owned elsewhere or intentionally excluded>
+
+## Acceptance criteria
+- [ ] <Binary, observable criterion>
+
+## Verification
+- `<exact or repository-appropriate command>`
+- <manual verification only when automation is unsuitable>
+
+## Dependencies
+- Depends on: <issue key or none>
+- Blocks: <issue key or none>
+- Dependency reason: <why>
+
+## Plan reference
+- <Relevant plan path and sections>
+
+## Likely ownership
+- Files/modules: <likely paths>
+- Shared contracts: <contracts>
+- Collision risk: <risk or none>
+
+## Parallel execution notes
+<What can safely happen concurrently and what cannot>
+```
+
+Omit optional subsections instead of filling them with low-value prose. Keep dependency fields explicit even when the value is `None`.
+
+### Acceptance criteria
+
+Acceptance criteria MUST describe observable outcomes and required invariants. Do not use coding activities as the primary criteria:
 
 - Create a component
 - Add an endpoint
 - Update the schema
 - Write tests
 
-Place those under implementation context when useful.
+Place those under Scope when useful. Every criterion must be binary enough for a reviewer to mark pass or fail.
 
-Every criterion must be binary enough for a reviewer to mark pass or fail.
-
-#### Implementation guidance
-
-Give the assignee a map, not turn-by-turn directions.
-
-Include:
-
-- Verified modules, systems, interfaces, and tests likely involved
-- Contracts and conventions that must be preserved
-- Known edge cases and coordination risks
-- Required ordering only when compatibility or parallel work demands it
-
-Do not prescribe internal design or implementation sequence unless the source locked it or correctness requires it. Clearly label optional suggestions as guidance.
-
-#### Verification
+### Verification
 
 Use the strongest verified proof available:
 
-1. Exact repository commands
-2. Integration or manual scenarios with expected results
-3. Relevant existing CI checks
+1. Exact repository commands.
+2. Integration or manual scenarios with expected results.
+3. Relevant existing CI checks.
 
 Include exact commands only when verified. Never invent scripts or test names. State the expected result, not merely `run tests`.
 
-### 7. Use Mermaid only when it compresses complexity
+## YAML execution manifest
 
-Include one concise Mermaid diagram when it explains behavior, architecture, state transitions, system interaction, or dependency placement better than prose.
+Produce one fenced YAML block using this minimum schema:
 
-Do not include a diagram when it merely repeats the scope.
+```yaml
+version: 1
+source_plan:
+  path: <plan path>
+  revision: <hash, timestamp, or identifier>
+issues:
+  - key: <stable-local-key>
+    title: <focused title>
+    why: <concise reason>
+    target_behavior:
+      - <observable behavior>
+    scope:
+      - <owned responsibility>
+    out_of_scope:
+      - <explicit exclusion>
+    acceptance_criteria:
+      - <binary criterion>
+    verification:
+      - <command or verification method>
+    dependencies:
+      - <issue key>
+    dependency_reason: <reason or none>
+    blocks:
+      - <issue key>
+    parallel_group: <wave/group identifier>
+    likely_paths:
+      - <path>
+    owned_modules:
+      - <module or subsystem>
+    shared_contracts:
+      - <contract or none>
+    collision_risks:
+      - <issue key and explanation>
+    human_owner: pending
+    execution_mode: pending
+```
 
-A diagram must:
+Rules:
 
-- Highlight the boundary owned by this PR.
-- Show only issue-relevant nodes and edges.
-- Distinguish current and new behavior when useful.
-- Use GitHub-compatible Mermaid syntax.
-- Remain understandable without the source plan.
+- `key` values MUST be unique and stable (e.g. `ISSUE-1`, `ISSUE-2`).
+- Every dependency MUST reference an existing key.
+- `dependencies` and `blocks` MUST be mutually consistent.
+- The dependency graph MUST contain no cycles.
+- `human_owner` and `execution_mode` remain `pending` until human approval.
+- Do not place local worktree paths, branches, pane IDs, or runtime state in this manifest.
+- Do not include implementation detail that belongs only in the plan unless needed to define scope.
+
+## Dependency and parallelism graph
+
+Produce a Mermaid graph showing:
+
+- Dependency direction (top-to-bottom or left-to-right).
+- Execution waves (group nodes reachable in the same wave).
+- Foundation/shared-contract work.
+- Safely parallel branches (same wave, no cross-edges).
+- Final integration work.
+
+Use subgraph blocks to show waves. The graph MUST match the YAML manifest exactly — every issue key, every dependency edge, every wave boundary.
+
+```mermaid
+flowchart LR
+  subgraph Wave1[Wave 1: Foundation]
+    ISSUE-1[ISSUE-1: Shared contract]
+  end
+  subgraph Wave2[Wave 2: Parallel]
+    ISSUE-2[ISSUE-2: Feature A]
+    ISSUE-3[ISSUE-3: Feature B]
+  end
+  subgraph Wave3[Wave 3: Integration]
+    ISSUE-4[ISSUE-4: Wire together]
+  end
+  ISSUE-1 --> ISSUE-2
+  ISSUE-1 --> ISSUE-3
+  ISSUE-2 --> ISSUE-4
+  ISSUE-3 --> ISSUE-4
+```
+
+## Decomposition analysis
+
+Before the drafts, produce a concise analysis covering:
+
+- **Boundary rationale** — why each issue boundary was chosen.
+- **Parallel execution** — which issues can run concurrently and why.
+- **Sequencing** — which issues must wait and what they depend on.
+- **Ownership collisions** — likely path/module collisions, whether resolved or flagged.
+- **Scope confidence** — whether any issue is close to exceeding one-PR scope.
+- **Ambiguity** — any ambiguity requiring human judgment.
+
+Do not expose hidden reasoning. Provide concise conclusions and evidence.
+
+## Self-validation
+
+Before returning output, verify every item below. If validation fails, correct the output before returning. If the plan itself is insufficient (not implementation-ready, missing architecture), return it to `to-plan` with exact deficiencies rather than inventing missing architecture.
+
+### Validation checklist
+
+- [ ] The source plan is implementation-ready (concrete enough for an agent to execute).
+- [ ] Every issue maps to plan content.
+- [ ] Every issue fits one focused PR.
+- [ ] Acceptance criteria are observable and binary.
+- [ ] Verification is concrete (exact commands or named scenarios).
+- [ ] Issue keys are unique.
+- [ ] All dependency references exist (no dangling keys).
+- [ ] The dependency graph is acyclic.
+- [ ] `dependencies` and `blocks` are mutually consistent.
+- [ ] Markdown and YAML agree on issue count, keys, dependencies, and waves.
+- [ ] Parallel groups respect dependencies (no issue in a group depends on another in the same group).
+- [ ] Ownership collisions are surfaced in both Markdown and YAML.
+- [ ] No GitHub issue publication or execution occurred.
+
+## Verification scenarios
+
+Test or simulate at least these three scenarios before finishing.
+
+### Scenario 1: Parallel feature
+
+A plan with one shared contract, two independent downstream implementations, and one final integration issue.
+
+Expected result:
+- Correct dependency graph.
+- Two issues in the same parallel wave.
+- No overlapping file ownership.
+- Final issue blocked until both dependencies complete.
+
+### Scenario 2: Overlapping files
+
+A plan where two proposed issues modify the same central file.
+
+Expected result:
+- Issues are restructured, sequenced, or collision risk is explicitly surfaced.
+- They are NOT marked safe for concurrent execution without justification.
+
+### Scenario 3: Small sequential change
+
+Expected result:
+- One focused issue.
+- No artificial splitting.
+- Valid one-node graph (single issue, no dependencies).
+- Clear verification.
 
 ## Context budget
 
@@ -267,219 +445,31 @@ To prevent bloated issues:
 - Avoid large code snippets. Include only decision-rich contracts, schemas, state machines, or type shapes that prose cannot express precisely.
 - Remove any sentence that does not affect scope, correctness, coordination, or proof.
 
-## Draft review format
+## Draft review and output format
 
-Before publishing, present:
+Before finalizing, present:
 
 1. A two-to-four sentence feature summary.
-2. Issue count and parent-child structure.
-3. A Mermaid issue graph when helpful.
-4. Any `Needs decision` conflicts.
-5. One compact card per draft issue containing:
-   - Draft ID and title
-   - Type: parent or implementation
-   - One-sentence PR boundary
-   - What it delivers
-   - In scope / out of scope
-   - Blocked by / blocks
-   - Parent / children
-   - Parallel status and coordination risk
-   - Why this is the correct granularity
+2. Issue count and structure.
+3. The Mermaid dependency and parallelism graph.
+4. The YAML execution manifest.
+5. The decomposition analysis.
+6. Any ambiguity requiring human judgment.
 
-Ask for approval of the complete graph. Accept requested merges, splits, renamed boundaries, or dependency changes. Do not publish until approved.
+Then write the complete output:
 
-## Parent issue template
+1. Markdown drafts to `local://` URIs (one per issue) or inline fenced blocks.
+2. YAML manifest as a fenced block.
+3. Mermaid graph as a fenced block.
+4. Decomposition analysis as prose.
 
-```markdown
-## Summary
-
-<Complete feature outcome and why it matters.>
-
-## Scope
-
-### In scope
-- <Feature-level behavior>
-
-### Out of scope
-- <Nearby behavior excluded>
-
-## Issue map
-
-<Optional Mermaid diagram showing children and genuine dependency edges.>
-
-## Implementation issues
-
-- `#<issue-number>` — <coherent outcome>
+Ask for approval of the complete issue set. Accept requested merges, splits, renamed boundaries, or dependency changes. Do not advance to Herdr execution until approved.
 
 ## Done when
 
-- [ ] Every implementation issue is closed.
-- [ ] The integrated feature behavior is verified.
-- [ ] No `Needs decision` item remains.
-
-## Source
-
-- Source: `<URL or local path for traceability>`
-- Original section: `<heading or concern file>`
-
-> Tracking issue only. No implementation PR is required.
-```
-
-## Implementation issue template
-
-```markdown
-## Summary
-
-<What changes, why it matters, and the exact boundary owned by this PR.>
-
-## Feature context
-
-<Concise larger-feature summary. State what this issue owns and what belongs to sibling issues.>
-
-## Outcome
-
-<Independently verifiable behavior or system state delivered by this PR.>
-
-## Behavior flow
-
-<Optional Mermaid diagram only when it reduces ambiguity.>
-
-## Scope
-
-### In scope
-- <Specific behavior or system boundary>
-
-### Out of scope
-- <Nearby behavior excluded or assigned elsewhere>
-
-## Acceptance criteria
-
-- [ ] <Observable pass/fail outcome>
-- [ ] <Required invariant or compatibility condition>
-- [ ] <Relevant edge-case behavior>
-
-## Implementation context
-
-### Verified relevant areas
-- `<confirmed module, path, route, schema, interface, or workflow>` — <why it matters>
-
-### Required constraints
-- <Locked decision, contract, convention, or compatibility rule>
-
-### Guidance
-- <Optional direction, or `None — assignee owns the internal design`.>
-
-### Coordination risks
-- <Shared files, interfaces, merge order, or `None known`.>
-
-## Verification
-
-- [ ] Run `<verified command>` and confirm `<expected result>`.
-- [ ] Perform `<scenario>` and confirm `<observable result>`.
-
-## Relationships
-
-- Parent: `#<issue-number>` or `None — top-level implementation issue`
-- Blocked by: `#<issue-number> — <gating reason>` or `None — parallel-ready`
-- Blocks: `#<issue-number> — <reason>` or `None known`
-
-## Delivery contract
-
-- One implementation issue = one PR.
-- Use a dedicated branch and sibling worktree; never share a worktree with another issue.
-- The PR must reference and resolve this issue only.
-- Post verification evidence before closure.
-
-## Source
-
-- Source: `<URL or local path for traceability>`
-- Original section: `<heading or concern file>`
-```
-
-Omit optional subsections instead of filling them with low-value prose. Keep relationship fields explicit even when the value is `None`.
-
-## Publish after approval
-
-### 1. Reuse existing labels
-
-```bash
-gh label list --repo <owner/repo> --limit 200
-```
-
-Use existing semantic matches only. Prefer one work-type label, one readiness label, and an existing domain label when useful. Do not create labels unless explicitly requested. Publish without labels when no good match exists.
-
-### 2. Create issues
-
-Create parent issues first, then implementation issues in dependency order.
-
-```bash
-gh issue create \
-  --repo "<owner/repo>" \
-  --title "<issue title>" \
-  --body-file "<body-file>"
-```
-
-Capture each issue number, URL, and node ID.
-
-### 3. Create parent-child relationships
-
-```bash
-PARENT_ID=$(gh issue view <parent-number> --repo "<owner/repo>" --json id --jq .id)
-CHILD_ID=$(gh issue view <child-number> --repo "<owner/repo>" --json id --jq .id)
-
-gh api graphql -f query='
-mutation {
-  addSubIssue(input: {
-    issueId: "'"$PARENT_ID"'"
-    subIssueId: "'"$CHILD_ID"'"
-    replaceParent: true
-  }) { subIssue { id } }
-}'
-```
-
-### 4. Create native blocked-by relationships
-
-```bash
-BLOCKED_ID=$(gh issue view <blocked-number> --repo "<owner/repo>" --json id --jq .id)
-BLOCKING_ID=$(gh issue view <blocking-number> --repo "<owner/repo>" --json id --jq .id)
-
-gh api graphql -f query='
-mutation {
-  addBlockedBy(input: {
-    issueId: "'"$BLOCKED_ID"'"
-    blockingIssueId: "'"$BLOCKING_ID"'"
-  }) { clientMutationId }
-}'
-```
-
-`issueId` is blocked by `blockingIssueId`.
-
-### 5. Replace draft references
-
-After all issues exist, replace draft IDs with real issue numbers:
-
-```bash
-gh issue edit <number> \
-  --repo "<owner/repo>" \
-  --body-file "<updated-body-file>"
-```
-
-Do not claim native relationships unless the GraphQL mutations succeeded.
-
-## Final quality check
-
-Before reporting completion, verify:
-
-- Every implementation issue maps to one coherent PR.
-- Parent issues own no implementation work.
-- Every issue stands alone without the original conversation.
-- Every codebase reference and command is verified.
-- Acceptance criteria describe outcomes or invariants.
-- Verification states observable proof.
-- Mermaid diagrams exist only where they improve understanding.
-- Every dependency is genuinely blocking.
-- Claimed parent-child and blocked-by relationships exist in GitHub.
-- Issue bodies use real issue numbers, not draft IDs.
-- No original specification issue was modified without permission.
-
-Return issue URLs grouped by execution wave, parallel-ready issues, blocked issues and their blockers, created native relationships, and unresolved `Needs decision` items.
+- Humans can read each issue and understand exactly what work is being claimed.
+- Herdr can consume the YAML manifest without inferring dependencies or ownership.
+- Issue boundaries create small, focused, reviewable PRs.
+- Parallelism is safe rather than merely aggressive.
+- Markdown and YAML are guaranteed to match.
+- No GitHub issue is published before human approval.
