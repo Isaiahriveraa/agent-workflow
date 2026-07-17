@@ -161,19 +161,38 @@ Add service coverage first to lock the domain behavior, followed by route covera
 * **Verification:** Run `pnpm test packages/api/src/routes/invoices.test.ts`, then `pnpm typecheck`.
 * **Done when:** The archived regression passes, no persistence occurs, and all existing invoice route tests remain green.
 
-## Execution Map
+## Dependency and Parallel Execution
+
+```mermaid
+graph TD
+    A[Task 1: Archived-customer domain guard] --> B[Task 2: API error mapping]
+    B --> C[Task 3: Route-level regression tests]
+```
+
+This is a fully sequential change. Each task depends on the preceding task's output.
+
+| Work area | Responsibility | Likely paths/modules | Depends on | Can run with | Verification gate |
+|---|---|---|---|---|---|
+| Domain guard | Reject archived customers in `InvoiceService.createInvoice` | `packages/core/src/invoices/invoice-service.ts`, `packages/core/src/invoices/errors.ts` | None (defines the error contract) | — | `InvoiceService.createInvoice` returns domain error for archived customer |
+| API error mapping | Translate domain error to HTTP 409 | `packages/api/src/routes/invoices.ts`, existing error mapper | Domain guard error contract | — | Route returns 409 for archived customer |
+| Route regression tests | Verify end-to-end rejection and no persistence | `packages/api/src/routes/invoices.test.ts`, per-test fixture factory | API error mapping | — | Archived regression passes, no invoice persisted |
 
 ### Sequential
 
-1. Task 1 establishes the domain error and service behavior.
-2. Task 2 depends on that error type for API translation.
-3. Task 3 verifies the complete route-to-service behavior.
+All work is sequential. Task 1 defines the domain error and service behavior. Task 2 depends on that error type for API translation. Task 3 verifies the complete route-to-service behavior.
 
-### Parallelizable
+### Parallel
 
-No implementation tasks should run in parallel because Tasks 1 and 2 define contracts consumed by Task 3.
+No implementation tasks should run in parallel because each defines contracts consumed by the next.
 
-Test-fixture preparation for Task 3 may begin separately only if it does not edit the same service or error-mapping files.
+Test-fixture preparation for Task 3 may begin during Task 2 only if it avoids editing the same service or error-mapping files.
+
+### Shared Contracts
+
+| Contract | Defined in | Consumed by | Must be ready before | Compatibility verification |
+|---|---|---|---|---|
+| `CustomerArchivedError` type and error propagation | Task 1: `packages/core/src/invoices/errors.ts` | Task 2: API error mapper | Task 2 starts | Typecheck + service test |
+| API 409 response envelope | Task 2: error mapper | Task 3: route tests | Task 3 starts | API integration test |
 
 ## Testing and Verification
 

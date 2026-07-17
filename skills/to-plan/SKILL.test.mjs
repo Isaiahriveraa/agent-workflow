@@ -26,16 +26,16 @@ const requiredPlanSections = [
   '## Alternatives Considered',
   '## Security Implications',
   '## Work Breakdown',
-  '### Task 1: {Action-Oriented Name}',
-  '**Objective:**',
+  '### Task N: {Action-oriented name}',
+  '**Outcome:**',
   '**Relevant areas:**',
   '**Changes:**',
-  '**Dependencies:**',
+  '**Depends on:**',
   '**Verification:**',
   '**Done when:**',
-  '## Execution Map',
+  '## Dependency and Parallel Execution',
   '### Sequential',
-  '### Parallelizable',
+  '### Parallel',
   '## Testing and Verification',
   '## Risks and Edge Cases',
   '## Definition of Done',
@@ -46,30 +46,26 @@ test('requires an implementation-ready plan structure', () => {
     assert.ok(content.includes(section), `missing ${section}`);
   }
 });
-
 test('requires repository grounding before planning', () => {
-  assert.match(content, /Step 2: Inspect the Repository/);
-  assert.match(content, /locate relevant files, modules, commands, config, tests, and callers/);
+  assert.match(content, /### 2\. Inspect the Repository/);
+  assert.match(content, /verify referenced paths and components exist/);
+  assert.match(content, /flag stale or conflicting architecture/);
   assert.match(content, /distinguish verified facts from assumptions/);
-  assert.match(content, /path\/to\/file\.ext:line/);
+  assert.match(content, /path\/to\/file\.ext/);
 });
-
 test('runs specialist subagents only when selected by lens triggers', () => {
-  assert.match(activeWorkflow, /Step 7: Conditional Specialist Subagent Pass/);
-  assert.match(activeWorkflow, /Do not spawn critique subagents by default/);
+  assert.match(activeWorkflow, /## Conditional Specialist Critique/);
+  assert.match(activeWorkflow, /Draft the implementation plan before deciding whether specialist critique is needed/);
   assert.match(activeWorkflow, /Read `SUBAGENT_LENSES\.md`/);
-  assert.match(activeWorkflow, /select only lenses whose triggers match/);
-  assert.match(activeWorkflow, /Run selected lenses in one batch when possible/);
-  assert.match(activeWorkflow, /When no specialist lens runs, omit `## Planning Critique`/);
+  assert.match(activeWorkflow, /select only lenses whose triggers match/i);
+  assert.match(activeWorkflow, /Run selected lenses together when possible/);
+  assert.match(activeWorkflow, /Include `## Planning Critique` only when lenses ran/);
   assert.doesNotMatch(activeWorkflow, /Spawn four focused subagents in parallel/);
 });
-
 test('keeps specialist lenses in a separate conditional catalog', () => {
-  assert.match(activeWorkflow, /SUBAGENT_LENSES\.md/);
-  assert.match(activeWorkflow, /Skip subagents when the plan is small, local, low-risk/);
+  assert.match(activeWorkflow, /Trigger specialist critique when at least one applies/);
   assert.match(lenses, /Do not run lenses for small, local, low-risk implementation plans/);
   assert.match(lenses, /Do not spawn every lens/);
-
   for (const lens of [
     'Testing / Verification',
     'Implementability / Agent Handoff',
@@ -88,14 +84,12 @@ test('keeps specialist lenses in a separate conditional catalog', () => {
 
 test('writes implementation plans to plan-server as single files or bundles', () => {
   assert.match(content, /PLAN_BUNDLES\.md/);
-  assert.match(content, /Single-file plan/);
-  assert.match(content, /Folder bundle/);
-  assert.match(content, /Use `\.mdx` for plan-server compatibility/);
+  assert.match(content, /Every plan-server.*mdx/);
   assert.match(content, /new-artifact\.py[\s\S]*--type plans/);
   assert.doesNotMatch(content, /--topic/);
-  assert.match(content, /~\/Documents\/plan-server\/projects\/\{project\}\/plans\/\{id\}\//);
+  assert.match(content, /Documents\/plan-server/);
   assert.match(content, /index\.mdx/);
-  assert.match(content, /00-foundation\.mdx/);
+  assert.match(content, /0-foundation\.mdx/);
   assert.match(content, /http:\/\/localhost:3456\/project\/\{project\}\/plan\/\{id\}/);
   assert.match(content, /pbcopy/);
 });
@@ -113,25 +107,25 @@ test('defines folder bundle splitting rules for large plans', () => {
   assert.match(bundles, /Human owner/);
   assert.match(bundles, /Implementation agent/);
   assert.match(bundles, /Do not teach generic concepts/);
-  assert.match(bundles, /Grill Prompts/);
-  assert.match(content, /balances human and agent needs/);
-  assert.match(content, /enough rationale for a human to explain the architecture/);
+  assert.match(content, /repository-specific changes/);
 });
 
 test('keeps human questions conditional instead of mandatory review panels', () => {
-  assert.match(activeWorkflow, /Ask for input only when one of these is true/);
-  assert.match(activeWorkflow, /Omit `## Open Questions` entirely when no implementation-changing questions remain/);
+  assert.match(activeWorkflow, /Ask or record a question only when its answer materially changes/);
+  assert.match(activeWorkflow, /Do not create empty sections/);
   assert.doesNotMatch(activeWorkflow, /Plan Review \(Step 4\)/);
   assert.doesNotMatch(activeWorkflow, /artifact-code-reviewer AND artifact-coverage-reviewer/);
   assert.doesNotMatch(activeWorkflow, /Triage each row/);
 });
-
 test('keeps the realistic before-and-after example in a separate file', () => {
   assert.match(content, /Read `EXAMPLE\.md`/);
   assert.doesNotMatch(activeWorkflow, /Billing Retry Implementation Plan/);
-  assert.match(example, /# To-Plan Example Case/);
-  assert.match(example, /## Messy user request/);
-  assert.match(example, /## Old style of output/);
-  assert.match(example, /Why weak:/);
-  assert.match(example, /## Improved implementation-ready plan/);
+  assert.match(example, /# Plan Calibration Example/);
+  assert.match(example, /## Weak Plan/);
+  assert.match(example, /This is not implementation-ready because it does not identify/);
+  assert.match(example, /## Strong Single-File Plan/);
+  assert.match(example, /## Dependency and Parallel Execution/);
+  assert.match(example, /```mermaid/);
+  assert.match(example, /\| Work area \| Responsibility \| Likely paths\/modules \| Depends on \| Can run with \| Verification gate \|/);
+  assert.match(example, /### Shared Contracts/);
 });

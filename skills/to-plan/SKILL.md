@@ -88,8 +88,10 @@ Before planning repository work:
 * locate relevant files, modules, symbols, callers, configurations, tests, and commands;
 * read representative implementation and test files;
 * inspect references before changing exported symbols or public contracts;
+* verify referenced paths and components exist before referencing them in the plan;
 * identify existing architecture, naming, error-handling, and testing conventions;
-* distinguish verified facts from assumptions.
+* flag stale or conflicting architecture that may affect the implementation;
+* distinguish verified facts from assumptions — mark unverifiable claims explicitly.
 
 Use concrete references:
 
@@ -139,12 +141,53 @@ Avoid vague work such as:
 
 Replace it with repository-specific changes, affected symbols, expected behavior, and exact verification.
 
-### 5. Map Execution
+### 5. Map Parallel and Sequential Execution
 
-Classify the planned work where relevant:
+Identify implementation work areas based on technical dependencies, file overlap, and shared contracts. The output of this step feeds directly into `to-issues` for issue decomposition.
+
+#### Dependency and Parallel Execution
+
+Every plan must contain a `## Dependency and Parallel Execution` section. This section is mandatory for every plan, even when all work is sequential.
+
+Include a Mermaid `graph TD` showing implementation ordering. Use square-bracket nodes with task names and arrows for dependencies:
+
+```mermaid
+graph TD
+    A[Foundation: shared contracts] --> B[Work area 1]
+    A --> C[Work area 2]
+    B --> D[Integration]
+    C --> D
+```
+
+Do not fabricate parallelism. A small one-file change may have a single sequential node.
+
+#### Execution-Boundary Table
+
+Include a table with the following columns:
+
+| Work area | Responsibility | Likely paths/modules | Depends on | Can run with | Verification gate |
+|---|---|---|---|---|---|
+
+The table describes technical work areas, not final issue boundaries. `to-issues` remains responsible for determining issue boundaries.
+
+#### Shared Contracts
+
+When multiple work areas depend on the same interface, schema, type, protocol, or behavior, identify:
+
+* the canonical contract;
+* where it is defined;
+* which work consumes it;
+* when it must be completed;
+* how compatibility will be verified.
+
+Workers must not be forced to guess an interface independently.
+
+#### Execution Classification
+
+Classify each work area as:
 
 * **Sequential** — requires an earlier task or contract.
-* **Parallelizable** — can be completed independently without shared-file or interface conflicts.
+* **Parallel** — can be completed independently without shared-file or interface conflicts.
 * **Blocked** — requires an unresolved implementation-changing decision.
 * **Optional** — useful but unnecessary for the target state.
 
@@ -152,6 +195,10 @@ Name:
 
 * shared-file conflicts;
 * schema or public-interface dependencies;
+* integration and merge order;
+* likely file or tightly coupled module overlap;
+* risks caused by parallel execution;
+* verification required before downstream work begins;
 * fixture and test dependencies;
 * branch or PR boundaries;
 * work that is safe to run in separate worktrees or agents.
@@ -166,12 +213,22 @@ Every plan must contain:
 * `## Current State`
 * `## Target State`
 * `## Scope`
+* `### In Scope`
+* `### Out of Scope`
 * `## Locked Decisions`
 * `## Implementation Strategy`
 * `## Work Breakdown`
-* `## Execution Map`
+* `## Dependency and Parallel Execution`
 * `## Testing and Verification`
 * `## Definition of Done`
+
+`## Dependency and Parallel Execution` must contain:
+
+* a Mermaid `graph TD` showing implementation ordering (a single sequential node is fine);
+* an execution-boundary table with work area, responsibility, likely paths/modules, dependencies, parallel compatibility, and verification gate columns;
+* shared contracts identification when multiple work areas share interfaces, schemas, types, protocols, or behavior;
+* execution classification under `### Sequential`, `### Parallel`, and conditionally `### Blocked` and `### Optional` with file conflicts, merge order, and overlap risks.
+
 
 Add these only when they change implementation or execution:
 
@@ -181,8 +238,8 @@ Add these only when they change implementation or execution:
 * `## Security Implications`
 * `## Risks and Edge Cases`
 * `## Open Questions`
-* `### Blocked`
-* `### Optional`
+* `### Blocked work`
+* `### Optional work`
 
 Do not create empty sections, generic review prompts, decorative MDX, or repeated summaries.
 
@@ -390,9 +447,12 @@ Before finishing, confirm:
 * each task has dependencies, verification, and a binary completion condition;
 * sequencing reflects actual technical dependencies;
 * parallel tasks do not hide shared-file or interface conflicts;
+* the Mermaid dependency graph reflects real technical dependencies — do not fabricate parallelism;
+* the execution-boundary table has all required columns with verified paths;
+* shared contracts are identified when multiple work areas share interfaces, schemas, or behavior;
+* execution waves, merge order, and file-conflict risks are named;
 * open questions materially affect implementation;
-* specialist findings were integrated instead of appended as generic commentary;
-* the plan contains no repeated background, empty sections, or broad best-practice filler;
+* sequential dependencies strictly follow the execution graph;
 * the artifact was written successfully;
 * the review URL was tested;
 * the correct path was copied to the clipboard.
@@ -408,9 +468,11 @@ Implementation plan written:
 - File: `{absolute path}`
 - URL: `{verified URL or attempted URL with exact failure}`
 - Tasks: {N}
-- Sequential: {summary or none}
-- Parallelizable: {summary or none}
+- Sequential work areas: {summary or none}
+- Parallel work areas: {summary or none}
 - Blocked: {summary or none}
+- Shared contracts: {count or none}
+- Execution waves: {N}
 - Open questions: {count or none}
 
 Copied to clipboard: `{absolute path}`
@@ -420,15 +482,14 @@ For a bundle, return:
 
 ```text
 Implementation plan bundle written:
-- Folder: `{absolute bundle path}`
-- Index: `{absolute bundle path}/index.mdx`
 - URL: `{verified URL or attempted URL with exact failure}`
 - Concerns: {N}
 - Dependency order: {short chain}
-- Parallelizable: {summary or none}
+- Parallel work areas: {summary or none}
 - Blocked: {summary or none}
+- Shared contracts: {count or none}
+- Execution waves: {N}
 - Open questions: {count or none}
-
 Copied to clipboard: `{absolute bundle path}`
 ```
 
