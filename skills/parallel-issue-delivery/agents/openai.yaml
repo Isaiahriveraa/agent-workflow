@@ -1,0 +1,4 @@
+interface:
+  display_name: "Parallel Issue Delivery"
+  short_description: "Parallelize scoped issues into reviewed PRs"
+  default_prompt: "Use $parallel-issue-delivery to split approved issues into isolated worktrees and deliver reviewed draft PRs."

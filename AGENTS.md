@@ -79,7 +79,7 @@ Invoke matching skills with `skill(name="skill-name")`.
 | Domain | Skill(s) |
 |---|---|
 | Delegation/context enforcement | `spawn`, `enforce` |
-| Frontend UI/UX | `ui-ux-pro-max`, `frontend-design` |
+| Frontend UI/UX | `impeccable`, `ui-ux-pro-max`, `frontend-design` |
 | Architecture/refactoring | `improve-codebase-architecture` |
 | Prototyping | `prototype` |
 | Debugging | `diagnose` |
@@ -91,6 +91,7 @@ Invoke matching skills with `skill(name="skill-name")`.
 | Performance | `performance` |
 | Next.js | `next-best-practices` |
 | Supabase/PostgreSQL | `supabase-postgres-best-practices` |
+| Issue discovery, decision issues, ambiguous-product exploration | `issue-discovery` |
 | Requirements | `deep-interview` |
 | Plan stress-testing | `grill-with-docs`, `ping-pong` |
 | Explanations | `explain` |
