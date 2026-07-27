@@ -22,26 +22,35 @@ After the user answers each question:
 
 2. **If a term was resolved** or an ADR criterion was met, use `/domain-modeling` to capture it. It handles glossary updates and ADR creation on the plan server with the right format and location.
 
-3. **Log the Q&A pair** to the plan server for the project. Infer the project from `git rev-parse --show-toplevel`:
+3. **Log the Q&A pair** to the plan server. The script auto-detects the project:
    ```bash
    python3 ~/.agents/scripts/new-artifact.py \
      --dest "$HOME/Documents/plan-server" \
-     --project "$(basename $(git rev-parse --show-toplevel 2>/dev/null || echo 'general'))" \
      --type grill \
      --topic "<session topic>"
    ```
+   The script auto-detects the project from the git repo or GitHub parent folder.
    Fill in the generated file with the Q&A transcript.
 
 Do NOT batch these writes. Write immediately after each question-answer round.
 
 ## Location convention
 
-All artifacts land on the plan server:
+### Plans, grill, glossary
+Land on the plan server:
 
 ```
 ~/Documents/plan-server/projects/{project}/
 ├── glossary/glossary.md       ← domain glossary (via domain-modeling)
-├── adr/NNNN-slug.md           ← ADRs (via domain-modeling)
 ├── grill/                     ← Q&A transcripts
 └── plans/                     ← plan artifacts (modified in-place)
 ```
+
+### ADRs
+Land in the **project repo** so agents working in the repo see them as context:
+
+```
+{git-root}/docs/adr/NNNN-slug.md
+```
+
+A symlink from plan-server's `projects/{project}/adr/` points to `{git-root}/docs/adr/` so the plan-server UI also discovers them.

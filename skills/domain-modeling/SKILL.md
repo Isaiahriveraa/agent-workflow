@@ -9,14 +9,23 @@ Actively build and sharpen the project's domain model as you design. This is the
 
 ## Storage
 
-All domain artifacts belong to the **plan server** under the project matching the git repo name:
+### Glossary
+Glossary entries belong to the **plan server** under the project matching the git repo name:
 
 ```
 ~/Documents/plan-server/projects/{project}/
 ├── glossary/glossary.md       ← domain glossary
-├── adr/0001-slug.md           ← Architecture Decision Records
 └── ...
 ```
+
+### ADRs (Architecture Decision Records)
+ADRs belong to the **project repo** (not plan-server) so agents working in the repo see them as context:
+
+```
+{git-root}/docs/adr/NNNN-slug.md
+```
+
+A symlink from plan-server's `projects/{project}/adr/` points to `{git-root}/docs/adr/` so the plan-server UI also discovers them.
 
 Create files lazily — only when you have something to write. Use the helper script:
 
@@ -24,7 +33,7 @@ Create files lazily — only when you have something to write. Use the helper sc
 # Create a glossary entry
 python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type glossary --topic "<term>"
 
-# Create an ADR
+# Create an ADR (writes to {git-root}/docs/adr/NNNN-slug.md, symlinks from plan-server)
 python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type adr --topic "<decision title>"
 ```
 
@@ -53,6 +62,33 @@ When a term is resolved, update the plan server glossary right there. Don't batc
 The glossary should be totally devoid of implementation details. Do not treat it as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 
 ### Offer ADRs sparingly
+
+Only offer to create an ADR when all three are true:
+1. **Hard to reverse** — the cost of changing your mind later is meaningful
+2. **Surprising without context** — a future reader will wonder "why did they do it this way?"
+3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
+
+If any of the three is missing, skip the ADR.
+
+### Create ADRs with simple names
+
+- **Filename**: `NNNN-short-description.md` — max 3-4 words, kebab-case
+- **Title**: Plain readable title (no `ADR-NNNN:` prefix in frontmatter)
+- **H1**: `# ADR-NNNN: Short readable title`
+- **Content**: Status, Context, Decision, Consequences
+
+### Update existing ADRs when decisions change
+
+Before creating a new ADR, scan the project's `docs/adr/` directory:
+
+1. Does any existing ADR cover the same decision? If so, **update it in-place** instead of creating a duplicate.
+2. Does the new decision **contradict or supersede** an existing ADR? If so:
+   - Set the **old ADR's status** to `Superseded by ADR-NNNN`
+   - Add a note in the old ADR's Consequences section
+   - Add a "Supersedes ADR-NNNN" reference in the new ADR's Context section
+3. **Don't delete ADRs** — superseded decisions are valuable historical context.
+
+This keeps the ADR set accurate without losing history.
 
 Only offer to create an ADR when all three are true:
 

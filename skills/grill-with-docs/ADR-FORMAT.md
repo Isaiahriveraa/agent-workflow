@@ -1,15 +1,15 @@
-ADRs are written to the plan server project directory:
-`~/Documents/plan-server/projects/{project}/adr/`
+ADRs are written to the **project repo** (not plan-server) so agents working in the repo see them as context:
+
+`{git-root}/docs/adr/NNNN-slug.md`
+
+A symlink from plan-server's `projects/{project}/adr/` points to `{git-root}/docs/adr/` so the plan-server UI also discovers them.
 
 Create them with the helper script:
 ```bash
-python3 ~/.agents/scripts/new-artifact.py --project <project> --type adr --topic "<decision title>"
+python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type adr --topic "<decision title>"
 ```
 
-Scan the directory for the highest existing number and increment by one.
-
-## When to offer an ADR
-Create the directory lazily — only when the first ADR is needed.
+The script auto-detects the git repo root and writes to `{git-root}/docs/adr/`. If no git repo is found, it falls back to plan-server.
 
 ## Template
 
@@ -31,7 +31,15 @@ Only include these when they add genuine value. Most ADRs won't need them.
 
 ## Numbering
 
-Scan the plan server `adr/` directory for the highest existing number and increment by one.
+Scan the project repo's `docs/adr/` directory for the highest existing number and increment by one.
+
+## Updating existing ADRs
+
+Before creating a new ADR, scan `docs/adr/` for existing ADRs covering the same ground:
+
+1. **Same decision changed?** Update the existing ADR in-place (context, decision, consequences).
+2. **New decision supersedes old?** Set old ADR's status to `Superseded by ADR-NNNN`, reference it in the new ADR.
+3. **Don't delete or duplicate.** Superseded ADRs preserve history.
 
 ## When to offer an ADR
 

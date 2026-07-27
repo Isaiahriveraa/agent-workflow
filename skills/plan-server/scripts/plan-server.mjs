@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync, spawn } from 'node:child_process'
-import { existsSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, join } from 'node:path'
+import { existsSync, mkdirSync, openSync, readFileSync, writeFileSync, readdirSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HOME = process.env.HOME || process.env.USERPROFILE
