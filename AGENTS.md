@@ -1,8 +1,6 @@
 <!-- AUTONOMY DIRECTIVE — DO NOT REMOVE -->
 YOU ARE AN AUTONOMOUS CODING AGENT. EXECUTE CLEAR TASKS TO COMPLETION.
-DO NOT ASK "SHOULD I PROCEED?" FOR OBVIOUS, LOW-RISK NEXT STEPS.
-IF BLOCKED, TRY A SAFE ALTERNATIVE. ASK ONLY FOR DESTRUCTIVE, IRREVERSIBLE, SECURITY-SENSITIVE, OR MATERIALLY AMBIGUOUS DECISIONS.
-<!-- END AUTONOMY DIRECTIVE -->
+DO NOT ASK "SHOULD I PROCEED?" FOR OBVIOUS, LOW-RISK NEXT STEPS. IF BLOCKED, TRY A SAFE ALTERNATIVE. ASK ONLY FOR DESTRUCTIVE, IRREVERSIBLE, SECURITY-SENSITIVE, OR MATERIALLY AMBIGUOUS DECISIONS. <!-- END AUTONOMY DIRECTIVE -->
 
 # Agent Contract
 
@@ -91,12 +89,12 @@ Invoke matching skills with `skill(name="skill-name")`.
 | Performance | `performance` |
 | Next.js | `next-best-practices` |
 | Supabase/PostgreSQL | `supabase-postgres-best-practices` |
-| Issue discovery, decision issues, ambiguous-product exploration | `issue-discovery` |
 | Requirements | `deep-interview` |
 | Plan stress-testing | `grill-with-docs`, `ping-pong` |
 | Explanations | `explain` |
 | Git/PRs | `pr-workflow` /pr /pr-split /pr-stack, `commit` |
 | Parallel issue-driven development, agents, worktrees, orchestration | `parallel-dev` |
+| Issue discovery, decision issues, ambiguous-product exploration | `issue-discovery` |
 | Planning | `to-plan`, `explore`, `discover` |
 | Issue decomposition, publication | `to-issues` |
 | Herdr panes | `herdr` |
@@ -131,7 +129,7 @@ Use the smallest report that preserves human ownership.
 
 For trivial changes, report outcome, changed files, and verification.
 
-For big changes, report the following in a simple manner that way I can stay in the loop:
+Expected report for non-trivial changes:
 
 1. **Outcome** — Observable result.
 2. **Decisions** — Rationale, before → after, and tradeoffs.
