@@ -191,7 +191,7 @@ function buildMdx({ prompt, title, project, tags, status, questions }) {
     content: `---
 title: ${yamlString(title)}
 status: ${status}
-created: ${now.date}
+created: ${now.iso}
 project: ${yamlString(project)}
 tags: ${yamlList(tags.length ? tags : ['plan'])}
 repo: ${yamlString(ctx.repo)}

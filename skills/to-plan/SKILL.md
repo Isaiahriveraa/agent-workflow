@@ -373,7 +373,7 @@ Every plan-server `.mdx` artifact must use:
 ---
 title: "Implementation Plan: {Concise Name}"
 status: ready
-created: {YYYY-MM-DD from metadata}
+created: {full ISO timestamp from metadata}
 project: "{project inferred from generated path}"
 tags: [plan, implementation, {domain-tags}]
 repo: "{repo from git-context.mjs}"
@@ -381,7 +381,7 @@ author: "{author from git-context.mjs}"
 branch: "{branch from git-context.mjs}"
 commit: "{commit from git-context.mjs}"
 summary: "{one-sentence implementation outcome}"
-last_updated: {date or full ISO timestamp}
+last_updated: {full ISO timestamp from metadata}
 last_updated_by: "{author from git-context.mjs}"
 type: plan
 parent: "{source artifact or parent plan path, when applicable}"

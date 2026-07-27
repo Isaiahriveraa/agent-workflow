@@ -123,7 +123,7 @@ Supported statuses:
 draft, review, approved, in-progress, complete
 ```
 
-Supported custom components:
+Supported custom components (Note: `<FileTree>` is now natively parsed in both `.md` handoffs and `.mdx` plans):
 
 ```mdx
 <Steps>

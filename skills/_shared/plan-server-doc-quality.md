@@ -611,3 +611,4 @@ validate:                   draft → complete
 8. **No filler.** Every paragraph carries signal. No "As previously mentioned," "It is worth noting that," or "In conclusion."
 9. **One document type per file.** Don't mix handoff content into a research doc.
 10. **Compress, don't truncate.** A 300-line document that covers every aspect is better than a 50-line summary that omits details. Use file:line references to compress but not truncate.
+11. **Use `<FileTree>` for directories.** Whenever visualizing file and directory structures, you MUST use the `<FileTree>` component block instead of standard markdown code blocks, backticks, or lists.
