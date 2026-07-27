@@ -12,6 +12,7 @@ plan:
   validation: passed
 capacity:
   max_active_workers: 3
+  workers_per_space: 3
   max_prs_awaiting_human_review: 2
 monitoring:
   stall_threshold_minutes: 10
@@ -55,6 +56,7 @@ repository: <repository>
 base_branch: <branch>
 capacity:
   max_active_workers: 3
+  workers_per_space: 3
   max_prs_awaiting_human_review: 2
 issues:
   - key: session-contract
@@ -127,6 +129,12 @@ issues:
     review_cycle: 0
 ownership_locks:
   src/session/types.rs: session-contract
+  workspaces:
+    - workspace_id: <opaque-id>
+      label: workers-1
+      worker_count: 0
+      max_workers: 3
+      root_pane_id: <pane-id>
 ```
 
 ## Worker context packet

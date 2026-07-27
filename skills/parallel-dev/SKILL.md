@@ -153,6 +153,15 @@ Default project state layout:
 
 Ensure `.herdr/state.yaml` and `.herdr/reports/` are ignored.
 
+### Workspace capacity plan
+
+Include `workers_per_space` in the approval packet's capacity block (default 3).
+During initialization, plan the workspace layout: for N approved `herdr-agent` issues,
+calculate the required workspace count: `ceil(N / workers_per_space)`.
+Each workspace gets a numeric label (`workers-1`, `workers-2`, ...) and `--cwd` set to
+the repository root. Record each workspace in `.herdr/state.yaml` under the
+`workspaces` key with its capacity.
+
 ## Phase 5 — Runtime delegation
 
 Before creating, inspecting, messaging, waiting on, restarting, or removing any Herdr resource:
@@ -163,6 +172,24 @@ Before creating, inspecting, messaging, waiting on, restarting, or removing any 
 4. Never reconstruct or guess Herdr commands or identifiers.
 
 Each worker receives a scoped context packet containing only its issue, relevant plan sections, locked architecture decisions, ownership boundaries, merged dependencies, acceptance criteria, verification commands, Git permissions, reporting contract, and stop conditions.
+
+### Workspace-aware worker allocation
+
+Before spawning a worker, determine its workspace:
+
+1. List existing workspaces via `herdr workspace list`.
+2. Filter to workspaces whose label matches `workers-N` (parallel-dev worker spaces).
+3. Find the first workspace with fewer than `workers_per_space` workers assigned to it
+   in `.herdr/state.yaml`.
+4. If none exists, create a new workspace:
+   - `herdr workspace create --cwd <repo-root> --label "workers-<N>"`
+   - Parse and record the returned `workspace_id` and `root_pane` from the JSON response.
+5. Assign this issue to the selected workspace.
+6. Use the workspace's root pane for the first worker, or split a new pane from it for
+   subsequent workers.
+7. Record `workspace_id` and `pane_id` in the issue's `herdr_resources`.
+
+Workers never create or manage workspaces. The commander owns workspace lifecycle.
 
 ## Phase 6 — Supervision and evidence
 
@@ -216,6 +243,25 @@ A worker is reviewable only after it:
 - states remaining risks
 
 Unsupported claims such as “should pass” or “appears complete” are rejected.
+
+### Cross-workspace supervision
+
+Workers may be distributed across multiple herdr workspaces. The commander
+supervises all workers regardless of workspace:
+
+- **Global pane addressing**: Pane IDs returned by herdr are globally unique
+  (`<workspace_id>-<pane_id>`). All `herdr pane read`, `herdr pane run`,
+  `herdr pane send-keys`, and `herdr wait` operations work across workspaces
+  using these global IDs.
+- **Workspace discovery**: Run `herdr workspace list` and cross-reference with
+  `.herdr/state.yaml` to enumerate active workspaces and their worker counts.
+- **Cross-workspace messaging**: All inter-worker communication routes through
+  the commander. When a dependency merges in one workspace, the commander
+  notifies the dependent worker in its workspace. Workers never directly message
+  workers in other workspaces.
+- **Cleanup**: After all workers in a workspace complete, close the workspace:
+  `herdr workspace close <workspace_id>` — but only after verifying all work
+  in that workspace is fully collected and no panes have pending output.
 
 ## Phase 7 — Independent review
 

@@ -53,7 +53,7 @@ The official `herdr` skill is the only authority for:
 
 - checking whether the agent is inside Herdr
 - discovering current workspaces, panes, agents, and worktrees
-- creating/removing worktrees and panes
+- creating/removing worktrees, workspaces, and panes
 - starting or resuming OMP
 - sending input and reading output
 - waiting for state transitions
@@ -64,6 +64,19 @@ Before any such operation, invoke `skill(name="herdr")` and follow its current i
 
 Do not embed a copied Herdr CLI manual here. The installed skill and binary can evolve.
 
+
+### Workspace management
+
+For parallel-dev execution, workspaces isolate worker groups. Create one workspace
+per worker batch (up to `workers_per_space` per workspace) and label it `workers-N`:
+
+- `herdr workspace create --cwd <repo-root> --label "workers-1"` — returns
+  `workspace`, `tab`, and `root_pane` IDs in JSON.
+- The `root_pane` is the first terminal in the workspace. Use it for the first worker,
+  then split new panes from it for subsequent workers.
+- List all workspaces: `herdr workspace list`.
+- Close a workspace: `herdr workspace close <workspace_id>`.
+- Workspace lifecycle belongs to the commander, never to individual workers.
 ## GitHub
 
 GitHub is the team-facing work ledger.

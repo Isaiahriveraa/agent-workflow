@@ -130,15 +130,37 @@ Workers never negotiate ownership changes privately.
 
 ## 7. Launch workers
 
+### Workspace allocation
+
+Before launching each worker, determine which workspace it belongs to:
+
+1. List existing workspaces: `herdr workspace list`.
+2. Identify worker workspaces (label matches `workers-N`).
+3. Find one whose assigned worker count (tracked in `.herdr/state.yaml` workspaces
+   entries) is below `workers_per_space`.
+4. If none, create a new workspace:
+   - `herdr workspace create --cwd <repo-root> --label "workers-<N>"`
+   - Parse and record the returned `workspace_id` and `root_pane` from JSON.
+5. Assign this issue to the selected workspace.
+6. Record the workspace assignment: increment the workspace's `worker_count` in
+   `.herdr/state.yaml`.
+
+### Worker launch sequence
+
 For each ready `herdr-agent` issue:
 
 1. Invoke the official `herdr` skill.
 2. Create one branch and isolated worktree from the approved base.
-3. Start one OMP worker without stealing focus.
-4. Record authoritative resource identifiers and session metadata.
-5. Wait for readiness using the official skill.
-6. Send the scoped worker context packet.
-7. Mark the issue active and update the GitHub milestone state.
+3. Identify the workspace pane for this worker:
+   - First issue in a workspace: use the workspace's `root_pane` directly.
+   - Subsequent issues: split a new pane from `root_pane`:
+     `herdr pane split <root_pane> --direction right --no-focus`.
+4. Start one OMP worker in the allocated pane, without stealing focus.
+5. Record authoritative resource identifiers (workspace_id, pane_id, worktree_path)
+   and session metadata in `.herdr/state.yaml` under the issue's `herdr_resources`.
+6. Wait for readiness using the official skill.
+7. Send the scoped worker context packet.
+8. Mark the issue active and update the GitHub milestone state.
 
 ## 8. Supervise active workers
 
@@ -172,6 +194,21 @@ When no event-driven completion signal exists (e.g., OMP agent-status wait is un
 4. If no change across consecutive checks exceeding the threshold, apply stall handling.
 
 Do not tight-loop poll. Each check must produce new information or confirm no change.
+
+### Cross-workspace supervision
+
+Workers may span multiple workspaces. The commander accesses any pane using its
+global pane ID (`<workspace_id>-<pane_id>`) — all herdr operations accept it:
+
+- `herdr pane read <global-pane-id>` — read output from any workspace.
+- `herdr pane run <global-pane-id> <command>` — run commands in any workspace.
+- `herdr pane send-keys <global-pane-id> <key>` — send keystrokes to any workspace.
+- `herdr wait agent-status <global-pane-id> --status done` — block on completion
+  regardless of workspace.
+
+Cross-workspace communication always routes through the commander. When a
+dependency worker finishes, the commander messages the dependent worker in its
+own workspace. Workers never message across workspaces directly.
 ## 9. Handle discovered scope
 
 When a worker discovers additional work:
