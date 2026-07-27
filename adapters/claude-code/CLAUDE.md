@@ -54,7 +54,6 @@ When a task matches a domain, invoke the relevant skill via `skill(name="skill-n
 | Task Domain | Skill(s) | Why |
 |---|---|---|
 | Frontend UI/UX, styling, design | `ui-ux-pro-max` + `og-frontend-skill` | High-quality UI generation, 50 styles, component design. `og-frontend-skill` lives at `skills/frontend-design/` |
-| Layout issues, responsive design | `flutter-build-responsive-layout`, `flutter-fix-layout-issues` | Flutter-specific layout debugging |
 | Architecture, refactoring | `improve-codebase-architecture` | Deepening, interface design, language refinement |
 | Prototyping | `prototype` | Throwaway prototypes before committing |
 | Debugging, hard bugs | `diagnose` | Structured reproduce→minimise→fix loop |
@@ -66,7 +65,6 @@ When a task matches a domain, invoke the relevant skill via `skill(name="skill-n
 | Performance | `performance` | Load time, Core Web Vitals, bundling |
 | Node.js backend | `nodejs-backend-patterns` | Express/Fastify, middleware, auth patterns |
 | Next.js | `next-best-practices` | App Router, RSC, caching, metadata |
-| Flutter | `flutter-apply-architecture-best-practices`, `flutter-setup-declarative-routing`, `flutter-add-widget-test`, `flutter-add-integration-test`, `flutter-use-http-package`, `flutter-implement-json-serialization`, `flutter-setup-localization` | Full Flutter stack |
 | Supabase/Postgres | `supabase-postgres-best-practices` | Query optimization, schema design |
 | Requirements gathering | `deep-interview` | Socratic questioning before implementation |
 | Plan stress-testing | `grill-with-docs`, `ping-pong` | Challenge plans against domain model |

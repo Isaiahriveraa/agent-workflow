@@ -97,83 +97,6 @@
       "skillPath": "skills/explore/SKILL.md",
       "skillFolderHash": "b48c3ed1d65cfb175ea7ced000d5416bcff40013"
     },
-    "flutter-add-integration-test": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-add-integration-test/SKILL.md",
-      "skillPath": "skills/flutter-add-integration-test/SKILL.md",
-      "skillFolderHash": "8d81b053c5fdf5b61aa7d0165cbc35e7a9a1c5bd"
-    },
-    "flutter-add-widget-preview": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-add-widget-preview/SKILL.md",
-      "skillPath": "skills/flutter-add-widget-preview/SKILL.md",
-      "skillFolderHash": "88cfeb7084e798714f5ac59cff62e5441759bcbe"
-    },
-    "flutter-add-widget-test": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-add-widget-test/SKILL.md",
-      "skillPath": "skills/flutter-add-widget-test/SKILL.md",
-      "skillFolderHash": "6c449ebd844e331e661b12630b6ad2a218e84d1b"
-    },
-    "flutter-animations": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-animations/SKILL.md",
-      "skillPath": "skills/flutter-animations/SKILL.md",
-      "skillFolderHash": "4eb286279b302262d36b2e0a5b29bb1eb27a960d"
-    },
-    "flutter-apply-architecture-best-practices": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-apply-architecture-best-practices/SKILL.md",
-      "skillPath": "skills/flutter-apply-architecture-best-practices/SKILL.md",
-      "skillFolderHash": "00497869976a903c83f509a59d4b6a501d409fa7"
-    },
-    "flutter-build-responsive-layout": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-build-responsive-layout/SKILL.md",
-      "skillPath": "skills/flutter-build-responsive-layout/SKILL.md",
-      "skillFolderHash": "c7a5d18071c625137cad2def9b13f3579d9bdf0a"
-    },
-    "flutter-fix-layout-issues": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-fix-layout-issues/SKILL.md",
-      "skillPath": "skills/flutter-fix-layout-issues/SKILL.md",
-      "skillFolderHash": "e82c82b4245ef502bd93bc543d4f5968f4ee8043"
-    },
-    "flutter-implement-json-serialization": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-implement-json-serialization/SKILL.md",
-      "skillPath": "skills/flutter-implement-json-serialization/SKILL.md",
-      "skillFolderHash": "05a4478e0a3d119f26ae6e6983da3d5c2ea13476"
-    },
-    "flutter-setup-declarative-routing": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-setup-declarative-routing/SKILL.md",
-      "skillPath": "skills/flutter-setup-declarative-routing/SKILL.md",
-      "skillFolderHash": "3a52fc5663cf37d68b6e096ef3e59f5056a01e91"
-    },
-    "flutter-setup-localization": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-setup-localization/SKILL.md",
-      "skillPath": "skills/flutter-setup-localization/SKILL.md",
-      "skillFolderHash": "dda4ef8b74976a3e51faa43d7ad00f03eab64d6d"
-    },
-    "flutter-use-http-package": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/flutter-use-http-package/SKILL.md",
-      "skillPath": "skills/flutter-use-http-package/SKILL.md",
-      "skillFolderHash": "6d53f8bac039151166fececdc31cbaf2762abe96"
-    },
     "framer-motion-animator": {
       "source": ".agents",
       "sourceType": "hub",
@@ -437,13 +360,6 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/ultrawork/SKILL.md",
       "skillPath": "skills/ultrawork/SKILL.md",
       "skillFolderHash": "1947fd92850267abe4375a7ded45d6acf7da74b2"
-    },
-    "wayfinder": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/wayfinder/SKILL.md",
-      "skillPath": "skills/wayfinder/SKILL.md",
-      "skillFolderHash": "de2db976433f14700aa8508132e216c6596e2407"
     },
     "issue-delivery": {
       "source": ".agents",

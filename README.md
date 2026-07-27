@@ -143,7 +143,6 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `improve-codebase-architecture/` | Codebase deepening |
 | `frontend-design/` | Visual design guidance |
 | `ui-ux-pro-max/` | UI/UX design intelligence |
-| `flutter-animations/` | Flutter motion effects |
 | `framer-motion-animator/` | Framer Motion animations |
 | `shadcn/` | shadcn/ui component management |
 
@@ -192,7 +191,6 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── prompt-master/
 │   ├── frontend-design/
 │   ├── ui-ux-pro-max/
-│   ├── flutter-animations/
 │   ├── framer-motion-animator/
 │   ├── shadcn/
 │   ├── herdr/

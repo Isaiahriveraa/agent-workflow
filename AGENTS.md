@@ -80,7 +80,6 @@ Invoke matching skills with `skill(name="skill-name")`.
 |---|---|
 | Delegation/context enforcement | `spawn`, `enforce` |
 | Frontend UI/UX | `ui-ux-pro-max`, `frontend-design` |
-| Flutter layout | `flutter-build-responsive-layout`, `flutter-fix-layout-issues` |
 | Architecture/refactoring | `improve-codebase-architecture` |
 | Prototyping | `prototype` |
 | Debugging | `diagnose` |
@@ -91,11 +90,6 @@ Invoke matching skills with `skill(name="skill-name")`.
 | Security | `security-review` |
 | Performance | `performance` |
 | Next.js | `next-best-practices` |
-| Flutter architecture | `flutter-apply-architecture-best-practices` |
-| Flutter routing | `flutter-setup-declarative-routing` |
-| Flutter tests | `flutter-add-widget-test`, `flutter-add-integration-test` |
-| Flutter networking/data | `flutter-use-http-package`, `flutter-implement-json-serialization` |
-| Flutter localization | `flutter-setup-localization` |
 | Supabase/PostgreSQL | `supabase-postgres-best-practices` |
 | Requirements | `deep-interview` |
 | Plan stress-testing | `grill-with-docs`, `ping-pong` |
