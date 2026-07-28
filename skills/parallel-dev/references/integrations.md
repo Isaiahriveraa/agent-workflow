@@ -64,7 +64,6 @@ Before any such operation, invoke `skill(name="herdr")` and follow its current i
 
 Do not embed a copied Herdr CLI manual here. The installed skill and binary can evolve.
 
-
 ### Workspace management
 
 For parallel-dev execution, workspaces isolate worker groups. Create one workspace
@@ -77,6 +76,59 @@ per worker batch (up to `workers_per_space` per workspace) and label it `workers
 - List all workspaces: `herdr workspace list`.
 - Close a workspace: `herdr workspace close <workspace_id>`.
 - Workspace lifecycle belongs to the commander, never to individual workers.
+
+### Cross-pane messaging
+
+Workers send STATUS messages to the commander pane using `herdr pane send-text` followed by `herdr pane send-keys Enter`. The commander's pane id is recorded in `.herdr/state.yaml` per worker (`issues.<key>.herdr_resources.commander_pane_id`) and is passed to the worker via the worker context packet.
+
+The commander sends the `VERIFICATION_PASSED` handshake to the worker pane using the same transport after commander verification passes.
+
+Pane IDs are global (`<workspace_id>-<pane_id>`); the same transport works across workspaces. Always re-list pane IDs before sending; they compact when tabs or panes close.
+
+**Send a STATUS line (worker → commander):**
+
+```bash
+COMMANDER_PANE_ID="1-1"  # from .herdr/state.yaml
+herdr pane send-text "$COMMANDER_PANE_ID" "STATUS session-contract IMPLEMENTING - starting sub-agent decomposition"
+herdr pane send-keys "$COMMANDER_PANE_ID" Enter
+```
+
+**Send the VERIFICATION_PASSED handshake (commander → worker):**
+
+```bash
+WORKER_PANE_ID="1-3"            # from .herdr/state.yaml
+VERIFIED_SHA="abc1234"          # from worker STATUS ... READY_FOR_REVIEW
+BASE="main"                     # approved base branch
+BRANCH="issue-142-session-contract"
+TITLE="Define shared session-state contract (#142)"
+herdr pane send-text "$WORKER_PANE_ID" "VERIFICATION_PASSED. Proceed to PR: run skill(pr-workflow) /pr from the implementation worktree at $VERIFIED_SHA, then gh pr create --draft --base $BASE --head $BRANCH --title \"$TITLE\" --body-file <body>, then send STATUS session-contract DRAFT_PR_OPENED <sha> <pr_url> to me."
+herdr pane send-keys "$WORKER_PANE_ID" Enter
+```
+
+**Parse STATUS from the commander's pane output:**
+
+```bash
+herdr pane read "$COMMANDER_PANE_ID" --source recent --lines 200 | \
+  grep -E '^STATUS [a-z0-9-]+ (IMPLEMENTING|BOSS_REVIEW|CHANGES_REQUESTED|COMMITTING|VERIFYING|READY_FOR_REVIEW|DRAFT_PR_OPENED|DONE|BLOCKED) [a-f0-9]+|.+'
+```
+
+The commander never sends a STATUS line for a worker; only the worker emits STATUS for its own issue. The commander forwards parsed STATUS to the user in chat and records the latest phase in `.herdr/state.yaml`.
+
+### OMP spawn recipe
+
+Spawn each worker with the approval-time model and thinking. The model fields come from the approval packet and are persisted in the committed manifest under the `models` block.
+
+```bash
+WORKER_MODEL="openai-codex/gpt-5.6-luna"  # from .herdr/manifest.yaml models.worker_model
+WORKER_THINKING="high"                   # from .herdr/manifest.yaml models.worker_thinking
+herdr pane run "$NEW_PANE" "omp --model $WORKER_MODEL --thinking $WORKER_THINKING"
+sleep 10
+herdr pane run "$NEW_PANE" "<worker context packet including boss protocol and commander_pane_id>"
+herdr pane send-keys "$NEW_PANE" Enter
+```
+
+The commander is the user's current OMP session and uses whatever model that session is configured for. There is no `commander_model` field in the packet.
+
 ## GitHub
 
 GitHub is the team-facing work ledger.
@@ -87,16 +139,17 @@ Publish only approved issues. Use meaningful status labels:
 status:ready
 status:in-progress
 status:blocked
-status:reviewing
 status:human-review
 status:done
 ```
+
+There is no `status:reviewing` label — there is no separate independent reviewer pane. Commander verification happens inside the commander's own session and is reflected via `status:in-progress` until the draft PR is opened.
 
 Add issue comments only for meaningful milestones:
 
 - implementation started
 - blocked by another approved issue
-- independent review started
+- commander verification started
 - draft PR opened
 - human changes requested
 - PR merged
@@ -118,6 +171,8 @@ Use the `gh` CLI for GitHub operations. Prefer single‑purpose commands and par
 | Detect merge | Poll `gh pr view <number> --json merged` — when `merged` is `true`, the merge is confirmed. |
 
 Parse returned JSON with `python3 -c 'import sys,json; print(json.load(sys.stdin)…)'` or the tool's built‑in JSON output. Persist returned numbers and URLs into the committed manifest. Never hardcode issue or PR numbers.
+
+The worker pane owns the `gh pr create --draft` call. The commander never opens a PR.
 
 Do not mirror terminal output or every agent transition in GitHub comments.
 

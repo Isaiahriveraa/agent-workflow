@@ -129,9 +129,9 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/parallel-dev",
       "skillPath": "skills/parallel-dev/SKILL.md",
-      "skillFolderHash": "9cbb1647fb7e8a52ada07b9856b980a1f5889c88",
+      "skillFolderHash": "6591db7e0a447b6e7adcc50e62c9deee22bca718",
       "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
+      "updatedAt": "2026-07-27T00:00:00.000Z"
     },
     "issue-delivery": {
       "source": ".agents",
