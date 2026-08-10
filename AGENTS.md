@@ -10,37 +10,59 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
 
 1. **Read before writing** — Inspect relevant code, callers, tests, configuration, docs, and scoped instructions before editing.
 2. **Define success first** — State the observable outcome and what evidence will prove it.
-3. **Act autonomously** — Make safe, reversible decisions without asking. Escalate only when consequences materially differ.
-4. **Keep changes surgical** — Touch only what the task requires. Match repository conventions.
-5. **Prefer simplicity** — Use the smallest maintainable solution. Avoid speculative abstractions and unused flexibility.
-6. **Design for humans** — Favor explicit names, low coupling, high cohesion, cohesive responsibilities, and clear dependency direction.
-7. **Use abstractions deliberately** — Add interfaces, layers, or patterns only for a real boundary, testing seam, proven variation, or recurring problem.
-8. **Test non-trivial behavior first** — Red → green → refactor. Trivial changes may skip formal TDD.
-9. **Use testing APIs** — Extract repeated setup or internal test access into small helpers so tests describe behavior.
-10. **Invest by feedback speed** — Prefer unit, then focused integration/contract, then minimal end-to-end tests.
-11. **Handle errors explicitly** — Never swallow failures. Preserve useful context with idiomatic error/result types.
-12. **Name by intent** — Use canonical domain language. Avoid vague, clever, verbose, or directory-redundant names.
-13. **Let code explain itself** — Comment only non-obvious rationale, constraints, or invariants; never restate code.
-14. **Document real contracts** — Document public behavior, errors, returns, and invariants only when names, types, tests, and existing docs are insufficient.
+3. **Keep changes surgical** — Touch only what the task requires. Match repository conventions.
+4. **Prefer simplicity** — Use the smallest maintainable solution. Avoid speculative abstractions and unused flexibility.
+5. **Design for humans** — Favor explicit names, low coupling, high cohesion, cohesive responsibilities, and clear dependency direction.
+6. **Use abstractions deliberately** — Add interfaces, layers, or patterns only for a real boundary, testing seam, proven variation, or recurring problem.
+7. **Test observable behavior, not implementation** — Red → green → refactor for non-trivial behavior; trivial changes may skip formal TDD. Assert only outcomes reachable through public interfaces (user-visible output, accessible roles/names/labels, returned values, error results) — never internals such as class names, DOM nesting or element types, private helpers, or internal state. A test must survive harmless refactors (renames, restructures, reimplementations) unchanged; if a behavior test breaks, either the behavior changed or the test over-coupled.
+8. **Use testing APIs** — Extract repeated setup or internal test access into small helpers so tests describe behavior.
+9. **Invest by feedback speed** — Prefer unit, then focused integration/contract, then minimal end-to-end tests.
+10. **Handle errors explicitly** — Never swallow failures. Preserve useful context with idiomatic error/result types.
+11. **Name by intent** — Use canonical domain language. Avoid vague, clever, verbose, or directory-redundant names.
+12. **Let the code explain itself; comment the why only when it can't** — Write code that reads like plain English: names state intent (e.g. `hasThumbnail`, not `ht`), control flow is obvious, no clever compression. Treat comments as the fallback, not the default: add a ≤2-line why/behavior comment only when the code alone can't convey a non-obvious decision (rationale, constraint, invariant, edge-case trap). Never restate what the code does — a comment that paraphrases the next line gets deleted. If a why needs more than two lines, the code needs renaming or restructuring, not a longer comment.
+13. **Document contracts with the block template** — For API endpoints and functions with a non-obvious input/output contract, use this block comment instead of prose. Fill in every applicable field; write `N/A` for the rest:
+
+    ```
+    /*
+    Purpose: <one sentence — what this does and who calls it>
+    Authentication/Authorization Requirements: <None | Logged in | isAdmin, ...>
+
+    Expected Request Information (<r> indicates a required field to include in the call):
+    - Parameters: <N/A or list>
+    - Queries: <N/A or list>
+    - Body: <N/A or list with types>
+
+    Expected Response Information:
+    - return <response shape with types>
+    */
+    ```
+
+    Reserve this template for endpoint/route handlers and contract-bearing functions. Do not wrap ordinary helpers or UI components in it — those use the short inline rule (12).
+14. **Optimize where it runs hot; keep it simple where it doesn't** — Default to the simplest correct solution, but write efficient code by default in hot paths:
+    - **Frontend**: avoid needless re-renders (stable callbacks/memoization where they matter, keyed lists), virtualize or paginate long lists, don't block the main thread (lazy images, deferred work).
+    - **Backend**: no N+1 queries, index-aware, batch where possible, keep payloads minimal.
+    - When unsure, measure: profile before micro-optimizing; in cold paths (setup, config, rarely-run code) readability wins. If you optimize, keep the code English-readable and comment *why* the optimization exists.
 15. **Keep the repository clean** — Remove dead code, stale comments, abandoned scaffolding, and artifacts exposed by the change without expanding scope.
 16. **Refactor safely** — Preserve observable behavior with tests and small reversible steps; do not mix unrelated features into refactors.
 17. **Prefer evidence over confidence** — Never claim success when a relevant test, command, or runtime check can verify it.
-18. **Fail clearly** — Report uncertainty, failed checks, incomplete work, and known risks directly. 19. **Use authoritative sources** — Check official documentation for unfamiliar or changing APIs before implementation.
+18. **Fail clearly** — Report uncertainty, failed checks, incomplete work, and known risks directly.
+19. **Use authoritative sources** — Check official documentation for unfamiliar or changing APIs before implementation.
 20. **Never bypass correctness** — No unsafe casts, ignored type errors, empty catches, or equivalent suppression.
 21. **Escalate prolonged blockers** — After sustained investigation, use Oracle or ask with concrete options and evidence.
 22. **Be extremely concise** — When reporting to the user, sacrifice grammar for concision. Shortest path from facts to understanding.
+23. **Centralize repeated semantic values** — At the second real use, give a repeated implementation value one intention-revealing constant so one edit updates every consumer. Do not unify equal literals with different meanings, and keep test expectations independent from implementation constants.
+24. **Codify repeated steps** — Before re-running a multi-step operation by hand, check `scripts/` and hub commands for an existing helper. When the same operation recurs and no helper exists, offer to script it — to cut agent token spend or give the user a reusable command. Offer, don't build: only create with approval.
+25. **Prove the behavior before planning it** — When planning backend work, start with the smallest implementation that proves the riskiest assumption end-to-end (a spike: swaks send, curl, a 20-line script). Capture the evidence verbatim and build the plan on it; if the proof fails, the plan changes before real code is written. See `learn-plan`.
+26. **Tutor mode: AI-assisted development means explaining, not just writing** — When the user is learning, explain the architecture big-picture first (one-sentence story, then layers, then files), let the user code the backend themselves while the AI explains the why, delegate frontend to specialists, and use DRIVE/DELEGATE vocabulary from `learning-mode`. See `learn-plan`.
+27. **Name worktrees after their branch** — Worktree directory name must match the branch name (`/` → `-`): `feat/merch-page` → `feat-merch-page`, `merge/main-into-dev` → `merge-main-into-dev`. Create worktrees with `~/.agents/scripts/new-worktree.sh <branch> [start-point]` (derives the directory from the branch, initializes submodules); tear them down with `~/.agents/scripts/cleanup-worktree.sh <branch>`. Never invent unrelated directory names like `dev-edit` — the directory must be self-describing from the branch name alone.
 
 ## Human in the Loop
 
 The agent owns execution. The human owns intent, architecture, and acceptance.
 
-- Write code a reviewer can understand once, verify, and extend locally.
-- Keep related behavior together and unrelated dependencies narrow.
-- Prefer boring-explicit code over clever compression.
-- Push proven variation to clear boundaries; avoid growing conditional ladders.
-- Keep tests readable, deterministic, behavior-focused, and maintained with production code.
-- Update established documentation when behavior, APIs, configuration, architecture, or workflows change.
-- Review the final diff as a maintainer and remove accidental complexity before completion.
+- Write code a reviewer can understand once, verify, and extend locally — boring-explicit over clever compression, variation at clear boundaries.
+- Keep related behavior together and dependencies narrow; keep tests readable, deterministic, behavior-focused, and maintained with production code.
+- Update established documentation when behavior, APIs, configuration, architecture, or workflows change; review the final diff as a maintainer and remove accidental complexity before completion.
 
 ## Subagent Strategy
 
@@ -56,20 +78,6 @@ Maximize subagent use for independent implementation work so the main agent pres
 - Fix review findings, rerun verification, and repeat review when remediation is material.
 - The main agent remains accountable for architectural consistency, instruction compliance, integration correctness, and final acceptance.
 
-## Workflow Triggers
-
-| User intent | Workflow |
-|---|---|
-| `plan this`, `let's plan` | Plan — decompose, sequence, assign |
-| `review code`, `code review` | Review — correctness, security, maintainability |
-| `tdd`, `test first` | TDD — red, green, refactor |
-| `fix build`, `type errors` | Build repair — reproduce, diagnose, fix, verify |
-| `security review` | Security audit — threats, dependencies, OWASP |
-| `analyze`, `investigate` | Investigation — reproduce, inspect, isolate root cause |
-| `cancel`, `stop`, `abort` | Stop cleanly and report current state |
-| `spawn`, `decompose`, `parallel tasks` | Spawn — split into parallel sub-agents with full context |
-| `enforce`, `enforce rules` | Enforce — apply hub AGENTS.md rules to project code |
-
 ## Skill Routing
 
 Invoke matching skills with `skill(name="skill-name")`.
@@ -81,7 +89,7 @@ Invoke matching skills with `skill(name="skill-name")`.
 | Architecture/refactoring | `improve-codebase-architecture` |
 | Prototyping | `prototype` |
 | Debugging | `diagnose` |
-| Code review | `code-review`, `code-critique`, `persona-critique` |
+| Code review | `code-review`, `review` |
 | Commits | `commit` |
 | Testing | `tdd` |
 | End-to-end testing | `e2e-testing-patterns` |
@@ -89,13 +97,15 @@ Invoke matching skills with `skill(name="skill-name")`.
 | Performance | `performance` |
 | Next.js | `next-best-practices` |
 | Supabase/PostgreSQL | `supabase-postgres-best-practices` |
-| Requirements | `deep-interview` |
+| Requirements | `discover` |
 | Plan stress-testing | `grill-with-docs`, `ping-pong` |
 | Explanations | `explain` |
-| Git/PRs | `pr-workflow` /pr /pr-split /pr-stack, `commit` |
+| Git/PRs | `pr-workflow`, `commit` |
 | Parallel issue-driven development, agents, worktrees, orchestration | `parallel-dev` |
+| Parallel dev with Herdr CLI inbox coordination and worktrees | `parallel-dev-herdr-cli` |
 | Issue discovery, decision issues, ambiguous-product exploration | `issue-discovery` |
 | Planning | `to-plan`, `explore`, `discover` |
+| Planning for learning / prove-first planning | `learn-plan` |
 | Issue decomposition, publication | `to-issues` |
 | Herdr panes | `herdr` |
 | Session handoff | `handoff` via `/ch` |
@@ -127,16 +137,7 @@ Never report a check as passing unless it was executed and its output inspected.
 
 Use the smallest report that preserves human ownership.
 
-For trivial changes, report outcome, changed files, and verification.
+- **Trivial changes**: outcome, changed files, verification.
+- **Non-trivial changes**: outcome, decisions, architecture (only when it clarifies), contracts, verification, changed files, risks — include only sections that carry information; drop empty ones.
 
-Expected report for non-trivial changes:
-
-1. **Outcome** — Observable result.
-2. **Decisions** — Rationale, before → after, and tradeoffs.
-3. **Architecture** — Static structure and runtime flow; use focused Mermaid diagrams only when useful.
-4. **Contracts** — Added/changed APIs, interfaces, traits, schemas, events, owners, consumers, failures, and tests.
-5. **Rules applied** — Only repository instructions that materially affected implementation.
-6. **Naming** — Only significant names or renames and why they fit the domain.
-7. **Verification** — Command/method, result, and behavior proven.
-8. **Changed files** — Created, modified, moved, and deleted files with purpose.
-9. **Risks** — Assumptions, edge cases, non-goals, and required follow-up.
+Full template and guidance: `~/.agents/references/completion-report.md`.
