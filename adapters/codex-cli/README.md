@@ -12,11 +12,9 @@ This directory documents the Codex CLI-specific integration boundary.
 - MCP: `native`
 - approvals: `native`
 - session continuity: `bridged` through shared continuity helpers and project-local runtime state
-- memory: `bridged-explicit` through the shared `status`, `recall`, and `flush` bridge surfaces
 
 ## Capability Interpretation
 - This profile describes what the hub currently manages for Codex, not every upstream Codex capability.
-- Codex has native MCP and local configuration surfaces upstream; this repo manages the shared `AGENTS.md` entry point, continuity helpers, the shared explicit memory bridge, and the hook scripts registered from `~/.codex/hooks.json`.
 
 ## Deliberately Not Managed
 - `~/.codex/config.toml`
@@ -42,5 +40,3 @@ Before running `codex exec`, the codex skill can call the router to recommend th
 ## Canonical Boundary
 - Shared workflow policy lives in `AGENTS.md` and `commands/`.
 - AGENTS-routing compatibility is bridged through `~/.codex/AGENTS.md -> ~/.agents/AGENTS.md`.
-- Explicit memory bridge parity only: `~/.agents/scripts/memory-sync-bridge.mjs` supports `status`, `recall`, and `flush`.
-- In Codex, use the direct script path: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.

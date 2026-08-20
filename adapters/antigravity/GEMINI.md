@@ -64,7 +64,6 @@ No symlink or generation needed — the CLI finds them via the user-scope alias.
 | MCP | unsupported | Hub does not manage an Antigravity MCP contract yet |
 | Approvals | native | Tool-native permission controls |
 | Session continuity | bridged | Shared continuity helpers write project-local runtime state |
-| Memory | bridged-explicit | `node ~/.agents/scripts/memory-sync-bridge.mjs status|recall|flush` |
 
 ---
 

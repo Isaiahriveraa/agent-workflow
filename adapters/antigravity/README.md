@@ -16,7 +16,6 @@ This directory documents the Antigravity-specific integration boundary.
 - MCP: `unsupported`
 - approvals: `native`
 - session continuity: `bridged` through shared continuity helpers and project-local runtime state
-- memory: `bridged-explicit` through the shared `status`, `recall`, and `flush` parity layer
 
 ## Capability Interpretation
 - This profile describes what the hub bridges for Gemini via the Antigravity adapter, not the full Gemini CLI feature set upstream.
@@ -31,23 +30,13 @@ This directory documents the Antigravity-specific integration boundary.
 - Shared workflow policy stays in the hub.
 - Gemini-native surfaces are symlinked directly when the hub format already matches.
 - This adapter only translates the surfaces whose schema differs from the hub: commands and agents.
-- Explicit memory bridge parity only: `~/.agents/scripts/memory-sync-bridge.mjs` supports `status`, `recall`, and `flush`.
 - Do not mirror `~/.agents/skills` into `~/.gemini/skills`; Gemini already discovers the `.agents` alias and a second copy creates duplicate-skill warnings.
-- Direct script path for memory bridge: `node ~/.agents/scripts/memory-sync-bridge.mjs <status|recall|flush>`.
 
-## Universal Memory Access (agents-memory)
 
-All ZLIs can also access memory via shell wrappers in PATH:
 
-```bash
 # Add to PATH (optional, one-time setup)
-ln -s ~/.agents/bin ~/bin
 
 # Then use from any ZLI
-agents-memory status
-agents-memory recall create-plan --query "planning a feature"
-agents-memory flush
-```
 
 This approach works for any CLI that can execute shell commands, including Gemini.
 

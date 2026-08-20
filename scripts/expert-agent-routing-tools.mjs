@@ -109,7 +109,6 @@ const categoryMatchers = {
     /\bclaude code\b/i,
     /\bopencode\b/i,
     /\bantigravity\b/i,
-    /\bopenclaw\b/i
   ],
   workflow_gating: [
     /\breadiness\b/i,

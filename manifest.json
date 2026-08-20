@@ -79,20 +79,6 @@
     },
 
     {
-      "source": "~/.openclaw/workspace/skills",
-      "target": "~/.agents/skills",
-      "tier": 1,
-      "tool": "openclaw",
-      "type": "directory"
-    },
-    {
-      "source": "~/.openclaw/CLAUDE.md",
-      "target": "~/.agents/AGENTS.md",
-      "tier": 1,
-      "tool": "openclaw",
-      "type": "file"
-    },
-    {
       "source": "~/bin",
       "target": "~/.agents/bin",
       "tier": 1,
@@ -112,21 +98,12 @@
       "tier": 1,
       "tool": "antigravity",
       "type": "directory"
-    },
-    {
-      "source": "~/.pi/agent/skills",
-      "target": "~/.agents/skills",
-      "tier": 1,
-      "tool": "pi",
-      "type": "directory"
     }
   ],
   "not_managed": [
     "~/.claude/settings.json",
     "~/.claude/hooks.json",
     "~/.codex/config.toml",
-    "~/.openclaw/openclaw.json",
-    "~/.openclaw/workspace/IDENTITY.md",
     "~/.codex/skills/.system/"
   ],
   "validated_local_contracts": [
@@ -147,8 +124,7 @@
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
     "antigravity_skills": "Symlinked to ~/.gemini/skills/ and ~/.gemini/antigravity-cli/plugins/hub/skills/ — both point to ~/.agents/skills/.",
-    "pi_skills": "~/.pi/agent/skills -> ~/.agents/skills/ — directory symlink, hub-managed.",
-    "nemoclaw_skills": "Auto-discovers from /sandbox/.agents/skills/ inside the sandbox — synced by sync.sh sync-nemoclaw-skills."
+    "pi_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed. Prompt templates wired via settings prompts array (~/.agents/commands)."
   },
   "capabilities": {
     "claude-code": {
@@ -241,8 +217,8 @@
         "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
       },
       "memory": {
-        "status": "bridged-explicit",
-        "contract": "Explicit memory bridge parity only: use gsd memory-sync from the bridged command surface or run ~/.agents/scripts/memory-sync-bridge.mjs directly for status, recall, and flush"
+        "status": "unmanaged",
+        "contract": "No shared memory bridge script; each ZLI uses its native memory surface"
       }
     },
     "antigravity": {
@@ -279,42 +255,8 @@
         "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
       },
       "memory": {
-        "status": "bridged-explicit",
-        "contract": "Explicit memory bridge parity only: use gsd memory-sync from the generated command surface or run ~/.agents/scripts/memory-sync-bridge.mjs directly for status, recall, and flush"
-      }
-    },
-    "openclaw": {
-      "commands": {
-        "status": "unsupported",
-        "contract": "OpenClaw upstream supports slash commands and plugin-provided commands, but this repo does not manage an OpenClaw-native command bridge yet"
-      },
-      "agents": {
-        "status": "unsupported",
-        "contract": "No hub-managed OpenClaw agent generation contract in this repo"
-      },
-      "hooks": {
-        "status": "unsupported",
-        "contract": "OpenClaw upstream supports hooks, but this repo does not manage an OpenClaw hook bridge yet"
-      },
-      "mcp": {
-        "status": "unsupported",
-        "contract": "No hub-managed OpenClaw MCP contract in this repo"
-      },
-      "approvals": {
-        "status": "native",
-        "contract": "Tool-native permission and approval controls"
-      },
-      "session_continuity": {
-        "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
-      },
-      "memory": {
-        "status": "bridged-explicit",
-        "contract": "Explicit memory bridge parity only: use ~/.agents/scripts/memory-sync-bridge.mjs directly for status, recall, and flush because this repo does not bridge OpenClaw commands"
-      },
-      "workspace_wrappers": {
-        "status": "bridged",
-        "contract": "Generated workspace wrappers from ~/.agents via sync.sh gen-openclaw-workspace"
+        "status": "unmanaged",
+        "contract": "No shared memory bridge script; each ZLI uses its native memory surface"
       }
     }
   },
@@ -354,30 +296,6 @@
       "generator": "sync.sh gen-antigravity-agents",
       "surface": "agents",
       "note": "Antigravity agents are generated from the hub agent definitions into Gemini-compatible agent files with translated frontmatter and Gemini-native tool names."
-    },
-    {
-      "tool": "openclaw",
-      "target": "~/.openclaw/workspace",
-      "source": "~/.agents",
-      "type": "wrapper-output",
-      "generator": "sync.sh gen-openclaw-workspace",
-      "surface": "workspace-wrappers",
-      "outputs": [
-        "AGENTS.md",
-        "SOUL.md",
-        "USER.md",
-        "TOOLS.md"
-      ],
-      "note": "OpenClaw workspace wrappers preserve tool-local identity while pointing back to the hub as the workflow source."
-    },
-    {
-      "tool": "nemoclaw",
-      "target": "<sandbox>:/sandbox/.agents/skills",
-      "source": "~/.agents/skills",
-      "type": "remote-sync",
-      "generator": "sync.sh sync-nemoclaw-skills",
-      "surface": "skills",
-      "note": "Skills are pushed into the NemoClaw sandbox at /sandbox/.agents/skills/ where OpenClaw auto-discovers them as personal agent skills. Run after npx skills add or sandbox restart."
     }
   ]
 }
