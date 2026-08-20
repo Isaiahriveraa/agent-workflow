@@ -34,11 +34,9 @@ The pipeline routes work through stages. Depth depends on complexity:
 ```
 lightweight:   implement → tdd → code-review → commit
 
-moderate:      research → plan → implement → tdd → code-review → commit
+moderate:      to-plan → implement → tdd → code-review → commit
 
-full:          discover → research → explore → plan → implement → tdd → code-review → commit
-
-team/huge:     wayfinder → to-issues → implement → tdd → code-review → commit
+team/huge:     issue-discovery → to-issues → implement → tdd → code-review → commit
 
 spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review → commit
 ```
@@ -49,13 +47,10 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 |-------|-------|------------------|-------|
 | Clarify | `grill-with-docs` + `domain-modeling` | Glossary, ADRs, sharpened plan | Plan server |
 | Spec | `to-spec` | Spec issue (Problem/Stories/Decisions/OutOfScope) | GitHub Issue |
-| Discover | `discover` | Feature Requirements Document (FRD) | Plan server |
-| Research | `research` | Subagent codebase investigation | Plan server |
-| Explore | `explore` | Solution options with pros/cons/trade-offs | Plan server |
 | Prototype | `prototype` | Throwaway code answering a design question | In-repo |
 | Plan | `to-plan` | Phased implementation plan | Plan server |
-| Wayfinder | `wayfinder` | Investigation ticket map for huge/foggy efforts | GitHub Issues |
-58:| Issues | `to-issues` | Tracer-bullet issues with blocking edges | Local issue drafts + YAML manifest |
+| Issue discovery | `issue-discovery` | Ambiguous ideas → decision issues | GitHub Issues |
+| Issues | `to-issues` | Tracer-bullet issues with blocking edges | Local issue drafts + YAML manifest |
 | Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
 | TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
 | Review | `code-review` / `review` | Code review report | Plan server |
@@ -64,15 +59,13 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 ### How to choose
 
 1. **Small, known fix** → `/skill:implement`
-2. **Need a plan first** → `/skill:research` → `/skill:to-plan` → `/skill:implement`
-3. **Need to clarify requirements** → `/skill:discover` → research → explore → plan → implement
-4. **Comparing approaches** → `/skill:explore`
-5. **Need a prototype** → `/skill:prototype`
-6. **Writing a spec** → `/skill:to-spec`
-7. **Splitting work for the team** → `/skill:to-issues`
-8. **Huge foggy effort** → `/skill:wayfinder`
-9. **Sharpening an idea** → `/skill:grill-with-docs`
-10. **Ask me which skill** → `/skill:ask-yonie`
+2. **Need a plan first** → `/skill:to-plan` → `/skill:implement`
+3. **Need a prototype** → `/skill:prototype`
+4. **Writing a spec** → `/skill:to-spec`
+5. **Splitting work for the team** → `/skill:to-issues`
+6. **Huge foggy effort** → `/skill:issue-discovery`
+7. **Sharpening an idea** → `/skill:grill-with-docs`
+8. **Ask me which skill** → `/skill:ask-yonie`
 
 ## Commands
 
@@ -80,11 +73,10 @@ Slash commands in `commands/` extend the tool's native surface:
 
 | Command | Description |
 |---------|-------------|
-| `/pr` | PR workflow — descriptions, branch splitting, stacked draft PRs (`/pr split`, `/pr stack`) |
-| `/plan` | Design interview — critique the developer's plan before they code |
 | `/ch` | Create a handoff document to resume work in a future session |
-| `/spawn` | Decompose complex work into parallel sub-agents with full context |
-| `/enforce` | Enforce hub operating rules from AGENTS.md on the current project |
+| `/later` | Record a future improvement idea as a scannable note in `future/` |
+
+Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-plan`) are invoked via `skill(name="skill-name")`, not slash commands.
 
 ## Adapters
 
@@ -97,7 +89,6 @@ Each AI tool connects through an adapter directory:
 | `adapters/opencode/` | OpenCode | Native config discovery |
 | `adapters/antigravity/` | Antigravity / Gemini | `GEMINI.md` bridge |
 | `adapters/openclaw/` | OpenClaw | Workspace wrapper templates |
-| `adapters/pi/` | Pi | Pi-specific integration |
 
 Adapters change ergonomics, not behavior. Source of truth stays in this repo.
 
@@ -109,12 +100,9 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 
 | Skill | Role |
 |-------|------|
-| `discover/` | Requirements extraction → FRD |
-| `research/` | Subagent codebase investigation → plan-server doc |
-| `explore/` | Solution option comparison → trade-off analysis |
 | `prototype/` | Throwaway code to answer a design question |
-| `to-plan/` | Research/explore → phased implementation plan |
-| `wayfinder/` | Huge foggy efforts → GitHub Issues map |
+| `to-plan/` | Phased implementation plan |
+| `issue-discovery/` | Ambiguous ideas → decision GitHub issues |
 | `to-spec/` | Conversation → spec issue |
 | `to-issues/` | Plan/spec → tracer-bullet issues |
 | `issue-delivery/` | One GitHub issue → isolated sibling worktree, verified draft PR |
@@ -128,15 +116,11 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `handoff/` | Session handoff documents |
 | `recall/` | Resume from handoff |
 | `plan-server/` | Local MDX plan server |
-| `explain/` | Visual explanations with Mermaid |
-| `revise/` | Surgical plan updates |
 | `codebase-design/` | Deep module design |
 | `pr-workflow/` | PR discipline |
 | `diagnose/` | Bug and performance diagnosis |
-| `learning-mode/` | Socratic learning workflow |
 | `cancel/` | Cancel active modes |
 | `herdr/` | herdr workspace management |
-| `omc-reference/` | OMC agent/tool catalog |
 | `prompt-master/` | Prompt engineering |
 | `split-plan/` | Break big plans into smaller phases |
 | `resolving-merge-conflicts/` | Merge conflict resolution |
@@ -158,15 +142,12 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 ├── package.json           # Node package — scripts
 ├── sync.sh                # Multi-CLI sync pipeline
 ├── .skill-lock.json       # Skill registry
-├── commands/              # Slash commands (pr, plan, ch, spawn, enforce)
+├── commands/              # Slash commands (ch, later)
 ├── agents/                # Specialist expert agents
 ├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules
-│   ├── discover/          # Pipeline skills
-│   ├── research/
-│   ├── explore/
-│   ├── prototype/
-│   ├── plan/
+│   ├── prototype/          # Pipeline skills
+│   ├── issue-discovery/
 │   ├── implement/
 │   ├── tdd/
 │   ├── code-review/
@@ -174,21 +155,16 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── commit/
 │   ├── grill-with-docs/
 │   ├── domain-modeling/
-│   ├── wayfinder/
 │   ├── to-spec/
 │   ├── to-issues/
 │   ├── handoff/
 │   ├── recall/
 │   ├── plan-server/
 │   ├── diagnose/
-│   ├── explain/
-│   ├── revise/
 │   ├── split-plan/
 │   ├── codebase-design/
 │   ├── resolving-merge-conflicts/
 │   ├── pr-workflow/
-│   ├── learning-mode/
-│   ├── omc-reference/
 │   ├── prompt-master/
 │   ├── frontend-design/
 │   ├── ui-ux-pro-max/
@@ -196,7 +172,6 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── framer-motion-animator/
 │   ├── shadcn/
 │   ├── herdr/
-│   ├── ultrawork/
 │   └── ...                # Additional domain skills
 ├── scripts/               # Tooling scripts (init, reset, memory sync, etc.)
 ├── adapters/              # 6 CLI adapter configs
@@ -213,7 +188,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 
 - Secrets: `.env`, `.env.local`
 - Dependencies: `node_modules/`, `.skill-lock.json`
-- Per-project runtime: plan server content at `~/Documents/plan-server/projects/{project}/`
+- Per-project runtime: plan server content at `<plan-server>/projects/{project}/`, where `<plan-server>` is resolved via `~/.agents/scripts/plan-server-path`
 
 The public repo is inspectable. Credentials, handoffs, live plans, and active project runtime state are intentionally excluded.
 

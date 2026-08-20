@@ -1,6 +1,8 @@
 # Completion Report
 
-Use the smallest report that preserves human ownership. The report answers two questions: what changed, and what evidence proves it works.
+The report answers two questions: **what changed** that the requester didn't know before, and **what evidence proves it works** that the requester can trust. The session transcript is not the report.
+
+Target length: trivial changes ≤3 sentences; non-trivial work ≤30 lines unless the change genuinely spans more.
 
 ## Trivial changes
 
@@ -8,19 +10,44 @@ Outcome, changed files, verification. Three sentences is enough.
 
 ## Non-trivial changes
 
-Include only sections that carry information; drop empty ones.
+Include only the blocks below that carry information; omit the rest — a missing block means "nothing to report here", not a defect.
 
-1. **Outcome** — The observable result and why it matters to the requester. State what is now true that wasn't before.
-2. **Decisions** — Material choices with rationale and tradeoffs. Include the alternative considered and why it lost. Omit if nothing was decided.
-3. **Architecture** — Static structure and runtime flow, with focused Mermaid diagrams only when they clarify. Omit for changes that don't alter structure. Show the new FileTree and the previous FileTree side by side.
-4. **Contracts** — Added/changed APIs, interfaces, traits, schemas, events; owners, consumers, failure modes, and tests. Include the exact shape (or pointer to it) so a reader can verify callers still match.
-5. **Verification** — For each important claim: the command or method, the observed result, and the behavior it proves. State checks not run and why. Never report a check as passing unless it was executed and its output inspected.
-6. **Changed files** — Created, modified, moved, and deleted files with purpose. Group by intent, not chronology.
-7. **Risks** — Assumptions, edge cases, non-goals, and required follow-up. End with the state of the work: complete, or what remains.
-8. **Rules applied** — Report rules you *broke* or deliberately deviated from, not rules you followed.
+### Outcome
+
+2–3 sentences: what is now true that wasn't before, stated observably — not what you did. ("`X` now validates `Y` and returns 409 on duplicates", not "I added a validation function".)
+
+### Verification
+
+The block the requester actually checks. One compact line per important claim — command or method, observed result, and the behavior it proves:
+
+- `cargo test validation` → 12 passed → duplicate-insert path returns 409
+- `npm run typecheck` → clean → contract change is type-safe
+- Not run: e2e suite (no browser env this session)
+
+Never report a check as passing unless it was executed and its output inspected.
+
+### Changed files
+
+Group by intent, not chronology — one line per group, with purpose:
+
+- Added `src/validation.ts` (rule engine)
+- Removed `src/legacy-check.ts` (replaced by the engine)
+- Touched `api/routes.ts` (wiring only)
+
+### Risks and decisions
+
+Only what needs the requester's call or awareness: assumptions, edge cases, follow-ups, and tradeoffs the human owns (contracts, auth, migrations, dependencies, deletions). End with the state of the work: complete, or what remains. Omit the block entirely if nothing qualifies — do not write "no risks".
+
+## Optional blocks — only when they clarify
+
+- **Architecture** — when the structure actually changed; focused Mermaid diagrams only.
+- **Contracts** — when APIs or interfaces changed; include the exact shape or a pointer to it so callers can be verified.
+- **Decisions** — material choices with the alternative considered and why it lost; omit if nothing was decided.
+- **Rules deviated from** — rules you deliberately broke or deviated from, and why; not rules you followed.
 
 ## What not to report
 
-- **Naming** — Only significant names or renames and why they fit the domain; fold into Changed files or Decisions otherwise.
-- **Process narration** — How the work happened (searches, failed attempts) belongs in the working session, not the report.
-- **Empty sections** — A missing section means "nothing to report here", not a defect.
+- **Process narration** — how the work happened (searches, failed attempts) belongs in the working session, not the report.
+- **Naming minutiae** — only significant names or renames and why they fit the domain; fold into Changed files otherwise.
+- **Restating the diff** — the diff shows what changed; the report says why it exists and that it works.
+- **Empty sections** — a missing section means "nothing to report here", not a defect.
