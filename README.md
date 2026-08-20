@@ -34,9 +34,9 @@ The pipeline routes work through stages. Depth depends on complexity:
 ```
 lightweight:   implement → tdd → code-review → commit
 
-moderate:      to-plan → implement → tdd → code-review → commit
+moderate:      to-tickets → implement → tdd → code-review → commit
 
-team/huge:     issue-discovery → to-issues → implement → tdd → code-review → commit
+team/huge:     issue-discovery → to-tickets → implement → tdd → code-review → commit
 
 spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review → commit
 ```
@@ -48,21 +48,21 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 | Clarify | `grill-with-docs` + `domain-modeling` | Glossary, ADRs, sharpened plan | Plan server |
 | Spec | `to-spec` | Spec issue (Problem/Stories/Decisions/OutOfScope) | GitHub Issue |
 | Prototype | `prototype` | Throwaway code answering a design question | In-repo |
-| Plan | `to-plan` | Phased implementation plan | Plan server |
+| Plan + tickets | `to-tickets` | Implementation plan + focused tickets (one per PR) | Plan server + local drafts |
 | Issue discovery | `issue-discovery` | Ambiguous ideas → decision issues | GitHub Issues |
-| Issues | `to-issues` | Tracer-bullet issues with blocking edges | Local issue drafts + YAML manifest |
+| Audit | `improve` | Read-only codebase survey → prioritized executor-ready plans | `plans/` in repo |
 | Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
 | TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
-| Review | `code-review` / `review` | Code review report | Plan server |
+| Review | `code-review` | Code review report | Plan server |
 | Commit | `commit` | Atomic commit message | Git commit |
 
 ### How to choose
 
 1. **Small, known fix** → `/skill:implement`
-2. **Need a plan first** → `/skill:to-plan` → `/skill:implement`
+2. **Need a plan first** → `/skill:to-tickets` → `/skill:implement`
 3. **Need a prototype** → `/skill:prototype`
 4. **Writing a spec** → `/skill:to-spec`
-5. **Splitting work for the team** → `/skill:to-issues`
+5. **Breaking work into tickets** → `/skill:to-tickets`
 6. **Huge foggy effort** → `/skill:issue-discovery`
 7. **Sharpening an idea** → `/skill:grill-with-docs`
 8. **Ask me which skill** → `/skill:ask-yonie`
@@ -77,7 +77,7 @@ Slash commands in `commands/` extend the tool's native surface:
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
 | `/wf` | Commit the current work (commit skill), then push and open a PR (pr-workflow) |
 
-Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-plan`) are invoked via `skill(name="skill-name")`, not slash commands.
+Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-tickets`) are invoked via `skill(name="skill-name")`, not slash commands.
 
 Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge.
 
@@ -103,19 +103,19 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | Skill | Role |
 |-------|------|
 | `prototype/` | Throwaway code to answer a design question |
-| `to-plan/` | Phased implementation plan |
+| `to-tickets/` | Implementation plan + focused tickets (one per PR) |
 | `issue-discovery/` | Ambiguous ideas → decision GitHub issues |
 | `to-spec/` | Conversation → spec issue |
-| `to-issues/` | Plan/spec → tracer-bullet issues |
+| `improve/` | Read-only codebase survey → prioritized executor-ready plans |
+| `research/` | Background-agent research → single cited Markdown file |
 | `issue-delivery/` | One GitHub issue → isolated sibling worktree, verified draft PR |
-| `parallel-issue-delivery/` | Parallel issue execution in Codex threads + isolated worktrees |
-| `parallel-dev/` | Issue-driven parallel development via Herdr-managed worker panes |
 | `implement/` | Orchestrator: tdd → code-review → commit |
+| `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
 | `subagent-implementation-review/` | Rule gate for delegated subagent work |
 | `tdd/` | Red-green-refactor with seam discipline |
-| `code-review/` | Adversarial review — two blind reviewers, one adjudicator |
-| `review/` | Two-axis review (standards + spec) |
+| `code-review/` | Adversarial review — three reviewers (behavioral, contract/spec, maintainability), one adjudicator |
+| `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
 | `commit/` | Atomic commit messages (mandatory before any commit) |
@@ -132,11 +132,9 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `e2e-testing-patterns/` | Playwright/Cypress testing standards |
 | `enforce/` | Enforce hub AGENTS.md rules on a project |
 | `cancel/` | Cancel active modes |
-| `herdr/` | herdr workspace management |
 | `prompt-master/` | Prompt engineering |
 | `split-plan/` | Break big plans into smaller phases |
 | `resolving-merge-conflicts/` | Merge conflict resolution |
-| `improve-codebase-architecture/` | Codebase deepening |
 | `frontend-design/` | Visual design guidance |
 | `ui-ux-pro-max/` | UI/UX design intelligence |
 | `impeccable/` | AI agent design guidance (pbakaus/impeccable) |
@@ -163,18 +161,17 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 ├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules
 │   ├── prototype/          # Pipeline skills
-│   ├── to-plan/
+│   ├── to-tickets/
 │   ├── issue-discovery/
 │   ├── implement/
 │   ├── tdd/
 │   ├── code-review/
-│   ├── review/
 │   ├── commit/
 │   ├── pr-workflow/
 │   ├── grill-with-docs/
 │   ├── domain-modeling/
 │   ├── to-spec/
-│   ├── to-issues/
+│   ├── improve/
 │   ├── handoff/
 │   ├── recall/
 │   ├── plan-server/
@@ -184,14 +181,14 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── split-plan/
 │   ├── codebase-design/
 │   ├── resolving-merge-conflicts/
-│   ├── parallel-dev/
+│   ├── research/
 │   ├── prompt-master/
 │   ├── frontend-design/
 │   ├── ui-ux-pro-max/
 │   ├── impeccable/
 │   ├── framer-motion-animator/
 │   ├── shadcn/
-│   ├── herdr/
+│   ├── wait-what/
 │   └── ...                # Additional domain skills
 ├── scripts/               # Tooling (init/reset, plan-server-path, worktree helpers, model router)
 ├── adapters/              # 4 CLI adapter configs

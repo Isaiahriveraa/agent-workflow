@@ -10,7 +10,7 @@ A loose idea has arrived — a feature request, a design question, an engineerin
 
 ## Plan, don't do
 
-`issue-discovery` is **planning** by default. Each session produces decision issues, research findings, prototypes, or investigation summaries — not code. If implementation is needed, the session ends with a handoff to `to-issues`, which turns the settled direction into implementation-ready issues.
+`issue-discovery` is **planning** by default. Each session produces decision issues, research findings, prototypes, or investigation summaries — not code. If implementation is needed, the session ends with a handoff to `to-tickets`, which turns the settled direction into implementation-ready tickets.
 
 ## Discovery flow
 
@@ -42,7 +42,7 @@ Different kinds of unknowns need different artifacts:
 | Unresolved product or engineering choice | `needs-decision` issue |
 | Missing evidence before deciding | `research-needed` issue |
 | Cheap concrete experiment | `prototype-needed` issue |
-| Direction is clear | Hand off to `to-issues` |
+| Direction is clear | Hand off to `to-tickets` |
 
 Propose the issue set to the user before creating anything.
 
@@ -114,7 +114,7 @@ Prototype issues are cheap concrete experiments. Label with `prototype-needed`. 
 
 ## Implementation handoff
 
-Once decisions are settled and direction is clear, hand off to `to-issues`. Implementation issues are a different artifact from decision issues:
+Once decisions are settled and direction is clear, hand off to `to-tickets`. Implementation tickets are a different artifact from decision issues:
 
 - They specify **observable behavior** and **scope**.
 - They define **acceptance criteria** and **verification**.
@@ -132,7 +132,7 @@ User invokes with a loose idea, feature request, or ambiguous problem.
 4. **Propose issue set.** Present the planned issues to the user for approval.
 5. **Create issues.** Once approved, create GitHub issues with plain public labels.
 6. **Resolve.** If working a decision, resolve at most one per session.
-7. **Hand off.** When direction is settled, hand to `to-issues` for implementation planning.
+7. **Hand off.** When direction is settled, hand to `to-tickets` for implementation planning.
 
 ## Internal mechanics
 

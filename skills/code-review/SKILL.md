@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review code using independent adversarial reviewers that search for concrete bugs and contract mismatches. Two blind reviewers, one adjudicator, optional fixer. Verifies every claim against actual repository state."
+description: "Review code using independent adversarial reviewers that search for concrete bugs, contract mismatches, and maintainability regressions. Three independent reviewers, one adjudicator, optional fixer. Verifies every claim against actual repository state."
 argument-hint: "[scope] [--fix] [--deep] [--artifact]"
 shell-timeout: 10
 ---
@@ -17,8 +17,8 @@ implemented change
 run baseline checks
       ↓
 reviewer A ───┐
-            ├─ independent adversarial review
-reviewer B ───┘
+            reviewer B ───┼─ independent adversarial review
+reviewer C ───┘
       ↓
 one adjudicator validates every claim
       ↓
@@ -160,9 +160,9 @@ Record each command, exit status, and concise failure output in `.git/code-revie
 
 A failing command is evidence, but not automatically a review finding. The review must establish that the selected diff caused or exposed the failure.
 
-### Step 3: Spawn Two Independent Adversarial Reviewers
+### Step 3: Spawn Three Independent Adversarial Reviewers
 
-Dispatch Reviewer A and Reviewer B in parallel in separate subagent contexts.
+Dispatch Reviewer A, Reviewer B, and Reviewer C in parallel in separate subagent contexts.
 They must not receive each other's output or the implementer's reasoning.
 
 #### Reviewer A — Blind Behavioral Adversary
@@ -240,6 +240,9 @@ Read the patch first. Then inspect only the callers, consumers, schemas, registr
 Check for:
 - callers and callees that now make incompatible assumptions
 - task acceptance criteria missing from the implementation
+- requirements missing or only partially implemented (quote the spec or issue line that demands them)
+- behavior added that the spec or issue did not ask for (scope creep)
+- requirements implemented but wrong (behavior present but not what the spec/issue requires)
 - public API, protocol, event, CLI, or serialized-shape incompatibility
 - producer/consumer filters that disagree
 - missing enum cases, registrations, routes, handlers, commands, or dispatch entries
@@ -271,6 +274,55 @@ Rules:
 - Do not propose a fix.
 - Return NO_FINDINGS when no qualifying findings exist.
 ```
+
+#### Reviewer C — Maintainability Adversary
+
+Use a separate `task` subagent with this prompt:
+
+```text
+You are an adversarial maintainability reviewer.
+
+Assume the changed code adds avoidable complexity. Your job is to find structural and design regressions in the diff and missed opportunities to make the code dramatically simpler without changing behavior.
+
+Inputs:
+- Patch: .git/code-review.patch
+- Changed files: .git/code-review.changed-files
+- Minimal context: .git/code-review.context.txt
+
+Do not ask for or rely on the author's reasoning. Do not see another reviewer's output.
+
+You are ambitious about structural simplification (code judo): look for reframes that delete whole branches, helpers, or layers while preserving behavior.
+
+Check for:
+- files pushed across the 1000-line boundary without a strong reason
+- new ad-hoc conditionals or special cases bolted onto unrelated flows (spaghetti growth) where a dedicated abstraction, state machine, or policy object would be cleaner
+- thin wrappers, identity abstractions, and pass-through helpers that add a layer without adding value
+- repeated conditionals that reveal a missing model or enum
+- unnecessary optionality, `unknown`, `any`, or cast-heavy code obscuring an invariant that types could express
+- logic in the wrong layer, or bespoke helpers where a canonical repository helper already exists
+- unnecessary sequential orchestration of independent work, and non-atomic partial updates
+- feature logic leaking into general-purpose modules
+- edge cases and 'temporary' branching that will become permanent debt
+- documented repository standards (e.g. CODING_STANDARDS.md, CONTRIBUTING.md) violated by the diff, citing the standard file and rule
+- Fowler smells from the baseline: Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest
+
+For each finding, return exactly:
+
+ID: C<n>
+Title: <specific maintainability regression or missed simplification>
+Evidence: <file:line — exact code quote>
+Standard: <which rule above it violates>
+Impact: <how this makes the code harder to maintain or extend>
+Remedy: <the smallest structural change, e.g. delete the layer, extract the helper, introduce the model, parallelize, make atomic>
+Confidence: <8-10>
+
+Rules:
+- Report only problems caused by or newly exposed by the reviewed diff.
+- Confidence must be at least 8.
+- A high-conviction structural finding beats a long cosmetic list: prefer a small number of findings that delete or reshape code.
+- Do not report naming, formatting, or style.
+- Do not invent remedies that change behavior; the diff must behave identically after the remedy.
+- Return NO_FINDINGS when no qualifying findings exist.
 
 ### Step 4: Triggered Deep Review (`--deep` only)
 
@@ -435,6 +487,8 @@ Regression test: {smallest useful test}
 
 Omit empty severity sections.
 
+Findings are tagged by reviewer lens, so the review axes stay visible: A = behavioral correctness, B = contract/spec faithfulness (including requirements missing, scope creep, requirements implemented wrong), C = standards and maintainability (including documented repo standards and Fowler smells). This keeps the standards-vs-spec distinction from `review` without a separate skill.
+
 Verdict rules:
 - `APPROVED` — no verified Critical or Important findings and no diff-caused baseline failures.
 - `CHANGES_REQUESTED` — at least one verified Critical or Important finding or one diff-caused baseline failure.
@@ -542,7 +596,7 @@ Recommend `--deep` when the diff includes:
 
 ## Final Principles
 
-- One implementation result, two independent adversarial reviews, one validating apply step.
+- One implementation result, three independent adversarial reviews, one validating apply step.
 - Search for falsifying examples rather than confirming examples.
 - Preserve context separation between author, reviewers, and fixer.
 - Review both local behavior and repository-wide contracts.

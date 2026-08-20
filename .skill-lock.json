@@ -89,15 +89,6 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
-    "parallel-dev": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/parallel-dev",
-      "skillPath": "skills/parallel-dev/SKILL.md",
-      "skillFolderHash": "6591db7e0a447b6e7adcc50e62c9deee22bca718",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-07-27T00:00:00.000Z"
-    },
     "issue-delivery": {
       "source": ".agents",
       "sourceType": "hub",
@@ -129,13 +120,6 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/tutor/SKILL.md",
       "skillPath": "skills/tutor/SKILL.md",
       "skillFolderHash": "c745bee62f5aeb4fd63f45801cc78e0b1ace8637"
-    },
-    "to-issues": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-issues/SKILL.md",
-      "skillPath": "skills/to-issues/SKILL.md",
-      "skillFolderHash": "eba191237608f5ccc0146bfec3f5d8b18e060f47"
     },
     "to-spec": {
       "source": ".agents",
@@ -177,13 +161,6 @@
       "skillPath": "skills/handoff/SKILL.md",
       "skillFolderHash": "bb9c2fa70d3c4c9eba36202f0893e64294968213"
     },
-    "herdr": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/herdr/SKILL.md",
-      "skillPath": "skills/herdr/SKILL.md",
-      "skillFolderHash": "4e91e8f4f5b1312332417028fe6cd6599097936b"
-    },
     "impeccable": {
       "source": ".agents",
       "sourceType": "hub",
@@ -197,16 +174,6 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/implement/SKILL.md",
       "skillPath": "skills/implement/SKILL.md",
       "skillFolderHash": "260b25eac4468565b2bbe1b850bfe04ab2a4017a"
-    },
-    "improve-codebase-architecture": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/mattpocock/skills.git",
-      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
-      "skillFolderHash": "6acf12623cdaa6e60f961c4a53548a3bff0f0c9c",
-      "pluginName": "mattpocock-skills",
-      "installedAt": "2026-05-24T03:48:02.063Z",
-      "updatedAt": "2026-05-24T03:48:02.063Z"
     },
     "next-best-practices": {
       "source": "vercel-labs/next-skills",
@@ -225,13 +192,6 @@
       "skillFolderHash": "4a480aded5001c237d9503ec3c6c6c6d5cc38bb7",
       "installedAt": "2026-02-17T20:41:46.081Z",
       "updatedAt": "2026-02-17T20:41:46.081Z"
-    },
-    "to-plan": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-plan/SKILL.md",
-      "skillPath": "skills/to-plan/SKILL.md",
-      "skillFolderHash": "03b6809bc61173b7aeb7e3c989c55e759aadb1bf"
     },
     "plan-server": {
       "source": ".agents",
@@ -277,13 +237,6 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/resolving-merge-conflicts/SKILL.md",
       "skillPath": "skills/resolving-merge-conflicts/SKILL.md",
       "skillFolderHash": "f34f5893c24bdc03131f52caea21f7c06d933092"
-    },
-    "review": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/review/SKILL.md",
-      "skillPath": "skills/review/SKILL.md",
-      "skillFolderHash": "8a3fed87af6aaa42f000a8f4a7d94f797bb1d213"
     },
     "security-review": {
       "source": ".agents",
@@ -340,14 +293,14 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
-    "parallel-issue-delivery": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/parallel-issue-delivery",
-      "skillPath": "skills/parallel-issue-delivery/SKILL.md",
-      "skillFolderHash": "1b651748b899bffa04a1bdd38e1e4de542744977",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
+    "improve": {
+      "source": "shadcn/improve",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/shadcn/improve.git",
+      "skillPath": "skills/improve/SKILL.md",
+      "skillFolderHash": "7d77d76815e6deb704427f17f6e393f55e3cb6da",
+      "installedAt": "2026-08-20T05:01:20.324Z",
+      "updatedAt": "2026-08-20T05:01:20.324Z"
     }
   },
   "dismissed": {
@@ -355,10 +308,17 @@
   },
   "lastSelectedAgents": [
     "amp",
+    "antigravity",
+    "cline",
     "codex",
+    "cursor",
+    "deepagents",
+    "dexto",
+    "firebender",
     "gemini-cli",
     "github-copilot",
     "kimi-cli",
-    "opencode"
+    "opencode",
+    "warp"
   ]
 }

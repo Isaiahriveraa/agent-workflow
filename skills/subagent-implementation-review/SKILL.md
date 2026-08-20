@@ -84,17 +84,15 @@ Finding shape: `ID | severity | category | file:line + quoted line | violated ru
 
 Produce a binary recommendation: `ready`, `changes-required`, or `blocked-awaiting-human`. `ready` requires no unresolved blockers, complete acceptance coverage, navigable code, required contracts/comments, and real verification evidence.
 
-### Queue-shaped output
+### Structured findings
 
-When the caller maintains a defect queue — `parallel-dev` workers do, at `.herdr/reports/<issue-key>/defects.jsonl` — emit each reconciled finding as one queue row instead of prose, and let the caller append them in the order returned:
+Emit each reconciled finding as one row the caller can collect:
 
 ```json
 {"source":"<pass-id>","severity":"blocking|high|medium|low","file":"<path>","line":<n>,"claim":"<one line>","evidence":"`<verbatim source line>`","required_change":"<observable correction>"}
 ```
 
-`seq`, `at`, and the disposition fields belong to the queue owner, not to this skill — it produces findings, it does not track their fate. Severity maps directly: **Blocker** → `blocking`, **Important** → `high`, **Suggestion** → `medium` or `low`. **Discussion** items do not enter the queue; they need a human decision and are reported separately.
-
-Emit findings in pass order. The caller works them first-in-first-out, so ordering here is the arrival order there — do not pre-sort by severity or by how easy a fix looks. The queue owner front-inserts `blocking` entries; that is its job, not this skill's.
+Severity maps directly: **Blocker** → `blocking`, **Important** → `high`, **Suggestion** → `medium` or `low`. **Discussion** items are not findings; they need a human decision and are reported separately. Emit findings in pass order.
 
 ## Remediation loop
 

@@ -352,7 +352,7 @@ Each document type has specific required sections beyond the universal checklist
 
 ### 5.1. Plan Documents
 
-Used by: to-plan skill, blueprint skill, split-plan skill
+Used by: to-tickets skill, blueprint skill, split-plan skill
 
 **Structure:**
 - Overview (what and why)
@@ -470,7 +470,7 @@ Used by: design skill
 
 ### 5.7. Review Documents
 
-Used by: review skill, code-review skill, persona-critique skill
+Used by: code-review skill, persona-critique skill
 
 **Structure:**
 - Summary (what was reviewed, fixed point, scope)
