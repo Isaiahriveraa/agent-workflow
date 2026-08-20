@@ -48,6 +48,7 @@
 //     `note:` so the LLM can ask the user via ask_user_question rather than fail.
 
 import { execFileSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
 
 const CHANGED_FILES_LINE_CAP = 2000;
 const CHANGED_FILES_BYTE_CAP = 40 * 1024;
@@ -249,6 +250,58 @@ if (result.strategy === "first-parent") {
 		// the skill's `git diff -U30` patch command — both exclude staged).
 		const raw = safe(["diff", "--name-only"]);
 		result.changedFiles = formatChangedFiles(dedupChangedFiles(raw));
+	}
+}
+
+// ---- write artifact files to .git ----
+const gitDir = safe(["rev-parse", "--git-dir"]) || ".git";
+
+const writePatch = (patchArgs) => {
+	let patch;
+	try {
+		patch = execFileSync("git", patchArgs, {
+			encoding: "utf-8",
+			stdio: ["ignore", "pipe", "ignore"],
+		});
+	} catch {
+		patch = "";
+	}
+	if (Buffer.byteLength(patch, "utf-8") > 1024 * 1024) {
+		const u20Idx = patchArgs.lastIndexOf("-U20");
+		if (u20Idx !== -1) {
+			patchArgs[u20Idx] = "-U10";
+			try {
+				patch = execFileSync("git", patchArgs, {
+					encoding: "utf-8",
+					stdio: ["ignore", "pipe", "ignore"],
+				});
+			} catch {
+				patch = "";
+			}
+		}
+	}
+	writeFileSync(`${gitDir}/code-review.patch`, patch, "utf-8");
+};
+
+if (result.strategy !== "unrecognised") {
+	writeFileSync(`${gitDir}/code-review.changed-files`, result.changedFiles, "utf-8");
+	writeFileSync(`${gitDir}/code-review.baseline.txt`, "", "utf-8");
+	writeFileSync(`${gitDir}/code-review.context.txt`, "", "utf-8");
+
+	if (result.strategy === "first-parent") {
+		writePatch(["log", result.range, "--first-parent", "--patch", "--reverse", "--no-merges", "-U20"]);
+	} else if (result.strategy === "explicit-range") {
+		writePatch(["log", result.range, "--patch", "--reverse", "--no-merges", "-U20"]);
+	} else if (result.strategy === "working-tree") {
+		if (lower === "commit") {
+			writePatch(["show", "HEAD", "-U20"]);
+		} else if (lower === "staged") {
+			writePatch(["diff", "--cached", "-U20"]);
+		} else if (lower === "modified") {
+			writePatch(["diff", "HEAD", "-U20"]);
+		} else {
+			writePatch(["diff", "-U20"]);
+		}
 	}
 }
 
