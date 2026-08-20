@@ -7,7 +7,7 @@ description: "Rule-enforcement gate for delegated subagent work — checks chang
 
 A lean rule-enforcement gate for delegated implementation work, run before a sub-agent result is accepted or handed off. It answers three questions: **does the change follow the hub's rules, does it conform to the codebase, and is the code readable** — readable code, not clever code.
 
-The `code-review` skill is the always-run verification step after integration (AGENTS.md Subagent Strategy). This gate is the fast pass before that: it catches rule and convention violations cheaply so `code-review` can focus on substance. Do not duplicate code-review's adversarial workflow here.
+The `code-review` skill is the always-run verification step after integration (AGENTS.md Implementation Mode). This gate is the fast pass before that: it catches rule and convention violations cheaply so `code-review` can focus on substance. Do not duplicate code-review's adversarial workflow here.
 
 ## Core contract
 
@@ -104,7 +104,7 @@ Severity maps directly: **Blocker** → `blocking`, **Important** → `high`, **
 
 ## Handoff to code-review
 
-Once the gate passes and the work is integrated, invoke `skill(name="code-review")` — per AGENTS.md Subagent Strategy, code-review is the always-run verification step. This gate makes code-review faster; it does not replace it.
+Once the gate passes and the work is integrated, invoke `skill(name="code-review")` — per AGENTS.md Implementation Mode, code-review is the always-run verification step. This gate makes code-review faster; it does not replace it.
 
 ## Closeout
 

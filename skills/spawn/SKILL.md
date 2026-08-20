@@ -191,7 +191,7 @@ Final output must include:
 
 ### Acceptance Loop
 
-Rejected work returns to the responsible sub-agent with your direction; when it returns, re-review the delta against the same checklist. Loop until acceptance, or escalate when the loop reveals a human decision or a repeated failure you should stop delegating and discuss. Acceptance is not the end: after synthesis, invoke `skill(name="code-review")` for verification — per AGENTS.md Subagent Strategy it is the always-run verification step.
+Rejected work returns to the responsible sub-agent with your direction; when it returns, re-review the delta against the same checklist. Loop until acceptance, or escalate when the loop reveals a human decision or a repeated failure you should stop delegating and discuss. Acceptance is not the end: after synthesis, invoke `skill(name="code-review")` for verification — per AGENTS.md Implementation Mode it is the always-run verification step.
 
 ---
 
