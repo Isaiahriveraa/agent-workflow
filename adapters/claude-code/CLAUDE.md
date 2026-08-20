@@ -28,50 +28,10 @@ Applies unless overridden. Bias: caution over speed.
 13. **Error handling** — Never swallow errors. Use Result types for recoverable errors.
 14. **Test investment** — Unit > integration > e2e. Spend budget that order.
 
-
 ---
-
-## Workflow Triggers
-
-Map natural language to workflows automatically — no manual routing needed.
-
-| When user says... | Route to |
-|---|---|
-| `plan this`, `let's plan` | Plan workflow — decompose, sequence, assign |
-| `review code`, `code review` | Code review — diff analysis, security check |
-| `tdd`, `test first` | TDD cycle — red, green, refactor |
-| `fix build`, `type errors` | Build fixing — diagnose compile/type errors |
-| `security review` | Security audit — dependency check, OWASP scan |
-| `cancel`, `stop`, `abort` | Abort current operation cleanly |
-| `analyze`, `investigate` | Deep research — explore, find root cause |
-
----
-
 ## Skill Routing
 
-When a task matches a domain, invoke the relevant skill via `skill(name="skill-name")`.
-
-| Task Domain | Skill(s) | Why |
-|---|---|---|
-| Frontend UI/UX, styling, design | `ui-ux-pro-max` + `og-frontend-skill` | High-quality UI generation, 50 styles, component design. `og-frontend-skill` lives at `skills/frontend-design/` |
-| Architecture, refactoring | `improve-codebase-architecture` | Deepening, interface design, language refinement |
-| Prototyping | `prototype` | Throwaway prototypes before committing |
-| Debugging, hard bugs | `diagnose` | Structured reproduce→minimise→fix loop |
-| Code review | `caveman-review`, `receiving-code-review` | Terse, actionable review comments |
-| Commit messages | `caveman-commit` | Ultra-compressed Conventional Commits |
-| Testing (JS/TS) | `javascript-testing-patterns` | Jest/Vitest/Testing Library patterns |
-| Testing (E2E) | `e2e-testing-patterns` | Playwright/Cypress reliability |
-| Security audit | `security-review` | Security audit workflow |
-| Performance | `performance` | Load time, Core Web Vitals, bundling |
-| Node.js backend | `nodejs-backend-patterns` | Express/Fastify, middleware, auth patterns |
-| Next.js | `next-best-practices` | App Router, RSC, caching, metadata |
-| Supabase/Postgres | `supabase-postgres-best-practices` | Query optimization, schema design |
-| Requirements gathering | `deep-interview` | Socratic questioning before implementation |
-| Plan stress-testing | `grill-with-docs`, `ping-pong` | Challenge plans against domain model |
-| Explaining plans | `explain` | Simplify technical plans for stakeholders |
-| Git operations | `git-master` | Atomic commits, rebase, history search |
-| Frontend visual iteration | `impeccable` | Live browser iteration, UI polish |
-| Herdr pane management | `herdr` | Spawn, monitor, and manage herdr agent panes in terminal environment |
+Skill routing is defined in the hub contract — `~/.agents/AGENTS.md` → `## Skill Routing` — and is the single source of truth. Invoke matching skills with `skill(name="skill-name")`. Do not maintain a second copy here; update the hub table instead.
 
 ---
 
