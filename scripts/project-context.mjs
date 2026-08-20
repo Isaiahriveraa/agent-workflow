@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,6 +7,10 @@ import { fileURLToPath } from "node:url";
 const agentsRoot = process.env.AGENTS_ROOT
 	? path.resolve(process.env.AGENTS_ROOT)
 	: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+// Single source of truth: scripts/plan-server-path prints the plan server root
+const planServerRoot = execFileSync(path.join(agentsRoot, "scripts", "plan-server-path"), {
+	encoding: "utf8",
+}).trim();
 const defaultWorkingDirectory = process.env.AGENTS_PROJECT_ROOT
 	? path.resolve(process.env.AGENTS_PROJECT_ROOT)
 	: process.cwd();
@@ -47,7 +52,10 @@ export const getProjectContext = (options = {}) => {
 		path.basename(projectRoot);
 	const projectSlug = `${slugify(slugBase)}-${hashProjectRoot(projectRoot)}`;
 	const projectDir = path.join(projectRoot, ".omx");
-	const thoughtsDir = path.join(projectRoot, "thoughts");
+	// Plan server project dirs keep their literal repo names (e.g. KodaProject)
+	const projectName = slugBase || "general";
+	// Per-project artifacts live on the plan server, not in repo thoughts/
+	const thoughtsDir = path.join(planServerRoot, "projects", projectName);
 	const sessionsDir = path.join(projectDir, "sessions");
 
 	return {

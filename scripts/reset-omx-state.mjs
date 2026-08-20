@@ -179,11 +179,12 @@ Runtime context and RPI artifacts are split by type: intake, plans, research, li
 Lightweight continuity artifacts are project-local runtime files. Project-local handoffs are transfer artifacts, not the ordinary pause/resume path.
 
 ## Sources
-- intake: \`thoughts/intake\`
-- plans: \`thoughts/plans\`
-- research: \`thoughts/research\`
+All paths resolve through \`~/.agents/scripts/plan-server-path\` under \`projects/<project>/\`.
+- intake: \`<plan-server>/projects/<project>/intake\`
+- plans: \`<plan-server>/projects/<project>/plans\`
+- research: \`<plan-server>/projects/<project>/research\`
 - sessions: (removed — use \`.sisyphus/run-continuation/\`)
-- handoffs: \`thoughts/handoffs\`
+- handoffs: \`<plan-server>/projects/<project>/handoffs\`
 - active working set metadata: (removed — use \`.sisyphus/run-continuation/\`)
 
 ## Preferred Retrieval Order

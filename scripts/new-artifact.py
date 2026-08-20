@@ -2,11 +2,8 @@
 """
 new-handoff.py -- create plan-server artifacts with ISO-timestamp filenames.
 
-With --dest (plan server mode):
-    {dest}/projects/{project}/{type}/{YYYY-MM-DD_HH-MM-SS}_{slug}.{ext}
-
-Without --dest (local thoughts mode):
-    thoughts/{type}/{Month}/{day}_{time}_{slug}.md  (handoffs/reflections/grill)
+Writes to {dest}/projects/{project}/{type}/{YYYY-MM-DD_HH-MM-SS}_{slug}.{ext}
+with dest defaulting to the root from ~/.agents/scripts/plan-server-path (single source of truth).
 
 All plan server types use flat subdirectories with ISO-8601 timestamp
 prefixes for automatic chronological sorting (.sort() == oldest first,
@@ -20,31 +17,12 @@ import pathlib
 import subprocess
 import sys
 
-THOUGHTS_ROOT = pathlib.Path("thoughts")
 TYPES = (
     "handoffs", "reflections", "grill",
     "glossary", "adr", "prd", "issues", "reviews", "maps",
     "decisions", "research", "designs", "solutions", "plans",
     "test-cases",
 )
-MONTHLY_TYPES = ("handoffs", "reflections", "grill")
-MONTHS = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-]
-
-
-def ordinal(n: int) -> str:
-    """1 -> 1st, 2 -> 2nd, 3 -> 3rd."""
-    suffix = "th" if 11 <= n <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
-    return f"{n}{suffix}"
-
-
-def friendly_time(t: datetime.datetime) -> str:
-    """14:28 -> 2_28_PM."""
-    ampm = "AM" if t.hour < 12 else "PM"
-    hour12 = t.hour % 12 or 12
-    return f"{hour12}_{t.minute:02d}_{ampm}"
 
 
 def display_time(t: datetime.datetime) -> str:
@@ -297,18 +275,6 @@ def template(art_type: str, title: str, date_str: str, time_str: str, adr_num: i
 
 # --- Main ---
 
-def validate_project_root(cwd: pathlib.Path) -> None:
-    """Check cwd is a project directory."""
-    home = pathlib.Path.home().resolve()
-    cwd_resolved = cwd.resolve()
-    if cwd_resolved == home:
-        print("Refusing to write thoughts/ from home directory. Run from a project.", file=sys.stderr)
-        sys.exit(1)
-    if not (cwd_resolved / ".git").exists():
-        print("Not a git root. Run from a project root.", file=sys.stderr)
-        sys.exit(1)
-
-
 def get_next_adr_num(directory: pathlib.Path) -> int:
     """Find the next available ADR number."""
     if not directory.exists():
@@ -503,12 +469,18 @@ def setup_adr_symlink(dest: str | pathlib.Path, project: str, repo_root: pathlib
     # Create symlink
     plan_server_adr.symlink_to(repo_adr_dir, target_is_directory=True)
 
+def plan_server_root() -> str:
+    """Resolve the plan server root through its single source of truth script."""
+    path_script = pathlib.Path.home() / ".agents" / "scripts" / "plan-server-path"
+    return subprocess.check_output([str(path_script)], text=True).strip()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create a plan-server artifact.")
     parser.add_argument("--type", choices=TYPES, default="handoffs",
                         help="Artifact type")
-    parser.add_argument("--dest",
-                        help="Destination root. When set, writes to {dest}/projects/{project}/{type}/ instead of thoughts/{type}/")
+    parser.add_argument("--dest", default=plan_server_root(),
+                        help="Destination root. Defaults to the path from ~/.agents/scripts/plan-server-path")
     parser.add_argument("--project", default="general",
                         help="Project name for plan server destination (auto-detected from git/cwd when using default)")
     parser.add_argument("--adr-num", type=int,
@@ -524,39 +496,31 @@ def main() -> None:
     raw_topic = " ".join(args.topic) or "untitled"
     title = readable(raw_topic)
 
-    # Determine root directory
-    if args.dest:
-        # Auto-detect project when using default "general"
-        project = args.project
-        if project == "general":
-            detected = detect_project(args.dest)
-            if detected:
-                project = detected
-            else:
-                auto_project = detect_or_create_project_from_git(args.dest)
-                if auto_project:
-                    project = auto_project
-        # Validate the project directory already exists -- prevents accidental
-        # creation of new projects from wrong --project values
-        project_dir = pathlib.Path(args.dest) / "projects" / project
-        if not project_dir.exists() or not project_dir.is_dir():
-            existing = sorted(
-                p.name for p in pathlib.Path(args.dest).glob("projects/*/")
-                if p.is_dir() and not p.name.startswith(".")
-            )
-            print(
-                f"Error: project '{project}' does not exist in {args.dest}/projects/.\n"
-                f"Existing projects: {', '.join(existing)}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        root = pathlib.Path(args.dest) / "projects" / project
-    else:
-        if args.type not in MONTHLY_TYPES:
-            print(f"Non-monthly type '{args.type}' requires --dest (plan server path)", file=sys.stderr)
-            sys.exit(1)
-        validate_project_root(pathlib.Path.cwd())
-        root = THOUGHTS_ROOT
+    # Plan server mode: dest always resolves to the plan server root
+    project = args.project
+    if project == "general":
+        detected = detect_project(args.dest)
+        if detected:
+            project = detected
+        else:
+            auto_project = detect_or_create_project_from_git(args.dest)
+            if auto_project:
+                project = auto_project
+    # Validate the project directory already exists -- prevents accidental
+    # creation of new projects from wrong --project values
+    project_dir = pathlib.Path(args.dest) / "projects" / project
+    if not project_dir.exists() or not project_dir.is_dir():
+        existing = sorted(
+            p.name for p in pathlib.Path(args.dest).glob("projects/*/")
+            if p.is_dir() and not p.name.startswith(".")
+        )
+        print(
+            f"Error: project '{project}' does not exist in {args.dest}/projects/.\n"
+            f"Existing projects: {', '.join(existing)}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    root = pathlib.Path(args.dest) / "projects" / project
 
     short_month = now.strftime("%b")
     date_str = f"{short_month} {now.day}, {now.year}"
@@ -566,41 +530,23 @@ def main() -> None:
     # Determine folder and filename
     art_type = args.type
 
-    if args.dest:
-        if art_type == 'adr':
-            # ADRs go to project repo docs/adr/ with NNNN-slug naming
-            repo_root = find_project_repo_root(args.dest, project)
-            if repo_root:
-                adr_dir = repo_root / 'docs' / 'adr'
-                setup_adr_symlink(args.dest, project, repo_root)
-            else:
-                adr_dir = root / 'adr'  # fall back to plan-server
-            num = args.adr_num if args.adr_num else get_next_adr_num(adr_dir)
-            folder = adr_dir
-            filename = f"{num:04d}-{slug(raw_topic)}.md"
+    if art_type == 'adr':
+        # ADRs go to project repo docs/adr/ with NNNN-slug naming
+        repo_root = find_project_repo_root(args.dest, project)
+        if repo_root:
+            adr_dir = repo_root / 'docs' / 'adr'
+            setup_adr_symlink(args.dest, project, repo_root)
         else:
-            # Plan server mode: flat dirs, ISO timestamp prefixes
-            iso_part = iso_filename(now)
-            ext = plan_server_ext(art_type)
-            folder = root / art_type
-            filename = f"{iso_part}_{slug(raw_topic)}{ext}"
-    elif art_type in MONTHLY_TYPES:
-        # Local mode: month subdirs, ordinal names
-        month_name = MONTHS[now.month - 1]
-        folder = root / art_type / month_name
-        day_ord = ordinal(now.day)
-        time_part = friendly_time(now)
-        filename = f"{day_ord}_{time_part}_{slug(raw_topic)}.md"
-    elif art_type == "adr":
-        folder = root / "adr"
-        num = args.adr_num if args.adr_num else get_next_adr_num(folder)
+            adr_dir = root / 'adr'  # fall back to plan-server
+        num = args.adr_num if args.adr_num else get_next_adr_num(adr_dir)
+        folder = adr_dir
         filename = f"{num:04d}-{slug(raw_topic)}.md"
-    elif art_type == "plans":
-        folder = root / "plans"
-        filename = f"{slug(raw_topic)}.mdx"
     else:
+        # Plan server mode: flat dirs, ISO timestamp prefixes
+        iso_part = iso_filename(now)
+        ext = plan_server_ext(art_type)
         folder = root / art_type
-        filename = f"{slug(raw_topic)}.md"
+        filename = f"{iso_part}_{slug(raw_topic)}{ext}"
 
     folder.mkdir(parents=True, exist_ok=True)
     filepath = folder / filename

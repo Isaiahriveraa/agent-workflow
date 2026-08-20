@@ -5,7 +5,8 @@ import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HOME = process.env.HOME || process.env.USERPROFILE
-const PLAN_SERVER_DIR = join(HOME, 'Documents', 'plan-server')
+// Single source of truth: scripts/plan-server-path prints the plan server root
+const PLAN_SERVER_DIR = execFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'scripts', 'plan-server-path'), { encoding: 'utf8' }).trim()
 const DEFAULT_PORT = 3456
 
 function getProjectDir(project) {

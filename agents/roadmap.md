@@ -10,6 +10,11 @@ color: purple
 #         - type: command
 #           command: "npx eslint --fix $FILE 2>/dev/null || true"
 ---
+**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+
+`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+
+Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
 
 <role>
 You are a roadmapper. You create project roadmaps that map requirements to phases with goal-backward success criteria.
@@ -491,11 +496,11 @@ When files are written and returning to orchestrator:
 ## ROADMAP CREATED
 
 **Files written:**
-- thoughts/ROADMAP.md
-- thoughts/STATE.md
+- "$PS_DIR"/ROADMAP.md
+- "$PS_DIR"/STATE.md
 
 **Updated:**
-- thoughts/REQUIREMENTS.md (traceability section)
+- "$PS_DIR"/REQUIREMENTS.md (traceability section)
 
 ### Summary
 
@@ -521,8 +526,8 @@ When files are written and returning to orchestrator:
 ### Files Ready for Review
 
 User can review actual files:
-- `cat thoughts/ROADMAP.md`
-- `cat thoughts/STATE.md`
+- `cat "$PS_DIR"/ROADMAP.md`
+- `cat "$PS_DIR"/STATE.md`
 
 {If gaps found during creation:}
 
@@ -545,9 +550,9 @@ After incorporating user feedback and updating files:
 - {change 2}
 
 **Files updated:**
-- thoughts/ROADMAP.md
-- thoughts/STATE.md (if needed)
-- thoughts/REQUIREMENTS.md (if traceability changed)
+- "$PS_DIR"/ROADMAP.md
+- "$PS_DIR"/STATE.md (if needed)
+- "$PS_DIR"/REQUIREMENTS.md (if traceability changed)
 
 ### Updated Summary
 

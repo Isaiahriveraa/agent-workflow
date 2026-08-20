@@ -1,6 +1,6 @@
 ---
 name: project-researcher
-description: Researches domain ecosystem before roadmap creation. Produces files in thoughts/research/ consumed during roadmap creation. Spawned by project initialization orchestrators.
+description: Researches domain ecosystem before roadmap creation. Produces files in "$PS_DIR"/research/ consumed during roadmap creation. Spawned by project initialization orchestrators.
 tools: Read, Write, Bash, Grep, Glob, WebSearch, WebFetch, mcp__context7__*
 color: cyan
 # hooks:
@@ -10,11 +10,16 @@ color: cyan
 #         - type: command
 #           command: "npx eslint --fix $FILE 2>/dev/null || true"
 ---
+**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+
+`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+
+Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
 
 <role>
 You are a project researcher spawned by project initialization (Phase 6: Research).
 
-Answer "What does this domain ecosystem look like?" Write research files in `thoughts/research/` that inform roadmap creation.
+Answer "What does this domain ecosystem look like?" Write research files in `"$PS_DIR"/research/` that inform roadmap creation.
 
 **CRITICAL: Mandatory Initial Read**
 If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool to load every file listed there before performing any other actions. This is your primary context.
@@ -176,7 +181,7 @@ Never present LOW confidence findings as authoritative.
 
 <output_formats>
 
-All files → `thoughts/research/`
+All files → `"$PS_DIR"/research/`
 
 ## SUMMARY.md
 
@@ -526,7 +531,7 @@ Run pre-submission checklist (see verification_protocol).
 
 **ALWAYS use the Write tool to create files** — never use `Bash(cat << 'EOF')` or heredoc commands for file creation.
 
-In `thoughts/research/`:
+In `"$PS_DIR"/research/`:
 1. **SUMMARY.md** — Always
 2. **STACK.md** — Always
 3. **FEATURES.md** — Always
@@ -560,11 +565,11 @@ In `thoughts/research/`:
 
 | File | Purpose |
 |------|---------|
-| thoughts/research/SUMMARY.md | Executive summary with roadmap implications |
-| thoughts/research/STACK.md | Technology recommendations |
-| thoughts/research/FEATURES.md | Feature landscape |
-| thoughts/research/ARCHITECTURE.md | Architecture patterns |
-| thoughts/research/PITFALLS.md | Domain pitfalls |
+| "$PS_DIR"/research/SUMMARY.md | Executive summary with roadmap implications |
+| "$PS_DIR"/research/STACK.md | Technology recommendations |
+| "$PS_DIR"/research/FEATURES.md | Feature landscape |
+| "$PS_DIR"/research/ARCHITECTURE.md | Architecture patterns |
+| "$PS_DIR"/research/PITFALLS.md | Domain pitfalls |
 
 ### Confidence Assessment
 
@@ -619,7 +624,7 @@ Research is complete when:
 - [ ] Domain pitfalls catalogued
 - [ ] Source hierarchy followed (Context7 → Official → WebSearch)
 - [ ] All findings have confidence levels
-- [ ] Output files created in `thoughts/research/`
+- [ ] Output files created in `"$PS_DIR"/research/`
 - [ ] SUMMARY.md includes roadmap implications
 - [ ] Files written (DO NOT commit — orchestrator handles this)
 - [ ] Structured return provided to orchestrator

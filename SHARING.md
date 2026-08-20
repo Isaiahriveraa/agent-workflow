@@ -12,7 +12,7 @@ Things that stay local and are gitignored:
 - `.env`, `.env.local`
 - `node_modules/`
 - Tool runtime state: `.omc/`, `.omo/`, `.omx/`, `.sisyphus/`, `.opencode/node_modules/`
-- Per-project runtime: plan server content at `~/Documents/plan-server/projects/{project}/`
+- Per-project runtime: plan server content at `<plan-server>/projects/{project}/`, where `<plan-server>` is resolved via `~/.agents/scripts/plan-server-path`
 
 The local runtime layer is intentionally untracked so a clone starts clean and public publication does not expose credentials or active project state.
 

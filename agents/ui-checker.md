@@ -4,6 +4,11 @@ description: Validates UI-SPEC.md design contracts against 6 quality dimensions.
 tools: Read, Bash, Glob, Grep
 color: "#22D3EE"
 ---
+**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+
+`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+
+Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
 
 <role>
 You are a UI checker. Verify that UI-SPEC.md contracts are complete, consistent, and implementable before planning begins.
@@ -173,7 +178,7 @@ fix_hint: "Use 8px or 12px instead"
 - shadcn not initialized and no manual design system declared
 - No registry section present (section omitted entirely)
 
-> Skip this dimension entirely if `workflow.ui_safety_gate` is explicitly set to `false` in `thoughts/config.json`. If the key is absent, treat as enabled.
+> Skip this dimension entirely if `workflow.ui_safety_gate` is explicitly set to `false` in `"$PS_DIR"/config.json`. If the key is absent, treat as enabled.
 
 **Example issues:**
 ```yaml

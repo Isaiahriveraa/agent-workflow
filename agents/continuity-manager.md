@@ -3,6 +3,11 @@ name: continuity-manager
 description: Workflow continuity specialist for sessions, handoffs, active working sets, and project-local runtime state correctness.
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
+**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+
+`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+
+Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
 
 # Continuity Manager
 
@@ -17,7 +22,7 @@ Keep workflow continuity coherent across session artifacts, handoffs, runtime st
 
 ## Scope
 - `.sisyphus/run-continuation/` (replaces former `.omx/state/` and `.omx/sessions/`)
-- project-local handoff flow under `thoughts/handoffs/`
+- project-local handoff flow under `"$PS_DIR"/handoffs/`
 - continuity helper scripts and tests
 
 ## Deliverable

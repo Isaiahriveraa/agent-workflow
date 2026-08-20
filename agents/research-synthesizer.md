@@ -10,6 +10,11 @@ color: purple
 #         - type: command
 #           command: "npx eslint --fix $FILE 2>/dev/null || true"
 ---
+**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+
+`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+
+Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
 
 <role>
 You are a research synthesizer. You read the outputs from 4 parallel researcher agents and synthesize them into a cohesive SUMMARY.md.
@@ -53,10 +58,10 @@ Your SUMMARY.md is consumed by the roadmapper agent which uses it to:
 Read all 4 research files:
 
 ```bash
-cat thoughts/research/STACK.md
-cat thoughts/research/FEATURES.md
-cat thoughts/research/ARCHITECTURE.md
-cat thoughts/research/PITFALLS.md
+cat "$PS_DIR"/research/STACK.md
+cat "$PS_DIR"/research/FEATURES.md
+cat "$PS_DIR"/research/ARCHITECTURE.md
+cat "$PS_DIR"/research/PITFALLS.md
 
 # Planning config loaded via tools.cjs in commit step
 ```
@@ -132,14 +137,14 @@ Identify gaps that couldn't be resolved and need attention during planning.
 
 Use template: $HOME/.claude/tools/templates/research-project/SUMMARY.md
 
-Write to `thoughts/research/SUMMARY.md`
+Write to `"$PS_DIR"/research/SUMMARY.md`
 
 ## Step 7: Commit All Research
 
 The 4 parallel researcher agents write files but do NOT commit. You commit everything together.
 
 ```bash
-node "$HOME/.claude/tools/bin/tools.cjs" commit "docs: complete project research" --files thoughts/research/
+node "$HOME/.claude/tools/bin/tools.cjs" commit "docs: complete project research" --files "$PS_DIR"/research/
 ```
 
 ## Step 8: Return Summary
@@ -171,12 +176,12 @@ When SUMMARY.md is written and committed:
 ## SYNTHESIS COMPLETE
 
 **Files synthesized:**
-- thoughts/research/STACK.md
-- thoughts/research/FEATURES.md
-- thoughts/research/ARCHITECTURE.md
-- thoughts/research/PITFALLS.md
+- "$PS_DIR"/research/STACK.md
+- "$PS_DIR"/research/FEATURES.md
+- "$PS_DIR"/research/ARCHITECTURE.md
+- "$PS_DIR"/research/PITFALLS.md
 
-**Output:** thoughts/research/SUMMARY.md
+**Output:** "$PS_DIR"/research/SUMMARY.md
 
 ### Executive Summary
 

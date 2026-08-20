@@ -1,6 +1,6 @@
 # Plan Server Document Quality Standard
 
-This is the canonical quality standard for every document written to the plan server (`~/Documents/plan-server/projects/**`). Every skill that produces plan server artifacts MUST write documents that satisfy these criteria.
+This is the canonical quality standard for every document written to the plan server (root resolved via `~/.agents/scripts/plan-server-path`, content under `projects/**`). Every skill that produces plan server artifacts MUST write documents that satisfy these criteria.
 
 ---
 
@@ -134,7 +134,7 @@ Files under legacy month subdirectories (e.g. `handoffs/July/4th_12_38_PM_slug.m
 ### 3.5. Creating Artifacts
 
 - **Plans** → use the `plan-server` skill script (`plan-server.mjs`), which generates ISO-prefixed `.mdx` filenames
-- **Handoffs, research, reviews, etc.** → use `new-artifact.py --type {type} --dest ~/Documents/plan-server --project {name}`, which now generates ISO-prefixed filenames
+- **Handoffs, research, reviews, etc.** → use `new-artifact.py --type {type} --dest "$("$HOME/.agents/scripts/plan-server-path")" --project {name}`, which now generates ISO-prefixed filenames
 - **Design, discover, explore, blueprint skills** → construct filenames from `now.mjs` `<slug>` (which is the ISO timestamp) + brief kebab description
 
 ---
@@ -394,8 +394,6 @@ Used by: handoff skill
 
 ### 5.3. Research Documents
 
-Used by: research skill
-
 **Structure:**
 - Summary (high-level findings)
 - Detailed Findings (per area with file:line)
@@ -437,8 +435,6 @@ Used by: design skill
 
 ### 5.5. Solutions Documents
 
-Used by: explore skill
-
 **Structure:**
 - Summary (problem, recommended option, effort, confidence)
 - Problem Statement (requirements, constraints, success criteria)
@@ -455,8 +451,6 @@ Used by: explore skill
 **Mermaid Usage:** Per-option architecture diagram showing how each approach would integrate.
 
 ### 5.6. FRD Documents
-
-Used by: discover skill
 
 **Structure:**
 - Summary
