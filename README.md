@@ -6,13 +6,13 @@ Shared operating contract for AI-assisted coding across multiple tools. Commands
 
 This is an opinionated delivery workflow — adapters bridge tool ergonomics, `AGENTS.md` governs agent behavior, and skill pipelines route work from fuzzy idea to clean commit.
 
-The hub serves Claude Code, Codex CLI, OpenCode, Antigravity/Gemini, OpenClaw, and Pi from the same commands, agents, and skills.
+The hub serves Claude Code, Codex CLI, OpenCode, and Antigravity/Gemini from the same commands, agents, and skills.
 
 ```
 ┌──────────────────────────────┐
 │  Claude Code                 │
 │  Codex CLI / OpenCode        │
-│  Antigravity / OpenClaw / Pi │
+│  Antigravity / Gemini        │
 └──────────┬───────────────────┘
            │
 ┌──────────▼───────────────────┐
@@ -75,8 +75,11 @@ Slash commands in `commands/` extend the tool's native surface:
 |---------|-------------|
 | `/ch` | Create a handoff document to resume work in a future session |
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
+| `/wf` | Commit the current work (commit skill), then push and open a PR (pr-workflow) |
 
 Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-plan`) are invoked via `skill(name="skill-name")`, not slash commands.
+
+Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge.
 
 ## Adapters
 
@@ -88,7 +91,6 @@ Each AI tool connects through an adapter directory:
 | `adapters/codex-cli/` | Codex CLI | Config under `~/.codex/` |
 | `adapters/opencode/` | OpenCode | Native config discovery |
 | `adapters/antigravity/` | Antigravity / Gemini | `GEMINI.md` bridge |
-| `adapters/openclaw/` | OpenClaw | Workspace wrapper templates |
 
 Adapters change ergonomics, not behavior. Source of truth stays in this repo.
 
@@ -106,19 +108,29 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `to-spec/` | Conversation → spec issue |
 | `to-issues/` | Plan/spec → tracer-bullet issues |
 | `issue-delivery/` | One GitHub issue → isolated sibling worktree, verified draft PR |
+| `parallel-issue-delivery/` | Parallel issue execution in Codex threads + isolated worktrees |
+| `parallel-dev/` | Issue-driven parallel development via Herdr-managed worker panes |
 | `implement/` | Orchestrator: tdd → code-review → commit |
+| `spawn/` | Max-context sub-agent decomposition |
+| `subagent-implementation-review/` | Rule gate for delegated subagent work |
 | `tdd/` | Red-green-refactor with seam discipline |
-| `code-review/` | Parallel specialist agent review |
+| `code-review/` | Adversarial review — two blind reviewers, one adjudicator |
 | `review/` | Two-axis review (standards + spec) |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
-| `commit/` | Atomic commit messages |
+| `commit/` | Atomic commit messages (mandatory before any commit) |
+| `pr-workflow/` | PR discipline (mandatory before any PR) |
 | `handoff/` | Session handoff documents |
 | `recall/` | Resume from handoff |
 | `plan-server/` | Local MDX plan server |
 | `codebase-design/` | Deep module design |
-| `pr-workflow/` | PR discipline |
+| `codebase-drill/` | OA-style codebase navigation training |
+| `learn-plan/` | Learning-session planning protocol |
+| `tutor/` | Technical mentor workflow |
 | `diagnose/` | Bug and performance diagnosis |
+| `security-review/` | Team-mode vulnerability research |
+| `e2e-testing-patterns/` | Playwright/Cypress testing standards |
+| `enforce/` | Enforce hub AGENTS.md rules on a project |
 | `cancel/` | Cancel active modes |
 | `herdr/` | herdr workspace management |
 | `prompt-master/` | Prompt engineering |
@@ -130,8 +142,12 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `impeccable/` | AI agent design guidance (pbakaus/impeccable) |
 | `framer-motion-animator/` | Framer Motion animations |
 | `shadcn/` | shadcn/ui component management |
+| `next-best-practices/` | Next.js best practices |
+| `performance/` | Web performance optimization |
+| `supabase-postgres-best-practices/` | Postgres optimization from Supabase |
+| `ask-yonie/` | Skill router — ask which skill fits |
 
-Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase-analyzer, claim-verifier, diff-auditor, artifact-reviewer, and more.
+Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase-analyzer, claim-verifier, diff-auditor, roadmap, ui-auditor, and more.
 
 ## Directory Structure
 
@@ -141,18 +157,20 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 ├── manifest.json          # Hub manifest — symlinks, capabilities
 ├── package.json           # Node package — scripts
 ├── sync.sh                # Multi-CLI sync pipeline
-├── .skill-lock.json       # Skill registry
-├── commands/              # Slash commands (ch, later)
+├── .skill-lock.json       # Skill registry (tracked)
+├── commands/              # Slash commands (ch, later, wf)
 ├── agents/                # Specialist expert agents
 ├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules
 │   ├── prototype/          # Pipeline skills
+│   ├── to-plan/
 │   ├── issue-discovery/
 │   ├── implement/
 │   ├── tdd/
 │   ├── code-review/
 │   ├── review/
 │   ├── commit/
+│   ├── pr-workflow/
 │   ├── grill-with-docs/
 │   ├── domain-modeling/
 │   ├── to-spec/
@@ -160,11 +178,13 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── handoff/
 │   ├── recall/
 │   ├── plan-server/
+│   ├── codebase-drill/
+│   ├── learn-plan/
 │   ├── diagnose/
 │   ├── split-plan/
 │   ├── codebase-design/
 │   ├── resolving-merge-conflicts/
-│   ├── pr-workflow/
+│   ├── parallel-dev/
 │   ├── prompt-master/
 │   ├── frontend-design/
 │   ├── ui-ux-pro-max/
@@ -173,9 +193,9 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── shadcn/
 │   ├── herdr/
 │   └── ...                # Additional domain skills
-├── scripts/               # Tooling scripts (init, reset, memory sync, etc.)
-├── adapters/              # 6 CLI adapter configs
-└── .omc/                  # OH MY PI runtime state
+├── scripts/               # Tooling (init/reset, plan-server-path, worktree helpers, model router)
+├── adapters/              # 4 CLI adapter configs
+└── .omc/                  # OpenCode project memory (regenerated)
 ```
 
 ## What Gets Shared
@@ -187,7 +207,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 ## What Stays Local
 
 - Secrets: `.env`, `.env.local`
-- Dependencies: `node_modules/`, `.skill-lock.json`
+- Dependencies: `node_modules/`
 - Per-project runtime: plan server content at `<plan-server>/projects/{project}/`, where `<plan-server>` is resolved via `~/.agents/scripts/plan-server-path`
 
 The public repo is inspectable. Credentials, handoffs, live plans, and active project runtime state are intentionally excluded.
