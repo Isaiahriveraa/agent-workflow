@@ -1,6 +1,6 @@
 ---
 name: parallel-dev
-description: Execute validated implementation plans through focused GitHub issues, isolated worktrees, Herdr-managed OMP worker panes that run a boss protocol (spawn → subagent-implementation-review → worker diff-review gate → commit → pr-workflow), STATUS progress messages back to the commander, and human-approved draft PRs. Use when the user explicitly wants issue-driven parallel development or asks to execute a plan through multiple agents.
+description: Execute validated implementation plans through focused GitHub issues, isolated worktrees on disjoint shards, and Herdr-managed OMP worker panes that run a boss loop (spawn → subagent-implementation-review → parallel adversarial review → FIFO defect-queue drain → diff-review gate → commit → pr-workflow), with STATUS progress back to the commander, an independent cold-reader review before verification passes, and human-approved draft PRs. Use when the user explicitly wants issue-driven parallel development or asks to execute a plan through multiple agents.
 ---
 
 # Parallel Development Commander
@@ -39,26 +39,38 @@ The official `herdr` skill owns pane, worktree, process, and OMP runtime operati
 ### You must never
 
 - Edit implementation code, application tests, migrations, or dependencies.
-- Spawn a separate "independent reviewer" pane. The worker's boss loop is the quality gate.
+- Spawn a separate "independent reviewer" **pane**. Independent review happens as `task` sub-agents — adversarial reviewers inside the worker's boss loop, and one cold reader inside commander verification. A pane means another OMP process, another worktree, and another thing to supervise, for a review that finishes in a single turn.
+- Skip the independent reviewer before `VERIFICATION_PASSED`. The commander wrote the worker's context packet and read every STATUS line; its own read of the diff is not independent.
+- Fix a review finding yourself. Findings go into the worker's defect queue and are drained by the worker's fixer sub-agents.
+- Launch a worker while fleet-wide open defects are at `max_open_defects`.
 - Open a draft PR yourself. The worker pane owns `gh pr create --draft` so the SHA, branch, and worktree stay aligned.
 - Approve, merge, or push to a base branch.
 - Re-implement a worker's diff. Send a checklist; let the worker fix.
 - Advance to `COMMITTING` while any acceptance criterion is unmet or
   while the cumulative `git diff <base>...HEAD` has not been verified
-  against every acceptance criterion in the worker context packet.
+  against every acceptance criterion in the worker context packet,
+  or while any defect-queue entry is still `open`.
 
 ## Ownership model
 
 ```text
-Commander:   plan validation, approval gate, runtime delegation,
-             STATUS supervision, commander verification, human-merge detection
-Worker pane: boss protocol (spawn → subagent-implementation-review → commit
-             → pr-workflow), STATUS messages to commander, draft PR creation
+Commander:   plan validation, approval gate, runtime delegation, shard allocation,
+             STATUS supervision, commander verification (defect-queue closure +
+             independent review), human-merge detection
+Worker pane: boss protocol (spawn → subagent-implementation-review →
+             adversarial review → drain defect queue → diff-review gate →
+             commit → pr-workflow), STATUS messages to commander,
+             draft PR creation
+Sub-agents:  implementer (writes code) | adversarial reviewer (diff-only, tries
+             to break it) | fixer (applies one defect) — three roles, three
+             separate context windows, never combined
 Human:       issue approval, PR review, and merge authority
 Herdr:       pane and OMP runtime control
 ```
 
 The commander is the user's current OMP session. It is not a separate pane; it supervises worker panes from its own context. Each worker pane runs the boss protocol as one OMP agent that delegates to in-model sub-agents via the `task` tool.
+
+Splitting implementer, reviewer, and fixer across separate context windows is the mechanism, not a formality. A reviewer that can see why the code was written the way it was inherits the implementer's blind spots and rationalizes them. Reviewers receive the diff and the acceptance criteria — nothing else.
 
 ### Branch naming convention
 
@@ -82,11 +94,19 @@ follow standard software-engineering conventions:
 
 ```text
 The commander owns orchestration and verification; the worker owns implementation
-and the draft PR. Quality lives in each worker's boss loop. The commander never
-opens a PR on unverified work and never re-implements a worker's diff.
+and the draft PR. Quality lives in the loop: implement → review in parallel with
+fresh contexts → drain the defect queue in arrival order → repeat until clean.
+The commander never opens a PR on unverified work and never re-implements a
+worker's diff.
 ```
 
 Optimize for maximum **safe** parallelism, not the maximum number of active agents.
+
+Three properties make parallelism safe rather than merely wide:
+
+1. **Disjoint shards.** Waves prove dependency safety; shards prove file safety. One active worker per shard.
+2. **Prohibitions, not guidance.** `fleet_rules` reach every worker verbatim. Destructive Git loses a neighbour's work; unguarded global commands stall the whole fleet. Neither is visible from inside the pane that causes it.
+3. **Backpressure on defects, not workers.** Undrained review findings are the real throughput limit. Adding a worker to a fleet that is behind on fixes makes completion later, not sooner.
 
 ## Required references
 
@@ -126,11 +146,11 @@ Invoke `to-issues` with the validated plan.
 Required output:
 
 1. Human-readable Markdown issue drafts.
-2. Machine-readable YAML execution manifest.
-3. Mermaid dependency / parallelism graph.
+2. Machine-readable YAML execution manifest, including `shard` per issue, `waves[].max_parallel`, per-issue `review`, `fleet_rules`, and `completion_oracle`.
+3. Mermaid dependency / parallelism graph with shard labels.
 4. Drafts only; no GitHub mutation.
 
-The YAML manifest is authoritative. Reject the result if Markdown, YAML, and Mermaid disagree.
+The YAML manifest is authoritative. Reject the result if Markdown, YAML, and Mermaid disagree, if two issues in the same wave and different shards share a path, or if a fan-out issue lacks a `work_queue_command`.
 
 ## Phase 3 — Human approval gate
 
@@ -142,7 +162,10 @@ Before publishing anything, show one complete approval packet containing:
 - execution mode: `herdr-agent`, `human`, or `unassigned`
 - dependency graph and execution waves
 - file/module ownership map
-- capacity limits (workers_per_space, max_active_workers, max_prs_awaiting_human_review)
+- capacity limits (workers_per_space, max_active_workers, max_prs_awaiting_human_review, max_open_defects)
+- shard partition per wave, and each wave's `max_parallel` (its shard count)
+- **`review` block** (see below) — review composition per issue
+- `fleet_rules` carried verbatim from the manifest
 - **`models` block** (see below) — explicitly prompt the user for these fields
 - collision risks and unresolved assumptions
 - exact actions the approval authorizes
@@ -156,6 +179,17 @@ models:
 ```
 
 The skill explicitly prompts the user for `worker_model` and `worker_thinking` before publishing anything. Defaults shown; user may override. The commander is the user's current OMP session and is not a model-choice field — there is no `commander_model` in the packet.
+
+The `review` block:
+
+```yaml
+review:
+  adversarial_reviewers: 2
+  reviewer_context: diff-only
+  fixer: separate
+```
+
+Review composition is a cost decision the human approves alongside capacity. Each implementation round spends `adversarial_reviewers` extra sub-agent contexts plus a fixer — the explicit trade for catching defects a same-context reader cannot see. Raise it to 3 for issues touching auth, persistence, migrations, concurrency, or public contracts; drop it to 1 for trivial mechanical diffs. `reviewer_context: diff-only` is not negotiable.
 
 Nothing is published or launched until the human approves this packet.
 
@@ -177,9 +211,13 @@ Default project state layout:
 ├── manifest.yaml          # approved execution contract; committed
 ├── state.yaml             # local runtime state; gitignored
 └── reports/               # local worker evidence; gitignored
+    └── <issue-key>/
+        └── defects.jsonl  # append-only defect queue for this issue
 ```
 
 Ensure `.herdr/state.yaml` and `.herdr/reports/` are ignored.
+
+Create an empty `defects.jsonl` per issue at initialization. The queue is append-only: entries are closed with a disposition, never edited or deleted. It survives context compaction, which an in-memory finding does not — that durability is the reason it is a file rather than a list the worker keeps in its head.
 
 ### Workspace capacity plan
 
@@ -199,7 +237,9 @@ Before creating, inspecting, messaging, waiting on, restarting, or removing any 
 3. Treat returned IDs, paths, process data, and statuses as authoritative.
 4. Never reconstruct or guess Herdr commands or identifiers.
 
-Each worker receives a scoped context packet containing the issue, relevant plan sections, locked architecture decisions, ownership boundaries, merged dependencies, acceptance criteria, verification commands, Git permissions, the boss protocol, the commander's pane id, and stop conditions. The packet schema lives in `references/contracts.md`.
+Each worker receives a scoped context packet containing the issue, relevant plan sections, locked architecture decisions, ownership boundaries and shard, convention artifacts to read before starting, merged dependencies, acceptance criteria, verification commands, Git permissions, `fleet_rules`, the `review` block, the defect-queue path, the boss protocol, the commander's pane id, and stop conditions. The packet schema lives in `references/contracts.md`.
+
+`fleet_rules` ships verbatim. Do not paraphrase, shorten, or soften it — a prohibition rewritten as advice reads as advice, and the failure modes it prevents (a neighbour's uncommitted work destroyed, the fleet stalled on disk I/O) are invisible from inside the pane that causes them.
 
 ### Worker launch
 
@@ -276,27 +316,33 @@ Phases, in the canonical order the worker transitions through them:
 
 - `IMPLEMENTING` — sub-agents active
 - `BOSS_REVIEW` — running `subagent-implementation-review` on sub-agent output
-- `CHANGES_REQUESTED` — boss review or the worker diff-review gate
-  found defects; the worker is re-delegating to sub-agents and will
-  continue to do so until every sub-agent returns `ready` and every
-  acceptance criterion is verified against the diff. The loop has no
-  cap. The worker MUST NOT advance to `COMMITTING` while any sub-agent
-  review is `changes-required`, `blocked-awaiting-human`, or any
-  acceptance criterion is unmet.
+- `ADVERSARIAL_REVIEW` — reviewer sub-agents running concurrently against
+  the diff, each given only the diff and the acceptance criteria. Loops
+  back. Quiet by construction: reviewers write no files and produce no
+  pane output until they return.
+- `CHANGES_REQUESTED` — the worker is draining its defect queue. Findings
+  are worked in arrival order (`blocking` severity first, then FIFO by
+  `seq`), each delegated to a fixer sub-agent. The loop has no cap. The
+  worker MUST NOT advance to `COMMITTING` while any queue entry is `open`
+  or any acceptance criterion is unmet.
 - `COMMITTING` — running the `commit` skill for atomic commits
 - `VERIFYING` — running checks (lint, test, typecheck) on the committed tree
 - `READY_FOR_REVIEW` — branch pushed, awaiting commander verification
 - `DRAFT_PR_OPENED` — `gh pr create --draft` succeeded
 - `DONE` — terminal, evidence report follows
 
+The loop exits when the queue has no open entries **and** the last round returned zero blocking and zero high findings — two consecutive clean rounds for issues marked `risk: high`. That is a defined exit signal, not the worker's judgement that it has done enough.
+
 `BLOCKED` is orthogonal: a worker can emit `STATUS <key> BLOCKED <sha-or-dash> <reason>` from any phase when it hits a destructive, irreversible, or materially ambiguous decision.
 
 **Commander response per phase:**
 
-- `IMPLEMENTING`, `BOSS_REVIEW`, `CHANGES_REQUESTED`, `COMMITTING`, `VERIFYING`, `DRAFT_PR_OPENED` — record, surface to user, no action.
+- `IMPLEMENTING`, `BOSS_REVIEW`, `ADVERSARIAL_REVIEW`, `CHANGES_REQUESTED`, `COMMITTING`, `VERIFYING`, `DRAFT_PR_OPENED` — record, surface to user, no action.
 - `READY_FOR_REVIEW` — trigger Phase 7 commander verification.
 - `BLOCKED` — investigate immediately, surface blocker reason, decide whether to unblock or escalate.
 - `DONE` — collect final evidence report, mark terminal.
+
+During `ADVERSARIAL_REVIEW` and `CHANGES_REQUESTED`, read `.herdr/reports/<issue-key>/defects.jsonl` for progress rather than the pane. Entries closing means the worker is advancing even when it is silent. Never interrupt an adversarial round — the interrupt discards every concurrent reviewer's work at once.
 
 The commander never sends a STATUS line for a worker; only the worker emits STATUS for its own issue.
 
@@ -321,7 +367,8 @@ The commander MUST:
 - Use the configured `stall_threshold_minutes` as the patience baseline — a `working` worker that has produced output within the threshold is not stalled.
 - Avoid messaging a worker that is `working` with sub-agents active; an interrupt during sub-agent computation wastes the work already done.
 - Record `last_output_hash`, `last_commit`, and `last_status_phase` in `.herdr/state.yaml` to detect genuine stalls.
-- A worker emitting `STATUS <key> CHANGES_REQUESTED` is iterating with its sub-agents. Do not interrupt; allow extended quiet periods.
+- A worker emitting `STATUS <key> CHANGES_REQUESTED` is draining its defect queue through fixer sub-agents. Do not interrupt; allow extended quiet periods.
+- A worker emitting `STATUS <key> ADVERSARIAL_REVIEW` has several reviewer sub-agents running concurrently. This phase is quiet by construction — reviewers write no files and produce no pane output until they return. An interrupt here discards every reviewer's work at once.
 
 Herdr `done` status for the parent pane signals completion of the entire worker task.
 A worker is verifiable only after it:
@@ -330,9 +377,10 @@ A worker is verifiable only after it:
 - identifies the exact pushed SHA
 - maps evidence to every acceptance criterion
 - reports exact verification commands and results
-- confirms scope and forbidden-path compliance
+- confirms scope, shard, and forbidden-path compliance
 - states remaining risks
 - includes a `boss_review_summary` in its evidence report
+- includes a `defect_queue` block with `open: 0` and `total == fixed + rejected + escalated`
 
 Unsupported claims such as "should pass" or "appears complete" are rejected.
 
@@ -357,17 +405,21 @@ supervises all workers regardless of workspace:
 
 ## Phase 7 — Commander verification
 
-The commander verifies the worker's evidence but does NOT spawn a separate reviewer. The worker's boss loop is the quality gate. Procedure:
+The commander verifies the worker's evidence and delegates one cold read. It does NOT spawn a reviewer pane. Procedure:
 
 1. The worker has reported `STATUS <key> READY_FOR_REVIEW <sha> <summary>` and pushed the branch at that SHA.
 2. Create a clean temporary checkout at the exact pushed SHA through the official Herdr workflow.
 3. Re-run the worker's verification commands from the issue contract.
-4. Inspect the diff for scope compliance (no out-of-scope files, no forbidden paths).
+4. Inspect the diff for scope compliance (no out-of-scope files, no forbidden paths, nothing outside the issue's shard).
 5. Inspect the evidence report (criterion-to-evidence mapping, exact verification exit codes, file list, scope confirmation, `boss_review_summary`).
-6. **If verification passes and evidence is complete:** send the `VERIFICATION_PASSED` handshake to the worker pane (see Phase 6 — `VERIFICATION_PASSED handshake`). The commander then waits for the worker to emit `STATUS <key> DRAFT_PR_OPENED <sha> <pr_url>`. Without the handshake, the worker stays idle at `READY_FOR_REVIEW` and never starts the PR workflow.
-7. **If verification fails or evidence is incomplete:** send a precise checklist back to the worker pane via `herdr pane send-text` + Enter. Do NOT write code. Wait for the worker's next STATUS.
+6. **Verify defect-queue closure** — read `.herdr/reports/<issue-key>/defects.jsonl` directly rather than trusting the summary. `open` must be zero, `total` must equal `fixed + rejected + escalated`, and every `rejected-with-evidence` entry must carry a live citation. A rejection without a citation is a skip wearing a disposition, and it is the likeliest place for a real defect to have been buried.
+7. **Dispatch the independent review** — one `task` sub-agent against the clean checkout, given only the diff and the acceptance criteria, using the adversarial reviewer prompt in `references/review-recovery.md`. It receives no plan, no context packet, no evidence report, no STATUS history.
+8. **If every gate passes and the independent review returned no findings:** send the `VERIFICATION_PASSED` handshake to the worker pane (see Phase 6 — `VERIFICATION_PASSED handshake`). The commander then waits for the worker to emit `STATUS <key> DRAFT_PR_OPENED <sha> <pr_url>`. Without the handshake, the worker stays idle at `READY_FOR_REVIEW` and never starts the PR workflow.
+9. **If any gate fails:** append independent-review findings to the worker's defect queue with `source: commander-review`, send a precise checklist naming the new `seq` values back to the worker pane via `herdr pane send-text` + Enter. Do NOT write code. Wait for the worker's next STATUS.
 
 The commander never opens a draft PR on unverified work. The commander never re-implements a worker's diff. The worker pane is the only place that runs `gh pr create --draft` — this keeps the SHA, branch, and worktree aligned with the implementation.
+
+Step 7 exists because the commander is not a cold reader: it authored the worker's context packet and read every STATUS line the worker emitted. Delegating the cold read to a sub-agent that has seen none of that is what makes it independent. A finding here means two independent contexts disagreed about whether the code works — worth resolving before spending a human's review slot, but the worker resolves it, not the commander.
 
 ## Phase 8 — Draft PR and human merge
 
@@ -375,10 +427,12 @@ Open a draft PR only when:
 
 - worker evidence is complete
 - the exact pushed SHA was commander-verified
+- the defect queue is closed (`open: 0`, dispositions accounted for)
+- the independent review was dispatched and returned no findings
 - the `VERIFICATION_PASSED` handshake was sent
 - required checks were reproduced successfully
 - acceptance criteria pass
-- scope is clean
+- scope is clean and inside the issue's shard
 - no blocking finding remains
 - human-review queue capacity exists
 
@@ -403,7 +457,9 @@ After the human merges, detect the merge, close/update the issue, clean safe run
 The workflow is complete only when:
 
 - every approved issue is merged, intentionally deferred, reassigned, or explicitly cancelled
-- every merged PR passed worker boss review and commander verification
+- every merged PR passed worker boss review, defect-queue closure, independent review, and commander verification
+- every defect queue reached terminal dispositions with no `open` entries
+- the plan's completion oracle passes, if one was declared
 - no unresolved ownership lock or active worker remains
 - runtime cleanup is safe and complete
 - remaining risks and deferred work are clearly reported

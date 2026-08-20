@@ -5,7 +5,7 @@ description: "Read hub AGENTS.md and enforce its rules on the current project us
 
 # Enforce
 
-Read `~/.agents/AGENTS.md` (the hub's master operating contract), extract its operating rules, and use the `skill(name="spawn")` protocol to enforce them on the current project — BERP comments, code smell cleanup, convention conformance, and any other policies defined in that file. Not a project-local AGENTS.md — the hub file is the single source of truth.
+Read `~/.agents/AGENTS.md` (the hub's master operating contract), extract its operating rules, and use the `skill(name="spawn")` protocol to enforce them on the current project — contract documentation (rule 8), code smell cleanup, convention conformance, and any other policies defined in that file. Not a project-local AGENTS.md — the hub file is the single source of truth.
 
 ---
 
@@ -68,7 +68,7 @@ All assigned files updated to conform to the rules in AGENTS.md.
 3. CONTEXT
 Project root: [path]
 AGENTS.md rules (full text):
-[extracted rules — BERP comments, inline comments, error handling,
+[extracted rules — contract docs (rule 8), inline comments, error handling,
  no type suppressions, code smell cleanup, etc.]
 
 Assigned files:
@@ -76,7 +76,7 @@ Assigned files:
 
 4. MUST DO
 - Read each file before editing
-- Write BERP docstrings on every public function/method/class
+- Document contract-bearing functions with the rule-8 block template; short why-comments on non-obvious logic
 - Add inline comments for non-obvious logic
 - Remove dead code, stale comments, leftover scaffolding
 - Fix any rule violations you find
@@ -91,7 +91,7 @@ Assigned files:
 
 6. DONE WHEN
 - All assigned files conform to AGENTS.md rules
-- BERP docstrings on all public symbols
+- Contract-bearing functions documented per rule 8; no boilerplate elsewhere
 - No dead code or stale comments remaining
 - LSP diagnostics clean on changed files
 ```
@@ -100,7 +100,7 @@ Assigned files:
 
 After all sub-agents complete:
 - Check that no file was left untouched that should have been covered
-- Verify BERP compliance on a sample of changed files
+- Verify rule-8 contract compliance on a sample of changed files
 - Report what was done per module
 
 ---
@@ -120,7 +120,7 @@ When reporting results, write the report to the plan server.
 Run this to create the enforce report under the plan server project structure:
 
 ```bash
-PLAN_SERVER="$HOME/Documents/plan-server"
+PLAN_SERVER="$("$HOME/.agents/scripts/plan-server-path")"
 python3 ~/.agents/scripts/new-artifact.py \
   --dest "$PLAN_SERVER" \
   --type reviews \

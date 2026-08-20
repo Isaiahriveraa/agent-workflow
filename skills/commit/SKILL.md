@@ -1,10 +1,11 @@
 ---
 name: commit
-description: Plan, review, and execute atomic Git commits using Conventional Commits.
-Invoke before every git commit, whether requested by the user or initiated
-by an agent. Inspect the full working tree, separate unrelated concerns,
-split files by hunk when necessary, present the exact commit plan, and
-require explicit user approval before staging or committing anything.
+description: >-
+  Plan, review, and execute atomic Git commits using Conventional Commits.
+  Invoke before every git commit, whether requested by the user or initiated
+  by an agent. Inspect the full working tree, separate unrelated concerns,
+  split files by hunk when necessary, present the exact commit plan, and
+  require explicit user approval before staging or committing anything.
 ---
 
 # Atomic Commit Workflow
@@ -397,6 +398,13 @@ Message:
 1. <commit 1 summary>
 2. <commit 2 summary>
 
+## Diff Scope
+- path/to/file: +<added> / -<removed>
+- path/to/other-file: +<added> / -<removed>
+- Total files: <N>
+- Total added: +<total added>
+- Total removed: -<total removed>
+
 Approval required before staging or committing.
 ```
 
@@ -404,6 +412,11 @@ For a single commit, still show the full proposal.
 
 Do not output only commit messages. The user must be able to review exactly
 which files and hunks belong to each commit.
+
+Diff Scope must show the exact line counts for the changes covered by the
+proposal: `git diff --numstat` for per-file added/removed counts and
+`git diff --stat` for the total. With hunk-level staging, show per-commit
+numbers; otherwise show the working-tree totals.
 
 ## Pre-Commit Verification
 

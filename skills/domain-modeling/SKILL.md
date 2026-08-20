@@ -13,7 +13,7 @@ Actively build and sharpen the project's domain model as you design. This is the
 Glossary entries belong to the **plan server** under the project matching the git repo name:
 
 ```
-~/Documents/plan-server/projects/{project}/
+<plan-server>/projects/{project}/   (root from ~/.agents/scripts/plan-server-path)
 ├── glossary/glossary.md       ← domain glossary
 └── ...
 ```
@@ -31,10 +31,10 @@ Create files lazily — only when you have something to write. Use the helper sc
 
 ```bash
 # Create a glossary entry
-python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type glossary --topic "<term>"
+python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --project <project> --type glossary --topic "<term>"
 
 # Create an ADR (writes to {git-root}/docs/adr/NNNN-slug.md, symlinks from plan-server)
-python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type adr --topic "<decision title>"
+python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --project <project> --type adr --topic "<decision title>"
 ```
 
 ## During the session

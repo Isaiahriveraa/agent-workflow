@@ -38,10 +38,13 @@ For every issue show:
 Also show:
 
 - dependency graph
-- ownership map
+- ownership map and shard partition
 - `max_active_workers`
 - `max_prs_awaiting_human_review`
+- `max_open_defects`
+- `review` block (see below)
 - `models` block (see below)
+- `fleet_rules` carried from the manifest
 - risks and approval boundary
 
 The `models` block:
@@ -54,15 +57,26 @@ models:
 
 The skill explicitly prompts the user for `worker_model` and `worker_thinking` before publishing. Defaults shown; user may override. The commander is the user's current OMP session and is not a model-choice field — there is no `commander_model` in the packet.
 
+The `review` block:
+
+```yaml
+review:
+  adversarial_reviewers: 2
+  reviewer_context: diff-only
+  fixer: separate
+```
+
+Review composition is a cost decision the human approves alongside capacity. Every implementation round spends `adversarial_reviewers` extra sub-agent contexts plus a fixer; that is the explicit trade for catching defects a same-context reader cannot see. Raise it to 3 for issues touching auth, persistence, migrations, concurrency, or public contracts; drop it to 1 for trivial mechanical diffs. `reviewer_context: diff-only` is not negotiable — a reviewer that reads the implementer's reasoning is not an independent reviewer.
+
 ## 4. Publish and initialize
 
 After approval:
 
 1. Invoke `to-issues` to publish only approved GitHub issues.
-2. Promote the draft manifest to the committed manifest (see `references/contracts.md` — Manifest promotion), including the `models` block.
-3. Initialize `.herdr/state.yaml` and `.herdr/reports/`.
+2. Promote the draft manifest to the committed manifest (see `references/contracts.md` — Manifest promotion), including the `models`, `review`, and `fleet_rules` blocks.
+3. Initialize `.herdr/state.yaml` and `.herdr/reports/`, creating an empty `.herdr/reports/<issue-key>/defects.jsonl` per issue.
 4. Apply team-facing status labels.
-5. Acquire ownership locks for likely files and tightly coupled modules.
+5. Acquire ownership locks for likely files and tightly coupled modules, one lock set per shard.
 
 The agent never becomes the GitHub owner. The human owns the result.
 
@@ -72,8 +86,12 @@ An issue becomes `READY` only when:
 
 - every hard dependency is merged
 - capacity is available (workers and human-review slots)
+- fleet-wide open defects are below `max_open_defects`
+- its shard has no other active worker
 - ownership is non-overlapping
 - the issue is approved
+
+The defect ceiling is backpressure on the real bottleneck. Worker count does not limit throughput; undrained review findings do. Launching another worker into a fleet that is already behind on fixes makes completion later, not sooner.
 
 Possible orchestration states:
 
@@ -91,6 +109,17 @@ MERGED
 ```
 
 The commander may use fewer workers than allowed but never more.
+
+### Launch order within a wave
+
+When more issues are `READY` than there is capacity, launch in descending
+`unblocks_count` — the issue that opens the most downstream work goes first.
+
+A dependency-correct graph says which issues *may* run; it does not say which
+should run first. Spending the last worker slot on a leaf issue while a
+high-fanout foundation issue waits strands the whole next wave behind it. Break
+ties by shard, preferring a shard with no active worker so the wave widens
+rather than deepens.
 
 ### Valid state transitions
 
@@ -113,7 +142,7 @@ CANCELLED ──────────→ (terminal)
 MERGED ─────────────→ (terminal)
 ```
 
-There is no `INDEPENDENT_REVIEW` state. The worker's boss loop is the quality gate; the commander runs the verification pass.
+There is no `INDEPENDENT_REVIEW` state. Independent review is not an orchestration state — it happens twice as `task` sub-agents inside states that already exist: adversarial reviewers inside the worker's `ACTIVE` loop, and the commander's cold reader inside `VERIFYING`. Neither needs a pane, a worktree, or a state transition.
 
 All transitions require the commander to update `.herdr/state.yaml`. Transitions not listed here are undefined; consult the human before attempting an unlisted transition.
 
@@ -129,6 +158,15 @@ If two ready issues overlap:
 4. Require explicit human approval for any overlap exception.
 
 Workers never negotiate ownership changes privately.
+
+### Shards
+
+The manifest assigns each issue a `shard` — the unit of concurrent file ownership within a wave. Issues in different shards have disjoint `owned_paths` and are safe to run at the same time. Issues in the same shard are not, regardless of what the dependency graph says.
+
+- Run at most one active worker per shard.
+- A wave's true parallelism is its distinct shard count, not its issue count. `waves[].max_parallel` from the manifest is that number; never exceed it even when `max_active_workers` would allow more.
+- Prefer allocating one workspace per shard so heavy commands stay serialized within a shard and independent across shards.
+- If a worker's diff touches a path outside its shard, that is a scope violation, not a merge problem. Send it back.
 
 ## 7. Launch workers
 
@@ -156,7 +194,9 @@ For each ready `herdr-agent` issue:
     `.herdr/manifest.yaml` (default `issue-<n>-<slug>`, or the repo
     override). Record it on the issue's `herdr_resources` and in
     `.herdr/state.yaml` before any `git checkout -b` runs.
-2. Create one branch and isolated worktree from the approved base.
+2. Create one branch and isolated worktree from the approved base via
+   `~/.agents/scripts/new-worktree.sh <branch> <start-point>` — the script
+   derives the worktree directory from the branch name (`/` → `-`).
 3. Identify the workspace pane for this worker:
    - First issue in a workspace: use the workspace's `root_pane` directly.
    - Subsequent issues: split a new pane from `root_pane`:
@@ -181,26 +221,38 @@ For each ready `herdr-agent` issue:
 
 After launch, the worker pane runs the boss protocol autonomously. The commander does not orchestrate the worker's internal sub-skill sequence; it only sends the `VERIFICATION_PASSED` handshake after the worker reports `READY_FOR_REVIEW`.
 
+The core loop is implement → review in parallel with fresh contexts → drain the defect queue → repeat. See `references/review-recovery.md` — Boss protocol for the adversarial reviewer prompt, the defect queue schema, and the termination condition.
+
 The worker's mandated sub-skill sequence:
 
 1. `skill(name="spawn")` — decompose the issue into atomic sub-tasks, write 7-section prompts.
 2. `task` tool — delegate each sub-task to an in-model sub-agent with a full 7-section prompt (TASK, EXPECTED OUTPUT, CONTEXT, CODEBASE CONVENTIONS, MUST DO, MUST NOT DO, DONE WHEN).
 3. `skill(name="subagent-implementation-review")` — review each sub-agent's output.
-3a. Worker diff-review gate — after every sub-agent passes
-    `subagent-implementation-review`, run `git diff <base>...HEAD`
-    and verify the cumulative diff against every
-    `acceptance_criteria` from the worker context packet. Re-delegate
-    any unmet criterion before committing. Never advance to commit
-    while a criterion is unmet.
-4. If review reports `changes-required` or `blocked-awaiting-human`, re-delegate with the correction instructions.
-5. `skill(name="commit")` — atomic commits, one logical change per commit, no `and` in subject lines.
-6. Push the branch.
-7. Wait for the commander's `VERIFICATION_PASSED` handshake before continuing.
-8. `skill(name="pr-workflow") /pr` — generate the PR description from the diff.
-9. `gh pr create --draft --base <base> --head <branch> --title <title> --body-file <body>`.
-10. Send `STATUS <key> DRAFT_PR_OPENED <sha> <pr_url>` to the commander.
+4. Adversarial review round — dispatch `review.adversarial_reviewers`
+   sub-agents in one parallel wave, each given only the diff and the
+   acceptance criteria and told to assume the code is wrong. Append
+   every finding to `.herdr/reports/<issue-key>/defects.jsonl` in
+   arrival order.
+5. Drain the defect queue — `blocking` severity first, then strictly
+   FIFO by `seq`. Each defect goes to a **fixer** sub-agent, never to
+   the reviewer that raised it or the agent that wrote the code. Every
+   entry reaches `fixed`, `rejected-with-evidence`, or `escalated`.
+6. Worker diff-review gate — run `git diff <base>...HEAD` and verify
+   the cumulative diff against every `acceptance_criteria` from the
+   worker context packet. Re-delegate any unmet criterion. Never
+   advance to commit while a criterion is unmet.
+7. Repeat 4–6 until the queue has no open entries and the last round
+   returned zero blocking and zero high findings.
+8. `skill(name="commit")` — atomic commits, one logical change per commit, no `and` in subject lines.
+9. Push the branch.
+10. Wait for the commander's `VERIFICATION_PASSED` handshake before continuing.
+11. `skill(name="pr-workflow") /pr` — generate the PR description from the diff.
+12. `gh pr create --draft --base <base> --head <branch> --title <title> --body-file <body>`.
+13. Send `STATUS <key> DRAFT_PR_OPENED <sha> <pr_url>` to the commander.
 
 The worker does not stop until a draft PR is open or it emits `STATUS <key> BLOCKED <sha-or-dash> <reason>`.
+
+Implementer, reviewer, and fixer are three separate sub-agents in three separate context windows. That separation is the mechanism — a reviewer that can see why the code was written the way it was inherits the implementer's blind spots.
 
 ## 8. Supervise active workers
 
@@ -239,7 +291,8 @@ Phases, in the canonical order the worker transitions through them:
 
 - `IMPLEMENTING` — sub-agents active
 - `BOSS_REVIEW` — running `subagent-implementation-review` on sub-agent output
-- `CHANGES_REQUESTED` — boss review found defects, re-delegating to sub-agents (loops back)
+- `ADVERSARIAL_REVIEW` — parallel reviewer sub-agents running against the diff (loops back)
+- `CHANGES_REQUESTED` — draining the defect queue through fixer sub-agents (loops back)
 - `COMMITTING` — running the `commit` skill for atomic commits
 - `VERIFYING` — running checks (lint, test, typecheck) on the committed tree
 - `READY_FOR_REVIEW` — branch pushed, awaiting commander verification
@@ -250,10 +303,12 @@ Phases, in the canonical order the worker transitions through them:
 
 **Commander response per phase:**
 
-- `IMPLEMENTING`, `BOSS_REVIEW`, `CHANGES_REQUESTED`, `COMMITTING`, `VERIFYING`, `DRAFT_PR_OPENED` — record, surface to user, no action.
+- `IMPLEMENTING`, `BOSS_REVIEW`, `ADVERSARIAL_REVIEW`, `CHANGES_REQUESTED`, `COMMITTING`, `VERIFYING`, `DRAFT_PR_OPENED` — record, surface to user, no action.
 - `READY_FOR_REVIEW` — trigger Section 10 commander verification.
 - `BLOCKED` — investigate immediately, surface blocker reason, decide whether to unblock or escalate.
 - `DONE` — collect final evidence report, mark terminal.
+
+`ADVERSARIAL_REVIEW` and `CHANGES_REQUESTED` are the two quietest phases: reviewers and fixers run as sub-agents and produce no pane output until they return. Read `.herdr/reports/<issue-key>/defects.jsonl` for progress instead of the pane, and never interrupt — an interrupt during a parallel review round discards every reviewer's work at once.
 
 If a worker's output is not a recognized STATUS line, do not assume a phase. Continue supervising; the next STATUS line will clarify.
 
@@ -317,23 +372,28 @@ Procedure:
 3. Re-run the worker's verification commands from the issue contract.
 4. Inspect the full diff for scope compliance (no out-of-scope files, no forbidden paths).
 5. Inspect the worker's evidence report: criterion-to-evidence mapping, exact verification exit codes, file list, scope confirmation, and `boss_review_summary`.
-6. Record the result in a `commander_verification_report` (see `references/contracts.md#commander-verification-report`).
-7. If verification passes and evidence is complete: send the `VERIFICATION_PASSED` handshake to the worker pane (see Section 8 — `VERIFICATION_PASSED handshake`). The commander then waits for the worker to emit `STATUS <key> DRAFT_PR_OPENED`.
-8. If verification fails or evidence is incomplete: send a precise checklist back to the worker pane via `herdr pane send-text` + Enter. Do NOT write code. Wait for the worker's next STATUS.
+6. **Verify defect-queue closure** — read `.herdr/reports/<issue-key>/defects.jsonl` directly rather than trusting the summary. `open` must be zero, `total` must equal `fixed + rejected + escalated`, and every `rejected-with-evidence` entry must carry a live citation (see `references/review-recovery.md#worker-evidence-gate`).
+7. **Dispatch the independent review** — one `task` sub-agent against the clean checkout, given only the diff and the acceptance criteria, using the adversarial reviewer prompt (see `references/review-recovery.md#commander-independent-review`). The commander wrote the worker's context packet and read every STATUS line; it is not a cold reader, so the cold read is delegated.
+8. Record the result in a `commander_verification_report` (see `references/contracts.md#commander-verification-report`), including the `independent_review` block.
+9. If verification passes, evidence is complete, the queue is closed, and the independent review returned no findings: send the `VERIFICATION_PASSED` handshake to the worker pane (see Section 8 — `VERIFICATION_PASSED handshake`). The commander then waits for the worker to emit `STATUS <key> DRAFT_PR_OPENED`.
+10. If any gate fails: append independent-review findings to the worker's defect queue with `source: commander-review`, send a precise checklist naming the new `seq` values back to the worker pane via `herdr pane send-text` + Enter. Do NOT write code. Wait for the worker's next STATUS.
 
 The commander never opens a draft PR on unverified work. The commander never re-implements a worker's diff. The worker pane is the only place that runs `gh pr create --draft` — this keeps the SHA, branch, and worktree aligned with the implementation.
 
+The independent reviewer is a `task` sub-agent, not a pane. The ban on reviewer panes stands: a pane means another OMP process, another worktree, and another thing to supervise, for a review that finishes in a single turn.
+
 ## 11. Changes requested
 
-When verification or the human reviewer requests changes:
+When verification, the independent reviewer, or the human reviewer requests changes:
 
 1. Validate and consolidate findings.
-2. Send the checklist to the original worker via `herdr pane send-text` + Enter.
-3. Keep the same issue, branch, worktree, and PR.
-4. Require a fresh push and a new `STATUS <key> READY_FOR_REVIEW <new_sha> <summary>`.
-5. Re-run Section 10 commander verification at the new SHA.
+2. Append each finding to `.herdr/reports/<issue-key>/defects.jsonl` with `source: commander-review` or `source: human-review`. They enter the same FIFO queue as the worker's own findings and are drained by the same rule.
+3. Send the checklist to the original worker via `herdr pane send-text` + Enter, naming the new `seq` values rather than restating the findings.
+4. Keep the same issue, branch, worktree, and PR.
+5. Require a fresh push and a new `STATUS <key> READY_FOR_REVIEW <new_sha> <summary>`.
+6. Re-run Section 10 commander verification at the new SHA, including a fresh independent review — the diff changed, so the previous cold read no longer applies.
 
-Use a replacement worker only when the original session is unusable. Do not spawn a reviewer; the commander runs the next verification pass.
+Use a replacement worker only when the original session is unusable. The commander never fixes findings itself; it queues them and lets the worker's fixer sub-agents drain them.
 
 ## 12. Draft PR
 

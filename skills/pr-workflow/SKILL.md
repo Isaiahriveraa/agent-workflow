@@ -32,6 +32,14 @@ Each PR addresses exactly **one concern**. Files spanning different domains, cha
 ### Level 2 — Commit Discipline
 Within a PR, **each commit addresses exactly one logical unit**. A single PR may have multiple commits, but no commit may mix unrelated changes.
 
+### Stack Decision
+Use stacked PRs for dependent concerns, not merely for smaller diffs:
+
+- **Independent concerns:** use separate branches/worktrees based on the base branch; each PR targets the base branch.
+- **Dependent concerns:** use one `gh stack`; each branch contains one concern and each PR targets the branch immediately below it.
+- A stack must still satisfy the one-concern-per-PR and one-logical-unit-per-commit rules.
+- Merge stacks from the bottom upward. After a lower PR merges, verify that GitHub or `gh stack sync` retargeted and rebased the remaining branches.
+
 **Examples of valid within-PR commit splits:**
 
 | PR Concern | Good Commits (separated) | Bad Commits (lumped) |
@@ -101,55 +109,34 @@ Generate a PR description based on the actual branch diff. Sized to the change.
 
 ### PR Description Structure
 
-Every PR body uses the same four sections regardless of size — each **must** be a markdown header (`##`) in the output body text. Include the HTML comments with guiding questions.
+Every PR body uses the same three sections regardless of size — each **must** be a markdown header (`##`) in the output body text. Include the HTML comments with guiding questions.
 
 ## Summary
 
 <!-- What changed and what observable outcome does it produce? -->
 
-## Why
+## Rationale
 
 <!--
 - What problem or limitation existed?
 - What happens without this change?
-- How does this move the project toward its larger goal?
+- Why was this solution chosen over alternatives, and what tradeoffs were accepted?
 -->
 
-## Approach
+## Stack Context
+
+<!-- Include only for stacked PRs. Describe the incremental diff from the immediate base branch. -->
+
+- Position: <N> of <M>
+- Base PR: #<number> or `<base-branch>` for the bottom PR
+- Depends on: #<number> or `N/A` for the bottom PR
+
+## Tests
 
 <!--
-- What solution was chosen?
-- What meaningful alternatives were considered?
-- Why was this option selected?
-- What tradeoff did we accept?
+- What tests were added or changed, and what do they cover?
+- What verification was run (test suite, lint, typecheck, build, manual checks)?
 -->
-
-## Architecture and Contracts
-
-<!--
-Describe only material changes to:
-- responsibilities or module boundaries
-- dependency direction
-- APIs, interfaces, schemas, events, or shared types
-- runtime, state, or data flow
-
-Add a focused Mermaid diagram when it makes the change easier to understand.
-Do not add one for trivial changes.
-
-Recommended diagram types:
-- flowchart: components, ownership, dependencies
-- sequenceDiagram: runtime communication
-- stateDiagram-v2: lifecycle or state transitions
-- erDiagram: persistent data relationships
-
-Write "No material architecture or contract changes" when none exist.
--->
-
-```mermaid
-flowchart LR
-    A[Existing Component] --> B[New Boundary]
-    B --> C[Dependent Component]
-```
 
 ### Writing Standard
 
@@ -177,7 +164,7 @@ Every PR diff MUST be under 700 lines. If a concern exceeds it, split further by
 
 ### Execution Steps
 
-**Phase 1 — Analyze & Categorize**: Inspect the branch diff against the merge base. Group changed files by concern domain, change type, and motivation. Within each concern group, further split files into logical commit units.
+**Phase 1 — Analyze & Categorize**: Inspect the branch diff against the merge base. Group changed files by concern domain, change type, and motivation. Within each concern group, further split files into logical commit units. Mark each group as independent or dependent on another group; only dependent groups belong in a stack.
 
 **Phase 2 — Propose**: Present the full plan showing every PR, every branch name, every file in each PR, and every commit with its message (per the Proposal Gate above). Do NOT execute anything yet.
 
@@ -215,7 +202,7 @@ Every PR diff MUST be under 700 lines. If a concern exceeds it, split further by
 
 ## Submode: `/pr stack` — Dirty Branch → Clean Stacked Draft PRs
 
-Tracking file at `thoughts/pr-stack/<dirty-branch>_<YYYY-MM-DD>.md`.
+Tracking file at `<plan-server>/projects/<project>/pr-stack/<dirty-branch>_<YYYY-MM-DD>.md`, where `<plan-server>` comes from `~/.agents/scripts/plan-server-path` (single source of truth) and `<project>` is the auto-detected plan server project for the current repo.
 
 **Phase 0: Health check** — `git fetch origin <base>`, `git status --short`. Ensure clean working tree.
 
@@ -225,31 +212,48 @@ Tracking file at `thoughts/pr-stack/<dirty-branch>_<YYYY-MM-DD>.md`.
 
 **Phase 2.5 — Propose**: Present the full plan showing every PR, every branch name, every file, and every commit within each PR (per the Proposal Gate). Do NOT create any branches or PRs yet.
 
-**Phase 3: Create each PR (only after approval)** — For each concern in order (1 through N):
-- Create branch from the previous PR's branch (or base for PR #1)
-- Cherry-pick the relevant commits, or if no clean commits exist:
-  ```
-  git checkout <source-branch> -- <file1> <file2> ...
-  ```
-- **Split into multiple commits per commit discipline rules** — stage files in logical groups, committing each group separately. Do NOT lump all files for the PR into a single commit.
-- If conflicts: resolve by keeping ONLY this concern's changes, log in tracking file
-- Push branch, generate PR body (scoped to this concern only), create as DRAFT via `gh pr create --draft`
-- Update tracking file
+**Phase 3: Create each PR (only after approval)**
 
-**Phase 4: Summary** — Print the PR stack with merge order instructions.
+Prefer `gh stack` for branch tracking, cascading rebases, pushing, and linked PR creation:
+
+The `gh-stack` extension is installed as a machine prerequisite; do not reinstall it during each workflow invocation.
+
+```bash
+gh stack init --base <base> <branch-1> <branch-2> ...
+gh stack sync
+gh stack submit
+```
+
+`gh stack submit` creates or updates the stacked PRs and links them on GitHub. Use its interactive editor to set concern-specific titles, descriptions, and draft status; use `gh stack submit --auto` only when generated metadata is acceptable. For an existing set of branches managed outside `gh stack`, use `gh stack link <branch-1> <branch-2> ...`.
+
+Before submitting:
+- Create or adopt branches in dependency order; each branch contains only its proposed concern.
+- If the source branch already has clean concern commits, adopt the branches with `gh stack init`. If it is dirty or mixed, create the proposed branches and selectively check out only each concern's files before committing.
+- **Split into multiple commits per commit discipline rules** — stage files in logical groups, committing each group separately. Do NOT lump all files for the PR into one commit.
+- Run focused tests for each layer where practical.
+
+During iteration:
+- Use `gh stack sync` for fetch, cascading rebase, push, and PR-state synchronization.
+- Use `gh stack rebase` when interactive conflict resolution is needed; use `gh stack rebase --abort` to restore the pre-rebase state.
+- If conflicts remain, resolve only the affected concern and record the resolution in the tracking file.
+- Keep the tracking file as a lightweight audit record; `gh stack` and GitHub are the source of truth for current stack/PR state.
+
+**Phase 4: Summary** — Print the PR stack with merge order instructions. Stacks merge bottom-up; use `gh stack merge <stack-number-or-pr-number>` when the required checks and approvals are complete.
 
 ### Rules
 
 - MUST: always draft, stack PRs, branch naming `{type}/<kebab>` (e.g. `feat/setup`, `fix/validation`), use `rtk` prefix, update tracking file after every PR, size body to this concern only.
 - MUST: split commits within each PR by logical unit — no "and" in commit messages.
 - MUST: propose the full plan and get user approval before any execution.
-- MUST NOT: force push, merge in dirty branch changes, mention dirty branch in PR body, run interactive rebase on shared branches.
+- MUST NOT: use unprotected `git push --force`, merge in dirty branch changes, mention dirty branch in PR body, or run interactive rebase on shared branches.
+- MAY: use `gh stack` commands that perform protected `--force-with-lease` updates as part of a cascading rebase.
 
 ### Failure Recovery
 
-- Cherry-pick fails repeatedly → abort, skip commit, log, move on.
-- `gh pr create` fails → verify `gh auth status`, push branch, retry.
-- Zero commits after cherry-pick → skip that PR, re-sequence.
+- `gh stack init` or `gh stack sync` reports divergence → stop, inspect the local and GitHub stack composition, then resolve explicitly; do not force an unrelated branch into the stack.
+- `gh stack rebase` conflicts → resolve only the affected concern, then `gh stack rebase --continue`; use `--abort` if the proposed resolution is unclear.
+- `gh stack submit` fails → verify `gh auth status`, branch cleanliness, and remote access before retrying.
+- A concern has no commits after extraction → skip that PR and re-sequence the stack.
 
 ### Verification Checklist
 

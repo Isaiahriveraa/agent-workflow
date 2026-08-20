@@ -15,7 +15,7 @@ When the user triggers cancel, stop, or abort — stop all active workflows, bac
 ### Steps
 
 1. **Identify active modes**
-   - Check for any running agent loops (`ralph`, `ultrawork`, `autopilot`, `team`)
+   - Check for any running agent loops (`team`)
    - Enumerate background tasks via `background_list`
    - Inspect `.sisyphus/run-continuation/` for active continuation state
 

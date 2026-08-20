@@ -48,7 +48,7 @@ function findProjectRoot(startDir = process.cwd()) {
     if (
       existsSync(join(dir, 'package.json')) ||
       existsSync(join(dir, '.git')) ||
-      existsSync(join(dir, 'skills-lock.json'))
+      existsSync(join(dir, '.skill-lock.json'))
     ) {
       return dir;
     }

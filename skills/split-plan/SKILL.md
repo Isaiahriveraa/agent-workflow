@@ -1,6 +1,7 @@
 ---
 name: split-plan
-description: Break a big plan into smaller, simpler phases that are easy for a human to read and follow. Removes repeated content, makes dependencies clear, and calls out edge cases. Use when a plan is too long, repetitive, or hard to follow. Trigger patterns: "split this plan", "optimize this plan", "narrow the phases", "make this plan agent-ready", "plan is too big", "crisp this plan", "sharpen this plan".
+description: >-
+  Break a big plan into smaller, simpler phases that are easy for a human to read and follow. Removes repeated content, makes dependencies clear, and calls out edge cases. Use when a plan is too long, repetitive, or hard to follow. Trigger patterns: "split this plan", "optimize this plan", "narrow the phases", "make this plan agent-ready", "plan is too big", "crisp this plan", "sharpen this plan".
 argument-hint: "[plan path]"
 shell-timeout: 10
 ---

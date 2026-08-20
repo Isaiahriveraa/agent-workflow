@@ -9,6 +9,7 @@ sending them tasks, and collecting results. These are hardened from real usage
 | Goal | Pattern |
 |------|---------|
 | Spawn omp agent with model | `herdr pane run PANE_ID "omp --model openai-codex/gpt-5.6-luna --thinking high"` |
+| Spawn opencode agent | `herdr pane run PANE_ID "opencode --model anthropic/claude-sonnet-4"` |
 | Wait for OMP to initialize | `sleep 10` |
 | Wait for work to finish | `herdr wait agent-status PANE_ID --status done --timeout 600000` |
 | Read output | `herdr pane read PANE_ID --source recent --lines 200` |
@@ -52,6 +53,42 @@ herdr wait agent-status "$NEW_PANE" --status done --timeout 600000
 herdr pane read "$NEW_PANE" --source recent --lines 200
 ```
 
+## Recipe 1b: Spawn an OpenCode Agent
+
+`opencode` is fully supported by Herdr (full-lifecycle integration plugin) and is
+the default worker CLI in the parallel-dev skill. The model flag is
+optional: `opencode --model <provider>/<model>`; omit it to use your opencode
+default model.
+
+```bash
+# 1. Get your current pane ID
+MY_PANE=$(herdr pane list | python3 -c 'import sys,json; d=json.load(sys.stdin)["result"]["panes"]; print([p["pane_id"] for p in d if p["focused"]][0])')
+
+# 2. Split to the right (stays in your current pane)
+NEW_PANE=$(herdr pane split "$MY_PANE" --direction right --no-focus | \
+  python3 -c 'import sys,json; print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')
+
+# 3. Launch opencode (model optional)
+herdr pane run "$NEW_PANE" "opencode --model anthropic/claude-sonnet-4"
+
+# 4. Wait for the TUI to initialize
+sleep 10
+
+# 5. Send the query
+herdr pane run "$NEW_PANE" "Your task query here"
+herdr pane send-keys "$NEW_PANE" Enter
+
+# 6. Wait for completion (plugin-reported agent status, like omp)
+herdr wait agent-status "$NEW_PANE" --status done --timeout 600000
+
+# 7. Read the results
+herdr pane read "$NEW_PANE" --source recent --lines 200
+```
+
+Alternative: `herdr agent start opencode --kind opencode --pane "$NEW_PANE"` for
+the managed-agent path (readiness handled by herdr; no sleep needed).
+
+---
 ---
 ## Recipe 2: Full Chain Command (One-shot)
 
@@ -163,6 +200,7 @@ check_agent w65299eff6919fc-2
 | `google/gemini-2.5-pro` | Gemini 2.5 Pro |
 
 Usage: `omp --model openai-codex/gpt-5.6-luna --thinking high`
+OpenCode: `opencode --model anthropic/claude-sonnet-4` (same provider/model strings; no `--thinking`)
 ---
 
 ## Pitfalls & Gotchas
@@ -191,6 +229,7 @@ Usage: `omp --model openai-codex/gpt-5.6-luna --thinking high`
 
 6. **Readiness wait pattern varies by agent**
    - For `omp` and other TUI agents, use `sleep 10` after launch (Luna 5.6 may need extra initialization)
+   - For `opencode` (TUI) the same `sleep 10` applies; it reports agent status via the herdr integration plugin
    - For non-interactive CLIs, use `herdr wait output PANE_ID --match "ready" --timeout 30000`
 
 ## Example: Complete Working Automation

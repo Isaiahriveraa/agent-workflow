@@ -50,7 +50,7 @@ Do not create a folder bundle for a small, local change. A bundle with only one 
 Create bundles under the same plan-server project and `plans/` directory:
 
 ```text
-~/Documents/plan-server/projects/{project}/plans/{id}/
+<plan-server>/projects/{project}/plans/{id}/   (root from ~/.agents/scripts/plan-server-path)
 ```
 
 Required files:
@@ -72,7 +72,7 @@ Use the existing artifact helper to reserve a stable plan id and project:
 
 ```bash
 rtk python3 ~/.agents/scripts/new-artifact.py \
-  --dest "$HOME/Documents/plan-server" \
+  --dest "$("$HOME/.agents/scripts/plan-server-path")" \
   --type plans \
   "<concise-plan-topic>"
 ```
@@ -90,15 +90,15 @@ For a folder bundle:
 Example:
 
 ```text
-Created: /Users/me/Documents/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry.mdx
+Created: /Users/me/Documents/Github/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry.mdx
 ```
 
 Bundle paths:
 
 ```text
-/Users/me/Documents/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry/index.mdx
-/Users/me/Documents/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry/00-foundation.mdx
-/Users/me/Documents/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry/01-webhook-idempotency.mdx
+/Users/me/Documents/Github/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry/index.mdx
+/Users/me/Documents/Github/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry/00-foundation.mdx
+/Users/me/Documents/Github/plan-server/projects/app/plans/2026-07-08_12-00-00_billing-retry/01-webhook-idempotency.mdx
 ```
 
 ## Index Requirements

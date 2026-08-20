@@ -52,7 +52,7 @@ One issue produces at most one branch, one Git worktree, one concern-tight PR, a
 - No new dependency, destructive migration/file deletion, auth/auths change, secret, deployment/CI change, or external side effect without a separate human decision.
 - Never work outside the issue worktree. Never mix another issue or opportunistic cleanup into its branch.
 - For non-trivial logic: TDD first. Tests assert behavior at agreed public seams, not private structure.
-- Public functions/classes follow the repository's BERP documentation convention. If explaining behavior/exceptions/returns/params makes a unit unwieldy, split the concern.
+- Contract-bearing functions follow the hub's contract rule (AGENTS.md rule 8): block template for endpoints and non-obvious contracts, no boilerplate on ordinary helpers. If a required contract doc makes a unit unwieldy, split the concern.
 - Names must be concise, descriptive, and domain-native. Do not repeat a directory/module namespace in a file, function, or variable name.
 - Keep code cohesive. Use guard clauses to flatten error paths. When variation is a growing set of cases, choose a lookup table, map, strategy, or polymorphic seam only when a real second case proves it; never add a speculative framework.
 - Do not use `as any`, `@ts-ignore`, empty catches, fake fallbacks, placeholders, or unverified claims.
@@ -143,7 +143,7 @@ CONTEXT
 <issue body/comments, plan references, source/test files, base branch, current patterns>
 
 CODEBASE CONVENTIONS
-<applicable AGENTS.md rules, naming, BERP, errors, test style, existing precedent>
+<applicable AGENTS.md rules, naming, contract docs (rule 8), errors, test style, existing precedent>
 
 MUST DO
 <approved test seams before the first red test, TDD, focused verification, code-review, commit audit, PR template>
@@ -249,7 +249,7 @@ An issue delivery attempt is complete only when all applicable items are true:
 - [ ] The issue outcome and scope were approved before branch/worktree creation.
 - [ ] Work occurred only in the approved worktree and branch.
 - [ ] TDD was used for non-trivial behavior at agreed seams.
-- [ ] Public APIs follow the repository BERP convention.
+- [ ] Contract-bearing functions documented per rule 8; no boilerplate elsewhere.
 - [ ] Project-native verification has actual results, including known gaps.
 - [ ] Code review completed; unresolved blocking findings are absent or explicitly awaiting a human decision.
 - [ ] Every commit is atomic and its audited message passes the no-`and` rule.

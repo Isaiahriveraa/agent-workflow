@@ -6,7 +6,7 @@ A symlink from plan-server's `projects/{project}/adr/` points to `{git-root}/doc
 
 Create them with the helper script:
 ```bash
-python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type adr --topic "<decision title>"
+python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --project <project> --type adr --topic "<decision title>"
 ```
 
 The script auto-detects the git repo root and writes to `{git-root}/docs/adr/`. If no git repo is found, it falls back to plan-server.

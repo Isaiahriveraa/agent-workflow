@@ -149,15 +149,18 @@ Identify implementation work areas based on technical dependencies, file overlap
 
 Every plan must contain a `## Dependency and Parallel Execution` section. This section is mandatory for every plan, even when all work is sequential.
 
-Include a Mermaid `graph TD` showing implementation ordering. Use square-bracket nodes with task names and arrows for dependencies:
+Include a Mermaid `graph TD` showing implementation ordering. Use square-bracket nodes with task names and arrows for dependencies. Mark the **critical path** — the node that unblocks the most downstream work — so execution can schedule it first:
 
 ```mermaid
 graph TD
-    A[Foundation: shared contracts] --> B[Work area 1]
+    A[Foundation: shared contracts]:::critical --> B[Work area 1]
     A --> C[Work area 2]
     B --> D[Integration]
     C --> D
+    classDef critical stroke-width:3px
 ```
+
+A dependency-correct graph is not automatically a fast graph. When two work areas are both ready, the one with more downstream dependents comes first; state that ordering explicitly when it is not obvious from the graph.
 
 Do not fabricate parallelism. A small one-file change may have a single sequential node.
 
@@ -182,14 +185,46 @@ When multiple work areas depend on the same interface, schema, type, protocol, o
 
 Workers must not be forced to guess an interface independently.
 
+#### Shared Convention Artifacts
+
+A shared contract fixes an *interface*. A shared convention artifact fixes a **repeated micro-decision** — the choice an implementer faces dozens of times and that has no single correct answer, only a consistent one. Independent agents resolving the same micro-decision independently produce as many dialects as there are agents, and the divergence only surfaces at integration.
+
+Include a `## Shared Convention Artifacts` section when the plan fans out to more than one concurrent implementer **and** any of these apply:
+
+* a source pattern must be translated to a target pattern repeatedly (framework migration, API version bump, language port);
+* a per-item decision recurs across many files (ownership/lifetime, error type, null handling, naming of a recurring concept);
+* the same setup, fixture, or boilerplate shape will be written in several places.
+
+For each artifact record:
+
+* its path in the repository — it is a committed file, not plan prose;
+* what decision it fixes and the range of choices it closes;
+* how it is populated (authored up front, or generated then reviewed);
+* which work areas must read it before starting;
+* who owns amendments once fan-out begins.
+
+An artifact must exist and be reviewed **before** the work areas that consume it start. Treat it as a wave-0 deliverable with its own verification gate, not as documentation written alongside the code.
+
 #### Execution Classification
 
 Classify each work area as:
 
 * **Sequential** — requires an earlier task or contract.
 * **Parallel** — can be completed independently without shared-file or interface conflicts.
+* **Fan-out (mechanical)** — many instances of the same change, enumerated by a command rather than by hand.
 * **Blocked** — requires an unresolved implementation-changing decision.
 * **Optional** — useful but unnecessary for the target state.
+
+A fan-out work area MUST declare a `work_queue_command` — the exact command whose output enumerates the work items — plus the field that identifies each item and how items are grouped into units of ownership:
+
+```md
+- **Work queue:** `cargo check --workspace --message-format short 2>&1 | grep '^error'`
+- **Item identity:** file path + error code
+- **Grouping:** by crate — one owner per crate, no cross-crate edits
+- **Order:** arrival order from the command's output
+```
+
+Enumerate fan-out items by command, never by hand. A hand-written list of "the 40 call sites" is wrong when written and staler by the time it executes; the command is re-derivable at launch and its remaining count is the progress metric.
 
 Name:
 
@@ -227,12 +262,17 @@ Every plan must contain:
 * a Mermaid `graph TD` showing implementation ordering (a single sequential node is fine);
 * an execution-boundary table with work area, responsibility, likely paths/modules, dependencies, parallel compatibility, and verification gate columns;
 * shared contracts identification when multiple work areas share interfaces, schemas, types, protocols, or behavior;
-* execution classification under `### Sequential`, `### Parallel`, and conditionally `### Blocked` and `### Optional` with file conflicts, merge order, and overlap risks.
+* execution classification under `### Sequential`, `### Parallel`, and conditionally `### Fan-out (mechanical)`, `### Blocked`, and `### Optional` with file conflicts, merge order, and overlap risks.
 
+`## Testing and Verification` must name a **completion oracle**: one command, independent of any individual agent's work, that answers "is this done" for the effort as a whole. State the command, the signal that means done, and the signal that means not-done.
+
+The oracle must not be a per-task check or an agent's own report. When several agents execute the plan concurrently, their self-reports are the least reliable evidence available; a single objective command is what the whole effort is measured against. When no such command exists, say so explicitly and name the strongest available substitute — that gap is itself a planning finding.
 
 Add these only when they change implementation or execution:
 
 * `## Assumptions`
+* `## Shared Convention Artifacts`
+* `## Fleet Rules`
 * `## Planning Critique`
 * `## Alternatives Considered`
 * `## Security Implications`
@@ -240,6 +280,21 @@ Add these only when they change implementation or execution:
 * `## Open Questions`
 * `### Blocked work`
 * `### Optional work`
+
+### Fleet Rules
+
+Include `## Fleet Rules` only when the plan will be executed by more than one concurrent agent. Concurrent agents in separate worktrees fail for operational reasons long before they fail for architectural ones: one destructive Git command loses another agent's work, and one unguarded repository-wide command serializes disk I/O across every worker at once.
+
+State the rules as prohibitions, not preferences:
+
+```md
+- **Forbidden:** `git stash`, `git reset`, `git checkout .`, `git clean`, `git add -A`, `git add .`, force-push
+- **Commits:** stage explicitly named paths only — `git add <path> [<path>…]`
+- **Search:** scope every search to a path or glob; no unguarded repository-wide `grep`/`find`
+- **Build and test:** scope to the owned package/module; full-repository builds only at the verification gate
+```
+
+Add repository-specific entries when a command is known to be slow or global here (a full type-check, a container build, a codegen step). Omit the section entirely for single-agent plans.
 
 Do not create empty sections, generic review prompts, decorative MDX, or repeated summaries.
 
@@ -352,7 +407,7 @@ Run:
 
 ```bash
 rtk python3 ~/.agents/scripts/new-artifact.py \
-  --dest "$HOME/Documents/plan-server" \
+  --dest "$("$HOME/.agents/scripts/plan-server-path")" \
   --type plans \
   "<concise-plan-topic>"
 ```
@@ -450,6 +505,11 @@ Before finishing, confirm:
 * the Mermaid dependency graph reflects real technical dependencies — do not fabricate parallelism;
 * the execution-boundary table has all required columns with verified paths;
 * shared contracts are identified when multiple work areas share interfaces, schemas, or behavior;
+* shared convention artifacts exist for every repeated micro-decision, with a committed path and a consuming work area;
+* every fan-out work area declares a `work_queue_command`, item identity, and grouping — no hand-enumerated item lists;
+* `## Testing and Verification` names a completion oracle that no single agent can self-report;
+* `## Fleet Rules` is present whenever more than one concurrent agent will execute the plan;
+* the critical path is marked on the dependency graph;
 * execution waves, merge order, and file-conflict risks are named;
 * open questions materially affect implementation;
 * sequential dependencies strictly follow the execution graph;
@@ -470,8 +530,11 @@ Implementation plan written:
 - Tasks: {N}
 - Sequential work areas: {summary or none}
 - Parallel work areas: {summary or none}
+- Fan-out work areas: {summary or none}
 - Blocked: {summary or none}
 - Shared contracts: {count or none}
+- Shared convention artifacts: {count or none}
+- Completion oracle: `{command}`
 - Execution waves: {N}
 - Open questions: {count or none}
 
@@ -486,8 +549,11 @@ Implementation plan bundle written:
 - Concerns: {N}
 - Dependency order: {short chain}
 - Parallel work areas: {summary or none}
+- Fan-out work areas: {summary or none}
 - Blocked: {summary or none}
 - Shared contracts: {count or none}
+- Shared convention artifacts: {count or none}
+- Completion oracle: `{command}`
 - Execution waves: {N}
 - Open questions: {count or none}
 Copied to clipboard: `{absolute bundle path}`

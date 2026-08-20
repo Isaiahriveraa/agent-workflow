@@ -49,7 +49,7 @@ summary: "Prevent invoice creation for archived customers while preserving the e
 last_updated: 2026-07-13T18:42:00-07:00
 last_updated_by: "Example Author"
 type: plan
-parent: "/home/example/Documents/plan-server/projects/example-billing/research/2026-07-13_archived-customer-behavior.mdx"
+parent: "/home/example/Documents/Github/plan-server/projects/example-billing/research/2026-07-13_archived-customer-behavior.mdx"
 phase_count: 3
 ---
 
@@ -196,9 +196,9 @@ Test-fixture preparation for Task 3 may begin during Task 2 only if it avoids ed
 
 ## Testing and Verification
 
+* **Completion oracle:** `pnpm test --filter invoices && pnpm typecheck` — exit `0` means the effort is complete; any non-zero exit means it is not, regardless of task-level reports.
 * Service regression: `pnpm test packages/core/src/invoices/invoice-service.test.ts`
 * API regression: `pnpm test packages/api/src/routes/invoices.test.ts`
-* Full relevant suite: `pnpm test --filter invoices`
 * Type verification: `pnpm typecheck`
 * Persistence evidence: archived-customer route test confirms the invoice repository received no insert.
 * Regression evidence: active-customer and unknown-customer tests remain unchanged and pass.
@@ -271,3 +271,37 @@ Each concern file contains only:
 * binary completion criteria.
 
 Do not repeat the full index inside every concern file.
+
+## Fan-out Calibration
+
+The example above is a small sequential plan, so it correctly omits `## Shared Convention Artifacts` and `## Fleet Rules`. Those sections belong to plans executed by several concurrent agents. This fragment calibrates them.
+
+Scenario: replace a deprecated `logger.log(msg, meta)` call with structured `logger.info({ event, ...fields })` across ~180 call sites in 9 packages.
+
+### Shared Convention Artifacts
+
+| Artifact | Fixes | Populated by | Consumed by | Amendment owner |
+|---|---|---|---|---|
+| `docs/logging-migration.md` | The mapping from each legacy call shape to its structured replacement, including how free-text messages become `event` names | Authored in wave 0, reviewed before fan-out | Every migration work area | Commander; amendments pause fan-out |
+| `docs/log-events.tsv` | One row per call site: file, current message, assigned `event` name, field names | Generated from `rg` output, then reviewed for naming collisions | Every migration work area | Commander |
+
+Without `log-events.tsv`, nine agents invent nine naming schemes for the same events and the divergence is invisible until the dashboards break. The artifact closes that decision once, before any agent starts.
+
+### Fan-out (mechanical)
+
+- **Work queue:** `rg -n --glob '!**/*.test.ts' 'logger\.log\(' packages/ | sort`
+- **Item identity:** `file:line`
+- **Grouping:** by package — one owner per package, no cross-package edits
+- **Order:** arrival order from the command's output
+- **Remaining count is the progress metric:** the queue is empty when `rg` returns nothing.
+
+### Parallel
+
+The 9 packages hold no shared files, so all 9 migration work areas run concurrently after wave 0. `packages/logger` itself is sequential and must merge first — it owns the `logger.info` signature the other eight consume.
+
+## Fleet Rules
+
+- **Forbidden:** `git stash`, `git reset`, `git checkout .`, `git clean`, `git add -A`, `git add .`, force-push
+- **Commits:** stage explicitly named paths only — `git add <path> [<path>…]`
+- **Search:** scope every search to `packages/<owned-package>/`; no unguarded repository-wide `grep`/`find`
+- **Build and test:** `pnpm test --filter <owned-package>`; `pnpm typecheck` at the verification gate only — it walks the whole workspace and blocks every concurrent worker's disk while it runs

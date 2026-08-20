@@ -52,7 +52,7 @@ plan server projects. The first match (closest to the repo root) wins.
 Run this to create the handoff file:
 
 ```bash
-PLAN_SERVER="$HOME/Documents/plan-server"
+PLAN_SERVER="$("$HOME/.agents/scripts/plan-server-path")"
 
 # Resolve project by walking up from git top-level
 PROJECT="general"
@@ -334,4 +334,10 @@ When earlier and later instructions conflict:
 
 ## Clipboard
 
-After writing the handoff file, immediately run `bash` with `pbcopy <absolute-path>` (using the path from the script output) so the user's clipboard has the file path.
+After writing the handoff file, immediately copy just the path to the clipboard. Use `printf` piped into `pbcopy` (NOT `pbcopy <file>` — that redirects the file's contents, not the path):
+
+```bash
+printf '%s' "$HANDOFF_PATH" | pbcopy   # copies the path string, not the document
+```
+
+where `$HANDOFF_PATH` is the path printed by the `new-artifact.py` script. The user's clipboard must contain only the document path.

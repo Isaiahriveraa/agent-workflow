@@ -46,6 +46,43 @@ test('requires an implementation-ready plan structure', () => {
     assert.ok(content.includes(section), `missing ${section}`);
   }
 });
+test('serializes repeated micro-decisions into artifacts before fan-out', () => {
+  assert.match(activeWorkflow, /#### Shared Convention Artifacts/);
+  assert.match(activeWorkflow, /\* `## Shared Convention Artifacts`/);
+  assert.match(activeWorkflow, /repeated micro-decision/);
+  assert.match(activeWorkflow, /its path in the repository — it is a committed file, not plan prose/);
+  assert.match(activeWorkflow, /before\*\* the work areas that consume it start/);
+});
+
+test('enumerates mechanical fan-out work by command, never by hand', () => {
+  assert.match(activeWorkflow, /\*\*Fan-out \(mechanical\)\*\*/);
+  assert.match(activeWorkflow, /### Fan-out \(mechanical\)/);
+  assert.match(activeWorkflow, /MUST declare a `work_queue_command`/);
+  assert.match(activeWorkflow, /Enumerate fan-out items by command, never by hand/);
+});
+
+test('requires fleet rules as prohibitions for multi-agent execution', () => {
+  assert.match(activeWorkflow, /### Fleet Rules/);
+  assert.match(activeWorkflow, /\* `## Fleet Rules`/);
+  assert.match(activeWorkflow, /only when the plan will be executed by more than one concurrent agent/);
+  assert.match(activeWorkflow, /State the rules as prohibitions, not preferences/);
+  for (const forbidden of ['git stash', 'git reset', 'git add -A']) {
+    assert.ok(activeWorkflow.includes(forbidden), `missing forbidden command ${forbidden}`);
+  }
+  assert.match(activeWorkflow, /stage explicitly named paths only/);
+});
+
+test('names a completion oracle no single agent can self-report', () => {
+  assert.match(activeWorkflow, /\*\*completion oracle\*\*/);
+  assert.match(activeWorkflow, /must not be a per-task check or an agent's own report/);
+  assert.match(activeWorkflow, /Completion oracle: `\{command\}`/);
+});
+
+test('marks the critical path so execution can schedule it first', () => {
+  assert.match(activeWorkflow, /Mark the \*\*critical path\*\*/);
+  assert.match(activeWorkflow, /A dependency-correct graph is not automatically a fast graph/);
+});
+
 test('requires repository grounding before planning', () => {
   assert.match(content, /### 2\. Inspect the Repository/);
   assert.match(content, /verify referenced paths and components exist/);
@@ -128,4 +165,15 @@ test('keeps the realistic before-and-after example in a separate file', () => {
   assert.match(example, /```mermaid/);
   assert.match(example, /\| Work area \| Responsibility \| Likely paths\/modules \| Depends on \| Can run with \| Verification gate \|/);
   assert.match(example, /### Shared Contracts/);
+  assert.match(example, /\*\*Completion oracle:\*\*/);
+});
+
+test('calibrates fan-out sections separately from the sequential example', () => {
+  assert.match(example, /## Fan-out Calibration/);
+  assert.match(example, /correctly omits `## Shared Convention Artifacts` and `## Fleet Rules`/);
+  assert.match(example, /### Shared Convention Artifacts/);
+  assert.match(example, /### Fan-out \(mechanical\)/);
+  assert.match(example, /\*\*Work queue:\*\*/);
+  assert.match(example, /## Fleet Rules/);
+  assert.match(example, /\*\*Forbidden:\*\*/);
 });

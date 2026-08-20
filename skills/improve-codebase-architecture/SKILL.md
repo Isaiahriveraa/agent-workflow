@@ -35,8 +35,8 @@ Key principles:
 
 Read the project's glossary and any ADRs first. Resolution order:
 
-- **Glossary**: `~/Documents/plan-server/projects/{project}/glossary/glossary.md` → project-local `CONTEXT.md` (whichever exists)
-- **ADRs**: `~/Documents/plan-server/projects/{project}/adr/` → `docs/adr/` (whichever exists)
+- **Glossary**: plan server `projects/{project}/glossary/glossary.md` (root from `~/.agents/scripts/plan-server-path`) → project-local `CONTEXT.md` (whichever exists)
+- **ADRs**: plan server `projects/{project}/adr/` (root from `~/.agents/scripts/plan-server-path`) → `docs/adr/` (whichever exists)
 
 Then use the Agent tool with `subagent_type=Explore` to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
 
@@ -77,7 +77,7 @@ Once the user picks a candidate, drop into a grilling conversation. Walk the des
 
 Side effects happen inline as decisions crystallize:
 
-- **Naming a deepened module after a concept not in the glossary?** Add the term to the plan server glossary: run `python3 ~/.agents/scripts/new-artifact.py --dest "$HOME/Documents/plan-server" --project <project> --type glossary --topic "<term>"` then fill in the definition.
+- **Naming a deepened module after a concept not in the glossary?** Add the term to the plan server glossary: run `python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --project <project> --type glossary --topic "<term>"` then fill in the definition.
 - **Sharpening a fuzzy term during the conversation?** Update the glossary in the plan server right there.
 - **User rejects the candidate with a load-bearing reason?** Offer an ADR (written via plan server), framed as: _"Want me to record this as an ADR so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing — skip ephemeral reasons ("not worth it right now") and self-evident ones.
 - **Want to explore alternative interfaces for the deepened module?** Use the `codebase-design` vocabulary — design the interface several radically different ways (few methods, simple params, high depth) and compare.

@@ -18,7 +18,7 @@ type: handoff
 
 Implement an IP-based rate limiter middleware for the Rust backend's HTTP routes. The middleware should apply a default 100 req/min limit and support per-route overrides via an attribute-like annotation.
 
-- Plan: `~/Documents/plan-server/projects/KodaProject/plans/2026-07-07_09-00-00_rate-limiting.mdx`
+- Plan: `~/Documents/Github/plan-server/projects/KodaProject/plans/2026-07-07_09-00-00_rate-limiting.mdx`
 
 ## Current State
 

@@ -25,7 +25,7 @@ After the user answers each question:
 3. **Log the Q&A pair** to the plan server. The script auto-detects the project:
    ```bash
    python3 ~/.agents/scripts/new-artifact.py \
-     --dest "$HOME/Documents/plan-server" \
+     --dest "$("$HOME/.agents/scripts/plan-server-path")" \
      --type grill \
      --topic "<session topic>"
    ```
@@ -40,7 +40,7 @@ Do NOT batch these writes. Write immediately after each question-answer round.
 Land on the plan server:
 
 ```
-~/Documents/plan-server/projects/{project}/
+<plan-server>/projects/{project}/   (root from ~/.agents/scripts/plan-server-path)
 ├── glossary/glossary.md       ← domain glossary (via domain-modeling)
 ├── grill/                     ← Q&A transcripts
 └── plans/                     ← plan artifacts (modified in-place)

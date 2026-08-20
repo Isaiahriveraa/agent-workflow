@@ -18,9 +18,9 @@ type: handoff
 
 Replace the existing JWT-based authentication backend with server-managed session tokens. The backend issues a `session_token` on login, stores it in a `sessions` table, and validates it on each request. The `/connect/start` and `/jobs/*` routes must use the new session middleware.
 
-- FRD: `~/Documents/plan-server/projects/KodaProject/frd/2026-07-06_10-00-00_user-auth-redesign.md`
-- Plan: `~/Documents/plan-server/projects/KodaProject/plans/2026-07-07_14-00-00_session-auth-plan.mdx`
-- ADR: `~/Documents/plan-server/projects/KodaProject/adr/2026-07-08_16-30-00_Session-token-over-JWT.md`
+- FRD: `~/Documents/Github/plan-server/projects/KodaProject/frd/2026-07-06_10-00-00_user-auth-redesign.md`
+- Plan: `~/Documents/Github/plan-server/projects/KodaProject/plans/2026-07-07_14-00-00_session-auth-plan.mdx`
+- ADR: `~/Documents/Github/plan-server/projects/KodaProject/adr/2026-07-08_16-30-00_Session-token-over-JWT.md`
 
 ## Current State
 

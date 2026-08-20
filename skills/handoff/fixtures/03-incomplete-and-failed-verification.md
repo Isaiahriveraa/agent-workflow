@@ -18,8 +18,8 @@ type: handoff
 
 Connect the Python voice gateway to the Rust backend so voice sessions can create jobs, receive events, and report completion. Specifically: wire `POST /jobs` from the voice gateway's `backend_job_runner_from_env()` into the existing backend job flow, with proper auth and error handling.
 
-- Plan: `~/Documents/plan-server/projects/KodaProject/plans/2026-07-06_09-00-00_voice-gateway-integration.mdx`
-- Research: `~/Documents/plan-server/projects/KodaProject/research/2026-07-05_14-15-27_voice-gateway-backend-contract.md`
+- Plan: `~/Documents/Github/plan-server/projects/KodaProject/plans/2026-07-06_09-00-00_voice-gateway-integration.mdx`
+- Research: `~/Documents/Github/plan-server/projects/KodaProject/research/2026-07-05_14-15-27_voice-gateway-backend-contract.md`
 
 ## Current State
 

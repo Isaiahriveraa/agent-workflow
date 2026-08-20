@@ -1,17 +1,17 @@
 ---
 name: spawn
-description: "Max-context sub-agent decomposition — split tasks along natural seams, give each agent full context, spawn in parallel"
+description: "Max-context sub-agent decomposition — split tasks along natural seams, give each agent full context, spawn in parallel, then accept as the senior engineer: verify, critique trade-offs, and direct fixes by explaining how"
 ---
 
 # Spawn
 
-Split a complex task into atomically independent work units, write an exhaustively descriptive 7-section prompt for each, and spawn all units in parallel. Optimizes for **correctness** over speed — the orchestrator takes its time to gather context, study conventions, and ensure zero follow-ups.
+Split a complex task into atomically independent work units, write an exhaustively descriptive 7-section prompt for each, and spawn all units in parallel. Optimizes for **correctness** over speed — the orchestrator takes its time to gather context, study conventions, and answer any follow-up a sub-agent raises.
 
 ---
 
 ## Purpose
 
-`skill(name="spawn")` turns one high-level task into parallel sub-agents that each have **everything they need** to ship independently. No follow-up questions. No "where does X live?" No "what pattern should I follow?" The orchestrator absorbs the full context burden so each sub-agent can execute cleanly.
+`skill(name="spawn")` turns one high-level task into parallel sub-agents that each have **everything they need** to ship independently. No "where does X live?" No "what pattern should I follow?" — the orchestrator absorbs the full context burden so each sub-agent can execute cleanly. If a question still arrives, you answer it: you are the sub-agent's point of contact, not a one-shot dispatcher.
 
 ---
 
@@ -57,7 +57,7 @@ For each unit, write a prompt with all of these sections:
 **4. CODEBASE CONVENTIONS** — Naming conventions, error handling patterns, import style, testing patterns, any style guide the project follows.
 
 **5. MUST DO** — Exhaustive numbered list:
-- MUST write BERP docstrings on every public function/method/class
+- MUST document contract-bearing functions with the rule-8 block template (AGENTS.md); no boilerplate on ordinary helpers
 - MUST match existing convention from [exact reference file:line]
 - MUST handle these edge cases: [list]
 - MUST validate using [specific approach]
@@ -71,7 +71,7 @@ For each unit, write a prompt with all of these sections:
 
 **7. DONE WHEN** — Binary pass/fail checklist:
 - [ ] File created with exports A, B, C
-- [ ] Every public symbol has a BERP docstring
+- [ ] Contract-bearing functions documented per rule 8; no boilerplate elsewhere
 - [ ] LSP diagnostics clean on changed files
 - [ ] No new dependencies added
 - [ ] Pattern matches [exact reference file]
@@ -81,13 +81,15 @@ For each unit, write a prompt with all of these sections:
 
 All independent units → parallel sub-agents. Each gets its own full context window. Maximum parallelism. Zero contention.
 
-## Phase 4 — Review Gate & Synthesis
+#### Live Q&A — answer, don't re-prompt
 
-The orchestrator must act as a strict reviewer before accepting any sub-agent output.
+A sub-agent question is not a failure; it is a real gap the prompt could not close. Answer it directly with a decision (one hub round-trip): resolve the ambiguity, name the file, state the pattern. Never re-delegate the question and never stay silent while the sub-agent stalls — you are its only point of contact. Broadcast the answer to sibling sub-agents that share the same gap.
 
-Do **not** assume sub-agent work is correct. Every result must pass a review gate before it can be synthesized into the final answer.
+## Phase 4 — Senior-Engineer Acceptance
 
-For each sub-agent result, review against:
+You are the senior engineer; sub-agents are your junior developers. You never write their code — you verify it, critique it, and direct fixes by explaining how you would do it. Every result must pass your acceptance gate before it is synthesized into the final answer.
+
+Do **not** assume sub-agent work is correct. For each sub-agent result, review against:
 
 1. The original user request.
 2. The current plan/spec/artifact.
@@ -100,9 +102,9 @@ For each sub-agent result, review against:
 9. `.agents` rules where relevant.
 10. Simplicity, maintainability, and future extensibility.
 
-If the sub-agent missed requirements, changed unrelated files, added unnecessary abstractions, violated conventions, ignored `.agents` rules, or implemented something different from the plan, the orchestrator must reject the result and send it back with specific correction instructions.
+If the sub-agent missed requirements, changed unrelated files, added unnecessary abstractions, violated conventions, ignored `.agents` rules, or implemented something different from the plan, reject the result and send it back. Think long-term: does this survive the next three changes to this code? Is the trade-off the one you would have made? Direct the fix by explaining **how** — the approach, the files, the trade-offs — and let the sub-agent implement it.
 
-The orchestrator may only accept a sub-agent result when it can clearly explain why the result satisfies the assignment.
+You may only accept a sub-agent result when you can clearly explain why it satisfies the assignment — and would survive review by another senior engineer.
 
 ### Review Checklist
 
@@ -120,7 +122,7 @@ For each sub-agent output, verify:
 * [ ] It avoids hidden coupling.
 * [ ] It has appropriate error handling.
 * [ ] It has appropriate tests or verification.
-* [ ] Public functions/classes/methods have BERP docstrings.
+* [ ] Contract-bearing functions documented per rule 8; no boilerplate elsewhere.
 * [ ] No TODOs, placeholders, pass stubs, or fake implementations remain.
 * [ ] LSP/lint/type diagnostics are clean on changed files where applicable.
 * [ ] The work can integrate cleanly with the other sub-agent outputs.
@@ -187,39 +189,27 @@ Final output must include:
 * Verification performed.
 * Remaining risks or follow-up work.
 
+### Acceptance Loop
+
+Rejected work returns to the responsible sub-agent with your direction; when it returns, re-review the delta against the same checklist. Loop until acceptance, or escalate when the loop reveals a human decision or a repeated failure you should stop delegating and discuss. Acceptance is not the end: after synthesis, invoke `skill(name="code-review")` for verification — per AGENTS.md Subagent Strategy it is the always-run verification step.
+
 ---
 
-## BERP Comment Rule (mandatory for all sub-agents)
+## Contract Documentation (per AGENTS.md rule 8)
 
-Every function, method, and class **must** have a BERP docstring:
+Sub-agents follow the hub's contract rule (AGENTS.md rule 8), not a docstring-everywhere mandate:
 
-```
-"""Brief one-line description.
+- Contract-bearing functions — API endpoints and functions with a non-obvious input/output contract — get the rule-8 block template from AGENTS.md. Fill in every applicable field; write `N/A` for the rest.
+- Ordinary helpers and UI components get no boilerplate: short why-comments only, per rule 5.
 
-Behavior:
-    What this does. How it behaves. Side effects, assumptions about state,
-    ordering constraints, or concurrency notes.
-
-Exceptions:
-    What exceptions can be raised and under what conditions.
-    ``None.`` if no exceptions are raised.
-
-Returns:
-    What is returned and what the return value represents.
-
-Params:
-    param_name: Description of the parameter.
-"""
-```
-
-If the BERP docstring would be too long → **split the function**. Verbosity in BERP is the signal that concerns aren't separated.
+If a required contract doc would be too long → **split the function**. Verbosity in the contract is the signal that concerns aren't separated.
 
 ---
 
 ## Hard Rule
 
-> Every sub-agent must be able to complete its task independently with **zero follow-ups**.
+> Every sub-agent must be able to complete its task independently with **zero avoidable follow-ups**.
 >
 > If a sub-agent would need to ask "what pattern should I follow?" or "where does X live?" — **add more context to the prompt before spawning.**
 >
-> The orchestrator's job is to absorb ALL the context burden so sub-agents can focus purely on execution. Correctness over speed.
+> The orchestrator's job is to absorb ALL the context burden so sub-agents can focus purely on execution. Correctness over speed — and when a follow-up still arrives, answer it (Phase 3).

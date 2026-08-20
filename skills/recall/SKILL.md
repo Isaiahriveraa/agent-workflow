@@ -11,7 +11,7 @@ You are tasked with resuming work from a handoff document through an interactive
 
 ## Input
 
-`$ARGUMENTS` — path to a handoff document (e.g. from plan server: `~/Documents/plan-server/projects/{project}/handoffs/<filename>.md`). If omitted, the skill lists available handoffs from the plan server and asks which to resume from.
+`$ARGUMENTS` — path to a handoff document (e.g. from plan server: `"$("$HOME/.agents/scripts/plan-server-path")"/projects/{project}/handoffs/<filename>.md`). If omitted, the skill lists available handoffs from the plan server and asks which to resume from.
 
 ## Metadata
 
@@ -19,7 +19,7 @@ You are tasked with resuming work from a handoff document through an interactive
 echo "### recent (read only in case of empty user input)"
 echo "recent handoffs:"
 # List latest handoffs from all projects (flat directory)
-for dir in "$HOME"/Documents/plan-server/projects/*/handoffs; do
+for dir in "$("$HOME/.agents/scripts/plan-server-path")"/projects/*/handoffs; do
   if [ -d "$dir" ]; then
     ls -t "$dir"/*.md 2>/dev/null | head -5
   fi
@@ -48,7 +48,7 @@ When this command is invoked:
    - **Exactly one entry** — confirm with `ask_user_question`: "Resume this handoff?" with options "Resume `<filename>` (Recommended)" and "Pick a different path". Do NOT call `ask_user_question` with a single option (the tool requires ≥2).
    - **Two or more entries** — present the top 4 filenames as `ask_user_question` options (a free-text "Other" row is appended automatically by the tool; do not list it manually).
 
-   Direct invocation alternative: `/skill:recall ~/Documents/plan-server/projects/{project}/handoffs/<filename>`
+   Direct invocation alternative: `/skill:recall "$("$HOME/.agents/scripts/plan-server-path")"/projects/{project}/handoffs/<filename>`
 
 ### Step 2: Read and Analyze Handoff
 
@@ -213,7 +213,7 @@ When this command is invoked:
 ## Example Interaction Flow
 
 ```
-User: /skill:recall ~/Documents/plan-server/projects/koda/handoffs/2026-07-04_12-38-06_webhook-validation.md
+User: /skill:recall "$("$HOME/.agents/scripts/plan-server-path")"/projects/koda/handoffs/2026-07-04_12-38-06_webhook-validation.md
 Assistant: Let me read and analyze that handoff document...
 
 {Reads handoff completely}

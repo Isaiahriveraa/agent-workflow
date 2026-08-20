@@ -1,5 +1,5 @@
-The skill writes to the plan server glossary by default:
-`~/Documents/plan-server/projects/{project}/glossary/glossary.md`
+The skill writes to the plan server glossary by default (root from `~/.agents/scripts/plan-server-path`):
+`"$("$HOME/.agents/scripts/plan-server-path")"/projects/{project}/glossary/glossary.md`
 
 Use the helper:
 ```bash

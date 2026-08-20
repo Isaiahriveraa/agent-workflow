@@ -138,12 +138,15 @@ Publish only approved issues. Use meaningful status labels:
 ```text
 status:ready
 status:in-progress
+status:reviewing
 status:blocked
 status:human-review
 status:done
 ```
 
-There is no `status:reviewing` label — there is no separate independent reviewer pane. Commander verification happens inside the commander's own session and is reflected via `status:in-progress` until the draft PR is opened.
+`status:reviewing` covers commander verification — re-running the worker's commands, checking defect-queue closure, and dispatching the independent reviewer. It does not imply a separate reviewer pane; there is none. Both review tiers run as `task` sub-agents, one inside the worker's own loop and one inside the commander's session.
+
+The worker's adversarial review rounds stay under `status:in-progress`. They are internal iteration, and a label that flickers every round is noise to the team reading the issue.
 
 Add issue comments only for meaningful milestones:
 
@@ -153,6 +156,8 @@ Add issue comments only for meaningful milestones:
 - draft PR opened
 - human changes requested
 - PR merged
+
+Do not comment per adversarial round or per defect. The defect queue lives in `.herdr/reports/`; GitHub carries outcomes, not iteration.
 
 Do not mirror terminal output or every agent transition.
 
@@ -190,5 +195,20 @@ Workers may not:
 - rebase unrelated branches
 - force-push without explicit commander authorization
 - delete remote branches
+
+Workers must never run, in any worktree:
+
+```text
+git stash        git reset        git checkout .
+git clean        git add -A       git add .
+```
+
+Stage explicitly named paths only: `git add <path> [<path>…]`.
+
+These are prohibitions rather than preferences because the failure mode is invisible from inside the pane that causes it. A worker that stashes or resets to "clean up" discards work belonging to a concurrent worker sharing the repository, and the victim sees only an inexplicably reverted file. A wildcard stage sweeps another worker's in-progress files into an unrelated commit.
+
+The same reasoning covers slow commands. An unguarded repository-wide `grep`/`find`, or a full-repository build run outside the verification gate, saturates disk I/O for every concurrent worker at once. Scope searches to a path or glob and scope builds to the owned package; run the full build only at the gate.
+
+Both rules ship to workers verbatim in the context packet's `fleet_rules` block. Do not paraphrase them — a softened prohibition reads as advice.
 
 The commander may perform control-plane Git operations but never feature-code edits.
