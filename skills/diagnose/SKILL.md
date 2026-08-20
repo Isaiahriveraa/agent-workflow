@@ -130,3 +130,11 @@ Required before declaring done:
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message — so the next debugger learns
 
 **Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `improve` skill (the codebase survey that produces implementation plans) with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+
+## Secrets redaction
+
+Anything you reproduce in this skill — repro scripts, logs, traces, HAR files, test fixtures — may contain secrets: tokens, API keys, passwords, connection strings, credentials in URLs, cookies, session ids. Before any of it is committed, pasted into a ticket, or shown to the user, scrub it:
+
+- Never copy a real secret value into a comment, a finding, or a test.
+- Replace values with placeholders like `sk-…`, `<token>`, `<password>`, `Bearer <redacted>`, or `user:****@host`.
+- If a secret is already committed or exposed, do not just delete it from the copy — flag it for rotation, because it is compromised.
