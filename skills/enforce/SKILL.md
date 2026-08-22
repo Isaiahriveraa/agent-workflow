@@ -1,115 +1,75 @@
 ---
 name: enforce
-description: "Read hub AGENTS.md and enforce its rules on the current project using spawn protocol"
+description: "Review what needs to change with a what/why rationale table, then enforce it. Gate for delegated work; hygiene pass for existing code."
 ---
 
 # Enforce
 
-Read `~/.agents/AGENTS.md` (the hub's master operating contract), extract its operating rules, and use the `skill(name="spawn")` protocol to enforce them on the current project — contract documentation (rule 8), code smell cleanup, convention conformance, and any other policies defined in that file. Not a project-local AGENTS.md — the hub file is the single source of truth.
+Review → Enforce → Verify. One skill, three phases. Phase 1 produces a **rationale table** — what needs to change, why, and the rule behind it. Phase 2 applies table rows only. Phase 3 verifies and reports.
 
----
-
-## Purpose
-
-`skill(name="enforce")` bridges hub policy (what `~/.agents/AGENTS.md` says) with project execution (making it real). Instead of manually auditing files, it reads the master rules from the hub, then decomposes the current project's codebase into parallel sub-agents that each enforce the rules on their assigned scope.
-
----
+The reviewer explains; the enforcer writes. You see the full rationale before anything is touched.
 
 ## When To Use This Skill
 
-| Use enforce | Don't enforce |
+| Use enforce | Don't use enforce |
 |---|---|
-| After adding new rules to AGENTS.md | On a codebase with no AGENTS.md |
-| Before a major review or release | For a single file — just edit it |
-| When code has drifted from conventions | When you're mid-implementation |
-| Onboarding a new project into the workflow | On generated or vendored code |
-| Periodic cleanup pass | Rules are already being followed |
+| Before accepting delegated subagent work (gate) | Mid-implementation |
+| After adding new rules to AGENTS.md (hygiene) | On a single file — just edit it |
+| Before a major review or release | On generated or vendored code |
+| When code has drifted from conventions | Rules are already being followed |
+| Onboarding a new project into the workflow | |
 
----
+## Enforcement Spec
 
-## Workflow
+The rules being enforced come from `~/.agents/AGENTS.md` — the numbered list under `## Operating Rules` (contract docs, error handling, no type suppressions, code smell cleanup, surgical scope, tests at public seams) — plus, in gate mode, the delegated prompt's acceptance criteria and forbidden shortcuts. The hub file is the single source of truth; never a project-local copy.
 
-### Step 1 — Read ~/.agents/AGENTS.md
+## Phase 1 — Review (read-only)
 
-Read `~/.agents/AGENTS.md`. Always the hub file — never a project-local copy.
+Produce the **rationale table**. No edits in this phase — the output is the contract for Phase 2.
 
-Extract the operating rules (the numbered list under `## Operating Rules`) and principles (under `## Operating Principles`). These are the **enforcement specification**.
+| ID | File:line | What | Why (rule) | Impact | Smallest fix |
+|---|---|---|---|---|---|
+| F1 | `src/auth.ts:42` | `catch (e) {}` swallows errors | AGENTS.md rule 7 — errors explicit | silent token-refresh failure | log + rethrow |
 
-### Step 2 — Map the Codebase
+Every row needs a verbatim quote at `file:line`, the rule it violates, an observable impact, and the smallest fix. A row without evidence is dropped. No style noise, no "might/could" without a path.
 
-Scan the project's source directories. Identify which files are in scope:
-- Source files only (skip `node_modules/`, `.git/`, `build/`, `dist/`, `.venv/`, etc.)
-- Group files by natural module/directory boundaries
-- Each group should be a **coherent unit** — one module, one layer, one concern
+Depth varies by trigger:
 
-### Step 3 — Decompose into Sub-Agent Tasks
+- **Gate mode** (delegated work, small diff): three passes — rules enforcement, codebase conformance (does it look like the repo already wrote it), adversarial (context-free, assumes the code is wrong). Include the task's acceptance criteria.
+- **Hygiene mode** (whole codebase): rules + conformance passes only. Skip the adversarial pass at repo scale — it is wasted cost. Map source files by natural module boundaries (5–15 files per unit), skipping generated directories.
 
-For each module group, create one sub-agent task. The tasks are:
-- **Fully independent** — no sub-agent depends on another's output
-- **Bounded** — each covers a manageable number of files (5-15 files per agent)
-- **Self-contained** — each has the full AGENTS.md ruleset and its file list
+## Phase 2 — Enforce (write)
 
-### Step 4 — Spawn (via spawn skill)
+Writers apply the rationale table rows **only**. Nothing outside the table — no "while I'm here" cleanup, no unlisted files, no behavior changes.
 
-Each sub-agent gets a prompt structured like this, using the spawn skill's 7-section format:
+Who writes:
 
-```
-──────────────────────────────────────────────
-SUB-AGENT: enforce-rules-[module-name]
-──────────────────────────────────────────────
+- **Gate mode** → the responsible implementing subagent (it has the context). Send it the table rows with exact file/symbol direction, acceptance criteria, and non-goals.
+- **Hygiene mode** → parallel spawned enforcers via `skill(name="spawn")`, one per module group, each receiving the full table rows for its files.
 
-1. TASK
-Enforce the operating rules from AGENTS.md on the assigned files.
-Do not modify behavior — only fix documentation, comments, and code smells.
+Writer rules (every writer):
 
-2. EXPECTED OUTPUT
-All assigned files updated to conform to the rules in AGENTS.md.
-
-3. CONTEXT
-Project root: [path]
-AGENTS.md rules (full text):
-[extracted rules — contract docs (rule 8), inline comments, error handling,
- no type suppressions, code smell cleanup, etc.]
-
-Assigned files:
-[file1, file2, file3, ...]
-
-4. MUST DO
 - Read each file before editing
-- Document contract-bearing functions with the rule-8 block template; short why-comments on non-obvious logic
-- Add inline comments for non-obvious logic
-- Remove dead code, stale comments, leftover scaffolding
-- Fix any rule violations you find
-- Only touch what needs changing
-
-5. MUST NOT DO
+- Touch only rows assigned to it — the table is the spec
 - Do not change behavior, logic, or functionality
-- Do not refactor beyond what's needed to fix rule violations
-- Do not touch files outside your assigned list
-- Do not add new dependencies
-- Do not leave TODO or placeholder comments
-
-6. DONE WHEN
-- All assigned files conform to AGENTS.md rules
-- Contract-bearing functions documented per rule 8; no boilerplate elsewhere
-- No dead code or stale comments remaining
+- Do not add dependencies; do not leave TODO or placeholder comments
 - LSP diagnostics clean on changed files
-```
 
-### Step 5 — Verify
+## Phase 3 — Verify + report
 
-After all sub-agents complete:
-- Check that no file was left untouched that should have been covered
-- Verify rule-8 contract compliance on a sample of changed files
-- Report what was done per module
-
----
+1. Re-check every table row: applied or explicitly rejected with reason.
+2. Sample-verify changed files against the table (no unlisted edits).
+3. Write the report to the plan server (see Output Format below), including the rationale table and per-module applied rows.
+4. Run `pbcopy <absolute-path>` so the user's clipboard has the path.
 
 ## Guardrails
 
-- Do not enforce on `node_modules/`, `.git/`, `vendor/`, `dist/`, `build/`, `__pycache__/`, `.venv/`, or any generated directory
-- Do not modify `.md` config files — only source code
-- Do not enforce on files larger than 500 lines in one pass (split into sub-agents per section instead)
+- **Reviewer ≠ writer.** The agent that finds a finding never applies it. Findings lose their blindness the moment the author's reasoning leaks in — separate agents, always.
+- **The table is the spec.** Any edit not backed by a table row is a violation.
+- Do not enforce on `node_modules/`, `.git/`, `vendor/`, `dist/`, `build/`, `__pycache__/`, `.venv/`, or any generated directory.
+- Do not modify `.md` config files — only source code.
+- Do not enforce on files larger than 500 lines in one pass (split into sub-agents per section instead).
+- **`code-review` stays the deep always-run verification** after integration (independent reviewers, adjudication, baseline checks, regression tests). This skill is the cheap/medium gate + hygiene layer — do not grow adjudication machinery into it.
 
 ## Output Format
 
@@ -155,11 +115,11 @@ type: review
 > [!summary]
 > What rules were enforced, which files were touched, and what the result was.
 
-## Summary
+## Rationale Table
 
-| Module | Files Changed | Issues Fixed | Status |
-|--------|--------------|--------------|--------|
-| {module} | {n} | {n} | pass/fail |
+| ID | File:line | What | Why (rule) | Impact | Status |
+|----|-----------|------|------------|--------|--------|
+| {id} | {file:line} | {change} | {rule} | {impact} | applied/rejected |
 
 > [!todo]
 > **Remaining Issues** (if any)

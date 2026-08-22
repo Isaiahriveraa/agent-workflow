@@ -1,70 +1,25 @@
 ---
 name: issue-discovery
-description: Turn ambiguous product or engineering ideas into clear, team-readable decision GitHub issues before implementation planning.
+description: >-
+  Compatibility workflow for turning ambiguous product or engineering ideas into clear, team-readable decision GitHub issues. `/plan` owns behavior clarification, repository research, and decomposition; this skill only publishes decision issues.
 disable-model-invocation: true
 ---
 
-# issue-discovery
+# issue-discovery (compatibility)
 
-A loose idea has arrived — a feature request, a design question, an engineering problem — but it isn't clear enough to implement yet. `issue-discovery` turns the fog into structured decision issues, one at a time, until the way forward is concrete enough for implementation planning.
+This skill is a **compatibility workflow** for publishing decision GitHub issues. It does **not** plan, research, or decompose work — `/plan` owns behavior clarification, repository research, and decomposition. Use this only to turn a settled ambiguity into a structured decision issue.
 
-## Plan, don't do
+## What `/plan` owns
 
-`issue-discovery` is **planning** by default. Each session produces decision issues, research findings, prototypes, or investigation summaries — not code. If implementation is needed, the session ends with a handoff to `to-tickets`, which turns the settled direction into implementation-ready tickets.
+- **Behavior clarification** — pinning down what "done" means.
+- **Repository research** — grounding claims in file:line evidence.
+- **Decomposition** — breaking work into concerns, dependencies, and steps.
 
-## Discovery flow
-
-### 1. Clarify the destination
-
-Before exploring, pin down what success looks like:
-
-- What should be decided or true when this discovery is complete?
-- What is the smallest concrete output that would count as "done"?
-- Who needs to be able to act on the result?
-
-### 2. Explore broadly
-
-Map the terrain before committing to a path:
-
-- **Users and stakeholders** — who is affected?
-- **Journey boundary** — where does this start and end?
-- **Repository context** — which codebases, services, or systems are involved?
-- **Constraints** — what hard boundaries exist (time, budget, compliance, platform)?
-- **Dependencies** — what else must happen first?
-- **Out of scope** — what is explicitly not being addressed?
-
-### 3. Separate concern types
-
-Different kinds of unknowns need different artifacts:
-
-| Unknown | Artifact |
-|---|---|
-| Unresolved product or engineering choice | `needs-decision` issue |
-| Missing evidence before deciding | `research-needed` issue |
-| Cheap concrete experiment | `prototype-needed` issue |
-| Direction is clear | Hand off to `to-tickets` |
-
-Propose the issue set to the user before creating anything.
-
-## Labels
-
-Use only plain public labels:
-
-- `needs-decision` — for unresolved product or engineering choices
-- `research-needed` — when evidence must be gathered before deciding
-- `prototype-needed` — when a cheap concrete experiment is needed
-
-Do not introduce a manual-task label unless there is a recurring, clearly understood need.
-
-## Parent/context issue
-
-A parent issue is **optional**. If one helps organize related sub-issues, title it with ordinary language such as "Parent context" or "Product goal" — not "map" or "planning map".
+If the idea still needs any of the above, run `/plan` first. This skill only publishes the resulting decision issues.
 
 ## Decision issues
 
-### Template
-
-When creating a decision issue, use this default template, shorter when context is obvious:
+When a decision needs to be recorded as a GitHub issue, use this default template, shorter when context is obvious:
 
 ```markdown
 ## Question
@@ -95,45 +50,24 @@ What is explicitly not being decided here?
 
 Do not add guessed implementation steps, exact file lists, or test checklists unless the user explicitly asks for them.
 
-### Resolution
+## Labels
 
-At most one decision issue per session. To resolve:
+Use only plain public labels:
 
-1. Gather evidence and reasoning.
-2. Record the decision as a comment on the issue.
-3. Close the issue.
-4. If a parent context issue exists, update it with a one-line summary and a link.
+- `needs-decision` — for unresolved product or engineering choices
+- `research-needed` — when evidence must be gathered before deciding
+- `prototype-needed` — when a cheap concrete experiment is needed
 
-## Research issues
-
-Research issues collect evidence without deciding. Label with `research-needed`. The deliverable is a markdown summary linked from the issue.
-
-## Prototype issues
-
-Prototype issues are cheap concrete experiments. Label with `prototype-needed`. The deliverable is a runnable prototype linked from the issue.
-
-## Implementation handoff
-
-Once decisions are settled and direction is clear, hand off to `to-tickets`. Implementation tickets are a different artifact from decision issues:
-
-- They specify **observable behavior** and **scope**.
-- They define **acceptance criteria** and **verification**.
-- They list **dependencies** and **out-of-scope** boundaries.
-- They may mention likely files when repository evidence supports them.
-- They do **not** over-prescribe implementation details.
+Do not introduce a manual-task label unless there is a recurring, clearly understood need.
 
 ## Invocation
 
-User invokes with a loose idea, feature request, or ambiguous problem.
+1. **Confirm the idea is settled enough to publish** — if behavior, research, or decomposition is still open, redirect to `/plan`.
+2. **Propose the issue set** — present the planned decision issues to the user for approval.
+3. **Create issues** — once approved, create GitHub issues with plain public labels.
+4. **Resolve** — if working a decision, resolve at most one per session.
 
-1. **Clarify the destination.** Ask what "done" looks like.
-2. **Explore broadly.** Gather context about users, codebases, constraints, dependencies, and out-of-scope areas.
-3. **Separate concerns.** Identify decisions, research needs, and prototypes.
-4. **Propose issue set.** Present the planned issues to the user for approval.
-5. **Create issues.** Once approved, create GitHub issues with plain public labels.
-6. **Resolve.** If working a decision, resolve at most one per session.
-7. **Hand off.** When direction is settled, hand to `to-tickets` for implementation planning.
+## Done when
 
-## Internal mechanics
-
-All workflow mechanics — labels, the parent-child relationship, the session-at-most-one-decision rule — are internal to this skill. Never expose branded vocabulary such as "wayfinder", "frontier", "map", or "grilling" in issue titles, labels, or bodies.
+- The user is redirected to `/plan` for any open behavior/research/decomposition work.
+- Approved decision issues are published to GitHub with plain public labels.

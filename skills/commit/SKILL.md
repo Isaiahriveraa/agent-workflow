@@ -3,9 +3,10 @@ name: commit
 description: >-
   Plan, review, and execute atomic Git commits using Conventional Commits.
   Invoke before every git commit, whether requested by the user or initiated
-  by an agent. Inspect the full working tree, separate unrelated concerns,
-  split files by hunk when necessary, present the exact commit plan, and
-  require explicit user approval before staging or committing anything.
+  by an agent. Run an informational pre-commit review gate, inspect the full
+  working tree, separate unrelated concerns, split files by hunk when
+  necessary, present the exact commit plan, and require explicit user
+  approval before staging or committing anything.
 ---
 
 # Atomic Commit Workflow
@@ -34,7 +35,63 @@ Do not group changes merely because:
 * they are part of the same user request
 * committing them together is easier
 
-## Mandatory Two-Phase Workflow
+## Phase 0: Pre-Commit Review Gate (informational)
+
+Before inspecting or proposing commits, run the code-review gate so the code
+is audited before you commit. The gate is advisory: it surfaces findings and
+lets the user decide. It never auto-fixes and never blocks the commit.
+
+### When to run
+
+Compute a fingerprint of the changes to be committed and compare it to the
+last-reviewed marker stored at `.git/code-review.marker`.
+
+* If the current fingerprint matches the marker, the exact changes were
+  already reviewed — skip the gate and proceed to Phase 1.
+* Otherwise, run the review.
+
+### Fingerprint
+
+Fingerprint the full change set that would be committed, including untracked
+files so brand-new code is reviewed:
+
+```bash
+# include untracked files so new code is reviewed
+git add -N <untracked files>
+git diff HEAD | shasum -a 256
+```
+
+Compare the output to `.git/code-review.marker`. On a match, skip the gate.
+
+After computing the fingerprint (and after any review), clear only the
+intent-to-add entries so existing staging intent is preserved:
+
+```bash
+git reset -- <the intent-to-added files>
+```
+
+### Run the review
+
+Invoke code-review scoped to the working-tree changes (`modified`), which
+includes the intent-to-added untracked files. Do NOT pass `--fix` and do NOT
+act on the verdict automatically.
+
+### Surface, do not decide
+
+Present the code-review verdict and findings to the user. Do not auto-apply
+fixes and do not block the commit on the verdict. The review is input to the
+user's decision; the Phase 1 approval gate below remains the sole gate.
+
+The user may:
+
+* fix the findings and re-run the gate (the marker updates on the next pass),
+  or
+* proceed to Phase 1 and commit as-is with the findings acknowledged.
+
+After a review completes, record the fingerprint in `.git/code-review.marker`
+so unchanged work is not re-reviewed on a later commit.
+
+## Mandatory Workflow
 
 ### Phase 1: Inspect and Propose
 
@@ -583,6 +640,7 @@ Explain the blocker precisely and show the safest next action.
 
 The workflow is complete only when:
 
+* the pre-commit review gate ran (or was correctly skipped via the marker)
 * every commit represents one logical story
 * each message accurately describes its exact staged diff
 * mixed files were separated by hunk where appropriate

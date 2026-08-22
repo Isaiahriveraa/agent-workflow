@@ -1,8 +1,8 @@
 ---
 name: plan-server
 description: >-
-  Create a local MDX plan, write it to the plan server (root from ~/.agents/scripts/plan-server-path), start/verify the plan server, and return the plan URL. Triggers: "/plan-server", "plan this", "create a plan", "make a plan".
-argument-hint: "[what to plan]"
+  Publish an existing plan to the local MDX plan server (root from ~/.agents/scripts/plan-server-path), start/verify the server, and return the plan URL. This is an explicit publisher/server utility, not a planning workflow. Trigger: "/plan-server".
+argument-hint: "[plan-file]"
 shell-timeout: 20
 ---
 
@@ -24,39 +24,33 @@ Reference this before writing any plan server document. The quality standard def
 - Writing style rules (lead with conclusion, file:line everywhere, tables over prose)
 
 Always reference the quality standard checklist before declaring a document complete.
-# Plan Server
+# Plan Server (publisher utility)
 
-Default path: use the script. It writes valid MDX, adds metadata from the current repo, and writes to the plan server root (from `~/.agents/scripts/plan-server-path`) `projects/{project}/plans/`. Defaults to project `general` unless `--project` is specified. Checks whether the server is running, starts it if needed, and prints the exact plan URL.
+This skill is an explicit **publisher/server utility**: it takes an existing plan and publishes it to the local MDX plan server, returning the URL. It does not plan, decompose, or refine work — `/plan` owns planning. Use this only when you already have a plan document to publish.
 
 ```bash
 node "${SKILL_DIR}/scripts/plan-server.mjs" "$ARGUMENTS"
 ```
 
 
-For a stronger one-shot plan from an agent, pass a concise plan brief as the argument:
+The canonical `/plan` produces local structured plans (under `.omo/plans/<slug>/`). `/plan-server` publishes the completed plan through the existing script, which wraps its contents in the plan-server MDX envelope and writes it to the detected project location. It does not perform planning or refinement. To publish an existing plan file, pass its path with `--input-file`:
 
 ```bash
-node "${SKILL_DIR}/scripts/plan-server.mjs" \
-  --title "Dashboard Widgets Refactor" \
-  --tag frontend \
-  --tag dashboard \
-  --question "Should layout state live in localStorage or the backend?" \
-  --question "What fallback is required for browsers without subgrid?" \
-  "$ARGUMENTS"
+node "${SKILL_DIR}/scripts/plan-server.mjs" --input-file "$ARGUMENTS"
 ```
 
 The project is auto-detected from git/cwd. Override with `--project <name>`.
 
-To open the created plan in the browser automatically:
+To open the published plan in the browser automatically:
 
 ```bash
 node "${SKILL_DIR}/scripts/plan-server.mjs" --open "$ARGUMENTS"
 ```
 
-The script accepts prompt text from stdin too:
+The script can also publish plan content passed via stdin:
 
 ```bash
-printf '%s\n' "$ARGUMENTS" | node "${SKILL_DIR}/scripts/plan-server.mjs" --title "Implementation Plan"
+cat /path/to/plan.md | node "${SKILL_DIR}/scripts/plan-server.mjs" --title "Existing Plan Title"
 ```
 
 
@@ -78,20 +72,13 @@ The script prints JSON:
 
 Return the `url` and `file` to the user.
 
-## When To Investigate First
+## Before Publishing
 
-If the request depends on real codebase details, inspect before running the script:
+The plan to publish must already exist and be complete. Verify before running the script:
 
-- Read relevant files, routes, tests, and config.
-- Use 1-3 focused explore agents only when parallel research will help.
-- Feed the synthesized brief into the script.
+- Confirm the plan file exists and is fully written (from `/plan` or an existing plan document).
 - Do not invent file paths, statuses, dependencies, or verification commands.
-
-Good script input:
-
-```text
-Refactor dashboard widgets so layout is registry-driven, data updates use subscriptions, and existing widget APIs remain compatible. Important files: src/widgets/registry.ts, src/grid/WidgetGrid.tsx, src/data/SubscriptionManager.ts. Verification: npm run build and focused widget tests.
-```
+- Do not synthesize a new plan brief — `/plan` produces the plan; this skill only publishes its completed contents.
 
 ## MDX Format
 
@@ -201,7 +188,7 @@ All plans: http://localhost:3456/
 
 ## Clipboard
 
-After the script creates the plan file, immediately run `bash` with `pbcopy <absolute-path>` (using the `file` value from JSON output, or the path from Step 5) so the user's clipboard has the file path.
+After the script publishes the plan file, immediately run `bash` with `pbcopy <absolute-path>` (using the `file` value from JSON output, or the path from Step 5) so the user's clipboard has the file path.
 
 
 ## Rich Document Guide

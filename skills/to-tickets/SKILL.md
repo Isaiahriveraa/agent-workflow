@@ -12,8 +12,6 @@ Turn an idea, spec, or plan into:
 1. A short implementation plan (what, why, how, order, verification).
 2. A set of focused tickets, each small enough to be one clean PR.
 
-This skill replaces the old `to-plan` and `to-issues` pair. It keeps the plan structure you write to the plan server, and the ticket-quality rules that make one ticket = one reviewable PR. It drops all the parallel-execution machinery (Herdr manifests, waves, shards, fleet rules, fan-out queues). You execute tickets one at a time in separate worktrees, review each PR, and stay in the loop.
-
 ## When to use
 
 - You have a spec, issue, PRD, or a settled idea and need to know what work it breaks into.
@@ -47,6 +45,7 @@ Do not turn vague wording directly into tasks. If there is no artifact, synthesi
 - Verify referenced paths and components exist.
 - Distinguish verified facts from assumptions; flag stale or conflicting architecture.
 - Never invent files, symbols, commands, or architecture. Use concrete references: `path/to/file.ext:line`, `ComponentName`, function names, test names, runnable commands.
+- Use subagents for inspecting the repo
 
 ### 3. Define the target state
 

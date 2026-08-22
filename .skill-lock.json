@@ -1,12 +1,12 @@
 {
   "version": 3,
   "skills": {
-    "ask-yonie": {
+    "skill-index": {
       "source": ".agents",
       "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/ask-yonie/SKILL.md",
-      "skillPath": "skills/ask-yonie/SKILL.md",
-      "skillFolderHash": "a82df1c9c8a9ef61de143945e55052786d880605"
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/skill-index",
+      "skillPath": "skills/skill-index/SKILL.md",
+      "skillFolderHash": "bc4bd393361994a7f476f8fe642c4c75a16bcad6"
     },
     "cancel": {
       "source": ".agents",
@@ -67,7 +67,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/enforce",
       "skillPath": "skills/enforce/SKILL.md",
-      "skillFolderHash": "69ad129406fc8c4f86635a2264c33922b13d83ff",
+      "skillFolderHash": "0fabde8aa1b279ea86a16e3f5e76dafb0d73e88e",
       "installedAt": "2026-07-16T00:00:00.000Z",
       "updatedAt": "2026-07-16T00:00:00.000Z"
     },
@@ -79,15 +79,6 @@
       "skillFolderHash": "c9c4986ac4e7ebcb9a39dd79c20afd5e0df012a9",
       "installedAt": "2026-07-16T00:00:00.000Z",
       "updatedAt": "2026-07-16T00:00:00.000Z"
-    },
-    "subagent-implementation-review": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/subagent-implementation-review",
-      "skillPath": "skills/subagent-implementation-review/SKILL.md",
-      "skillFolderHash": "2d8a0d7e57135f3276b108c92ffe2834ee2d7fc7",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
     },
     "issue-delivery": {
       "source": ".agents",
@@ -103,7 +94,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/issue-discovery/SKILL.md",
       "skillPath": "skills/issue-discovery/SKILL.md",
-      "skillFolderHash": "febf372d4e14432cf5839b1bdfb2c933570d4b0f"
+      "skillFolderHash": "df422f68bdd7d0341315668729ebeebe09409382"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
@@ -193,12 +184,21 @@
       "installedAt": "2026-02-17T20:41:46.081Z",
       "updatedAt": "2026-02-17T20:41:46.081Z"
     },
+    "plan": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan/SKILL.md",
+      "skillPath": "skills/plan/SKILL.md",
+      "skillFolderHash": "7e3d62b6df0cbf98310de78747a4dd7029b21175",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-08-20T00:00:00.000Z"
+    },
     "plan-server": {
       "source": ".agents",
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan-server/SKILL.md",
       "skillPath": "skills/plan-server/SKILL.md",
-      "skillFolderHash": "3d4add0c29250addd2d64c00a06f1cdbcef0e707"
+      "skillFolderHash": "04c9c61014bdf4fe87c0d6bb61f6ff3ac4b60761"
     },
     "pr-workflow": {
       "source": ".agents",
@@ -252,13 +252,6 @@
       "skillPath": "skills/shadcn/SKILL.md",
       "skillFolderHash": "c5a5c3a8e380ab7d49369c68a715b2da6b1bcc44"
     },
-    "split-plan": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/split-plan/SKILL.md",
-      "skillPath": "skills/split-plan/SKILL.md",
-      "skillFolderHash": "21f0a3430254e1d69e1f68d9240b2752474c4aa3"
-    },
     "supabase-postgres-best-practices": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
@@ -301,6 +294,42 @@
       "skillFolderHash": "7d77d76815e6deb704427f17f6e393f55e3cb6da",
       "installedAt": "2026-08-20T05:01:20.324Z",
       "updatedAt": "2026-08-20T05:01:20.324Z"
+    },
+    "frontend-implement": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/frontend-implement",
+      "skillPath": "skills/frontend-implement/SKILL.md",
+      "skillFolderHash": "3e0fbebe5bd61c021f825cdac4db2e77a563b6f6",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-08-20T00:00:00.000Z"
+    },
+    "research": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/research",
+      "skillPath": "skills/research/SKILL.md",
+      "skillFolderHash": "985569f15739c713d6784887c3d186d4ef9ac85b",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "to-tickets": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-tickets",
+      "skillPath": "skills/to-tickets/SKILL.md",
+      "skillFolderHash": "2564202540b8ab238ec038c7cb8f81643afbd72b",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "wait-what": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/wait-what",
+      "skillPath": "skills/wait-what/SKILL.md",
+      "skillFolderHash": "5d0b7b635a75f5bf2a03113860f393a042f07a12",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
   "dismissed": {

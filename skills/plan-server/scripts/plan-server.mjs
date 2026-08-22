@@ -16,10 +16,12 @@ function getProjectDir(project) {
 function usage() {
   console.log(`Usage:
   plan-server.mjs "Plan this feature"
+  plan-server.mjs --input-file /path/to/plan.md
   echo "Plan this feature" | plan-server.mjs --title "Feature Plan"
 
 Options:
   --title <text>       Plan title. Defaults from the prompt.
+  --input-file <path>  Read an existing local plan as the publishing prompt.
   --project <name>     Project name. Auto-detected from git/cwd when using default. Default: general.
   --tag <tag>          Add a tag. Can be repeated.
   --status <status>    draft, review, approved, in-progress, complete. Default: draft.
@@ -40,6 +42,7 @@ function parseArgs(argv) {
     port: DEFAULT_PORT,
     open: false,
     server: true,
+    inputFile: '',
     promptParts: [],
   }
 
@@ -48,6 +51,7 @@ function parseArgs(argv) {
 
     if (arg === '--help' || arg === '-h') opts.help = true
     else if (arg === '--title') opts.title = argv[++i]
+    else if (arg === '--input-file') opts.inputFile = argv[++i]
     else if (arg === '--project') opts.project = argv[++i]
     else if (arg === '--tag') opts.tags.push(argv[++i])
     else if (arg === '--status') opts.status = argv[++i]
@@ -282,7 +286,8 @@ async function main() {
     return
   }
 
-  const prompt = [opts.promptParts.join(' '), readStdinIfPiped()].filter(Boolean).join('\n\n').trim()
+  const filePrompt = opts.inputFile ? readFileSync(opts.inputFile, 'utf8').trim() : ''
+  const prompt = filePrompt || [opts.promptParts.join(' '), readStdinIfPiped()].filter(Boolean).join('\n\n').trim()
   if (!prompt) {
     usage()
     process.exitCode = 2

@@ -86,7 +86,6 @@ type: handoff | research | design | plan | solutions | frd | review | validation
 parent: "path/to/parent-doc.md"     # plan references its design; design references its research
 phase_count: 5                     # plan, blueprint
 unresolved_phase_count: 5          # plan, blueprint
-original: "path/to/original.md"    # split-plan
 ---
 ```
 
@@ -352,7 +351,7 @@ Each document type has specific required sections beyond the universal checklist
 
 ### 5.1. Plan Documents
 
-Used by: to-tickets skill, blueprint skill, split-plan skill
+Used by: to-tickets skill, blueprint skill
 
 **Structure:**
 - Overview (what and why)
@@ -571,7 +570,6 @@ blueprint ────────────────────┤
             review (Review Document)
 
 handoff ────────────────────→ (any point — session boundary)
-split-plan ──────────────────→ (post-plan, when plan is too large)
 decision-mapping ────────────→ (pre-discover, when idea is too vague)
 ```
 

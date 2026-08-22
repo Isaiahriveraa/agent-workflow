@@ -34,9 +34,7 @@ The pipeline routes work through stages. Depth depends on complexity:
 ```
 lightweight:   implement → tdd → code-review → commit
 
-moderate:      to-tickets → implement → tdd → code-review → commit
-
-team/huge:     issue-discovery → to-tickets → implement → tdd → code-review → commit
+planned:       /plan → to-tickets → implement → tdd → code-review → commit
 
 spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review → commit
 ```
@@ -46,26 +44,30 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 | Stage | Skill | What it produces | Where |
 |-------|-------|------------------|-------|
 | Clarify | `grill-with-docs` + `domain-modeling` | Glossary, ADRs, sharpened plan | Plan server |
-| Spec | `to-spec` | Spec issue (Problem/Stories/Decisions/OutOfScope) | GitHub Issue |
+| Spec | `to-spec` | Spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning | GitHub Issue |
 | Prototype | `prototype` | Throwaway code answering a design question | In-repo |
-| Plan + tickets | `to-tickets` | Implementation plan + focused tickets (one per PR) | Plan server + local drafts |
-| Issue discovery | `issue-discovery` | Ambiguous ideas → decision issues | GitHub Issues |
+| Plan | `/plan` | Plan file — feature/engineering planning, concern decomposition, dependencies, parallelism, stacking | Plan file (human-approved) |
+| Tickets | `to-tickets` | Convert an approved plan → focused tickets (one per PR) | Local drafts |
+| Decision issues (compat) | `issue-discovery` | Ambiguous ideas → decision GitHub issues; planning lives in `/plan` | GitHub Issues |
 | Audit | `improve` | Read-only codebase survey → prioritized executor-ready plans | `plans/` in repo |
 | Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
 | TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
 | Review | `code-review` | Code review report | Plan server |
-| Commit | `commit` | Atomic commit message | Git commit |
+| Commit | `commit` | Pre-commit review gate + atomic commit message | Git commit |
 
 ### How to choose
 
 1. **Small, known fix** → `/skill:implement`
-2. **Need a plan first** → `/skill:to-tickets` → `/skill:implement`
+2. **Feature/engineering plan or messy product intent** → `/plan` — decomposes concerns, dependencies, parallelism, and stacking; includes repository research for the change; writes a plan file for approval → `/skill:to-tickets` converts the approved plan → `/skill:implement`
 3. **Need a prototype** → `/skill:prototype`
-4. **Writing a spec** → `/skill:to-spec`
-5. **Breaking work into tickets** → `/skill:to-tickets`
-6. **Huge foggy effort** → `/skill:issue-discovery`
-7. **Sharpening an idea** → `/skill:grill-with-docs`
-8. **Ask me which skill** → `/skill:ask-yonie`
+4. **Writing a spec** → `/skill:to-spec` — GitHub spec issue, no code/file-path planning
+5. **Ready GitHub issue to ship** → `/skill:issue-delivery` — isolated worktree → verified draft PR (separate issue-to-PR path)
+6. **External cited research** → `/skill:research`
+7. **Audit an existing codebase** → `/skill:improve` — read-only survey, audit-driven
+8. **Publish an existing plan** → `/skill:plan-server` — explicitly writes the plan to the plan server and returns its URL
+9. **Decision issues before planning (compat)** → `/skill:issue-discovery`
+10. **Sharpening an idea** → `/skill:grill-with-docs`
+11. **Ask me which skill** → `/skill:skill-index`
 
 ## Commands
 
@@ -103,8 +105,9 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | Skill | Role |
 |-------|------|
 | `prototype/` | Throwaway code to answer a design question |
-| `to-tickets/` | Implementation plan + focused tickets (one per PR) |
-| `issue-discovery/` | Ambiguous ideas → decision GitHub issues |
+| `plan/` | Repo-grounded, dependency-aware planning → local plan files in `.omo/plans/<slug>/` |
+| `to-tickets/` | Convert an approved plan/spec/issue into focused tickets (one per PR) |
+| `issue-discovery/` | Ambiguous ideas → decision GitHub issues (compat — planning lives in `/plan`) |
 | `to-spec/` | Conversation → spec issue |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Background-agent research → single cited Markdown file |
@@ -112,17 +115,18 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `implement/` | Orchestrator: tdd → code-review → commit |
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
-| `subagent-implementation-review/` | Rule gate for delegated subagent work |
 | `tdd/` | Red-green-refactor with seam discipline |
 | `code-review/` | Adversarial review — three reviewers (behavioral, contract/spec, maintainability), one adjudicator |
-| `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
 | `commit/` | Atomic commit messages (mandatory before any commit) |
 | `pr-workflow/` | PR discipline (mandatory before any PR) |
 | `handoff/` | Session handoff documents |
+| `ch/` | Handoff shorthand — /ch as a skill |
 | `recall/` | Resume from handoff |
-| `plan-server/` | Local MDX plan server |
+| `later/` | Future improvement notes in `future/` |
+| `wf/` | Commit + PR in one flow (commit → pr-workflow) |
+| `plan-server/` | Explicitly publish an existing plan to the local MDX plan server |
 | `codebase-design/` | Deep module design |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning protocol |
@@ -130,12 +134,12 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `diagnose/` | Bug and performance diagnosis |
 | `security-review/` | Team-mode vulnerability research |
 | `e2e-testing-patterns/` | Playwright/Cypress testing standards |
-| `enforce/` | Enforce hub AGENTS.md rules on a project |
+| `enforce/` | Review what needs to change (what/why rationale table) → apply it. Gate for delegated work; hygiene pass for existing code |
 | `cancel/` | Cancel active modes |
 | `prompt-master/` | Prompt engineering |
-| `split-plan/` | Break big plans into smaller phases |
 | `resolving-merge-conflicts/` | Merge conflict resolution |
 | `frontend-design/` | Visual design guidance |
+| `frontend-implement/` | Frontend implementation mode — main agent writes, sub-agents research only |
 | `ui-ux-pro-max/` | UI/UX design intelligence |
 | `impeccable/` | AI agent design guidance (pbakaus/impeccable) |
 | `framer-motion-animator/` | Framer Motion animations |
@@ -143,7 +147,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `next-best-practices/` | Next.js best practices |
 | `performance/` | Web performance optimization |
 | `supabase-postgres-best-practices/` | Postgres optimization from Supabase |
-| `ask-yonie/` | Skill router — ask which skill fits |
+| `skill-index/` | Skill router — ask which skill fits |
 
 Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase-analyzer, claim-verifier, diff-auditor, roadmap, ui-auditor, and more.
 
@@ -161,6 +165,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 ├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules
 │   ├── prototype/          # Pipeline skills
+│   ├── plan/
 │   ├── to-tickets/
 │   ├── issue-discovery/
 │   ├── implement/
@@ -178,12 +183,12 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── codebase-drill/
 │   ├── learn-plan/
 │   ├── diagnose/
-│   ├── split-plan/
 │   ├── codebase-design/
 │   ├── resolving-merge-conflicts/
 │   ├── research/
 │   ├── prompt-master/
 │   ├── frontend-design/
+│   ├── frontend-implement/
 │   ├── ui-ux-pro-max/
 │   ├── impeccable/
 │   ├── framer-motion-animator/

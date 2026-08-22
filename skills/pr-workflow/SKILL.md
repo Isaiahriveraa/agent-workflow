@@ -90,6 +90,11 @@ Generate a PR description based on the actual branch diff. Sized to the change.
 ### Operating Rules
 
 - Do not open a PR or push commits without approval.
+- After creating or editing a PR, verify the stored body with `gh pr view --json body`.
+  Confirm that section headers are present, blank lines are real newline characters
+  rather than literal `\\n` text, and the body contains no unintended Markdown
+  formatting artifacts. If verification fails, correct the body before reporting
+  the PR as complete.
 - Inspect the branch against the intended base branch first.
 - Size the PR before writing it.
 - Describe only what is actually in the committed branch diff against the base branch.
@@ -260,6 +265,7 @@ During iteration:
 - [ ] All PRs verified as drafts via `gh pr list`
 - [ ] Each PR's base branch is correct (previous PR's branch or base-branch)
 - [ ] PR bodies are non-empty and concern-specific
+- [ ] PR bodies were fetched after creation/edit and verified to contain real line breaks, correct headers, and no unintended formatting artifacts
 - [ ] **Each PR has well-separated commits** — `git log --oneline` per branch shows no commit that mixes unrelated files
 - [ ] Tracking file has all PR URLs and statuses, committed to the dirty branch
 - [ ] No extraneous files committed on stack/ branches
