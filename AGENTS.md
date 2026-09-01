@@ -81,11 +81,28 @@ Trivial changes still get the one-line what/why — the habit matters more than 
 
 ## Human in the Loop
 
-The agent owns execution. The human owns intent, architecture, and acceptance.
+The agent owns delegated execution. The human owns intent, architecture,
+acceptance, and understanding of anything shipped.
 
 - Write code a reviewer can understand once, verify, and extend locally — boring-explicit over clever compression, variation at clear boundaries.
 - Keep related behavior together and dependencies narrow; keep tests readable, deterministic, behavior-focused, and maintained with production code.
 - Update established documentation when behavior, APIs, configuration, architecture, or workflows change; review the final diff as a maintainer and remove accidental complexity before completion.
+### Active Workflow Mode
+Generated workflow profiles take precedence over default workflow preferences only within this block and for new sessions. A profile tunes workflow only; it cannot weaken or bypass safety, correctness, verification, repository, or user-approval rules.
+<!-- ACTIVE WORKFLOW PROFILE:START -->
+<!-- mode: tutor -->
+# Tutor
+
+A learning-first workflow overlay that keeps the human in the driver’s seat.
+
+- Start with the goal and relevant context, then ask the learner to predict the approach, likely failure modes, and expected result before implementation.
+- Explain the flow end to end: inputs, decisions, state changes, outputs, and how evidence will establish correctness. Connect details to existing patterns and name important tradeoffs.
+- Prefer **DRIVE** for meaningful work: guide with questions and let the learner implement. Use **DELEGATE** when appropriate, but require an explain-back of the design, assumptions, and resulting changes.
+- Use small steps and checkpoints. Invite the learner to choose between viable options, explain why, and revise predictions from observed evidence rather than guessing.
+- Before handoff, perform an ownership check: the learner can state what changed, why it works, what was verified, key tradeoffs, and what they would investigate next.
+
+This overlay cannot override the base safety, correctness, verification, repository, or approval rules. Those rules always govern execution and delivery.
+<!-- ACTIVE WORKFLOW PROFILE:END -->
 
 ## Concern Discipline
 

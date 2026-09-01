@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+root=${AGENT_MODE_ROOT:-$(cd -- "$script_dir/.." && pwd)}
+agents="$root/AGENTS.md"
+profiles="$root/profiles"
+begin='<!-- ACTIVE WORKFLOW PROFILE:START -->'
+end='<!-- ACTIVE WORKFLOW PROFILE:END -->'
+
+fail() {
+  printf 'agent-mode: %s\n' "$*" >&2
+  exit 1
+}
+
+[[ -f "$agents" ]] || fail "missing $agents"
+
+validate_markers() {
+  awk -v b="$begin" -v e="$end" '
+    $0 == b { begins++; begin_line = NR }
+    $0 == e { ends++; end_line = NR }
+    END {
+      if (begins != 1 || ends != 1 || begin_line >= end_line) exit 1
+    }
+  ' "$agents" || fail "AGENTS.md must contain exactly one ordered marker pair"
+}
+
+profile_path() {
+  local mode=$1
+  case "$mode" in
+    ship-fast|tutor) ;;
+    *) fail "unknown mode: $mode" ;;
+  esac
+
+  local file="$profiles/$mode.md"
+  [[ -r "$file" ]] || fail "missing profile: $mode"
+  if awk -v b="$begin" -v e="$end" '$0 == b || $0 == e { found = 1 } END { exit found ? 0 : 1 }' "$file"; then
+    fail "profile contains reserved agent-mode markers: $mode"
+  fi
+  printf '%s\n' "$file"
+}
+
+active_mode() {
+  awk -v b="$begin" -v e="$end" '
+    $0 == b { inside = 1; next }
+    inside && $0 == e { exit }
+    inside && $0 ~ /^<!-- mode: [a-z][a-z0-9-]* -->$/ {
+      mode = $0
+      sub(/^<!-- mode: /, "", mode)
+      sub(/ -->$/, "", mode)
+      count++
+    }
+    END {
+      if (count != 1) exit 1
+      print mode
+    }
+  ' "$agents"
+}
+
+status() {
+  validate_markers
+  active_mode || fail "active profile mode is missing or malformed"
+}
+
+switch_mode() {
+  local mode=$1
+  local profile
+  profile=$(profile_path "$mode")
+  validate_markers
+
+  local current
+  current=$(active_mode 2>/dev/null) || fail "active profile mode is missing or malformed"
+  if [[ "$current" == "$mode" ]]; then
+    return 0
+  fi
+
+  local tmp
+  tmp=$(mktemp "$root/.agent-mode.XXXXXX")
+  trap 'rm -f -- "$tmp"' EXIT
+
+  local perm
+  perm=$(stat -f '%Lp' "$agents" 2>/dev/null || stat -c '%a' "$agents")
+  awk -v b="$begin" -v e="$end" -v profile="$profile" -v mode="$mode" '
+    $0 == b {
+      print
+      print "<!-- mode: " mode " -->"
+      while ((getline line < profile) > 0) print line
+      close(profile)
+      inside = 1
+      next
+    }
+    inside && $0 == e { print; inside = 0; next }
+    !inside { print }
+  ' "$agents" > "$tmp"
+
+  chmod "$perm" "$tmp"
+  mv -f -- "$tmp" "$agents"
+  trap - EXIT
+}
+
+[[ $# -eq 1 ]] || fail "usage: agent-mode status|ship-fast|tutor"
+case "$1" in
+  status) status ;;
+  ship-fast|tutor) switch_mode "$1" ;;
+  *) fail "unknown mode: $1" ;;
+esac

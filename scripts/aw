@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+agent_mode="$script_dir/agent-mode"
+if [[ ! -x "$agent_mode" && -x "$HOME/.agents/scripts/agent-mode" ]]; then
+  agent_mode="$HOME/.agents/scripts/agent-mode"
+fi
+
+case "${1:-}" in
+  ship)  exec "$agent_mode" ship-fast ;;
+  tutor) exec "$agent_mode" tutor ;;
+  status) exec "$agent_mode" status ;;
+  *)
+    printf 'Usage: aw ship|tutor|status\n' >&2
+    exit 2
+    ;;
+esac
