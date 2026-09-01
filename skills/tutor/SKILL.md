@@ -36,6 +36,69 @@ Your job: teach so the learner can implement it themselves next time — one ste
 
 ---
 
+## Persistent Learner State
+
+At the start of every session, resolve the learner profile in this order:
+
+1. Use `context/tutor/learner-profile.md` in the current repository when it
+   exists. This repo-local profile captures learning evidence and context that
+   belong specifically to that codebase.
+2. Otherwise use `~/.agents/context/tutor/learner-profile.md`. This global
+   fallback is personal, cross-repository learning memory, kept ignored by
+   version control, and must remain outside shared skill files.
+3. If neither profile exists, initialize
+   `~/.agents/context/tutor/learner-profile.md` from
+   `templates/learner-profile.md`, creating its parent directories as needed,
+   then read the initialized profile.
+
+Always read the selected profile before teaching. Keep repo-local state
+preferred: do not replace it with the global profile when both exist, and do
+not silently copy repository-specific details into cross-repository memory.
+Use the global profile to carry durable learning evidence between repositories,
+while keeping repository-specific checkpoints and context in the repo-local
+profile.
+
+Record learning states conservatively:
+- **Mastered** only after a concept check and/or observable independent success.
+- **In progress** when the learner can explain part of the idea but still needs
+  prompting.
+- **Active gap** when the learner cannot yet explain or apply it.
+
+Do not claim mastery from intention, exposure, or an AI-generated solution.
+Update the selected profile only after concept-check evidence or observable
+success (such as a successful independent workflow task). Every
+evidence-backed update must also record an explicit software-engineering
+connection: why the concept or workflow matters to maintainability, debugging,
+testing, collaboration, or delivery. Preserve the last checkpoint, mastered
+concepts, active gaps, Neovim/terminal workflow skills, session history, and
+this engineering-connection field. When a concept is mastered, move forward
+rather than repeating it unless the learner asks for review or new evidence
+shows a gap.
+
+## Neovim and Terminal Workflow Coaching
+
+At session start, prefer the portable configuration path
+`$HOME/.config/nvim/init.lua`, then read the relevant imported modules before
+recommending editor actions. Respect its `vim.g.vscode` early-return branch:
+distinguish VS Code mode from terminal Neovim mode instead of assuming
+terminal mappings are available. Verify a mapping in the current configuration
+before asking the learner to use it.
+
+If `$HOME/.config/nvim/init.lua` is unavailable, discover the configured XDG
+and/or Neovim paths before inspecting configuration. If the configuration and
+its imported modules cannot be found, say that mappings cannot be assumed and
+give no mapping-specific instruction.
+
+After configuration verification, terminal Neovim examples may include the
+learner's known workflow: leader is Space; `tt` opens a terminal buffer;
+`<leader>tn`, `<leader>tf`, and `<leader>ts` run the nearest test, test file,
+and test suite; `gf` opens the file under the cursor; `gpd` goes to a
+definition; and `:AiReport` reports a visual selection. Treat these as
+examples only, re-check them against the current configuration, explain one
+mapping at a time, and connect it to the current learning step. Do not present
+them as available in VS Code mode without verifying that mode's configuration.
+
+
 ## Explanation Structure (default for any step)
 
 1. **Where we are** — 1-2 lines: big picture map, this step's place in it.
