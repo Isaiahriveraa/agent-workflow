@@ -1,15 +1,24 @@
-ADRs are written to the **project repo** (not plan-server) so agents working in the repo see them as context:
+ADRs are written to the current worktree's context directory:
 
-`{git-root}/docs/adr/NNNN-slug.md`
+`{git-root}/context/adr/NNNN-slug.md`
 
-A symlink from plan-server's `projects/{project}/adr/` points to `{git-root}/docs/adr/` so the plan-server UI also discovers them.
+## Terminal-first writing
+
+Keep ADRs readable at roughly 80 columns in a plain terminal:
+
+- Use short paragraphs and simple headings.
+- Use bullets for options and consequences instead of wide tables.
+- If a relationship needs a diagram, use a fenced `text` block with ASCII
+  characters. Never use a Mermaid code block.
+- Keep the decision and its reason visible near the top; optional sections
+  should not bury them.
 
 Create them with the helper script:
 ```bash
-python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --project <project> --type adr --topic "<decision title>"
+python3 ~/.agents/scripts/new-artifact.py --type adr --topic "<decision title>"
 ```
 
-The script auto-detects the git repo root and writes to `{git-root}/docs/adr/`. If no git repo is found, it falls back to plan-server.
+The script resolves the current git worktree root and writes to `{git-root}/context/adr/`.
 
 ## Template
 
@@ -17,6 +26,12 @@ The script auto-detects the git repo root and writes to `{git-root}/docs/adr/`. 
 # {Short title of the decision}
 
 {1-3 sentences: what's the context, what did we decide, and why.}
+```
+
+Example with an ASCII flow:
+
+```text
+[Question] -> [Decision] -> [Consequence]
 ```
 
 That's it. An ADR can be a single paragraph. The value is in recording *that* a decision was made and *why* — not in filling out sections.
@@ -31,11 +46,11 @@ Only include these when they add genuine value. Most ADRs won't need them.
 
 ## Numbering
 
-Scan the project repo's `docs/adr/` directory for the highest existing number and increment by one.
+Scan `context/adr/` for the highest existing number and increment by one.
 
 ## Updating existing ADRs
 
-Before creating a new ADR, scan `docs/adr/` for existing ADRs covering the same ground:
+Before creating a new ADR, scan `context/adr/` for existing ADRs covering the same ground:
 
 1. **Same decision changed?** Update the existing ADR in-place (context, decision, consequences).
 2. **New decision supersedes old?** Set old ADR's status to `Superseded by ADR-NNNN`, reference it in the new ADR.

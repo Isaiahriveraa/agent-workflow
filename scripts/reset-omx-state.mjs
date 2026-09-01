@@ -15,7 +15,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { getProjectContext } from "./project-context.mjs";
+import { ensureProjectContext, getProjectContext } from "./project-context.mjs";
 
 const args = process.argv.slice(2);
 const FLAGS = {
@@ -26,7 +26,7 @@ const FLAGS = {
 	keepSpecs: args.includes("--keep-specs"),
 };
 
-const project = getProjectContext();
+const project = FLAGS.dryRun ? getProjectContext() : ensureProjectContext();
 const omxDir = project.projectDir;
 
 const log = (message) => console.log(`[reset-omx] ${message}`);
@@ -89,6 +89,7 @@ const writeIfChanged = (filePath, content) => {
 	if (FLAGS.dryRun) {
 		log(`would write: ${path.relative(omxDir, filePath)}`);
 	} else {
+		fs.mkdirSync(path.dirname(filePath), { recursive: true });
 		fs.writeFileSync(filePath, content);
 		log(`wrote: ${path.relative(omxDir, filePath)}`);
 	}
@@ -174,17 +175,16 @@ const artifactsMd = `# Artifact Retrieval Context
 
 Describes where resumable workflow artifacts live and how they should be prioritized.
 
-Runtime context and RPI artifacts are split by type: intake, plans, research, lightweight runtime continuity, and handoffs are project-local workflow artifacts.
+Runtime state and context artifacts are split by type: plans, research, lightweight runtime continuity, and handoffs are worktree-local workflow artifacts.
 
 Lightweight continuity artifacts are project-local runtime files. Project-local handoffs are transfer artifacts, not the ordinary pause/resume path.
 
 ## Sources
-All paths resolve through \`~/.agents/scripts/plan-server-path\` under \`projects/<project>/\`.
-- intake: \`<plan-server>/projects/<project>/intake\`
-- plans: \`<plan-server>/projects/<project>/plans\`
-- research: \`<plan-server>/projects/<project>/research\`
+All documentation paths resolve under the current worktree's \`context/\` directory.
+- plans: \`context/plans\`
+- research: \`context/research\`
 - sessions: (removed — use \`.sisyphus/run-continuation/\`)
-- handoffs: \`<plan-server>/projects/<project>/handoffs\`
+- handoffs: \`context/handoffs\`
 - active working set metadata: (removed — use \`.sisyphus/run-continuation/\`)
 
 ## Preferred Retrieval Order
@@ -238,7 +238,7 @@ console.log("");
 
 // 1. Clean sessions directory
 log("── Cleaning sessions ──");
-cleanDir(project.thoughtPaths.sessions, "session file");
+cleanDir(project.runtimePaths.sessions, "session file");
 
 // 2. Clean logs (unless --keep-logs)
 if (!FLAGS.keepLogs) {
@@ -252,6 +252,7 @@ if (!FLAGS.keepLogs) {
 // 3. Clean plans (only in --full mode, unless --keep-plans)
 if (FLAGS.full && !FLAGS.keepPlans) {
 	log("── Cleaning plans (--full) ──");
+	cleanDir(project.contextPaths.plans, "plan file");
 	cleanDir(path.join(omxDir, "plans"), "plan file");
 } else {
 	log("── Preserving plans ──");
@@ -260,7 +261,7 @@ if (FLAGS.full && !FLAGS.keepPlans) {
 // 4. Clean specs (only in --full mode, unless --keep-specs)
 if (FLAGS.full && !FLAGS.keepSpecs) {
 	log("── Cleaning specs (--full) ──");
-	cleanDir(path.join(omxDir, "specs"), "spec file");
+	cleanDir(path.join(project.contextDir, "specs"), "spec file");
 } else {
 	log("── Preserving specs ──");
 }
@@ -288,11 +289,9 @@ writeIfChanged(
 
 // 10. Ensure required directories exist
 log("── Ensuring directory structure ──");
-ensureDir(project.thoughtPaths.sessions);
+ensureDir(project.runtimePaths.sessions);
 ensureDir(path.join(omxDir, "logs"));
-ensureDir(path.join(omxDir, "plans"));
-ensureDir(path.join(omxDir, "specs"));
-
+ensureDir(project.contextPaths.plans);
 console.log("");
 log("Reset complete.");
 if (FLAGS.dryRun)

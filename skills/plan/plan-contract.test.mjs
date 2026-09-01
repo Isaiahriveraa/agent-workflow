@@ -51,6 +51,13 @@ describe("plan skill contract", () => {
     assert.ok(mentions(/research/i), "must require repository research");
     assert.ok(mentions(/file:line/), "must cite file:line evidence");
   });
+ 
+  it("requires external evidence from proven implementations and API documentation", () => {
+    assert.ok(mentions(/web\s*search/i), "must require web search");
+    assert.ok(mentions(/proven|existing implementation/i), "must look for proven existing implementations");
+    assert.ok(mentions(/api documentation|official documentation/i), "must consult API documentation");
+    assert.ok(mentions(/relevant external|external evidence/i), "must assess relevant external evidence");
+  });
 
   it("distinguishes current behavior from desired behavior", () => {
     assert.ok(mentions(/current/i));
@@ -108,9 +115,8 @@ describe("plan skill contract", () => {
     assert.ok(mentions(/non.?goal|out of scope/i));
   });
 
-  it("defines local output at .omo/plans/<slug>/ honoring an existing repo convention", () => {
-    assert.ok(mentions(/\.omo\/plans\//), "must define .omo/plans/ default output");
-    assert.ok(mentions(/convention/i), "must honor an existing repo convention first");
+  it("defines local output at context/plans/<slug>/", () => {
+    assert.ok(mentions(/context\/plans\//), "must define context/plans/ output");
   });
 
   it("requires 00-index.md for multi-step plans", () => {
@@ -140,15 +146,8 @@ describe("plan skill contract", () => {
     assert.ok(mentions(/issue-delivery/) && mentions(/deliver/), "issue-delivery delivers a ready issue");
     assert.ok(mentions(/to-spec/) && mentions(/github/i), "to-spec is a GitHub spec workflow");
     assert.ok(mentions(/research/) && mentions(/external/i), "research is external-source research");
-    assert.ok(mentions(/plan-server/) && mentions(/publish/i), "plan-server is explicit publishing");
     assert.ok(mentions(/codebase-design/) && mentions(/unchanged/i), "codebase-design is unchanged");
   });
-
-	it("publishes the completed local plan through the plan-server script", () => {
-		assert.ok(mentions(/plan-server\/scripts\/plan-server\.mjs/));
-		assert.ok(mentions(/input-file/));
-		assert.ok(mentions(/url|file/i));
-	});
 
 	it("keeps concern splitting inside plan instead of exposing split-plan", () => {
 		assert.equal(existsSync(join(HUB_ROOT, "skills", "split-plan")), false);

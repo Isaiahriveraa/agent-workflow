@@ -27,7 +27,7 @@ This skill requires a Git repository and a terminal or agent session with Git an
 |---|---|
 | `<issue-number-or-url>` | Required GitHub issue number or URL. |
 | `--base <branch>` | Optional base branch. Resolve the repository default branch when omitted. |
-| `--plan <path-or-url>` | Optional approved plan artifact. Accept only a plan-server project path or an `http(s)` URL from the plan-server domain. Reject `file://` URLs and arbitrary filesystem paths. It is scope evidence; it never overrides the issue's explicit acceptance criteria. |
+| `--plan <path>` | Optional approved local plan artifact, normally under `context/plans/`. It is scope evidence; it never overrides the issue's explicit acceptance criteria. |
 
 ### Deliverable
 

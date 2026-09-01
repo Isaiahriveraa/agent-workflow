@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "node --test scripts/*.test.mjs skills/*/*.test.mjs",
     "init:local-state": "node ./scripts/init-local-state.mjs",
     "reset:omx-state": "node ./scripts/reset-omx-state.mjs",
     "reset:omx-state:dry": "node ./scripts/reset-omx-state.mjs --dry-run"

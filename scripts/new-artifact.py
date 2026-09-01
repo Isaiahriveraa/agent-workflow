@@ -1,25 +1,18 @@
 #!/usr/bin/env python3
-"""
-new-handoff.py -- create plan-server artifacts with ISO-timestamp filenames.
+"""Create worktree-local context artifacts with ISO-timestamp filenames.
 
-Writes to {dest}/projects/{project}/{type}/{YYYY-MM-DD_HH-MM-SS}_{slug}.{ext}
-with dest defaulting to the root from ~/.agents/scripts/plan-server-path (single source of truth).
-
-All plan server types use flat subdirectories with ISO-8601 timestamp
-prefixes for automatic chronological sorting (.sort() == oldest first,
-.reverse() == newest first). Plans use .mdx, everything else .md.
+Writes to {git-root}/context/{type}/{YYYY-MM-DD_HH-MM-SS}_{slug}.md.
 """
 
 import argparse
 import datetime
-import os
 import pathlib
 import subprocess
 import sys
 
 TYPES = (
     "handoffs", "reflections", "grill",
-    "glossary", "adr", "prd", "issues", "reviews", "maps",
+    "glossary", "adr", "prd", "issues", "reviews", "maps", "discover", "frd", "tickets",
     "decisions", "research", "designs", "solutions", "plans",
     "test-cases",
 )
@@ -56,9 +49,9 @@ def iso_filename(t: datetime.datetime) -> str:
     return f"{t.year:04d}-{t.month:02d}-{t.day:02d}_{t.hour:02d}-{t.minute:02d}-{t.second:02d}"
 
 
-def plan_server_ext(art_type: str) -> str:
-    """File extension for plan server artifacts."""
-    return ".mdx" if art_type == "plans" else ".md"
+def artifact_ext(_: str) -> str:
+    """All context artifacts use plain Markdown."""
+    return ".md"
 
 
 # --- Templates ---
@@ -120,15 +113,14 @@ def grill_template(title: str, date_str: str, time_str: str) -> str:
         f"# {title} - Grill Session",
         f"*{date_str} - {time_str}*",
         "",
-        "> [!summary]",
-        "> Plan stress-test session. Key terms challenged, resolved decisions, ADRs created, and remaining open questions.",
+        "## Summary",
+        "Plan stress-test session. Key terms challenged, resolved decisions, ADRs created, and remaining open questions.",
         "",
         "## Starting Question",
         "*What was the plan or idea being grilled?*",
         "",
-        "> [!question]",
-        "> **Open questions**",
-        "> - *(add questions still needing resolution)*",
+        "### Open Questions",
+        "- *(add questions still needing resolution)*",
         "",
         "## Terms Challenged",
         "",
@@ -150,19 +142,17 @@ def grill_template(title: str, date_str: str, time_str: str) -> str:
         "",
         "## Key Insights",
         "",
-        "> [!todo]",
-        "> **Follow-ups**",
-        "> - [ ] {action item}",
+        "### Follow-ups",
+        "- [ ] {action item}",
         "",
         "## Related",
         "",
-        "- [[glossary]]",
-        "- [[handoff-{related}]]",
-        "- [[plan-{related}]]",
+        "- `context/glossary/glossary.md`",
+        "- `context/handoffs/...`",
+        "- `context/plans/...`",
         "",
     ]
     return "\n".join(lines)
-
 
 def empty_template(title: str, date_str: str, time_str: str) -> str:
     return f"# {title}\n*{date_str} - {time_str}*\n\n"
@@ -242,6 +232,26 @@ def plan_template(title: str, date_str: str, time_str: str) -> str:
     s += "## Overview\n\n"
     return s
 
+def discover_template(title: str, date_str: str, time_str: str) -> str:
+    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: discover\n---\n\n"
+    s += f"# Discovery: {title}\n*{date_str} - {time_str}*\n\n"
+    s += "## Summary\n\n\n## Findings\n\n\n## Next Steps\n\n"
+    return s
+
+
+def frd_template(title: str, date_str: str, time_str: str) -> str:
+    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: frd\n---\n\n"
+    s += f"# Functional Requirements: {title}\n*{date_str} - {time_str}*\n\n"
+    s += "## Problem Statement\n\n\n## Requirements\n\n\n## Acceptance Criteria\n\n"
+    return s
+
+
+def tickets_template(title: str, date_str: str, time_str: str) -> str:
+    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: tickets\n---\n\n"
+    s += f"# Ticket: {title}\n*{date_str} - {time_str}*\n\n"
+    s += "## Summary\n\n\n## Scope\n\n\n## Acceptance Criteria\n\n"
+    return s
+
 
 
 
@@ -256,6 +266,9 @@ def template(art_type: str, title: str, date_str: str, time_str: str, adr_num: i
         "issues": issue_template,
         "reviews": review_template,
         "maps": map_template,
+        "discover": discover_template,
+        "frd": frd_template,
+        "tickets": tickets_template,
         "research": research_template,
         "designs": design_template,
         "solutions": solutions_template,
@@ -289,80 +302,8 @@ def get_next_adr_num(directory: pathlib.Path) -> int:
     return max(nums) + 1 if nums else 1
 
 
-def detect_project(dest: str | pathlib.Path) -> str | None:
-    """Auto-detect plan server project from cwd/git context.
-
-    Behavior:
-        Tries three strategies in order:
-        1. Checks if cwd is inside a plan server project directory
-        2. Walks up from git repo root checking each parent dir name
-           against existing plan server project directories
-        3. Checks the AGENTS_PROJECT_SLUG environment variable
-        Returns None if all strategies fail.
-
-    Returns:
-        Matching project name string, or None.
-    """
-    plan_server_root = pathlib.Path(dest)
-    cwd = pathlib.Path.cwd().resolve()
-    projects_dir = plan_server_root / "projects"
-
-    if not projects_dir.is_dir():
-        return None
-
-    # 1. Check if cwd is inside a plan server project dir
-    for project_dir in projects_dir.iterdir():
-        if project_dir.is_dir() and not project_dir.name.startswith("."):
-            try:
-                project_resolved = project_dir.resolve()
-                if str(cwd).startswith(str(project_resolved) + "/") or str(cwd) == str(project_resolved):
-                    return project_dir.name
-            except (ValueError, OSError):
-                pass
-
-    # 2. Walk up from git top-level checking each parent dir name against projects
-    try:
-        git_top = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-        if git_top:
-            walk = pathlib.Path(git_top)
-            while str(walk) != "/":
-                name = walk.name
-                if name and (projects_dir / name).is_dir():
-                    return name
-                walk = walk.parent
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-
-    # 3. Check AGENTS_PROJECT_SLUG env var
-    slug = os.environ.get("AGENTS_PROJECT_SLUG")
-    if slug and (projects_dir / slug).is_dir():
-        return slug
-
-    return None
-
-
-def detect_or_create_project_from_git(dest: str | pathlib.Path) -> str | None:
-    """Get git root dir name and create a project directory under projects/ if needed.
-
-    Returns the project name, or None if no git repo is detected.
-    """
-    # 1. Check if CWD is inside ~/Documents/Github/{parent}/ (handles monorepo parents)
-    github_parent = detect_github_parent_project()
-    if github_parent and not github_parent.startswith("."):
-        projects_dir = pathlib.Path(dest) / "projects"
-        project_dir = projects_dir / github_parent
-        if not project_dir.exists():
-            project_dir.mkdir(parents=True, exist_ok=True)
-            (project_dir / "plans").mkdir(exist_ok=True)
-            (project_dir / "handoffs").mkdir(exist_ok=True)
-            print(f"Auto-created project: {github_parent}")
-        return github_parent
-
-    # 2. Fall back to git root basename
+def git_root() -> pathlib.Path | None:
+    """Return the current worktree root, or None outside a Git worktree."""
     try:
         git_top = subprocess.check_output(
             ["git", "rev-parse", "--show-toplevel"],
@@ -371,120 +312,19 @@ def detect_or_create_project_from_git(dest: str | pathlib.Path) -> str | None:
         ).strip()
         if not git_top:
             return None
-        repo_name = pathlib.Path(git_top).name
-        if not repo_name or repo_name.startswith("."):
-            return None
-
-        projects_dir = pathlib.Path(dest) / "projects"
-        project_dir = projects_dir / repo_name
-
-        if not project_dir.exists():
-            project_dir.mkdir(parents=True, exist_ok=True)
-            (project_dir / "plans").mkdir(exist_ok=True)
-            (project_dir / "handoffs").mkdir(exist_ok=True)
-            print(f"Auto-created project: {repo_name}")
-
-        return repo_name
+        return pathlib.Path(git_top).resolve()
     except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         return None
 
 
-def detect_github_parent_project() -> str | None:
-    """If CWD is inside ~/Documents/Github/{project}/, return {project}.
-    
-    This handles monorepo parents like KodaProject that contain multiple
-    git repos (backend/, koda/, etc.).
-    """
-    cwd = pathlib.Path.cwd().resolve()
-    github_dir = pathlib.Path.home() / "Documents" / "Github"
-    if not github_dir.is_dir():
-        return None
-    # Walk up from cwd to find the GitHub project ancestor
-    # Case 1: CWD is the project dir itself (~/Documents/Github/KodaProject/)
-    # Case 2: CWD is inside a subdirectory (~/Documents/Github/KodaProject/backend/)
-    for parent in cwd.parents:
-        if parent == github_dir:
-            # CWD itself is a direct child of ~/Documents/Github/
-            return cwd.name
-        if parent.parent == github_dir:
-            # A parent directory is a direct child of ~/Documents/Github/
-            return parent.name
-    return None
-
-
-def find_project_repo_root(dest: str | pathlib.Path, project: str) -> pathlib.Path | None:
-    """Find the actual repo root directory for a project.
-
-    Checks, in order:
-    1. ~/Documents/Github/{project}/
-    2. CWD's git root
-
-    Returns None if no suitable directory is found.
-    """
-    # 1. Check ~/Documents/Github/{project}/
-    github_path = pathlib.Path.home() / "Documents" / "Github" / project
-    if github_path.is_dir():
-        return github_path.resolve()
-
-    # 2. Check CWD's git root
-    try:
-        git_top = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-        if git_top:
-            return pathlib.Path(git_top).resolve()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-
-    return None
-
-
-def setup_adr_symlink(dest: str | pathlib.Path, project: str, repo_root: pathlib.Path) -> None:
-    """Set up symlink from plan-server to the repo's docs/adr/.
-    Skips if the plan-server path is already the correct symlink.
-    """
-    plan_server_adr = pathlib.Path(dest) / "projects" / project / "adr"
-    repo_adr_dir = repo_root / "docs" / "adr"
-
-    # Ensure the target docs/adr/ exists
-    repo_adr_dir.mkdir(parents=True, exist_ok=True)
-
-    # If it's already the correct symlink, skip
-    if plan_server_adr.is_symlink():
-        existing = plan_server_adr.readlink()
-        if existing.resolve() == repo_adr_dir.resolve():
-            return
-        plan_server_adr.unlink()
-    elif plan_server_adr.is_dir():
-        # Real directory exists — try to remove if empty
-        try:
-            plan_server_adr.rmdir()
-        except OSError:
-            # Not empty — replace with symlink anyway (files are moving to repo)
-            import shutil
-            shutil.rmtree(str(plan_server_adr))
-
-    # Create symlink
-    plan_server_adr.symlink_to(repo_adr_dir, target_is_directory=True)
-
-def plan_server_root() -> str:
-    """Resolve the plan server root through its single source of truth script."""
-    path_script = pathlib.Path.home() / ".agents" / "scripts" / "plan-server-path"
-    return subprocess.check_output([str(path_script)], text=True).strip()
-
-
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Create a plan-server artifact.")
+    parser = argparse.ArgumentParser(description="Create a worktree-local context artifact.")
     parser.add_argument("--type", choices=TYPES, default="handoffs",
                         help="Artifact type")
-    parser.add_argument("--dest", default=plan_server_root(),
-                        help="Destination root. Defaults to the path from ~/.agents/scripts/plan-server-path")
-    parser.add_argument("--project", default="general",
-                        help="Project name for plan server destination (auto-detected from git/cwd when using default)")
     parser.add_argument("--adr-num", type=int,
                         help="ADR number (auto-incremented if omitted)")
+    parser.add_argument("--topic", dest="topic_flag",
+                        help="Topic for the generated file")
     parser.add_argument("topic", nargs="*",
                         help="Topic for the generated file")
     return parser.parse_args()
@@ -493,34 +333,14 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     now = datetime.datetime.now()
-    raw_topic = " ".join(args.topic) or "untitled"
+    raw_topic = args.topic_flag or " ".join(args.topic) or "untitled"
     title = readable(raw_topic)
 
-    # Plan server mode: dest always resolves to the plan server root
-    project = args.project
-    if project == "general":
-        detected = detect_project(args.dest)
-        if detected:
-            project = detected
-        else:
-            auto_project = detect_or_create_project_from_git(args.dest)
-            if auto_project:
-                project = auto_project
-    # Validate the project directory already exists -- prevents accidental
-    # creation of new projects from wrong --project values
-    project_dir = pathlib.Path(args.dest) / "projects" / project
-    if not project_dir.exists() or not project_dir.is_dir():
-        existing = sorted(
-            p.name for p in pathlib.Path(args.dest).glob("projects/*/")
-            if p.is_dir() and not p.name.startswith(".")
-        )
-        print(
-            f"Error: project '{project}' does not exist in {args.dest}/projects/.\n"
-            f"Existing projects: {', '.join(existing)}",
-            file=sys.stderr,
-        )
+    repo_root = git_root()
+    if repo_root is None:
+        print("Error: artifact creation requires a Git worktree.", file=sys.stderr)
         sys.exit(1)
-    root = pathlib.Path(args.dest) / "projects" / project
+    root = repo_root / "context"
 
     short_month = now.strftime("%b")
     date_str = f"{short_month} {now.day}, {now.year}"
@@ -531,23 +351,30 @@ def main() -> None:
     art_type = args.type
 
     if art_type == 'adr':
-        # ADRs go to project repo docs/adr/ with NNNN-slug naming
-        repo_root = find_project_repo_root(args.dest, project)
-        if repo_root:
-            adr_dir = repo_root / 'docs' / 'adr'
-            setup_adr_symlink(args.dest, project, repo_root)
-        else:
-            adr_dir = root / 'adr'  # fall back to plan-server
-        num = args.adr_num if args.adr_num else get_next_adr_num(adr_dir)
-        folder = adr_dir
+        folder = root / 'adr'
+        num = args.adr_num if args.adr_num else get_next_adr_num(folder)
         filename = f"{num:04d}-{slug(raw_topic)}.md"
+    elif art_type == 'glossary':
+        folder = root / 'glossary'
+        folder.mkdir(parents=True, exist_ok=True)
+        filepath = folder / 'glossary.md'
+        term_header = f"**{title}**:\n"
+        term_body = f"{{A one or two sentence description of {title}}}\n_Avoid_: \n"
+        if filepath.exists():
+            with open(filepath, "a", encoding="utf-8") as f:
+                f.write(f"\n{term_header}{term_body}")
+            print(f"Appended to: {filepath}")
+            return
+        else:
+            header = f"# Glossary\n\n{term_header}{term_body}"
+            filepath.write_text(header, encoding="utf-8")
+            print(f"Created: {filepath}")
+            return
     else:
-        # Plan server mode: flat dirs, ISO timestamp prefixes
         iso_part = iso_filename(now)
-        ext = plan_server_ext(art_type)
+        ext = artifact_ext(art_type)
         folder = root / art_type
         filename = f"{iso_part}_{slug(raw_topic)}{ext}"
-
     folder.mkdir(parents=True, exist_ok=True)
     filepath = folder / filename
 

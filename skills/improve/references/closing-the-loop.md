@@ -11,7 +11,7 @@ The founding rule survives unchanged: **the advisor never edits source code.** I
 ### Preconditions (check all before dispatching)
 
 - The repo is a git repository (worktree isolation requires it). If not: stop and say so.
-- The plan file exists and its dependencies show DONE in `plans/README.md`. If not: stop, name the missing dependency.
+- The plan file exists and its dependencies show DONE in `context/plans/README.md`. If not: stop, name the missing dependency.
 - Run the plan's drift check yourself. If in-scope files changed since `Planned at`, reconcile the plan first (see below) — don't hand a stale plan to an executor.
 
 ### Dispatch
@@ -22,7 +22,7 @@ Create the worktree before dispatch with `~/.agents/scripts/new-worktree.sh <bra
 
 The subagent prompt must contain:
 
-1. **The full plan file text, inlined.** The worktree contains only committed files — if `plans/` is uncommitted, the executor can't read it. Never assume; always inline.
+1. **The full plan file text, inlined.** The worktree contains only committed files — if `context/plans/` is uncommitted, the executor can't read it. Never assume; always inline.
 2. The executor preamble:
 
 > You are the executor for the implementation plan below. Follow it step by
@@ -30,7 +30,7 @@ The subagent prompt must contain:
 > moving on. Touch only the files listed as in scope. If any STOP condition
 > occurs, stop immediately and report. Do not improvise around obstacles.
 > Commit your work in the worktree following the plan's git workflow section.
-> One override: SKIP the plan's instruction to update `plans/README.md` —
+> One override: SKIP the plan's instruction to update `context/plans/README.md` —
 > your reviewer maintains the index. Before reporting, audit every claim in
 > your report against an actual tool result from this session — only report
 > what you can point to evidence for; if a verification failed or was
@@ -72,9 +72,9 @@ Running verification commands inside the executor's worktree is fine — it's is
 
 ---
 
-## `reconcile` — keep `plans/` alive
+## `reconcile` — keep `context/plans/` alive
 
-Process what happened since the last session. Read `plans/README.md` and every plan file, then per status:
+Process what happened since the last session. Read `context/plans/README.md` and every plan file, then per status:
 
 - **DONE** — spot-check that the done criteria still hold on the current HEAD (cheap ones only). Mark verified in the index. Don't delete plan files — they're the record.
 - **BLOCKED** — read the reason. Investigate the underlying obstacle in the codebase. Either rewrite the plan around it (new number if the approach changed fundamentally, in-place refresh otherwise) or mark REJECTED with one line of rationale.

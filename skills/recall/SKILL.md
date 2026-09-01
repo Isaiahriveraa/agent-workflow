@@ -11,19 +11,16 @@ You are tasked with resuming work from a handoff document through an interactive
 
 ## Input
 
-`$ARGUMENTS` — path to a handoff document (e.g. from plan server: `"$("$HOME/.agents/scripts/plan-server-path")"/projects/{project}/handoffs/<filename>.md`). If omitted, the skill lists available handoffs from the plan server and asks which to resume from.
+`$ARGUMENTS` — path to a handoff document (e.g. `context/handoffs/<filename>.md`). If omitted, the skill lists available handoffs from the current worktree's `context/handoffs/` directory and asks which to resume from.
 
 ## Metadata
 
 ```!
 echo "### recent (read only in case of empty user input)"
 echo "recent handoffs:"
-# List latest handoffs from all projects (flat directory)
-for dir in "$("$HOME/.agents/scripts/plan-server-path")"/projects/*/handoffs; do
-  if [ -d "$dir" ]; then
-    ls -t "$dir"/*.md 2>/dev/null | head -5
-  fi
-done
+# List latest handoffs from the worktree's context directory
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
+find "$GIT_ROOT/context/handoffs" -maxdepth 1 -type f -name '*.md' -print 2>/dev/null | sort -r | head -5
 ```
 
 ## Flow
@@ -39,7 +36,7 @@ When this command is invoked:
 1. **If the path to a handoff document was provided**:
    - If a handoff document path was provided as a parameter, skip the default message
    - Immediately read the handoff document FULLY using the Read tool
-   - Immediately read any research or plan documents it links to on the plan server. Read these critical files DIRECTLY using the Read tool - do NOT invoke skills for this initial reading phase.
+   - Immediately read any research or plan documents it links to under `context/`. Read these critical files DIRECTLY using the Read tool - do NOT invoke skills for this initial reading phase.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
@@ -48,7 +45,7 @@ When this command is invoked:
    - **Exactly one entry** — confirm with `ask_user_question`: "Resume this handoff?" with options "Resume `<filename>` (Recommended)" and "Pick a different path". Do NOT call `ask_user_question` with a single option (the tool requires ≥2).
    - **Two or more entries** — present the top 4 filenames as `ask_user_question` options (a free-text "Other" row is appended automatically by the tool; do not list it manually).
 
-   Direct invocation alternative: `/skill:recall "$("$HOME/.agents/scripts/plan-server-path")"/projects/{project}/handoffs/<filename>`
+   Direct invocation alternative: `/skill:recall context/handoffs/<filename>`
 
 ### Step 2: Read and Analyze Handoff
 
@@ -213,7 +210,7 @@ When this command is invoked:
 ## Example Interaction Flow
 
 ```
-User: /skill:recall "$("$HOME/.agents/scripts/plan-server-path")"/projects/koda/handoffs/2026-07-04_12-38-06_webhook-validation.md
+User: /skill:recall context/handoffs/2026-07-04_12-38-06_webhook-validation.md
 Assistant: Let me read and analyze that handoff document...
 
 {Reads handoff completely}

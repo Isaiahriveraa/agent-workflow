@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,10 +6,6 @@ import { fileURLToPath } from "node:url";
 const agentsRoot = process.env.AGENTS_ROOT
 	? path.resolve(process.env.AGENTS_ROOT)
 	: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-// Single source of truth: scripts/plan-server-path prints the plan server root
-const planServerRoot = execFileSync(path.join(agentsRoot, "scripts", "plan-server-path"), {
-	encoding: "utf8",
-}).trim();
 const defaultWorkingDirectory = process.env.AGENTS_PROJECT_ROOT
 	? path.resolve(process.env.AGENTS_PROJECT_ROOT)
 	: process.cwd();
@@ -52,33 +47,50 @@ export const getProjectContext = (options = {}) => {
 		path.basename(projectRoot);
 	const projectSlug = `${slugify(slugBase)}-${hashProjectRoot(projectRoot)}`;
 	const projectDir = path.join(projectRoot, ".omx");
-	// Plan server project dirs keep their literal repo names (e.g. KodaProject)
-	const projectName = slugBase || "general";
-	// Per-project artifacts live on the plan server, not in repo thoughts/
-	const thoughtsDir = path.join(planServerRoot, "projects", projectName);
+	const contextDir = path.join(projectRoot, "context");
 	const sessionsDir = path.join(projectDir, "sessions");
+	const artifactTypes = [
+		"handoffs",
+		"reflections",
+		"grill",
+		"glossary",
+		"adr",
+		"prd",
+		"issues",
+		"reviews",
+		"maps",
+		"discover",
+		"frd",
+		"tickets",
+		"decisions",
+		"research",
+		"designs",
+		"solutions",
+		"plans",
+		"test-cases",
+		"pr-stack",
+		"ui-reviews",
+		"debug",
+	];
+	const contextPaths = Object.fromEntries(
+		artifactTypes.map((type) => [type, path.join(contextDir, type)]),
+	);
 
 	return {
 		agentsRoot,
 		projectRoot,
 		projectSlug,
 		projectDir,
-		thoughtPaths: {
-			intake: path.join(thoughtsDir, "intake"),
-			plans: path.join(thoughtsDir, "plans"),
-			research: path.join(thoughtsDir, "research"),
-			lessons: path.join(thoughtsDir, "lessons"),
-			traces: path.join(thoughtsDir, "traces"),
-			evaluations: path.join(thoughtsDir, "evaluations"),
-			strategies: path.join(thoughtsDir, "strategies"),
-			sessions: sessionsDir,
-			handoffs: path.join(thoughtsDir, "handoffs"),
-		},
+		contextDir,
+		contextPaths,
+		runtimePaths: { sessions: sessionsDir },
 	};
 };
 
 export const ensureProjectContext = (options = {}) => {
-	return getProjectContext(options);
+	const context = getProjectContext(options);
+	fs.mkdirSync(context.contextDir, { recursive: true });
+	return context;
 };
 
 if (import.meta.url === `file://${process.argv[1]}`) {

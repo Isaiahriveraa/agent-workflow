@@ -43,31 +43,30 @@ spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review
 
 | Stage | Skill | What it produces | Where |
 |-------|-------|------------------|-------|
-| Clarify | `grill-with-docs` + `domain-modeling` | Glossary, ADRs, sharpened plan | Plan server |
+| Clarify | `grill-with-docs` + `domain-modeling` | Glossary, ADRs, sharpened plan | `context/` |
 | Spec | `to-spec` | Spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning | GitHub Issue |
 | Prototype | `prototype` | Throwaway code answering a design question | In-repo |
-| Plan | `/plan` | Plan file — feature/engineering planning, concern decomposition, dependencies, parallelism, stacking | Plan file (human-approved) |
+| Plan | `/plan` | Repository-grounded plan with mandatory cited external-evidence pass: proven implementations, official API docs, relevant constraints, and failure modes | Plan file (human-approved) |
 | Tickets | `to-tickets` | Convert an approved plan → focused tickets (one per PR) | Local drafts |
 | Decision issues (compat) | `issue-discovery` | Ambiguous ideas → decision GitHub issues; planning lives in `/plan` | GitHub Issues |
 | Audit | `improve` | Read-only codebase survey → prioritized executor-ready plans | `plans/` in repo |
 | Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
 | TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
-| Review | `code-review` | Code review report | Plan server |
+| Review | `code-review` | Code review report | `context/reviews/` |
 | Commit | `commit` | Pre-commit review gate + atomic commit message | Git commit |
 
 ### How to choose
 
 1. **Small, known fix** → `/skill:implement`
-2. **Feature/engineering plan or messy product intent** → `/plan` — decomposes concerns, dependencies, parallelism, and stacking; includes repository research for the change; writes a plan file for approval → `/skill:to-tickets` converts the approved plan → `/skill:implement`
+2. **Feature/engineering plan or messy product intent** → `/plan` — researches the repository and mandatory external evidence (using `/research`'s background-agent + cited-Markdown protocol), then decomposes concerns, dependencies, parallelism, and stacking → `/skill:to-tickets` converts the approved plan → `/skill:implement`
 3. **Need a prototype** → `/skill:prototype`
 4. **Writing a spec** → `/skill:to-spec` — GitHub spec issue, no code/file-path planning
 5. **Ready GitHub issue to ship** → `/skill:issue-delivery` — isolated worktree → verified draft PR (separate issue-to-PR path)
-6. **External cited research** → `/skill:research`
+6. **Standalone cited research** → `/skill:research` — background-agent research with primary sources and one cited Markdown artifact; `/plan` uses this protocol as part of planning
 7. **Audit an existing codebase** → `/skill:improve` — read-only survey, audit-driven
-8. **Publish an existing plan** → `/skill:plan-server` — explicitly writes the plan to the plan server and returns its URL
-9. **Decision issues before planning (compat)** → `/skill:issue-discovery`
-10. **Sharpening an idea** → `/skill:grill-with-docs`
-11. **Ask me which skill** → `/skill:skill-index`
+8. **Decision issues before planning (compat)** → `/skill:issue-discovery`
+9. **Sharpening an idea** → `/skill:grill-with-docs`
+10. **Ask me which skill** → `/skill:skill-index`
 
 ## Commands
 
@@ -105,7 +104,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | Skill | Role |
 |-------|------|
 | `prototype/` | Throwaway code to answer a design question |
-| `plan/` | Repo-grounded, dependency-aware planning → local plan files in `.omo/plans/<slug>/` |
+| `plan/` | Repository-grounded planning with mandatory cited external evidence → local plan files in `context/plans/<slug>/` |
 | `to-tickets/` | Convert an approved plan/spec/issue into focused tickets (one per PR) |
 | `issue-discovery/` | Ambiguous ideas → decision GitHub issues (compat — planning lives in `/plan`) |
 | `to-spec/` | Conversation → spec issue |
@@ -126,7 +125,6 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `recall/` | Resume from handoff |
 | `later/` | Future improvement notes in `future/` |
 | `wf/` | Commit + PR in one flow (commit → pr-workflow) |
-| `plan-server/` | Explicitly publish an existing plan to the local MDX plan server |
 | `codebase-design/` | Deep module design |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning protocol |
@@ -147,6 +145,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `next-best-practices/` | Next.js best practices |
 | `performance/` | Web performance optimization |
 | `supabase-postgres-best-practices/` | Postgres optimization from Supabase |
+| `herdr/` | Control Herdr terminal multiplexer for coding agents |
 | `skill-index/` | Skill router — ask which skill fits |
 
 Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase-analyzer, claim-verifier, diff-auditor, roadmap, ui-auditor, and more.
@@ -179,7 +178,6 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── improve/
 │   ├── handoff/
 │   ├── recall/
-│   ├── plan-server/
 │   ├── codebase-drill/
 │   ├── learn-plan/
 │   ├── diagnose/
@@ -195,7 +193,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── shadcn/
 │   ├── wait-what/
 │   └── ...                # Additional domain skills
-├── scripts/               # Tooling (init/reset, plan-server-path, worktree helpers, model router)
+├── scripts/               # Tooling (init/reset, context paths, worktree helpers, model router)
 ├── adapters/              # 4 CLI adapter configs
 └── .omc/                  # OpenCode project memory (regenerated)
 ```
@@ -210,7 +208,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 
 - Secrets: `.env`, `.env.local`
 - Dependencies: `node_modules/`
-- Per-project runtime: plan server content at `<plan-server>/projects/{project}/`, where `<plan-server>` is resolved via `~/.agents/scripts/plan-server-path`
+- Worktree context: `context/` at the Git worktree root (plans, handoffs, ADRs, and research)
 
 The public repo is inspectable. Credentials, handoffs, live plans, and active project runtime state are intentionally excluded.
 

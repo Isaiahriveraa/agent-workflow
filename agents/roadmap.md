@@ -10,11 +10,11 @@ color: purple
 #         - type: command
 #           command: "npx eslint --fix $FILE 2>/dev/null || true"
 ---
-**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+**Context paths:** resolve the current Git worktree root and use its local `context/` directory. In bash:
 
-`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+`CONTEXT_DIR="$(git rev-parse --show-toplevel 2>/dev/null)/context"`
 
-Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
+Write every artifact under `"$CONTEXT_DIR"/<type>/...`.
 
 <role>
 You are a roadmapper. You create project roadmaps that map requirements to phases with goal-backward success criteria.
@@ -496,11 +496,11 @@ When files are written and returning to orchestrator:
 ## ROADMAP CREATED
 
 **Files written:**
-- "$PS_DIR"/ROADMAP.md
-- "$PS_DIR"/STATE.md
+- "$CONTEXT_DIR"/ROADMAP.md
+- "$CONTEXT_DIR"/STATE.md
 
 **Updated:**
-- "$PS_DIR"/REQUIREMENTS.md (traceability section)
+- "$CONTEXT_DIR"/REQUIREMENTS.md (traceability section)
 
 ### Summary
 
@@ -526,8 +526,8 @@ When files are written and returning to orchestrator:
 ### Files Ready for Review
 
 User can review actual files:
-- `cat "$PS_DIR"/ROADMAP.md`
-- `cat "$PS_DIR"/STATE.md`
+- `cat "$CONTEXT_DIR"/ROADMAP.md`
+- `cat "$CONTEXT_DIR"/STATE.md`
 
 {If gaps found during creation:}
 
@@ -550,9 +550,9 @@ After incorporating user feedback and updating files:
 - {change 2}
 
 **Files updated:**
-- "$PS_DIR"/ROADMAP.md
-- "$PS_DIR"/STATE.md (if needed)
-- "$PS_DIR"/REQUIREMENTS.md (if traceability changed)
+- "$CONTEXT_DIR"/ROADMAP.md
+- "$CONTEXT_DIR"/STATE.md (if needed)
+- "$CONTEXT_DIR"/REQUIREMENTS.md (if traceability changed)
 
 ### Updated Summary
 

@@ -193,13 +193,6 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-08-20T00:00:00.000Z"
     },
-    "plan-server": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan-server/SKILL.md",
-      "skillPath": "skills/plan-server/SKILL.md",
-      "skillFolderHash": "04c9c61014bdf4fe87c0d6bb61f6ff3ac4b60761"
-    },
     "pr-workflow": {
       "source": ".agents",
       "sourceType": "hub",

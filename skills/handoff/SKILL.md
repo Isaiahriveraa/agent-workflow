@@ -41,42 +41,19 @@ Copy values verbatim — do not reformat the timezone offset.
 
 ### 1. Create the file
 
-Determine the correct plan server project, then create the handoff.
-
-**Project resolution**: The script needs to know which plan server project
-directory to write to. The git repo name doesn't always match the plan server
-project (e.g. `backend/` repo belongs to the `KodaProject` project). Resolve by
-walking up from the git top-level, checking each directory name against existing
-plan server projects. The first match (closest to the repo root) wins.
+Resolve the current Git worktree root, then create the handoff under its local
+`context/handoffs/` directory. The writer creates `context/` and the artifact
+directory when absent.
 
 Run this to create the handoff file:
 
 ```bash
-PLAN_SERVER="$("$HOME/.agents/scripts/plan-server-path")"
-
-# Resolve project by walking up from git top-level
-PROJECT="general"
-git_top=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-if [ -n "$git_top" ]; then
-  walk="$git_top"
-  while [ "$walk" != "/" ]; do
-    name=$(basename "$walk")
-    if [ -d "$PLAN_SERVER/projects/$name" ]; then
-      PROJECT="$name"
-      break
-    fi
-    walk=$(dirname "$walk")
-  done
-fi
-
 python3 ~/.agents/scripts/new-artifact.py \
-  --dest "$PLAN_SERVER" \
-  --project "$PROJECT" \
   --type handoffs \
   "<description>"
 ```
 
-Where `<description>` is a short slug of what you were working on (from `$ARGUMENTS`, or auto-generated from context). If `$ARGUMENTS` is empty, use a brief topic summary. The project is resolved by walking up from the git repo root — override with `--project <name>` if needed.
+Where `<description>` is a short slug of what you were working on (from `$ARGUMENTS`, or auto-generated from context). If `$ARGUMENTS` is empty, use a brief topic summary.
 
 ### 2. Recover context
 
@@ -90,7 +67,7 @@ Before writing, gather the essential information:
 6. **Remaining work** — What still needs doing.
 7. **Verification state** — What tests/checks have been run and their results.
 
-Also check if the session produced or referenced **plan server artifacts** (plans, research, design, FRD, solutions, ADRs) from this session or earlier. Include them in the handoff so the next agent can read them for broader context.
+Also check if the session produced or referenced **context artifacts** (plans, research, designs, solutions, and ADRs) from this session or earlier. Include them in the handoff so the next agent can read them for broader context.
 
 ### 3. Write content
 
@@ -121,9 +98,9 @@ A short, direct description of the user's latest confirmed objective.
 What the next agent is expected to complete.
 
 If the session produced a plan, FRD, design document, or other spec artifact on
-the plan server, link it here:
+the context directory, link it here:
 
-- Plan: `{path/to/plan.mdx}`
+- Plan: `{context/plans/path-to-plan.md}`
 - Research: `{path/to/research.md}`
 - ADR: `{path/to/adr.md}`
 
@@ -267,7 +244,7 @@ Include information that affects future implementation:
 - Unresolved blockers and next steps.
 - Verification state and acceptance criteria.
 - Exact user preferences that affect implementation.
-- **Plan server artifacts** from this or related sessions (plans, research, ADRs, designs, FRDs, solutions).
+- **Context artifacts** from this or related sessions (plans, research, ADRs, designs, and solutions).
 
 ### Remove
 

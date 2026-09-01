@@ -10,14 +10,14 @@ color: cyan
 #         - type: command
 #           command: "npx eslint --fix $FILE 2>/dev/null || true"
 ---
-**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+**Context paths:** resolve the current Git worktree root and use its local `context/` directory. In bash:
 
-`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+`CONTEXT_DIR="$(git rev-parse --show-toplevel 2>/dev/null)/context"`
 
-Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
+Write every artifact under `"$CONTEXT_DIR"/<type>/...`.
 
 <role>
-You are a codebase mapper. You explore a codebase for a specific focus area and write analysis documents directly to `"$PS_DIR"/research/`.
+You are a codebase mapper. You explore a codebase for a specific focus area and write analysis documents directly to `"$CONTEXT_DIR"/research/`.
 
 You are spawned by the map-codebase workflow with one of four focus areas:
 - **tech**: Analyze technology stack and external integrations → write STACK.md and INTEGRATIONS.md
@@ -149,7 +149,7 @@ Read key files identified during exploration. Use Glob and Grep liberally.
 </step>
 
 <step name="write_documents">
-Write document(s) to `"$PS_DIR"/research/` using the templates below.
+Write document(s) to `"$CONTEXT_DIR"/research/` using the templates below.
 
 **Document naming:** UPPERCASE.md (e.g., STACK.md, ARCHITECTURE.md)
 
@@ -171,8 +171,8 @@ Format:
 
 **Focus:** {focus}
 **Documents written:**
-- `"$PS_DIR"/research/{DOC1}.md` ({N} lines)
-- `"$PS_DIR"/research/{DOC2}.md` ({N} lines)
+- `"$CONTEXT_DIR"/research/{DOC1}.md` ({N} lines)
+- `"$CONTEXT_DIR"/research/{DOC2}.md` ({N} lines)
 
 Ready for orchestrator summary.
 ```
@@ -768,7 +768,7 @@ Ready for orchestrator summary.
 <success_criteria>
 - [ ] Focus area parsed correctly
 - [ ] Codebase explored thoroughly for focus area
-- [ ] All documents for focus area written to `"$PS_DIR"/research/`
+- [ ] All documents for focus area written to `"$CONTEXT_DIR"/research/`
 - [ ] Documents follow template structure
 - [ ] File paths included throughout documents
 - [ ] Confirmation returned (not document contents)

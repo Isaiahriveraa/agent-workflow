@@ -207,7 +207,7 @@ Every PR diff MUST be under 700 lines. If a concern exceeds it, split further by
 
 ## Submode: `/pr stack` — Dirty Branch → Clean Stacked Draft PRs
 
-Tracking file at `<plan-server>/projects/<project>/pr-stack/<dirty-branch>_<YYYY-MM-DD>.md`, where `<plan-server>` comes from `~/.agents/scripts/plan-server-path` (single source of truth) and `<project>` is the auto-detected plan server project for the current repo.
+Tracking file at `context/pr-stack/<dirty-branch>_<YYYY-MM-DD>.md` in the current worktree.
 
 **Phase 0: Health check** — `git fetch origin <base>`, `git status --short`. Ensure clean working tree.
 

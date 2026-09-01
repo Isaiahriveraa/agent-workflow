@@ -154,7 +154,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
+        "contract": "Shared continuity helpers write worktree-local runtime state and context handoffs"
       },
       "settings": {
         "status": "validated-local",
@@ -184,7 +184,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
+        "contract": "Shared continuity helpers write worktree-local runtime state and context handoffs"
       }
     },
     "opencode": {
@@ -214,7 +214,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
+        "contract": "Shared continuity helpers write worktree-local runtime state and context handoffs"
       },
       "memory": {
         "status": "unmanaged",
@@ -252,7 +252,7 @@
       },
       "session_continuity": {
         "status": "bridged",
-        "contract": "Shared continuity helpers write project-local runtime state and project-local handoffs"
+        "contract": "Shared continuity helpers write worktree-local runtime state and context handoffs"
       },
       "memory": {
         "status": "unmanaged",

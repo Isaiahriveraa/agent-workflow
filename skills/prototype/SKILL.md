@@ -31,15 +31,15 @@ The _answer_ is the only thing worth keeping from a prototype. Capture it somewh
 
 ### Wayfinder context
 
-When the prototype is part of a wayfinding effort, the answer also serves as that ticket's resolution. Post the finding as a resolution comment on the wayfinder ticket and link the prototype artifact (plan-server or repo path) there. Close the ticket — the prototype answered its question.
+When the prototype is part of a wayfinding effort, the answer also serves as that ticket's resolution. Post the finding as a resolution comment on the wayfinder ticket and link the prototype artifact (local context or repo path) there. Close the ticket — the prototype answered its question.
 
-### Plan server capture path
+### Context capture path
 
-Route the answer to the plan server under the appropriate project:
+Route the answer to the current worktree's `context/` directory:
 
-- **Logic/state decision validated** → run `python3 ~/.agents/scripts/new-artifact.py --project <project> --type decisions --topic "<verdict>"`
-- **Design decision validated** → run `python3 ~/.agents/scripts/new-artifact.py --project <project> --type designs --topic "<verdict>"`
-- **Research question answered** → run `python3 ~/.agents/scripts/new-artifact.py --project <project> --type research --topic "<finding>"`
+- **Logic/state decision validated** → run `python3 ~/.agents/scripts/new-artifact.py --type decisions --topic "<verdict>"`
+- **Design decision validated** → run `python3 ~/.agents/scripts/new-artifact.py --type designs --topic "<verdict>"`
+- **Research question answered** → run `python3 ~/.agents/scripts/new-artifact.py --type research --topic "<finding>"`
 - **Negative result (prototype disproved approach)** → still worth capturing as a decision — prevents re-exploration
 
-Project name is inferred from the git repo name (basename of `git rev-parse --show-toplevel`). If the user is around, that capture is a quick conversation; if not, leave the placeholder so they (or you, on the next pass) can fill in the verdict before deleting the prototype.
+The artifact location is inferred from the current Git worktree. If the user is around, that capture is a quick conversation; if not, leave the placeholder so they (or you, on the next pass) can fill in the verdict before deleting the prototype.

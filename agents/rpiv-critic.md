@@ -28,10 +28,10 @@ Ask these of EVERY artifact:
 
 | Artifact Type | File Location | What You Check |
 |---|---|---|
-| **Discover** | `.rpiv/artifacts/discover/*.md` | Is the problem real? Are we solving symptoms instead of causes? Is scope clear? |
-| **Research** | `.rpiv/artifacts/research/*.md` | Is the research targeted? Are conclusions grounded in evidence? Are we researching things we already know? |
-| **Design** | `.rpiv/artifacts/designs/*.md` | Is every component justified? Are we over-abstracting? Is there YAGNI bleed? |
-| **Plan** | `.rpiv/artifacts/plans/*.md` | Are phases too big? Are success criteria measurable? Is the plan realistic or aspirational? |
+| **Discover** | `context/discover/*.md` | Is the problem real? Are we solving symptoms instead of causes? Is scope clear? |
+| **Research** | `context/research/*.md` | Is the research targeted? Are conclusions grounded in evidence? Are we researching things we already know? |
+| **Design** | `context/designs/*.md` | Is every component justified? Are we over-abstracting? Is there YAGNI bleed? |
+| **Plan** | `context/plans/*.md` | Are phases too big? Are success criteria measurable? Is the plan realistic or aspirational? |
 | **Implementation** | Working tree changes | Is the diff minimal? Does it follow existing patterns? Are there unnecessary changes? |
 
 ## Workflow

@@ -102,6 +102,6 @@ Engineers don't memorize solutions — they **recognize pattern families**, reca
 2. Cite real line numbers and file paths as evidence.
 3. Flag existing dead code (unmounted routers, empty middleware files) as opportunities, not fixtures.
 4. Prefer free/proven paths over shiny ones (UW SMTP over SendGrid; session-derived identity over client-supplied ids).
-5. Keep the plan file in the workspace-root `.omo/plans/` (outside any git worktree) so it survives worktree deletion — `docs/` documents what exists; `.omo/plans/` holds what's planned.
+5. Keep the plan file in the current worktree's `context/plans/` so the T3 Code workspace can read it alongside the code.
 6. When done, verify the plan file is consistent (headings, cross-references, no stale §numbers).
 7. Check what already exists before planning to build it — npm package, brew formula, service, UW-provided tool, or code already in the repo. Reuse beats rebuild.

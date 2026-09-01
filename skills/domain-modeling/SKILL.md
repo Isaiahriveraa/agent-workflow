@@ -10,31 +10,29 @@ Actively build and sharpen the project's domain model as you design. This is the
 ## Storage
 
 ### Glossary
-Glossary entries belong to the **plan server** under the project matching the git repo name:
+Glossary entries belong to the current worktree's local context directory:
 
 ```
-<plan-server>/projects/{project}/   (root from ~/.agents/scripts/plan-server-path)
+{git-root}/context/
 ├── glossary/glossary.md       ← domain glossary
 └── ...
 ```
 
 ### ADRs (Architecture Decision Records)
-ADRs belong to the **project repo** (not plan-server) so agents working in the repo see them as context:
+ADRs belong to the current worktree's context directory:
 
 ```
-{git-root}/docs/adr/NNNN-slug.md
+{git-root}/context/adr/NNNN-slug.md
 ```
-
-A symlink from plan-server's `projects/{project}/adr/` points to `{git-root}/docs/adr/` so the plan-server UI also discovers them.
 
 Create files lazily — only when you have something to write. Use the helper script:
 
 ```bash
 # Create a glossary entry
-python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --project <project> --type glossary --topic "<term>"
+python3 ~/.agents/scripts/new-artifact.py --type glossary --topic "<term>"
 
-# Create an ADR (writes to {git-root}/docs/adr/NNNN-slug.md, symlinks from plan-server)
-python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --project <project> --type adr --topic "<decision title>"
+# Create an ADR under {git-root}/context/adr/NNNN-slug.md
+python3 ~/.agents/scripts/new-artifact.py --type adr --topic "<decision title>"
 ```
 
 ## During the session
@@ -57,7 +55,7 @@ When the user states how something works, check whether the code agrees. If you 
 
 ### Update glossary inline
 
-When a term is resolved, update the plan server glossary right there. Don't batch these up — capture them as they happen.
+When a term is resolved, update the local context glossary right there. Don't batch these up — capture them as they happen.
 
 The glossary should be totally devoid of implementation details. Do not treat it as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 
@@ -79,7 +77,7 @@ If any of the three is missing, skip the ADR.
 
 ### Update existing ADRs when decisions change
 
-Before creating a new ADR, scan the project's `docs/adr/` directory:
+Before creating a new ADR, scan `context/adr/`:
 
 1. Does any existing ADR cover the same decision? If so, **update it in-place** instead of creating a duplicate.
 2. Does the new decision **contradict or supersede** an existing ADR? If so:

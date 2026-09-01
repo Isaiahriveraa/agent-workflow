@@ -1,5 +1,0 @@
-#!/bin/sh
-# Single source of truth for the plan server location.
-# Every skill, script, and agent that writes plan-server artifacts resolves the
-# path through this script — change the destination here, nowhere else.
-echo "$HOME/Documents/Github/plan-server"

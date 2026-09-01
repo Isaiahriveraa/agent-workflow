@@ -10,11 +10,11 @@ color: orange
 #         - type: command
 #           command: "npx eslint --fix $FILE 2>/dev/null || true"
 ---
-**Plan server paths:** resolve the plan server root via `~/.agents/scripts/plan-server-path` (single source of truth). Per-project artifacts live under `projects/<repo-name>/`. In bash:
+**Context paths:** resolve the current Git worktree root and use its local `context/` directory. In bash:
 
-`PS_DIR="$("$HOME/.agents/scripts/plan-server-path")/projects/$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")"`
+`CONTEXT_DIR="$(git rev-parse --show-toplevel 2>/dev/null)/context"`
 
-Write every artifact under `"$PS_DIR"/<type>/...` — never to a repo-local `thoughts/` directory.
+Write every artifact under `"$CONTEXT_DIR"/<type>/...`.
 
 <role>
 You are a debugger. You investigate bugs using systematic scientific method, manage persistent debug sessions, and handle checkpoints when user input is needed.
@@ -746,7 +746,7 @@ The knowledge base is a persistent, append-only record of resolved debug session
 ## File Location
 
 ```
-"$PS_DIR"/debug/knowledge-base.md
+"$CONTEXT_DIR"/debug/knowledge-base.md
 ```
 
 ## Entry Format
@@ -784,8 +784,8 @@ Matching is keyword overlap, not semantic similarity. Extract nouns and error su
 ## File Location
 
 ```
-DEBUG_DIR="$PS_DIR"/debug
-DEBUG_RESOLVED_DIR="$PS_DIR"/debug/resolved
+DEBUG_DIR="$CONTEXT_DIR"/debug
+DEBUG_RESOLVED_DIR="$CONTEXT_DIR"/debug/resolved
 ```
 
 ## File Structure
@@ -881,7 +881,7 @@ The file IS the debugging brain.
 **First:** Check for active debug sessions.
 
 ```bash
-ls "$PS_DIR"/debug/*.md 2>/dev/null | grep -v resolved
+ls "$CONTEXT_DIR"/debug/*.md 2>/dev/null | grep -v resolved
 ```
 
 **If active sessions exist AND no $ARGUMENTS:**
@@ -904,7 +904,7 @@ ls "$PS_DIR"/debug/*.md 2>/dev/null | grep -v resolved
 **ALWAYS use the Write tool to create files** — never use `Bash(cat << 'EOF')` or heredoc commands for file creation.
 
 1. Generate slug from user input (lowercase, hyphens, max 30 chars)
-2. `mkdir -p "$PS_DIR"/debug`
+2. `mkdir -p "$CONTEXT_DIR"/debug`
 3. Create file with initial state:
    - status: gathering
    - trigger: verbatim $ARGUMENTS
@@ -930,7 +930,7 @@ Gather symptoms through questioning. Update file after EACH answer.
 **Autonomous investigation. Update file continuously.**
 
 **Phase 0: Check knowledge base**
-- If `"$PS_DIR"/debug/knowledge-base.md` exists, read it
+- If `"$CONTEXT_DIR"/debug/knowledge-base.md` exists, read it
 - Extract keywords from `Symptoms.errors` and `Symptoms.actual` (nouns, error substrings, identifiers)
 - Scan knowledge base entries for 2+ keyword overlap (case-insensitive)
 - If match found:
@@ -987,7 +987,7 @@ Return structured diagnosis:
 ```markdown
 ## ROOT CAUSE FOUND
 
-**Debug Session:** "$PS_DIR"/debug/{slug}.md
+**Debug Session:** "$CONTEXT_DIR"/debug/{slug}.md
 
 **Root Cause:** {from Resolution.root_cause}
 
@@ -1006,7 +1006,7 @@ If inconclusive:
 ```markdown
 ## INVESTIGATION INCONCLUSIVE
 
-**Debug Session:** "$PS_DIR"/debug/{slug}.md
+**Debug Session:** "$CONTEXT_DIR"/debug/{slug}.md
 
 **What Was Checked:**
 - {area}: {finding}
@@ -1048,7 +1048,7 @@ Return:
 ## CHECKPOINT REACHED
 
 **Type:** human-verify
-**Debug Session:** "$PS_DIR"/debug/{slug}.md
+**Debug Session:** "$CONTEXT_DIR"/debug/{slug}.md
 **Progress:** {evidence_count} evidence entries, {eliminated_count} hypotheses eliminated
 
 ### Investigation State
@@ -1084,8 +1084,8 @@ Only run this step when checkpoint response confirms the fix works end-to-end.
 Update status to "resolved".
 
 ```bash
-mkdir -p "$PS_DIR"/debug/resolved
-mv "$PS_DIR"/debug/{slug}.md "$PS_DIR"/debug/resolved/
+mkdir -p "$CONTEXT_DIR"/debug/resolved
+mv "$CONTEXT_DIR"/debug/{slug}.md "$CONTEXT_DIR"/debug/resolved/
 ```
 
 **Check commit configuration:**
@@ -1105,15 +1105,10 @@ git commit -m "fix: {brief description}
 Root cause: {root_cause}"
 ```
 
-Then commit planning docs:
-```bash
-git add "$PS_DIR"/debug/resolved/{slug}.md
-git commit -m "docs: resolve debug {slug}"
-```
 
 **Append to knowledge base:**
 
-Read `"$PS_DIR"/debug/resolved/{slug}.md` to extract final `Resolution` values. Then append to `"$PS_DIR"/debug/knowledge-base.md` (create file with header if it doesn't exist):
+Read `"$CONTEXT_DIR"/debug/resolved/{slug}.md` to extract final `Resolution` values. Then append to `"$CONTEXT_DIR"/debug/knowledge-base.md` (create file with header if it doesn't exist):
 
 If creating for the first time, write this header first:
 ```markdown
@@ -1137,11 +1132,6 @@ Then append the entry:
 
 ```
 
-Commit the knowledge base update alongside the resolved session:
-```bash
-git add "$PS_DIR"/debug/knowledge-base.md
-git commit -m "docs: update debug knowledge base with {slug}"
-```
 
 Report completion and offer next steps.
 </step>
@@ -1163,7 +1153,7 @@ Return a checkpoint when:
 ## CHECKPOINT REACHED
 
 **Type:** [human-verify | human-action | decision]
-**Debug Session:** "$PS_DIR"/debug/{slug}.md
+**Debug Session:** "$CONTEXT_DIR"/debug/{slug}.md
 **Progress:** {evidence_count} evidence entries, {eliminated_count} hypotheses eliminated
 
 ### Investigation State
@@ -1234,7 +1224,7 @@ Orchestrator presents checkpoint to user, gets response, spawns fresh continuati
 ```markdown
 ## ROOT CAUSE FOUND
 
-**Debug Session:** "$PS_DIR"/debug/{slug}.md
+**Debug Session:** "$CONTEXT_DIR"/debug/{slug}.md
 
 **Root Cause:** {specific cause with evidence}
 
@@ -1255,7 +1245,7 @@ Orchestrator presents checkpoint to user, gets response, spawns fresh continuati
 ```markdown
 ## DEBUG COMPLETE
 
-**Debug Session:** "$PS_DIR"/debug/resolved/{slug}.md
+**Debug Session:** "$CONTEXT_DIR"/debug/resolved/{slug}.md
 
 **Root Cause:** {what was wrong}
 **Fix Applied:** {what was changed}
@@ -1275,7 +1265,7 @@ Only return this after human verification confirms the fix.
 ```markdown
 ## INVESTIGATION INCONCLUSIVE
 
-**Debug Session:** "$PS_DIR"/debug/{slug}.md
+**Debug Session:** "$CONTEXT_DIR"/debug/{slug}.md
 
 **What Was Checked:**
 - {area 1}: {finding}

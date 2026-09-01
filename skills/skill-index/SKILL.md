@@ -12,12 +12,12 @@ You don't remember every skill, so ask.
 
 Most work travels this route:
 
-1. **`/plan`** — the canonical planning entry point. Use it for feature/engineering planning, messy product intent, repository research for a planned change, concern decomposition, dependencies, parallelism, stacking analysis, and plan-file generation. The output is a plan file for human approval.
+1. **`/plan`** — the canonical planning entry point. Use it for feature/engineering planning, messy product intent, repository research, and a mandatory `/research` pass covering proven implementations, official API documentation, relevant constraints, and failure modes; it records cited external evidence, decomposes concerns, declares dependencies, and generates a plan file for human approval.
 2. **Plan approved?** → **`/skill:to-tickets`** — converts the approved plan into focused tickets, each sized for one reviewable PR.
-3. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to the plan server.
+3. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
 4. **Need a prototype?** → **`/skill:prototype`** — throwaway code to answer a design question. Route findings to the plan.
 5. **Need a spec issue?** → **`/skill:to-spec`** — synthesize the conversation into a GitHub spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning.
-6. **External cited research?** → **`/skill:research`** — background agent, primary sources, one cited Markdown output.
+6. **Standalone cited research?** → **`/skill:research`** — background-agent research using web search and primary sources, producing one cited Markdown evidence artifact; `/plan` invokes this protocol when external evidence is part of a plan.
 7. **Ready GitHub issue to ship?** → **`/skill:issue-delivery`** — isolated worktree → verified draft PR (a separate issue-to-PR path, not part of the planning flow).
 8. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), review changes (`/skill:code-review`), commit (`/skill:commit`).
 
@@ -46,7 +46,6 @@ Most work travels this route:
 
 - **Plan work** → **`/plan`** — feature/engineering planning, messy product intent, concern decomposition, dependencies, parallelism, stacking; writes a plan file for approval.
 - **Approved plan → tickets** → **`/skill:to-tickets`** — converts the approved plan into focused tickets, one per reviewable PR.
-- **Publish an existing plan** → **`/skill:plan-server`** — explicitly writes the plan to the plan server and returns its URL.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues; planning now lives in `/plan`.
 - **External cited research** → **`/skill:research`** — background agent, primary sources, one cited Markdown output.
 - **Agent too verbose** → say **`wait-what`** — forces a short, direct answer (3 lines).
@@ -71,3 +70,4 @@ Most work travels this route:
 - **Resolve merge conflicts** → **`/skill:resolving-merge-conflicts`** — structured conflict resolution.
 - **Commit** → **`/skill:commit`** — runs an informational pre-commit review gate (unless the diff was already reviewed), then atomic commit messages with single-story enforcement. Splits mixed concerns automatically.
 - **PR workflow** → **`/skill:pr-workflow`** — break work into PR-sized chunks.
+- **Herdr terminal multiplexer** → **`/skill:herdr`** — inspect and control workspaces, tabs, panes, and coding agents inside Herdr.

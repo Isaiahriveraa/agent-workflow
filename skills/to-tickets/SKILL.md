@@ -19,9 +19,10 @@ Turn an idea, spec, or plan into:
 - You want tickets that produce small, reviewable PRs.
 
 ## Inputs
-
-`$ARGUMENTS` may contain a request, a conversation, a spec, an issue, a PR, an existing plan, or a pasted brief. Treat upstream artifacts as evidence, not unquestionable spec. Read the source fully and follow its references.
-
+`$ARGUMENTS` may contain a request, a conversation, a spec, an issue, a PR, an
+existing plan file, a plan directory index (`context/plans/<slug>/00-index.md`),
+or a pasted brief. Treat upstream artifacts as evidence, not unquestionable
+spec. Read the source fully and follow its references.
 ## Workflow
 
 ### 1. Resolve the request
@@ -81,23 +82,10 @@ Required sections:
 - **## Testing and Verification** — the exact commands that prove it works, including the one command that answers "is the whole effort done" (a completion check no single agent can just self-report). If no such command exists, say so — that gap is itself a planning finding.
 - **## Definition of Done** — what finished means for the whole effort.
 
-Write the plan to the plan server:
-
-```sh
-rtk python3 ~/.agents/scripts/new-artifact.py --dest "$("$HOME/.agents/scripts/plan-server-path")" --type plans "<topic>"
-```
-
-Use the exact printed path. Fill the generated `.mdx`. Verify the review URL responds:
-
-```sh
-curl -fsS --max-time 3 -o /dev/null "http://localhost:3456/project/{project}/plan/{id}"
-```
-
-Copy the absolute path to the clipboard:
-
-```sh
-printf '%s' '<path>' | pbcopy
-```
+Write the plan to the current worktree's `context/plans/` directory (as a single
+Markdown plan or a `context/plans/<slug>/00-index.md` index for multi-step
+work). Create the directory when absent and return the absolute Markdown path.
+No server or URL publication is required.
 
 ### 5. Break the plan into tickets
 
@@ -141,7 +129,7 @@ Ticket template:
 <files/modules this will touch, shared contracts, collision risk>
 
 ## Plan reference
-<plan-server URL or section>
+<local context/plans path or section>
 ```
 
 ### 6. Present and get approval

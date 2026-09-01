@@ -59,7 +59,7 @@ Writer rules (every writer):
 
 1. Re-check every table row: applied or explicitly rejected with reason.
 2. Sample-verify changed files against the table (no unlisted edits).
-3. Write the report to the plan server (see Output Format below), including the rationale table and per-module applied rows.
+3. Write the report to `context/reviews/` (see Output Format below), including the rationale table and per-module applied rows.
 4. Run `pbcopy <absolute-path>` so the user's clipboard has the path.
 
 ## Guardrails
@@ -73,26 +73,23 @@ Writer rules (every writer):
 
 ## Output Format
 
-When reporting results, write the report to the plan server.
+When reporting results, write the report to the current worktree's context directory.
 
 ### 1. Create the file
 
-Run this to create the enforce report under the plan server project structure:
+Run this to create the enforce report:
 
 ```bash
-PLAN_SERVER="$("$HOME/.agents/scripts/plan-server-path")"
 python3 ~/.agents/scripts/new-artifact.py \
-  --dest "$PLAN_SERVER" \
   --type reviews \
   "enforce-{scope}"
 ```
 
-Where `{scope}` is a short slug of what was enforced. The project is auto-detected from the current directory and git context; override with `--project <name>` if needed.
+Where `{scope}` is a short slug of what was enforced.
 
 The script creates the file and prints its path. **Do not construct the path yourself** — use the path the script returns.
 
-The report will be viewable in the plan server at:
-`http://localhost:3456/project/{project}/reviews`
+The report is viewable at the returned local path.
 
 ### 2. Write content
 

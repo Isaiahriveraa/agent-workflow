@@ -1,12 +1,22 @@
-The skill writes to the plan server glossary by default (root from `~/.agents/scripts/plan-server-path`):
-`"$("$HOME/.agents/scripts/plan-server-path")"/projects/{project}/glossary/glossary.md`
+The skill writes to the current worktree glossary:
+`context/glossary/glossary.md`
+
+## Terminal-first writing
+
+Glossary entries should scan cleanly in a plain terminal:
+
+- Keep definitions to one or two short sentences.
+- Use one term per entry with a blank line between entries.
+- Keep aliases in `_Avoid_` rather than adding a wide comparison table.
+- Use ASCII arrows (`->`) for relationships when needed; do not use Mermaid,
+  HTML, or Unicode box-drawing characters.
 
 Use the helper:
 ```bash
-python3 ~/.agents/scripts/new-artifact.py --project <project> --type glossary --topic "<term>"
+python3 ~/.agents/scripts/new-artifact.py --type glossary --topic "<term>"
 ```
 
-If the plan server is not available, fall back to `CONTEXT.md` at the project root.
+If no glossary exists, create `context/glossary/glossary.md` lazily.
 
 ## Single vs multi-context repos
 
@@ -23,6 +33,14 @@ A person or organization that places orders.
 _Avoid_: Client, buyer, account
 ```
 
+For relationships, prefer a compact list:
+
+```text
+Order
+  -> contains one or more Line items
+  -> belongs to one Customer
+```
+
 ## Rules
 
 - **Be opinionated.** When multiple words exist for the same concept, pick the best one and list the others as aliases to avoid.
@@ -35,11 +53,9 @@ _Avoid_: Client, buyer, account
 
 ## Location resolution
 
-The skill writes to the first existing path in this order:
-1. Plan server glossary (created lazily at `glossary/glossary.md`)
-2. `CONTEXT.md` — project-local fallback (created at project root)
+The skill writes to the local context glossary at `context/glossary/glossary.md`.
 
-The plan server glossary should be preferred when available.
+The local context glossary is the canonical source.
 
 ## Single vs multi-context repos
 
@@ -66,6 +82,6 @@ The plan server glossary should be preferred when available.
 The skill infers which structure applies:
 
 - If `CONTEXT-MAP.md` exists, read it to find contexts
-- If plan server glossary exists, single context
+- If `context/glossary/glossary.md` exists, single context
 - If a root `CONTEXT.md` exists, single legacy context
 - If none exist, create lazily

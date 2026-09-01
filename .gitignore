@@ -21,6 +21,7 @@ config/
 .nvimlog
 .claude/
 .omo/
+context/
 .opencode/
 .pi/
 .herdr/state.yaml
