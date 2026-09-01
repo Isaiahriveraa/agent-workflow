@@ -330,6 +330,15 @@
       "skillFolderHash": "5d0b7b635a75f5bf2a03113860f393a042f07a12",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "herdr": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/herdr",
+      "skillPath": "skills/herdr/SKILL.md",
+      "skillFolderHash": "99815e4ae319659f6ab21014addd6dc8bd15615c",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
   "dismissed": {
