@@ -13,3 +13,4 @@ Run typechecking regularly, single test files regularly, and the full test suite
 Once done, use /code-review to review the work.
 
 Propose your commits using the /commit skill.
+Once implementation, verification, and code-review are complete, report back to the user using the **Implementation Mode** protocol in `references/communication.md` (What changed, Before -> After behavior walk, load-bearing decisions, failure boundaries, verification, teach-back, and landmark code locations).

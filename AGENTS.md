@@ -69,15 +69,20 @@ Whenever you add, rename, remove, or re-route a skill, update `skill-index`'s SK
 20. **Codify repeated steps** — Before re-running a multi-step operation by hand, check `scripts/` and hub commands for an existing helper. When the same operation recurs and no helper exists, offer to script it — to cut agent token spend or give the user a reusable command. Offer, don't build: only create with approval.
 21. **Ask before destructive or permission-expanding steps** — No new dependencies, destructive migrations, irreversible deletion, public contract breaks, permission expansion, or unrelated architecture changes without explicit authorization.
 
-## Backend Learning Contract
+## Human Ownership & Progressive Disclosure
 
-The user is learning backend architecture. Every backend change (logic, data, API, packages, concurrency) must teach, not just ship. After every backend change, include a short **architectural explanation** — the user must be able to answer "how did you implement that?" in an interview from it, without the code:
+Communication must flow idea downward before implementation details move upward:
+1. Problem -> 2. Behavior -> 3. Why -> 4. Important Decisions -> 5. Architecture / System Picture -> 6. Edge Cases & Failures -> 7. Tradeoffs -> 8. Teach-Back -> 9. Code details on request.
 
-- **What changed** — one line from 10,000 feet: the system before → the system after. High level first, always; if the change is complex, start at the top and break it down in simple layers — never lead with syntax or line-level detail.
-- **What we used and why** — the package/pattern/function that carried the change (e.g. an index on `status`, a queue, an idempotency key), why this situation made it the right tool, and the alternative we didn't pick and why it lost. Mention functions/packages by name as landmarks only — no code dumps.
-- **How it fits** — where it sits in the flow (request → handler → service → DB), who calls it, what it touches.
+### Universal Ownership Gate
+Before completing any non-trivial task, verify:
+> Can the user explain and defend the problem, decisions, tradeoffs, and failure behavior in a standup or interview without reading the diff?
 
-Trivial changes still get the one-line what/why — the habit matters more than the size. Backend/logic changes only; UI-only changes skip this.
+For meaningful architectural work, default to surfacing up to the 3 load-bearing decisions (Decision, Why, Alternative, Tradeoff, Future Effect) and 2–4 teach-back points. Mechanical and routine changes stay lightweight (Outcome, Verification, landmark file).
+
+Calibrate technical vocabulary and depth to `context/tutor/learner-profile.md` using the Goldilocks Rule (Current Understanding + 1). Introduce technical terms after the concept is understood.
+
+Full mode schemas (Planning, Implementation, Research) and guidance: `references/communication.md`.
 
 ## Human in the Loop
 
@@ -139,7 +144,3 @@ Before claiming completion:
 5. Confirm requested behavior and integration paths work.
 6. State checks not run and why.
 7. Confirm no hidden pending work or known errors remain.
-
-## Completion Report
-
-Use the smallest report that preserves human ownership. Trivial changes: outcome, changed files, verification. Non-trivial changes: outcome, decisions, architecture (only when it clarifies), contracts, verification, changed files, risks — include only sections that carry information; drop empty ones. Full template and guidance: `references/completion-report.md`.
