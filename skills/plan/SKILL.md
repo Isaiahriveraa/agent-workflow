@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Turn messy intent into a repository-grounded, dependency-aware, testable local plan. Clarify the goal, research the repo with file:line evidence, decompose into independent concerns with explicit dependencies, and write vertical-slice steps with observable acceptance. Use when the user wants a plan before implementation.
+description: Turn messy intent into a repository-grounded, dependency-aware, production-minded local plan. Clarify the goal, research the repo with file:line evidence, choose durable but proportionate foundations, decompose into independent concerns with explicit dependencies, and write vertical-slice steps with observable acceptance. Use when the user wants a plan before implementation.
 argument-hint: "[I need you to plan]"
 shell-timeout: 20
 ---
@@ -88,7 +88,19 @@ For each step, note its architecture impact using the deep-module vocabulary:
 - **Leverage** — how much downstream work one decision unlocks.
 - **Locality** — how contained a change is.
 
-### 11. State non-goals
+### 11. Make durable, proportionate decisions
+
+For every material decision that affects users, data, public contracts, security, reliability, or future delivery, record:
+
+- **Foundation** — the smallest production-sound choice to make now.
+- **Why now** — the concrete user, operational, or correctness risk it prevents.
+- **Alternatives** — the realistic simpler and more elaborate options considered, and why neither is the better fit today.
+- **Guardrail** — the test, contract, boundary, migration path, or operational control that keeps the choice safe.
+- **Escalation signal** — a measurable trigger (usage, latency, failure rate, data volume, team need, or product requirement) that justifies extra complexity later.
+
+Do not confuse long-term thinking with premature abstraction or infrastructure. Prefer a clear interface, strong invariant, reversible migration, and observable verification over speculative scale systems. If the plan intentionally defers a material concern, name the owner/signal that will reopen it; never hide it as a non-goal.
+
+### 12. State non-goals
 
 List what is explicitly out of scope, so nobody expands the plan.
 
@@ -117,6 +129,7 @@ Each step file includes:
 - **Verification** — exact command + expected result.
 - **Dependencies** — start-now / concurrent / blocked with reasons.
 - **Architecture impact** — Module/Interface/Implementation/Depth/Seam/Adapter/Leverage/Locality.
+- **Long-term decisions** — for material decisions: Foundation/Why now/Alternatives/Guardrail/Escalation signal.
 - **Non-goals** — what this step does not touch.
 
 ## Relationship to sibling skills
@@ -140,6 +153,7 @@ Stop and ask the human before proceeding when a decision is **materially unresol
 - Steps are vertical slices, stacked only when dependency and review criteria hold.
 - Tests, edge cases, and observable acceptance are specified.
 - Architecture impact uses the full deep-module vocabulary.
+- Every material user-facing decision has a proportionate foundation, explicit tradeoff, guardrail, and escalation signal.
 - Non-goals are explicit.
 - Output is written under `context/plans/<slug>/`, with `00-index.md` for multi-step plans.
 - The human has approved the plan.

@@ -189,9 +189,9 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan/SKILL.md",
       "skillPath": "skills/plan/SKILL.md",
-      "skillFolderHash": "7e3d62b6df0cbf98310de78747a4dd7029b21175",
+      "skillFolderHash": "aae398cf9829de2cd9b0094d557e5ef5437da623",
       "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-08-20T00:00:00.000Z"
+      "updatedAt": "2026-09-01T00:00:00.000Z"
     },
     "pr-workflow": {
       "source": ".agents",

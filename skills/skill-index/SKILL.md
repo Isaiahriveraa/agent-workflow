@@ -44,7 +44,7 @@ Most work travels this route:
 
 ## Planning & execution
 
-- **Plan work** → **`/plan`** — feature/engineering planning, messy product intent, concern decomposition, dependencies, parallelism, stacking; writes a plan file for approval.
+- **Plan work** → **`/plan`** — feature/engineering planning with proportionate, durable production decisions; records tradeoffs, guardrails, escalation signals, dependencies, and reviewable delivery steps.
 - **Approved plan → tickets** → **`/skill:to-tickets`** — converts the approved plan into focused tickets, one per reviewable PR.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues; planning now lives in `/plan`.
 - **External cited research** → **`/skill:research`** — background agent, primary sources, one cited Markdown output.
