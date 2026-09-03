@@ -41,7 +41,7 @@ context/
 ├── plans/         # Phased implementation plans, success criteria
 ├── handoffs/      # Downstream delivery/session context snapshots
 ├── reviews/       # Downstream/supporting code quality and compliance reviews
-└── issues/        # Issue drafts produced by to-issues
+└── issues/        # Issue drafts produced by to-issues, grouped under context/issues/<slug>/
 ```
 
 ### Search Patterns
@@ -75,8 +75,8 @@ Structure your findings like this:
   - parent: `context/designs/2026-01-17_09-00-00_rate-limiter-design.md`
 
 ### Issue Documents
-- `context/issues/2026-01-19_12-00-00_rate-limiter-issues.md` - Issue drafts compiled from the approved plan
-  - parent: `context/plans/2026-01-18_11-20-00_rate-limiter-implementation.md`
+- `context/issues/events-redesign/001-api-contract.md` - Issue draft compiled from the approved plan
+  - parent: `context/plans/events-redesign/`
 
 ### Code Reviews (Downstream/Supporting)
 - `context/reviews/2026-01-25_16-00-00_rate-limiter-review.md` - Review of rate limiting implementation

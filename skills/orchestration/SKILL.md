@@ -49,6 +49,51 @@ Layout heuristics:
 4. Put parallel concerns at the same nesting level. Represent dependencies in the plan, not by hiding them in one pane.
 5. If the request is too large for one readable tab, split by project or audience into workspaces/tabs and show the complete tree before creation.
 6. Name every workspace, tab, and pane with short stable kebab-case labels.
+## Pane splitting: how and when
+
+“Pane splitting” is the concrete Herdr operation for turning the chosen layout into
+side-by-side execution units. Split for independent concerns, not for every step:
+
+- Split when two concerns can start concurrently, have different acceptance evidence,
+  or need separate lifecycle/status monitoring.
+- Do not split a short sequence, tightly coupled edit, shared design decision, or
+  dependent step that cannot begin until another pane produces an artifact.
+- Keep one concern per pane. A small request may need no split at all; a large request
+  may need several panes at the same nesting level. Optimize for understandable
+  context and supervision, not maximum parallelism.
+- The orchestrator decides from the concern map. Do not ask the user to pick pane
+  count, direction, or ratio when the request and repository context make a safe
+  default clear. Ask only when alternatives have materially different user-visible
+  consequences or the operation is destructive.
+
+Use the installed CLI syntax and the returned opaque ID:
+
+```bash
+herdr pane split --current \
+  --direction right --ratio 0.5 --cwd "$PWD" --no-focus
+```
+
+Use `--direction down` when a horizontal split would make columns too narrow. Set a
+different ratio only when one concern clearly needs more room. The command returns
+`.result.pane.pane_id`; use that exact pane ID for the next command. Never infer it
+from pane order, and never omit `--cwd "$PWD"` when creating a sibling pane.
+
+Example: a request to add an API endpoint, update its frontend, and add regression
+coverage yields this plan:
+
+```text
+Workspace: current
+└── Tab: endpoint-change
+    ├── Pane: api
+    ├── Pane: frontend (starts after API contract)
+    └── Pane: regression-tests
+```
+
+Start `api` and `regression-tests` concurrently if their contracts permit it; hold
+`frontend` until the API contract is finalized. If the endpoint is trivial and the
+tests necessarily change with the implementation, keep them in one pane instead of
+manufacturing parallelism. For each split, record the concern, owner, dependency,
+and acceptance evidence before mutating Herdr state.
 
 ## Planning and dispatch
 
@@ -104,6 +149,14 @@ herdr agent prompt <stable-name> \
 
 The prompt should be short because the full contract is in the file. Dispatch independent concerns in parallel where possible. Serialize only when a later concern consumes a finalized interface, schema, or artifact.
 
+For issue-oriented work, orchestration coordinates the concerns but does not replace
+`/to-issues` or publish GitHub issues. Once the approved plan is ready, `/to-issues`
+owns the durable drafts under `context/issues/<slug>/` and the parent/child manifest.
+Child prompts may name the issue concern and expected draft path, but public issue
+content must remain in the issue workflow rather than in temporary orchestration
+files.
+
+
 ## Status-only supervision
 
 Maintain a compact board from `herdr agent list`:
@@ -133,6 +186,35 @@ Interpret states as follows:
 - timeout: report that completion was not observed; do not claim success.
 
 When an agent reaches a settled state, verify its declared deliverables and run the parent-level gates. A status is evidence of lifecycle completion, not proof that the implementation is correct.
+
+### Child completion report
+
+Every child must explicitly report when its concern is finished, blocked, or failed.
+The report is a hand-back to the orchestrator, not a replacement for lifecycle state:
+
+```text
+Concern: <stable concern id>
+State: done | blocked | failed
+Result: <one-sentence outcome>
+Changed paths: <paths or none>
+Verification: <commands and observed results>
+Assumptions/risks: <none or explicit items>
+```
+
+Keep that report in the agent's response when it is short. If the result or logs are
+too large for a reliable response, have the child write the complete report to a
+run-specific temporary Markdown file and reply with only its path. Read that file
+after the agent settles, verify the paths and evidence independently, and include
+the concise result in the parent synthesis. A temp report is private coordination
+state; it is not a durable plan, issue draft, or public GitHub issue body.
+
+For a multi-pane run, maintain a short `team-brief.md` beside the prompt and report
+files in the run-specific temporary directory. Update it as concerns settle with
+one line per concern: state, outcome, changed paths, verification, and blockers.
+Use the brief for the main pane's synthesis; keep detailed logs and child reports in
+their panes or temporary files. The brief is a coordination summary only and must
+not be mistaken for an issue draft or publication approval.
+
 
 ## Completion and synthesis
 

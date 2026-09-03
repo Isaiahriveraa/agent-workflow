@@ -72,13 +72,20 @@ Do not recast `Start now`, `Concurrent`, or `Blocked` as an invented execution s
 
 Create one issue for each independently understandable, implementable, testable, reviewable concern already defined by the approved plan. Do not invent a new decomposition, split or merge concerns, reorder work, or alter dependencies to make drafting easier; flag any such need and return it to `/plan`. Prefer a behavior-complete vertical slice only when that preserves the plan's concern boundary. Dependencies must remain acyclic and retain their reasons.
 
-Each issue must preserve its source plan concern or step identity and receive a stable local draft path under the plan area before publication. Record the path and plan-step identity together as the local identity; keep both stable across edits and reruns. Do not require or invent a synthetic visible issue ID. After publication, use the GitHub issue number and URL as the canonical identity. If an existing draft has conflicting paths or plan-step mappings, flag the collision rather than silently renaming or remapping it.
+Each issue must preserve its source plan concern or step identity and receive a stable local draft path under the issue area before publication. Record the path and plan-step identity together as the local identity; keep both stable across edits and reruns. Do not require or invent a synthetic visible issue ID. After publication, use the GitHub issue number and URL as the canonical identity. If an existing draft has conflicting paths or plan-step mappings, flag the collision rather than silently renaming or remapping it.
 
 Enrich incomplete issues only with evidence already present in the approved plan or with narrowly scoped checks for staleness needed for safe drafting. An issue is incomplete when it lacks behavior, scope, non-goals, binary acceptance, exact verification, ownership, dependency reason, plan reference, or work position. Preserve the plan's acceptance, verification, dependencies and positions; do not rewrite them as design choices. Mark assumptions and unresolved questions. If enrichment cannot make an issue safe to deliver, leave it `Review needed` or `Blocked`; do not fabricate acceptance criteria, test commands, ownership, or implementation details. Present every material enrichment for human review.
 
 ### 3. Draft the local artifacts
 
-In Draft mode, write or update local Markdown artifacts under the plan's existing local plan area (normally `context/plans/<slug>/`). Do not create GitHub issues. The draft set must include:
+In Draft mode, write or update local Markdown artifacts under `context/issues/<slug>/`, where `<slug>` names the approved initiative (for example, `context/issues/events-redesign/`). Keep the approved source plan under `context/plans/<slug>/`. Do not create GitHub issues. The draft set must include:
+
+Use stable, readable filenames within that slug directory, for example
+`001-parent.md`, `002-api-contract.md`, and `003-frontend.md`. The numeric prefix
+is local ordering only, not a public issue ID; the plan-step identity and later
+GitHub issue number remain the authoritative mappings. Keep all issues for the
+initiative in the slug directory rather than creating an extra directory for each
+concern unless a repository-specific convention requires it.
 
 1. the issue documents or a clearly delimited issue-set document;
 2. a parent/child issue manifest; and
@@ -106,7 +113,7 @@ Each issue must stand alone and use this shape:
 
 <!-- Local draft metadata; omit this block from the published issue body. -->
 **Plan-step identity:** <source plan step or concern>
-**Local draft path:** <durable path under the plan area>
+**Local draft path:** <durable path under `context/issues/<slug>/`>
 
 ## Why
 

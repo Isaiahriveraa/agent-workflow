@@ -49,7 +49,7 @@ The supporting skills below remain available for focused needs, but they do not 
 |-------|-------|------------------|-------|
 | Design | `/design` | Evidence-backed design: intent, behavior, scope, decisions, and constraints | `context/designs/` |
 | Plan | `/plan` | Repository-grounded execution plan with concerns, dependencies, parallelism, and verification | `context/plans/<slug>/` |
-| Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/plans/<slug>/` |
+| Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
 | Approval | Human review | Approved ticket set ready for delivery | Conversation or plan record |
 | Delivery | `issue-delivery` | One published issue delivered through an isolated worktree to a verified draft PR | GitHub issue number → draft PR |
 
@@ -104,7 +104,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `design/` | Shape intent and design-level decisions into an evidence-backed artifact for `/plan` |
 | `plan/` | Validate upstream artifacts, investigate only research gaps, and decompose a canonical execution plan → local plan files in `context/plans/<slug>/` |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
-| `to-issues/` | Mechanically compile an approved plan into local parent/child drafts tracked by path and manifest while preserving dependencies; after approval, optionally publish ready child issues (or explicitly single-concern issues) to GitHub, where they are identified by issue number |
+| `to-issues/` | Mechanically compile an approved plan into local parent/child drafts under `context/issues/<slug>/`, tracked by path and manifest while preserving dependencies; after approval, optionally publish ready child issues (or explicitly single-concern issues) to GitHub, where they are identified by issue number |
 | `issue-discovery/` | Ambiguous ideas → decision GitHub issues for discovery (compat — planning lives in `/plan`) |
 | `to-spec/` | Conversation → spec issue |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
