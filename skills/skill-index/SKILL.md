@@ -45,6 +45,7 @@ Most work travels this route:
 ## Planning & execution
 
 - **Plan work** → **`/plan`** — feature/engineering planning with proportionate, durable production decisions; records tradeoffs, guardrails, escalation signals, dependencies, and reviewable delivery steps.
+- **Understand or present an existing plan** → **`/skill:plan-standup-notes <plan-path>`** — turns the plan into compact iPad handwriting notes, a 30-second standup, and senior-level tradeoffs; explanation only, not implementation.
 - **Approved plan → tickets** → **`/skill:to-tickets`** — converts the approved plan into focused tickets, one per reviewable PR.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues; planning now lives in `/plan`.
 - **External cited research** → **`/skill:research`** — background agent, primary sources, one cited Markdown output.

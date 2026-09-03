@@ -332,6 +332,15 @@
       "skillFolderHash": "99815e4ae319659f6ab21014addd6dc8bd15615c",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "plan-standup-notes": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan-standup-notes",
+      "skillPath": "skills/plan-standup-notes/SKILL.md",
+      "skillFolderHash": "7998c4bb91c1d13beae36f839872f68e75149881",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
   "dismissed": {

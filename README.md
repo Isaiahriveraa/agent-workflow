@@ -105,6 +105,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 |-------|------|
 | `prototype/` | Throwaway code to answer a design question |
 | `plan/` | Repository-grounded planning with mandatory cited external evidence → local plan files in `context/plans/<slug>/` |
+| `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `to-tickets/` | Convert an approved plan/spec/issue into focused tickets (one per PR) |
 | `issue-discovery/` | Ambiguous ideas → decision GitHub issues (compat — planning lives in `/plan`) |
 | `to-spec/` | Conversation → spec issue |
