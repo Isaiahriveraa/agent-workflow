@@ -98,4 +98,19 @@ describe("new-artifact.py", () => {
 		assert.ok(match, `writer did not create file with --topic`);
 		assert.match(match[1], /caching-layer\.md$/);
 	});
+
+	it("generates timestamped ADR files under context/adr/", () => {
+		const root = makeRepo();
+		const output = execFileSync("python3", [writer, "--type", "adr", "--topic", "use postgres"], {
+			cwd: root,
+			encoding: "utf8",
+		});
+		const match = output.match(/Created: (.+)$/m);
+		assert.ok(match, `writer did not create ADR file`);
+		assert.match(match[1], /\/context\/adr\/\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_use-postgres\.md$/);
+		const content = fs.readFileSync(match[1], "utf8");
+		assert.ok(content.includes("type: adr"));
+		assert.ok(content.includes("status: proposed"));
+		assert.ok(content.includes("# use postgres"));
+	});
 });

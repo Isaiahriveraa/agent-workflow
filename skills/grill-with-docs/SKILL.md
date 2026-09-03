@@ -141,5 +141,5 @@ Land in the current worktree:
 Land in the worktree context directory:
 
 ```
-{git-root}/context/adr/NNNN-slug.md
+{git-root}/context/adr/{YYYY-MM-DD_HH-MM-SS}_{slug}.md
 ```

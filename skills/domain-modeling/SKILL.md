@@ -22,7 +22,7 @@ Glossary entries belong to the current worktree's local context directory:
 ADRs belong to the current worktree's context directory:
 
 ```
-{git-root}/context/adr/NNNN-slug.md
+{git-root}/context/adr/{YYYY-MM-DD_HH-MM-SS}_{slug}.md
 ```
 
 Create files lazily — only when you have something to write. Use the helper script:
@@ -31,7 +31,7 @@ Create files lazily — only when you have something to write. Use the helper sc
 # Create a glossary entry
 python3 ~/.agents/scripts/new-artifact.py --type glossary --topic "<term>"
 
-# Create an ADR under {git-root}/context/adr/NNNN-slug.md
+# Create an ADR under {git-root}/context/adr/
 python3 ~/.agents/scripts/new-artifact.py --type adr --topic "<decision title>"
 ```
 
@@ -70,9 +70,9 @@ If any of the three is missing, skip the ADR.
 
 ### Create ADRs with simple names
 
-- **Filename**: `NNNN-short-description.md` — max 3-4 words, kebab-case
-- **Title**: Plain readable title (no `ADR-NNNN:` prefix in frontmatter)
-- **H1**: `# ADR-NNNN: Short readable title`
+- **Filename**: `{YYYY-MM-DD_HH-MM-SS}_{slug}.md` — timestamped slug
+- **Title**: Plain readable title
+- **H1**: `# Short readable title`
 - **Content**: Status, Context, Decision, Consequences
 
 ### Update existing ADRs when decisions change
@@ -81,9 +81,9 @@ Before creating a new ADR, scan `context/adr/`:
 
 1. Does any existing ADR cover the same decision? If so, **update it in-place** instead of creating a duplicate.
 2. Does the new decision **contradict or supersede** an existing ADR? If so:
-   - Set the **old ADR's status** to `Superseded by ADR-NNNN`
+   - Set the **old ADR's status** to `Superseded by adr/<filename>.md`
    - Add a note in the old ADR's Consequences section
-   - Add a "Supersedes ADR-NNNN" reference in the new ADR's Context section
+   - Add a "Supersedes adr/<filename>.md" reference in the new ADR's Context section
 3. **Don't delete ADRs** — superseded decisions are valuable historical context.
 
 This keeps the ADR set accurate without losing history.

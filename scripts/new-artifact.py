@@ -158,9 +158,9 @@ def empty_template(title: str, date_str: str, time_str: str) -> str:
     return f"# {title}\n*{date_str} - {time_str}*\n\n"
 
 
-def adr_template(title: str, date_str: str, time_str: str, num: int) -> str:
-    s = f"---\ndate: {date_str}\ntype: adr\ntitle: {title}\n---\n\n"
-    s += f"# ADR-{num:04d}: {title}\n*{date_str} - {time_str}*\n\n"
+def adr_template(title: str, date_str: str, time_str: str) -> str:
+    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: adr\nstatus: proposed\n---\n\n"
+    s += f"# {title}\n*{date_str} - {time_str}*\n\n"
     s += "## Status\n\nProposed\n\n## Context\n\n\n## Decision\n\n\n## Consequences\n\n"
     return s
 
@@ -256,12 +256,13 @@ def tickets_template(title: str, date_str: str, time_str: str) -> str:
 
 
 # --- Router ---
-def template(art_type: str, title: str, date_str: str, time_str: str, adr_num: int | None = None, iso_date: str | None = None) -> str:
+def template(art_type: str, title: str, date_str: str, time_str: str, iso_date: str | None = None) -> str:
     templates = {
         "handoffs": handoff_template,
         "reflections": reflection_template,
         "grill": grill_template,
         "glossary": glossary_template,
+        "adr": adr_template,
         "prd": prd_template,
         "issues": issue_template,
         "reviews": review_template,
@@ -276,30 +277,13 @@ def template(art_type: str, title: str, date_str: str, time_str: str, adr_num: i
         "plans": plan_template,
         "test-cases": empty_template,
     }
-    if art_type == "adr":
-        content = adr_template(title, date_str, time_str, adr_num or 1)
-    else:
-        tpl = templates.get(art_type, empty_template)
-        content = tpl(title, date_str, time_str)
+    tpl = templates.get(art_type, empty_template)
+    content = tpl(title, date_str, time_str)
     # Replace frontmatter display date with machine-parseable ISO date
     if iso_date and content.startswith("---"):
         content = content.replace(f"date: {date_str}", f"date: {iso_date}", 1)
     return content
-
 # --- Main ---
-
-def get_next_adr_num(directory: pathlib.Path) -> int:
-    """Find the next available ADR number."""
-    if not directory.exists():
-        return 1
-    nums = []
-    for f in directory.iterdir():
-        if f.is_file() and f.suffix == ".md":
-            try:
-                nums.append(int(f.stem.split("-")[0]))
-            except (ValueError, IndexError):
-                pass
-    return max(nums) + 1 if nums else 1
 
 
 def git_root() -> pathlib.Path | None:
@@ -321,8 +305,6 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create a worktree-local context artifact.")
     parser.add_argument("--type", choices=TYPES, default="handoffs",
                         help="Artifact type")
-    parser.add_argument("--adr-num", type=int,
-                        help="ADR number (auto-incremented if omitted)")
     parser.add_argument("--topic", dest="topic_flag",
                         help="Topic for the generated file")
     parser.add_argument("topic", nargs="*",
@@ -350,11 +332,7 @@ def main() -> None:
     # Determine folder and filename
     art_type = args.type
 
-    if art_type == 'adr':
-        folder = root / 'adr'
-        num = args.adr_num if args.adr_num else get_next_adr_num(folder)
-        filename = f"{num:04d}-{slug(raw_topic)}.md"
-    elif art_type == 'glossary':
+    if art_type == 'glossary':
         folder = root / 'glossary'
         folder.mkdir(parents=True, exist_ok=True)
         filepath = folder / 'glossary.md'
@@ -382,18 +360,10 @@ def main() -> None:
         print(f"Already exists: {filepath}")
         return
 
-    # Get ADR number for template
-    adr_num = None
-    if art_type == "adr":
-        if args.adr_num:
-            adr_num = args.adr_num
-        else:
-            adr_num = get_next_adr_num(folder)
-
-    content = template(art_type, title, date_str, time_str, adr_num, iso_date)
+    content = template(art_type, title, date_str, time_str, iso_date)
     filepath.write_text(content, encoding="utf-8")
     print(f"Created: {filepath}")
-
+    return
 
 if __name__ == "__main__":
     main()

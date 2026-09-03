@@ -1,6 +1,6 @@
 ADRs are written to the current worktree's context directory:
 
-`{git-root}/context/adr/NNNN-slug.md`
+`{git-root}/context/adr/{YYYY-MM-DD_HH-MM-SS}_{slug}.md`
 
 ## Terminal-first writing
 
@@ -40,20 +40,16 @@ That's it. An ADR can be a single paragraph. The value is in recording *that* a 
 
 Only include these when they add genuine value. Most ADRs won't need them.
 
-- **Status** frontmatter (`proposed | accepted | deprecated | superseded by ADR-NNNN`) — useful when decisions are revisited
+- **Status** frontmatter (`proposed | accepted | deprecated | superseded by adr/<filename>.md`) — useful when decisions are revisited
 - **Considered Options** — only when the rejected alternatives are worth remembering
 - **Consequences** — only when non-obvious downstream effects need to be called out
-
-## Numbering
-
-Scan `context/adr/` for the highest existing number and increment by one.
 
 ## Updating existing ADRs
 
 Before creating a new ADR, scan `context/adr/` for existing ADRs covering the same ground:
 
 1. **Same decision changed?** Update the existing ADR in-place (context, decision, consequences).
-2. **New decision supersedes old?** Set old ADR's status to `Superseded by ADR-NNNN`, reference it in the new ADR.
+2. **New decision supersedes old?** Set old ADR's status to `Superseded by adr/<filename>.md`, reference it in the new ADR.
 3. **Don't delete or duplicate.** Superseded ADRs preserve history.
 
 ## When to offer an ADR
