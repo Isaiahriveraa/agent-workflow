@@ -69,7 +69,7 @@ Slash commands in `commands/` extend the tool's native surface:
 |---------|-------------|
 | `/ch` | Create a handoff document to resume work in a future session |
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
-| `/wf` | Commit the current work (commit skill), then push and open a PR (pr-workflow) |
+| `/wf` | Commit the current work, then push and open a PR; `/wf --no` or `/wf --no-review` skips only the nested commit pre-commit code-review gate (all approvals, staging/atomicity, verification, and PR gates remain required) |
 
 Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
 
@@ -113,13 +113,13 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `code-review/` | Adversarial review — three reviewers (behavioral, contract/spec, maintainability), one adjudicator |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
-| `commit/` | Atomic commit messages (mandatory before any commit) |
+| `commit/` | Normal `commit` invocation runs the pre-commit code-review gate; `commit --no` or `commit --no-review` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files. |
 | `pr-workflow/` | PR discipline (mandatory before any PR) |
 | `handoff/` | Session handoff documents |
 | `ch/` | Handoff shorthand — /ch as a skill |
 | `recall/` | Resume from handoff |
 | `later/` | Future improvement notes in `future/` |
-| `wf/` | Commit + PR in one flow (commit → pr-workflow) |
+| `wf/` | Commit + PR in one flow (commit → pr-workflow); supports `wf --no` and `wf --no-review` as passthroughs to skip only the nested commit review gate. |
 | `codebase-design/` | Deep module design |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning protocol |

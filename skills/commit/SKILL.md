@@ -17,6 +17,18 @@ files, and staged hunks MUST describe the same concern.
 
 This skill is mandatory before any `git commit` operation.
 
+## Invocation and Options
+
+The default `commit` invocation runs the Phase 0 pre-commit review gate,
+unless the current fingerprint matches `.git/code-review.marker`, in which
+case the gate is skipped as already reviewed.
+
+Use `commit --no` to explicitly skip only the Phase 0 code-review gate.
+`commit --no-review` is an accepted descriptive alias. This opt-out must be
+intentional and must be reported in both the proposal and the final result.
+It does not bypass user approval, atomic grouping, staged-diff verification,
+or any relevant checks.
+
 ## Core Rule
 
 > One commit, one reason for change.
@@ -37,9 +49,15 @@ Do not group changes merely because:
 
 ## Phase 0: Pre-Commit Review Gate (informational)
 
-Before inspecting or proposing commits, run the code-review gate so the code
-is audited before you commit. The gate is advisory: it surfaces findings and
-lets the user decide. It never auto-fixes and never blocks the commit.
+By default, Phase 0 is review-or-marker-skip: run the code-review gate unless
+the current fingerprint matches the marker. The gate is advisory: it surfaces
+findings and lets the user decide. It never auto-fixes and never blocks the
+commit.
+
+When `--no` or `--no-review` is supplied, intentionally skip only this
+code-review gate. Do not treat the review as mandatory in that invocation;
+the explicit opt-out must be reported in the proposal and final result, and
+all other workflow and safety rules remain in force.
 
 ### When to run
 
@@ -48,7 +66,8 @@ last-reviewed marker stored at `.git/code-review.marker`.
 
 * If the current fingerprint matches the marker, the exact changes were
   already reviewed — skip the gate and proceed to Phase 1.
-* Otherwise, run the review.
+* Otherwise, run the review unless `--no` or `--no-review` was explicitly
+  supplied.
 
 ### Fingerprint
 
@@ -90,6 +109,7 @@ The user may:
 
 After a review completes, record the fingerprint in `.git/code-review.marker`
 so unchanged work is not re-reviewed on a later commit.
+
 
 ## Mandatory Workflow
 
@@ -252,18 +272,21 @@ Dependency is a valid grouping reason. Convenience is not.
 
 ## Mixed Files and Hunk-Level Staging
 
-A file can contain changes for multiple commits.
+A file whose changes all belong to one approved concern may be staged as a
+whole, even when it contains multiple Git hunks. Do not split such hunks
+merely because there is more than one hunk.
 
-Do not place the entire file into one commit merely because Git tracks files
-as the default staging unit.
+When a file contains multiple independent concerns, or when the approved plan
+deliberately selects only part of a file, hunk-level staging is required:
 
-When a file contains multiple independent concerns:
-
-1. Inspect each hunk.
+1. Inspect each relevant hunk.
 2. Assign each hunk to its logical commit.
 3. Use patch-based staging.
 4. Verify the staged diff before committing.
 5. Leave unrelated hunks unstaged for later commits.
+
+Hunk-level staging is therefore required for mixed-concern files and
+deliberately partial selection, but not for a one-concern file staged in full.
 
 Preferred tools:
 
@@ -432,12 +455,19 @@ Message:
 Purpose:
 <one precise explanation of the logical story>
 
+Review gate:
+<default review ran | marker matched and review skipped | explicitly skipped
+with --no/--no-review>
+
 Files:
 - path/to/file
 - path/to/other-file
 
 Hunks:
-- path/to/mixed-file: <specific lines or concern>
+- For a one-concern file staged in full: `<path>` — whole file (all changes
+  belong to this concern)
+- For a mixed-concern or deliberately partial file: `<path>` — exact hunks,
+  lines, or concerns staged
 - None
 
 Verification:
@@ -640,13 +670,14 @@ Explain the blocker precisely and show the safest next action.
 
 The workflow is complete only when:
 
-* the pre-commit review gate ran (or was correctly skipped via the marker)
+* the pre-commit review gate ran, was correctly skipped via the marker, or was
+  explicitly skipped with `--no`/`--no-review`, and that choice was reported
 * every commit represents one logical story
 * each message accurately describes its exact staged diff
-* mixed files were separated by hunk where appropriate
+* one-concern files were staged as whole files when appropriate
+* mixed-concern and deliberately partial files were separated by hunk
 * the user approved the structure before Git state changed
 * relevant verification was performed
 * no unrelated changes were committed
 * remaining working-tree changes were reported
 * the resulting history is easy to review, revert, cherry-pick, or bisect
-
