@@ -15,6 +15,7 @@ gsd-local-patches/
 config/
 !projects/.gitkeep
 .omx/
+.om*
 .pi-lens
 .rpiv
 .sisyphus
