@@ -316,9 +316,9 @@
     "to-issues": {
       "source": ".agents",
       "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-tickets",
-      "skillPath": "skills/to-tickets/SKILL.md",
-      "skillFolderHash": "2564202540b8ab238ec038c7cb8f81643afbd72b",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-issues",
+      "skillPath": "skills/to-issues/SKILL.md",
+      "skillFolderHash": "bdaa0fca9082713ee9774a0334fd138e3c720ce1",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
