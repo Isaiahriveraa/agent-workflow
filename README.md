@@ -33,6 +33,10 @@ The project workflow is intentionally linear at the planning boundary. Each stag
 
 ```
 /design → /plan → to-issues → human approval → issue-delivery
+
+or
+
+/design → /plan → /implement
 ```
 
 Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition.
