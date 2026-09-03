@@ -29,6 +29,13 @@
       "skillPath": "skills/codebase-design/SKILL.md",
       "skillFolderHash": "805aab7a9ffa7e9a37727455b977df0ad9b51315"
     },
+    "design": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/design",
+      "skillPath": "skills/design/SKILL.md",
+      "skillFolderHash": "37f8ce990b8c8113868d868c4de21a92892e4820"
+    },
     "commit": {
       "source": ".agents",
       "sourceType": "hub",
@@ -306,7 +313,7 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
-    "to-tickets": {
+    "to-issues": {
       "source": ".agents",
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-tickets",

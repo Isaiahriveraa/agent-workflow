@@ -29,44 +29,37 @@ The hub serves Claude Code, Codex CLI, OpenCode, and Antigravity/Gemini from the
 
 ## Workflow
 
-The pipeline routes work through stages. Depth depends on complexity:
+The project workflow is intentionally linear at the planning boundary. Each stage owns one concern and passes a durable artifact to the next stage. Local drafts are tracked by their file paths and the plan manifest; once published, work is identified by its GitHub issue number.
 
 ```
-lightweight:   implement → tdd → code-review → commit
-
-planned:       /plan → to-tickets → implement → tdd → code-review → commit
-
-spec-driven:   grill-with-docs → to-spec → implement → tdd → code-review → commit
+/design → /plan → to-issues → human approval → issue-delivery
 ```
+
+Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition.
+
+The supporting skills below remain available for focused needs, but they do not replace this delivery path.
 
 ### Pipeline stages
 
 | Stage | Skill | What it produces | Where |
 |-------|-------|------------------|-------|
-| Clarify | `grill-with-docs` + `domain-modeling` | Glossary, ADRs, sharpened plan | `context/` |
-| Spec | `to-spec` | Spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning | GitHub Issue |
-| Prototype | `prototype` | Throwaway code answering a design question | In-repo |
-| Plan | `/plan` | Repository-grounded plan with mandatory cited external-evidence pass: proven implementations, official API docs, relevant constraints, and failure modes | Plan file (human-approved) |
-| Tickets | `to-tickets` | Convert an approved plan → focused tickets (one per PR) | Local drafts |
-| Decision issues (compat) | `issue-discovery` | Ambiguous ideas → decision GitHub issues; planning lives in `/plan` | GitHub Issues |
-| Audit | `improve` | Read-only codebase survey → prioritized executor-ready plans | `plans/` in repo |
-| Implement | `implement` | Working code (orchestrates tdd + code-review) | Git branch |
-| TDD | `tdd` | Tests + implementation, one red-green cycle | Source + test files |
-| Review | `code-review` | Code review report | `context/reviews/` |
-| Commit | `commit` | Pre-commit review gate + atomic commit message | Git commit |
+| Design | `/design` | Evidence-backed design: intent, behavior, scope, decisions, and constraints | `context/designs/` |
+| Plan | `/plan` | Repository-grounded execution plan with concerns, dependencies, parallelism, and verification | `context/plans/<slug>/` |
+| Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/plans/<slug>/` |
+| Approval | Human review | Approved ticket set ready for delivery | Conversation or plan record |
+| Delivery | `issue-delivery` | One published issue delivered through an isolated worktree to a verified draft PR | GitHub issue number → draft PR |
 
 ### How to choose
 
-1. **Small, known fix** → `/skill:implement`
-2. **Feature/engineering plan or messy product intent** → `/plan` — researches the repository and mandatory external evidence (using `/research`'s background-agent + cited-Markdown protocol), then decomposes concerns, dependencies, parallelism, and stacking → `/skill:to-tickets` converts the approved plan → `/skill:implement`
-3. **Need a prototype** → `/skill:prototype`
-4. **Writing a spec** → `/skill:to-spec` — GitHub spec issue, no code/file-path planning
-5. **Ready GitHub issue to ship** → `/skill:issue-delivery` — isolated worktree → verified draft PR (separate issue-to-PR path)
-6. **Standalone cited research** → `/skill:research` — background-agent research with primary sources and one cited Markdown artifact; `/plan` uses this protocol as part of planning
-7. **Audit an existing codebase** → `/skill:improve` — read-only survey, audit-driven
-8. **Decision issues before planning (compat)** → `/skill:issue-discovery`
-9. **Sharpening an idea** → `/skill:grill-with-docs`
-10. **Ask me which skill** → `/skill:skill-index`
+1. **New product or system work** → `/design` → `/plan` → `to-issues` → human approval → `/skill:issue-delivery`
+2. **Already have an approved plan** → `to-issues` → human approval → `/skill:issue-delivery`
+3. **Already have a published, ready issue** → `/skill:issue-delivery`
+4. **Need to clarify a domain or research question** → use the focused supporting skill, then return to `/design` or `/plan`
+5. **Standalone cited research** → `/skill:research` — use it to fill a planning gap, then return to `/plan`
+6. **Audit an existing codebase** → `/skill:improve` — read-only survey, then use findings in `/design` or `/plan`
+7. **Resolve an ambiguous product decision** → `/skill:issue-discovery` — create a decision issue, then return to `/design` or `/plan`
+8. **Sharpen an idea** → `/skill:grill-with-docs`
+9. **Ask which skill fits** → `/skill:skill-index`
 
 ## Commands
 
@@ -78,7 +71,7 @@ Slash commands in `commands/` extend the tool's native surface:
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
 | `/wf` | Commit the current work (commit skill), then push and open a PR (pr-workflow) |
 
-Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-tickets`) are invoked via `skill(name="skill-name")`, not slash commands.
+Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
 
 Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge.
 
@@ -104,14 +97,15 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | Skill | Role |
 |-------|------|
 | `prototype/` | Throwaway code to answer a design question |
-| `plan/` | Repository-grounded planning with mandatory cited external evidence → local plan files in `context/plans/<slug>/` |
+| `design/` | Shape intent and design-level decisions into an evidence-backed artifact for `/plan` |
+| `plan/` | Validate upstream artifacts, investigate only research gaps, and decompose a canonical execution plan → local plan files in `context/plans/<slug>/` |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
-| `to-tickets/` | Convert an approved plan/spec/issue into focused tickets (one per PR) |
-| `issue-discovery/` | Ambiguous ideas → decision GitHub issues (compat — planning lives in `/plan`) |
+| `to-issues/` | Mechanically compile an approved plan into local parent/child drafts tracked by path and manifest while preserving dependencies; after approval, optionally publish ready child issues (or explicitly single-concern issues) to GitHub, where they are identified by issue number |
+| `issue-discovery/` | Ambiguous ideas → decision GitHub issues for discovery (compat — planning lives in `/plan`) |
 | `to-spec/` | Conversation → spec issue |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Background-agent research → single cited Markdown file |
-| `issue-delivery/` | One GitHub issue → isolated sibling worktree, verified draft PR |
+| `issue-delivery/` | Receive one published, ready child issue (or explicitly single-concern issue), verify dependencies and readiness, and deliver it through an isolated sibling worktree to a verified draft PR; route incomplete issues back to `to-issues` for enrichment; does not create issues or schedule batches |
 | `implement/` | Orchestrator: tdd → code-review → commit |
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
@@ -166,7 +160,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── _shared/           # Shared utility modules
 │   ├── prototype/          # Pipeline skills
 │   ├── plan/
-│   ├── to-tickets/
+│   ├── to-issues/
 │   ├── issue-discovery/
 │   ├── implement/
 │   ├── tdd/

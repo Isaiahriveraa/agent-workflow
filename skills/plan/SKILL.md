@@ -17,6 +17,21 @@ Turn messy intent into a repository-grounded, dependency-aware, testable local p
 
 ## Workflow
 
+### 0. Preflight inputs: existing design artifact
+
+Before clarifying or researching, check whether the user supplied or the repository contains a relevant `context/designs/*.md` artifact. If one exists, read it fully and treat it as the design source of truth for the handoff. Verify its current-state evidence, desired behavior, citations, scope, and unresolved questions against the repository and the user's request; never silently trust an incomplete artifact. Carry verified decisions and open questions into the plan, and stop to ask the human when a material question remains unresolved.
+
+This creates two valid paths:
+
+- **Design present** — reuse the artifact's relevant, current, cited, sufficient external evidence for the plan's decisions and do not invoke a redundant full `/research` pass. Run targeted supplemental research only for material gaps, stale or conflicting evidence, or missing decisions, and record what was supplemented and why.
+- **No design** — follow the mandatory repository and full external-evidence workflow below, including the `/research` protocol.
+
+The design artifact is an input, not a separate handoff deliverable: write the resulting plan under `context/plans/<slug>/` and make its repository and external evidence traceable there.
+### Design and issue handoff boundary
+
+`/plan` is the canonical execution-plan owner between `/design` and `/to-issues`. It validates the complete design artifact against the repository and request, verifies and reuses sufficient evidence, and performs only targeted supplemental research for identified gaps. It then owns concern decomposition, dependency and parallelism reasoning, implementation-ready steps, and recording whether the plan is approved. Do not re-author the design's intent or design prose; preserve it as input while translating it into an executable plan. Do not leave decomposition or execution reasoning to `/to-issues`.
+
+
 ### 1. Clarify intent
 
 Before planning, make sure you understand the goal. Ask the human to resolve anything materially ambiguous about the desired outcome, scope, or constraints. Do not turn vague wording directly into steps.
@@ -27,7 +42,9 @@ Ground every claim in the repo. Locate the files, modules, symbols, callers, con
 
 ### 3. Research proven external implementations and documentation
 
-Use the repository's `/research` protocol for this pass: delegate background research, use web search, and produce a cited Markdown evidence artifact before finalizing the plan. Search for existing, demonstrably working implementations of the requested behavior and authoritative API documentation, prioritizing official documentation, maintained reference implementations, standards, and release notes. Also investigate relevant libraries, frameworks, protocols, providers, constraints, and known failure modes.
+Use the repository's `/research` protocol for a full pass when no relevant design artifact is available. When a relevant artifact is present, reuse its external evidence only after verifying that it is relevant, current, cited, and sufficient for the plan's decisions; otherwise perform targeted supplemental research for the identified gaps, stale or conflicting evidence, or missing decisions. In either path, produce and cite the evidence needed by the plan, and do not treat the design artifact as a substitute for verification.
+
+Search for existing, demonstrably working implementations of the requested behavior and authoritative API documentation, prioritizing official documentation, maintained reference implementations, standards, and release notes. Also investigate relevant libraries, frameworks, protocols, providers, constraints, and known failure modes.
 
 Treat external research as evidence, not a design substitute:
 
@@ -37,7 +54,7 @@ Treat external research as evidence, not a design substitute:
 - If a source is irrelevant, stale, inaccessible, or unsupported by evidence, exclude it and explain the exclusion when it affects a decision.
 - If web search finds no credible implementation or documentation, say so explicitly, mark the affected decision as uncertain, and stop to ask when the uncertainty is material; do not silently proceed as though evidence exists.
 
-The plan's repository evidence and external evidence sections must make it possible for an implementer to trace each material design choice to a source.
+The plan's repository evidence and external evidence sections must make it possible for an implementer to trace each material design choice to a source, whether that evidence was newly researched or verified and reused from the design artifact.
 
 ### 4. Define current vs desired behavior
 
@@ -105,8 +122,14 @@ Do not confuse long-term thinking with premature abstraction or infrastructure. 
 List what is explicitly out of scope, so nobody expands the plan.
 
 ## Local output
+### Plan output contract for `/to-issues`
+
+The saved plan is the complete execution contract that `/to-issues` consumes without redesign. It must state its approval status, and every concern has a stable identifier (for example, `C-01`) plus a machine-auditable mapping to its implementation-ready step(s), observable acceptance criteria, verification command and expected result, dependencies (including start-now/concurrent/blocked status and reasons), and work position in the execution order. Keep those mappings consistent across `00-index.md` and step files; `/to-issues` may compile them into issues but must not invent concerns, reorder dependencies, or resolve missing design decisions.
+
 
 Write the plan under the current worktree's `context/plans/<slug>/` directory. Create `context/` and `context/plans/` when absent.
+
+The human-facing plan presentation follows the **Planning Mode** protocol in `references/communication.md`: Problem, Desired Behavior, System Shape & Seams, up to 3 Key Decisions to challenge before code is written, Tradeoffs & Edge Cases, and Definition of Done. Point the human to the saved plan file under `context/plans/<slug>/`.
 
 - Any multi-step plan has a `00-index.md` at the root of the plan directory.
 - Avoid unnecessary nesting; simple single-concern work may be one file.
@@ -134,10 +157,11 @@ Each step file includes:
 
 ## Relationship to sibling skills
 
-- `/to-tickets` consumes an **approved** plan and breaks it into focused tickets.
+- `/to-issues` consumes an **approved** plan and breaks it into focused issues.
 - `/issue-delivery` delivers a **ready** issue through an isolated worktree to a draft PR.
 - `/to-spec` remains a GitHub spec workflow (Problem/Stories/Decisions/OutOfScope).
-- `/research` supplies the mandatory external-evidence pass for plans; invoke it standalone when a cited research Markdown artifact is needed without a plan.
+- `/research` supplies the mandatory external-evidence pass for plans when no relevant design artifact exists; with a verified sufficient artifact, use targeted supplemental research only for material gaps, stale or conflicting evidence, or missing decisions. Invoke it standalone when a cited research Markdown artifact is needed without a plan.
+- `/design` may provide the optional `context/designs/*.md` source-of-truth input for this skill; `/plan` reads it directly, verifies it, and consumes it without creating a separate handoff artifact.
 - `/codebase-design` is unchanged; it deepens module interfaces, this skill plans work.
 
 ## Stop and ask

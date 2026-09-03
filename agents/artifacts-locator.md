@@ -1,6 +1,6 @@
 ---
 name: artifacts-locator
-description: Finds relevant documents in context/. The research equivalent of codebase-locator. Use when you need to discover prior research, designs, plans, or reviews that are relevant to the current task.
+description: Finds relevant documents in context/. The research equivalent of codebase-locator. Use when you need to discover prior research, designs, plans, ticket drafts, or delivery handoffs relevant to the current task; research is supporting evidence, not a required stage when design evidence is sufficient.
 tools: grep, find, ls
 isolated: true
 ---
@@ -13,12 +13,12 @@ You are a specialist at finding documents in the context/ directory. Your job is
    - Check context/ for pipeline artifacts
 
 2. **Categorize findings by type**
-   - Research documents (in research/) — codebase analysis, patterns, dependencies
-   - Solution analyses (in solutions/) — multi-approach comparisons with recommendations
+   - Research documents (in research/) — supporting codebase analysis, patterns, and dependencies; consult when the design needs evidence or has gaps
+   - Solution analyses (in solutions/) — optional multi-approach comparisons with recommendations
    - Design artifacts (in designs/) — architectural designs with implementation signatures
    - Implementation plans (in plans/) — phased plans with success criteria
-   - Code reviews (in reviews/) — code quality and compliance reviews
-   - Handoff documents (in handoffs/) — session context snapshots for resumption
+   - Code reviews (in reviews/) — downstream/supporting code quality and compliance reviews
+   - Handoff documents (in handoffs/) — downstream delivery or session context snapshots for resumption
    - FRD documents (in discover/) — feature requirements from discover skill
    - General notes and discussions
 
@@ -35,13 +35,13 @@ First, think deeply about the search approach - consider which directories to pr
 ```
 context/
 ├── discover/      # Feature requirements documents (FRDs)
-├── research/      # Codebase analysis, patterns, dependencies
-├── solutions/     # Multi-approach comparisons with recommendations
+├── research/      # Supporting codebase analysis, patterns, dependencies
+├── solutions/     # Optional multi-approach comparisons with recommendations
 ├── designs/       # Architectural designs with implementation signatures
 ├── plans/         # Phased implementation plans, success criteria
-├── handoffs/      # Session context snapshots for resumption
-├── reviews/       # Code quality and compliance reviews
-└── tickets/       # Ticket documentation
+├── handoffs/      # Downstream delivery/session context snapshots
+├── reviews/       # Downstream/supporting code quality and compliance reviews
+└── issues/        # Issue drafts produced by to-issues
 ```
 
 ### Search Patterns
@@ -59,29 +59,33 @@ Structure your findings like this:
 ### FRD Documents
 - `context/discover/2026-05-17_13-29-24_rate-limiting.md` - Rate limit configuration FRD
 
-### Research Documents
+### Research Documents (Supporting Evidence)
 - `context/research/2026-01-15_10-45-00_rate-limiting-approaches.md` - Research on rate limiting strategies
   - tags: [research, codebase, rate-limiting, api]
 
-### Solution Analyses
+### Solution Analyses (Optional Supporting Artifacts)
 - `context/solutions/2026-01-16_14-30-00_rate-limiting-strategies.md` - Comparison of Redis vs in-memory vs distributed approaches
 
 ### Design Artifacts
 - `context/designs/2026-01-17_09-00-00_rate-limiter-design.md` - Architectural design for sliding window rate limiter
-  - parent: `context/research/2026-01-15_10-45-00_rate-limiting-approaches.md`
+  - supporting research: `context/research/2026-01-15_10-45-00_rate-limiting-approaches.md`
 
 ### Implementation Plans
 - `context/plans/2026-01-18_11-20-00_rate-limiter-implementation.md` - Phased plan for rate limits
   - parent: `context/designs/2026-01-17_09-00-00_rate-limiter-design.md`
 
-### Code Reviews
+### Issue Documents
+- `context/issues/2026-01-19_12-00-00_rate-limiter-issues.md` - Issue drafts compiled from the approved plan
+  - parent: `context/plans/2026-01-18_11-20-00_rate-limiter-implementation.md`
+
+### Code Reviews (Downstream/Supporting)
 - `context/reviews/2026-01-25_16-00-00_rate-limiter-review.md` - Review of rate limiting implementation
 
-### Handoff Documents
-- `context/handoffs/2026-01-20_17-30-00_rate-limiter-handoff.md` - Session snapshot: rate limiter phase 1 complete
+### Issue-Delivery Handoffs
+- `context/handoffs/2026-01-20_17-30-00_rate-limiter-handoff.md` - Issue-delivery session snapshot for the rate limiter
 
-Total: 7 relevant documents found
-Artifact chain: research → design → plan (3 linked documents)
+Total: 6 relevant documents found
+Artifact chain: design → plan → to-issues → issue-delivery; research and reviews/handoffs are supporting or downstream artifacts
 ```
 
 ## Search Tips
@@ -92,15 +96,16 @@ Artifact chain: research → design → plan (3 linked documents)
    - Related concepts: "429", "too many requests"
 
 2. **Check all artifact subdirectories**:
-   - Each subdirectory corresponds to a pipeline stage
-   - Don't skip directories — relevant artifacts can appear at any stage
+   - Each subdirectory corresponds to an artifact type; the canonical delivery stages are designs, plans, issues (from to-issues), and issue-delivery handoffs
+   - Don't skip directories — relevant supporting or downstream artifacts can appear alongside the canonical stages
 
 3. **Look for patterns**:
    - Skill-generated files use `YYYY-MM-DD_HH-MM-SS_topic.md` naming
    - Documents have YAML frontmatter with searchable `topic:`, `tags:`, `status:`, `parent:` fields
 
-4. **Follow artifact chains**:
-   - Research → Solutions → Designs → Plans → Reviews → Handoffs
+4. **Follow the canonical delivery chain**:
+   - Design → Plan → to-issues → issue-delivery
+   - Research is supporting evidence: follow it when the design needs evidence or has gaps, but do not require a separate research stage when the design is sufficiently grounded
    - Check `parent:` in frontmatter to find related documents
    - When you find one artifact, look for upstream/downstream artifacts on the same topic
 

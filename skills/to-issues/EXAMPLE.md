@@ -1,8 +1,8 @@
-# Ticket Calibration Example
+# Issue Calibration Example
 
-This example shows the difference between a weak ticket and a strong ticket for the same feature. The feature: allow users to archive a project so it disappears from the active project list but stays recoverable.
+This example shows the difference between a weak issue and a strong issue for the same feature. The feature: allow users to archive a project so it disappears from the active project list but stays recoverable.
 
-## Weak Ticket
+## Weak Issue
 
 ```
 # Add project archiving
@@ -33,16 +33,19 @@ Run tests
 This is weak because:
 
 - Acceptance criteria are a task list, not observable outcomes. "Add archived column" is an implementation step; it says nothing about what the user can do.
-- Scope is a list of layers, so this ticket would touch everything and be unreviewable in one PR.
+- Scope is a list of layers, so this issue would touch everything and be unreviewable in one PR.
 - Verification is "run tests" with no expected result.
 - It mixes schema, API, query, and UI into one unowned blob.
 
-## Strong Tickets
+## Strong Issues
 
-### Ticket 1: Persist the archived flag on a project
+### Issue 1: Persist the archived flag on a project
 
-```
+```markdown
 # Persist the archived flag on a project
+
+**Plan-step identity:** C-01-persist-archived-flag
+**Local draft path:** context/plans/project-archiving/01-persist-flag.md
 
 ## Why
 Users want to hide old projects; the first step is storing that intent.
@@ -66,21 +69,25 @@ Project list filtering, UI, restore-from-trash behavior, any other attribute.
 - `curl -X POST localhost:3000/projects/1/archive` then `curl localhost:3000/projects/1` shows `"archived": true`.
 - `npx prisma migrate rollback` succeeds.
 
-## Dependencies
-- Depends on: none.
-- Blocks: Ticket 2 (project list filtering).
+## Dependencies and position
+- Depends on: none
+- Blocks: context/plans/project-archiving/02-filter-list.md (C-02-filter-archived-projects) — requires archived column
+- Position: Start now — no blocker
 
 ## Likely ownership
-`prisma/schema.prisma`, `migrations/`, `src/routes/projects.ts`. No collision risk — no other ticket touches these yet.
+`prisma/schema.prisma`, `migrations/`, `src/routes/projects.ts`. No collision risk — no other issue touches these yet.
 
 ## Plan reference
-http://localhost:3456/project/demo/plan/archiving#persist-the-archived-flag
+context/plans/project-archiving/00-index.md#persist-the-archived-flag
 ```
 
-### Ticket 2: Filter archived projects out of the active list
+### Issue 2: Filter archived projects out of the active list
 
-```
+```markdown
 # Filter archived projects out of the active list
+
+**Plan-step identity:** C-02-filter-archived-projects
+**Local draft path:** context/plans/project-archiving/02-filter-list.md
 
 ## Why
 Archiving must hide the project from the active list to be useful.
@@ -92,7 +99,7 @@ Archiving must hide the project from the active list to be useful.
 The list query and its response shape.
 
 ## Out of scope
-Archive/unarchive endpoints (Ticket 1), archived-project browsing UI, pagination changes.
+Archive/unarchive endpoints (Issue 1), archived-project browsing UI, pagination changes.
 
 ## Acceptance criteria
 - `GET /projects` returns only non-archived projects.
@@ -104,21 +111,22 @@ Archive/unarchive endpoints (Ticket 1), archived-project browsing UI, pagination
 - `curl localhost:3000/projects` shows no archived project; `curl "localhost:3000/projects?include=archived"` does.
 - `npm test -- list` passes.
 
-## Dependencies
-- Depends on: Ticket 1 (needs the `archived` column).
-- Blocks: none.
+## Dependencies and position
+- Depends on: context/plans/project-archiving/01-persist-flag.md (C-01-persist-archived-flag) — needs the `archived` column
+- Blocks: none
+- Position: Blocked — depends on Issue 1 landing and schema migration
 
 ## Likely ownership
-`src/routes/projects.ts` (same file as Ticket 1 — run after Ticket 1 lands), `src/lib/projectQuery.ts`. Collision risk: Ticket 1 touches `src/routes/projects.ts`; these are sequential.
+`src/routes/projects.ts` (same file as Issue 1 — run after Issue 1 lands), `src/lib/projectQuery.ts`. Collision risk: Issue 1 touches `src/routes/projects.ts`; these are sequential.
 
 ## Plan reference
-http://localhost:3456/project/demo/plan/archiving#filter-archived-projects
+context/plans/project-archiving/00-index.md#filter-archived-projects
 ```
 
 ## Why these are strong
 
-- **Behavior-complete, reviewable.** Each ticket is end-to-end and fits one PR.
+- **Behavior-complete, reviewable.** Each issue is end-to-end and fits one PR.
 - **Acceptance criteria are observable.** You can point at a command output and say "done".
-- **Dependencies are explicit.** Ticket 2 blocks on Ticket 1, and the shared-file risk is named so they run sequentially.
+- **Dependencies are explicit.** Issue 2 blocks on Issue 1, and the shared-file risk is named so they run sequentially.
 - **Verification is concrete.** Exact commands + expected results, not "run tests".
-- **Scope and out-of-scope bound each ticket.** No layer-hopping.
+- **Scope and out-of-scope bound each issue.** No layer-hopping.
