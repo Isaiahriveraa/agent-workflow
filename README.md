@@ -75,7 +75,7 @@ Slash commands in `commands/` extend the tool's native surface:
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
 | `/wf` | Commit the current work, then push and open a PR; `/wf --no` or `/wf --no-review` skips only the nested commit pre-commit code-review gate (all approvals, staging/atomicity, verification, and PR gates remain required) |
 
-Workflow skills (`spawn`, `enforce`, `pr-workflow`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
+Workflow skills (`spawn`, `enforce`, `pr`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
 
 Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge.
 
@@ -118,12 +118,12 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
 | `commit/` | Normal `commit` invocation runs the pre-commit code-review gate; `commit --no` or `commit --no-review` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files. |
-| `pr-workflow/` | PR discipline (mandatory before any PR) |
+| `pr/` | PR discipline (mandatory before any PR) |
 | `handoff/` | Session handoff documents |
 | `ch/` | Handoff shorthand — /ch as a skill |
 | `recall/` | Resume from handoff |
 | `later/` | Future improvement notes in `future/` |
-| `wf/` | Commit + PR in one flow (commit → pr-workflow); supports `wf --no` and `wf --no-review` as passthroughs to skip only the nested commit review gate. |
+| `wf/` | Commit + PR in one flow (commit → pr); supports `wf --no` and `wf --no-review` as passthroughs to skip only the nested commit review gate. |
 | `codebase-design/` | Deep module design |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning protocol |
@@ -171,7 +171,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── tdd/
 │   ├── code-review/
 │   ├── commit/
-│   ├── pr-workflow/
+│   ├── pr/
 │   ├── grill-with-docs/
 │   ├── domain-modeling/
 │   ├── to-spec/

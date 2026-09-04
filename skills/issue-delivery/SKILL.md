@@ -63,7 +63,7 @@ One issue produces at most one branch, one Git worktree, one concern-tight PR, a
 | `implement` | Implementation orchestration: regular focused checks plus full-suite verification where the repository supports it. |
 | `code-review` | Review the completed branch diff before PR preparation; resolve blocking findings or surface them in the Publish packet. |
 | `commit` | Audit every planned commit message. It generates messages only; the worker stages and commits only after the audit passes. |
-| `/pr` | Generate the reviewer-facing PR proposal from the actual branch diff. The body must use `### Summary`, `### Rationale`, and `### Tests`. |
+| `/pr` | Generate the reviewer-facing PR proposal from the actual branch diff. The body must use `### Rationale`, `### Observable Behavior`, and `### Verification`. |
 | `handoff` | Write a continuation artifact on a blocked, crashed, or timed-out worker; retain the worktree. |
 
 ## Non-Negotiable Rules
@@ -199,17 +199,20 @@ The worker follows this sequence:
 1. Review the final diff against the approved delivery proposal. Measure PR size as the insertion-plus-deletion total from `rtk git diff --numstat <base>...HEAD`. A diff that contains another concern, an unexpected file, or more than 700 changed lines returns to delivery approval with a split proposal.
 2. Invoke `commit` for each logical unit before staging it. The message must pass the single-story check and contain no `and`.
 3. Stage only the audited logical unit in the issue worktree. Use file-level staging when the concerns are file-separated. For an intra-file split, use interactive patch staging only when the session supports it; otherwise re-sequence the edits so each commit can be staged safely. Re-check the remaining diff before the next commit.
-4. Invoke `skill(pr-workflow)` `/pr` against the resolved base branch. Derive title/body solely from the committed branch diff.
+4. Invoke `skill(pr)` `/pr` against the resolved base branch. Derive title/body solely from the committed branch diff.
 5. The PR proposal must include:
 
 ```markdown
-### Summary
-<one concise paragraph about the delivered behavior>
-
 ### Rationale
-- <why the non-obvious changes exist>
+- <why this change exists, what problem/limitation it solves, why this approach>
 
-### Tests
+### Observable Behavior
+- <what the user or caller experiences now vs before; not code implementation details>
+
+<!-- Note: If summary/observable behavior and rationale overlap, use a single `### Summary & Rationale` header — do not repeat yourself. -->
+
+### Verification
+- Added <X> test to verify <behavior>
 - <commands and results actually run>
 - <tests not run and why, if any>
 

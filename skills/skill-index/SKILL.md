@@ -67,12 +67,12 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 
 - **Learning sessions** → **`/skill:learn-plan`** — planning protocol for learning sessions.
 - **Capture a future idea** → **`/skill:later`** — record a future improvement note in `future/` without implementing.
-- **Commit + PR in one flow** → **`/skill:wf`** — commit skill then pr-workflow, two approval gates.
+- **Commit + PR in one flow** → **`/skill:wf`** — commit skill then pr skill, two approval gates.
 
 ## Quick utilities
 
 - **Resolve merge conflicts** → **`/skill:resolving-merge-conflicts`** — structured conflict resolution.
 - **Commit** → **`/skill:commit`** — normal `commit` invocation runs the pre-commit code-review gate; `commit --no` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files.
-- **PR workflow** → **`/skill:pr-workflow`** — break work into PR-sized chunks.
+- **PR** → **`/skill:pr`** — break work into PR-sized chunks.
 - **Herdr terminal multiplexer** → **`/skill:herdr`** — inspect and control workspaces, tabs, panes, and coding agents inside Herdr.
 - **Multi-context Herdr layout** → **`/skill:orchestration`** — propose a nested workspace/tab/pane tree, dispatch prompt-file-backed OMP agents, and supervise through lifecycle status

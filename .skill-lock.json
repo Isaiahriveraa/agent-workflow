@@ -200,12 +200,14 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-09-01T00:00:00.000Z"
     },
-    "pr-workflow": {
+    "pr": {
       "source": ".agents",
       "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/pr-workflow/SKILL.md",
-      "skillPath": "skills/pr-workflow/SKILL.md",
-      "skillFolderHash": "1cc3aa6dcf90d21b384c8e51afeefd55148afb35"
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/pr/SKILL.md",
+      "skillPath": "skills/pr/SKILL.md",
+      "skillFolderHash": "f0689167a2442ed290b2f4356780c56a6241ac6c",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-09-04T00:00:00.000Z"
     },
     "prompt-master": {
       "source": ".agents",

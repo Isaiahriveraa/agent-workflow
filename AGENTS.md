@@ -131,7 +131,7 @@ Every branch and PR addresses exactly one concern. This keeps the PR list small,
 - **New idea mid-task** — When the user raises a new idea while work is in flight, do not switch tracks. Acknowledge it, finish the current concern, then propose the idea as the next PR. If the current PR is a prerequisite for it, say so and sequence it after. If it is independent, spin up a separate worktree instead of queueing it.
 - **Parallel concerns → separate worktrees** — Independent concerns proceed in parallel across their respective worktrees. Never start a second concern inside an existing worktree.
 - **Commit** — Every commit goes through the `commit` skill (plan, get approval, then stage). Never commit directly.
-- **PR** — Every PR goes through `pr-workflow` (check size, one concern per PR, generate the body). Never open a PR directly.
+- **PR** — Every PR goes through the `pr` skill (check size, one concern per PR, generate the body). Never open a PR directly.
 - **Propose before executing** — When multiple concerns are on the table, present the branch/worktree plan and merge sequencing for approval first. The agent owns execution; the human approves the plan, the commits, and the PRs.
 - **Clean up after merge** — As soon as a branch is merged into the desired target branch, tear down its worktree immediately with `~/.agents/scripts/cleanup-worktree.sh <branch>`: it removes the worktree, deletes the merged local branch, asks before deleting the remote branch, and runs `git worktree prune`. Never leave merged branches or stale worktrees behind — a clean `git worktree list` is the baseline for easy PR review.
 

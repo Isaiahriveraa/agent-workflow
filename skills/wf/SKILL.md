@@ -1,6 +1,6 @@
 ---
 name: wf
-description: Commit the current work with the commit skill, then push and open a PR via pr-workflow — one concern, two approval gates. Use when the user says "wf", "wf --no", "wf --no-review", "commit and PR", "ship this", or wants the full commit → push → PR flow for the current branch.
+description: Commit the current work with the commit skill, then push and open a PR via the pr skill — one concern, two approval gates. Use when the user says "wf", "wf --no", "wf --no-review", "commit and PR", "ship this", or wants the full commit → push → PR flow for the current branch.
 argument-hint: "[--no|--no-review] [base-branch]"
 disable-model-invocation: true
 ---
@@ -26,15 +26,15 @@ Invoke the `commit` skill at `~/.agents/skills/commit/SKILL.md`:
 5. **STOP — wait for explicit user approval.**
 6. Execute the approved plan commit by commit: stage whole files when a file belongs to one concern; use hunk-level staging only for mixed-concern or deliberately partial files, with pre/post-commit verification.
 
-### 2. PR phase (pr-workflow skill)
+### 2. PR phase (pr skill)
 
-Invoke the `pr-workflow` skill at `~/.agents/skills/pr-workflow/SKILL.md`, `/pr` submode:
+Invoke the `pr` skill at `~/.agents/skills/pr/SKILL.md`, `/pr` submode:
 
 1. Confirm branch state and base branch (user-provided or upstream default).
 2. Inspect the branch diff against base: `git log --oneline <base>..HEAD`, `git diff --stat <base>...HEAD`.
 3. Check commit granularity — each commit must be one logical unit; flag violations.
 4. Size the PR (`small` / `medium` / `large`).
-5. Write the PR body with exactly three sections: `## Summary`, `## Rationale`, `## Tests` (per the pr-workflow template).
+5. Write the PR body with the core sections: `## Rationale` (the human/system why), `## Observable Behavior` (what the system does, not code implementation details), and `## Verification` (tests added to verify behavior). If summary and rationale overlap, combine them as `## Summary & Rationale` — do not repeat yourself. Include `## Stack Context` only if part of a PR stack (per the pr skill template).
 6. Present the body and the push/create plan (`git push -u origin <branch>`, `gh pr create --draft`).
 7. **STOP — wait for explicit user approval.**
 8. Execute: push, then `gh pr create --draft --title <type>(<scope>): <summary> --body <body>`. Create as draft by default so the user reviews before marking ready.

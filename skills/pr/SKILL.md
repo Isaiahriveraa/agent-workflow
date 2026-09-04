@@ -1,9 +1,9 @@
 ---
-name: pr-workflow
+name: pr
 description: "Generate PR descriptions, split branches into concern-tight PRs, or convert dirty branches into clean stacked draft PRs. Three submodes: `/pr` (generate description), `/pr split` (split by concern), `/pr stack` (stacked draft PRs from dirty branch)."
 ---
 
-# PR Workflow
+# PR
 
 Three submodes:
 
@@ -97,7 +97,9 @@ Generate a PR description based on the actual branch diff. Sized to the change.
   the PR as complete.
 - Inspect the branch against the intended base branch first.
 - Size the PR before writing it.
+- Describe the **rationale (why)** and **observable behavior**, NOT code implementation details. The diff already displays code changes; the PR body must convey why the change exists, how the system behaves now, and how tests verified that behavior.
 - Describe only what is actually in the committed branch diff against the base branch.
+- Omit `## Stack Context` unless the branch is explicitly part of a stacked PR.
 - Do not mention local-only files, ignored files, or plans/research artifacts unless they are committed and reviewer-relevant.
 - Do not invent provenance from the conversation. If it is not visible in `git log`, `git diff --stat`, `git diff --name-only`, or the inspected diff, leave it out.
 - Keep reviewer-facing text repo-clean: no machine-specific absolute paths, no local home-directory references.
@@ -112,37 +114,74 @@ Generate a PR description based on the actual branch diff. Sized to the change.
 5. Decide PR size: `small` (1-2 commits), `medium` (several related commits), `large` (cross-cutting, architectural).
    If the branch mixes unrelated stories, stop and say so before writing.
 
+### PR Description Philosophy: The "Why" and "Behavior", Never Implementation
+
+Reviewers read PR descriptions to understand **why** the change was made and **what** the observable behavior is. They already have the "Files changed" tab in GitHub to inspect the code lines, functions, and files.
+
+- **Rationale (The Why)**: Explain the problem, bug, limitation, or user need that prompted this change. Why does this PR exist? What happens if we don't merge it? Why this approach over alternatives?
+- **Observable Behavior (The What)**: Describe the observable outcome from the perspective of the user, caller, or consumer. What can someone do now that they couldn't before? How does system behavior change?
+- **NEVER recite code implementation details**: Never dump a line-by-line or file-by-file code recap (e.g. "added helper X, updated method Y, imported Z"). That is implementation trivia already visible in the diff. Explain behavior, not code plumbing.
+- **Verification proves behavior**: Verification exists to prove the behavior was implemented as intended. Explicitly call out tests added or updated to verify that behavior (e.g. "Added `test_name` to verify that..."), followed by the commands run and observable outcomes.
+- **Don't repeat yourself**: If the summary/observable behavior and rationale overlap, combine them as `## Summary & Rationale` instead of repeating the same context across two sections.
+- **Omit Stack Context unless stacked**: Only include `## Stack Context` when the PR is part of a multi-PR stack. Never include it for normal standalone PRs.
 ### PR Description Structure
+Every PR body uses these core sections. Each **must** be a markdown header (`##`) in the output body text. Include the HTML comments with guiding questions.
 
-Every PR body uses the same three sections regardless of size — each **must** be a markdown header (`##`) in the output body text. Include the HTML comments with guiding questions.
+**No-Repeat Rule**: If summary and rationale overlap, just use `## Summary & Rationale`. Don't repeat yourself.
 
-## Summary
-
-<!-- What changed and what observable outcome does it produce? -->
+#### Standard Layout (Default)
 
 ## Rationale
 
 <!--
-- What problem or limitation existed?
+- What problem, limitation, or user pain existed? (The Human/System Why)
 - What happens without this change?
 - Why was this solution chosen over alternatives, and what tradeoffs were accepted?
 -->
 
-## Stack Context
+## Observable Behavior
 
-<!-- Include only for stacked PRs. Describe the incremental diff from the immediate base branch. -->
+<!--
+- What observable outcome or behavior does this produce from the perspective of the user or caller?
+- Focus STRICTLY on what the system does and how behavior changes.
+- DO NOT list code-level implementation details, file-by-file changes, or repeat the diff.
+-->
+
+## Verification
+
+<!--
+- How was the behavior verified as implemented as intended?
+- List specific tests added or updated to verify behavior (e.g., "Added <test-name> to verify <behavior>").
+- What automated commands or manual checks were run, and what were the observed results?
+-->
+
+#### Overlapping Layout (When Summary & Rationale Coincide)
+
+## Summary & Rationale
+
+<!--
+- State why this change exists and what observable behavior it produces in one cohesive narrative.
+- Do NOT repeat yourself across separate headers. Focus on the why and observable behavior, never code implementation.
+-->
+
+## Verification
+
+<!--
+- How was the behavior verified as implemented as intended?
+- List specific tests added or updated to verify behavior (e.g., "Added <test-name> to verify <behavior>").
+- What automated commands or manual checks were run, and what were the observed results?
+-->
+### Stack Context (Stacked PRs ONLY)
+
+Include this section **only** if the PR is part of a PR stack (`/pr stack` or dependent branches). Omit entirely for standalone PRs:
+
+```markdown
+## Stack Context
 
 - Position: <N> of <M>
 - Base PR: #<number> or `<base-branch>` for the bottom PR
 - Depends on: #<number> or `N/A` for the bottom PR
-
-## Tests
-
-<!--
-- What tests were added or changed, and what do they cover?
-- What verification was run (test suite, lint, typecheck, build, manual checks)?
--->
-
+```
 ### Writing Standard
 
 Professional, direct, plain. No filler, no marketing, no "this PR aims to", no "please review", no AI attribution, no generated-by footers.
@@ -338,7 +377,8 @@ If your current work is getting too big:
 - Generated-by footers
 - Over-explaining small diffs
 - File-by-file changelogs unless explicitly requested
-
+- Code implementation details (internal helpers, variable names, plumbing mechanics) instead of observable behavior
+- Unnecessary `## Stack Context` on non-stacked PRs
 ---
 
 **Remember**: A 5-file PR merged today > a 50-file PR "almost done"
