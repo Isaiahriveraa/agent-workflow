@@ -9,14 +9,28 @@ Use this skill when a request contains multiple independent workstreams and Herd
 
 ## Core contract
 
-- First inspect the entire request and build a flat concern map.
+- Inspect the entire request and build a flat concern map before creating anything.
+- Run the preflight below before mutating Herdr state or dispatching agents.
 - Never silently absorb unrelated concerns into one pane.
-- Every spawned OMP agent receives a focused prompt and follows the user's requested workflow exactly.
-- Use temporary Markdown prompt files for substantial prompts. Agents read their assigned file rather than receiving a giant shell argument.
-- Monitor lifecycle state with `herdr agent list` and `herdr agent wait`; do not repeatedly read pane transcripts. Read a pane only when its status is `blocked`, `failed`, `unknown`, or a concrete diagnostic is required.
-- Preserve the user's focus with `--no-focus` unless the user explicitly requests otherwise.
+- Every child receives a focused prompt and follows the user's requested workflow exactly.
+- Use temporary Markdown prompt and report files for substantial coordination; never treat them as durable plans or public issue bodies.
+- Monitor lifecycle state with `herdr agent list` and `herdr agent wait`; do not repeatedly read pane transcripts. Read a pane only for `blocked`, `failed`, `unknown`, or a concrete diagnostic.
+- Make panes visible and ensure they are always focused; never use `--no-focus` unless explicitly requested otherwise.
 - Do not close or repurpose panes, tabs, or workspaces the orchestrator did not create.
-- The orchestrator owns layout, dependencies, status, synthesis, and final verification. Child agents own their concern's implementation.
+- The orchestrator owns layout, dependencies, status, synthesis, and final verification. Children own their concerns and their invoked skills' policy.
+
+## Preflight and modes
+
+Before creation, write a short run manifest that answers:
+
+- **Mode:** audit-only, Draft conversion, or Publication. If both audit and conversion are requested, audit must complete first; only that requested audit-completion barrier blocks conversion.
+- **Authorization:** an explicit `/to-issues` Draft invocation authorizes local Draft conversion, including for Proposed or otherwise unapproved source plans. Preserve that source status as metadata such as `needs-review` or `blocked`; source approval is not a Draft prerequisite. Separate issue-set approval and publication authorization remain required for their respective actions.
+- **Canonical sources:** list the exact source-plan paths and the source version/commit when relevant. Do not reconcile competing plans silently.
+- **Durable output root:** record the exact expected path. On reruns, use the existing repository-local root under `context/plans/<slug>/issues/`; otherwise use the documented default, normally `context/plans/<slug>/issues/`, for the active repository/workflow. Never silently remap an existing root. `/to-issues` owns issue decomposition, drafts, and manifests.
+- **Expected reports:** list every child report path and the required synthesis file, normally `team-brief.md` beside prompts and reports in the run directory.
+- **Barriers:** state dependencies, the audit-completion barrier only when an audit was requested, the report/artifact barrier, and the separate issue-set approval and publication gates.
+
+Audit work is read-only review and produces evidence for the next stage. `/to-issues` owns issue decomposition, draft content, manifests, and publication policy. Orchestration may dispatch either skill, but must not duplicate or override its policy. Publication is never implied by drafting and requires its own explicit authorization and workflow.
 
 ## Choose the layout before creating it
 
@@ -34,84 +48,46 @@ Workspace: <label>
 
 Use the smallest hierarchy that keeps the work legible:
 
-- **Workspace**: Separate a genuinely independent context, repository, project, client, or user-visible initiative. Do not create one merely to group a few panes.
-- **Tab**: Group work that shares a project context, lifecycle, dependency chain, or review audience. A tab is the default grouping boundary when multiple concerns belong to one workspace.
-- **Pane**: One independently reasoned concern, agent, service, command, or server. A pane is the default execution unit.
-- **Workspace plus tabs**: Use when there are multiple projects or contexts and each has multiple related workstreams.
-- **Tabs without a new workspace**: Use when the current workspace already has the right repository/context and the user wants separation by activity or audience.
-- **Panes in the current tab**: Use for a small number of independent concerns that benefit from immediate side-by-side visibility.
+- **Workspace:** separate a genuinely independent context, repository, project, client, or user-visible initiative.
+- **Tab:** group work sharing project context, lifecycle, dependency chain, or review audience.
+- **Pane:** one independently reasoned concern, agent, service, command, or server.
+- Use tabs without a new workspace when the current workspace already has the right context. Use current-tab panes for a small number of independent concerns.
 
 Layout heuristics:
 
 1. Minimize context switching, not pane count.
-2. Keep related concerns in one tab, but do not make a tab so dense that status becomes ambiguous.
+2. Keep related concerns in one tab without making status ambiguous.
 3. Prefer one concern per pane; combine only tightly coupled steps with one owner and one acceptance contract.
-4. Put parallel concerns at the same nesting level. Represent dependencies in the plan, not by hiding them in one pane.
-5. If the request is too large for one readable tab, split by project or audience into workspaces/tabs and show the complete tree before creation.
+4. Put parallel concerns at the same nesting level; represent dependencies in the plan.
+5. For four or more concerns, do not create one unreadable horizontal row. Group by domain across tabs or use down splits, keeping each pane large enough for its work. Use a workspace only when the contexts are genuinely independent.
 6. Name every workspace, tab, and pane with short stable kebab-case labels.
-## Pane splitting: how and when
+7. Always make newly created panes, tabs, and workspaces visible and focused (`--focus`); never use `--no-focus` unless explicitly requested.
 
-“Pane splitting” is the concrete Herdr operation for turning the chosen layout into
-side-by-side execution units. Split for independent concerns, not for every step:
+## Pane splitting and creation
 
-- Split when two concerns can start concurrently, have different acceptance evidence,
-  or need separate lifecycle/status monitoring.
-- Do not split a short sequence, tightly coupled edit, shared design decision, or
-  dependent step that cannot begin until another pane produces an artifact.
-- Keep one concern per pane. A small request may need no split at all; a large request
-  may need several panes at the same nesting level. Optimize for understandable
-  context and supervision, not maximum parallelism.
-- The orchestrator decides from the concern map. Do not ask the user to pick pane
-  count, direction, or ratio when the request and repository context make a safe
-  default clear. Ask only when alternatives have materially different user-visible
-  consequences or the operation is destructive.
+Split for independent concerns, different acceptance evidence, or separate lifecycle monitoring—not for every step. Do not split a short sequence, shared design decision, or dependent step that cannot begin until another pane produces an artifact.
 
-Use the installed CLI syntax and the returned opaque ID:
+Use the installed CLI syntax and returned opaque IDs:
 
 ```bash
 herdr pane split --current \
-  --direction right --ratio 0.5 --cwd "$PWD" --no-focus
+  --direction right --ratio 0.5 --cwd "$PWD" --focus
 ```
 
-Use `--direction down` when a horizontal split would make columns too narrow. Set a
-different ratio only when one concern clearly needs more room. The command returns
-`.result.pane.pane_id`; use that exact pane ID for the next command. Never infer it
-from pane order, and never omit `--cwd "$PWD"` when creating a sibling pane.
+Always make panes visible and keep them focused (`--focus`). Never use `--no-focus` unless explicitly instructed to do so. Use `--direction down` when horizontal columns would become too narrow, especially for four or more concerns. Set a different ratio only when one concern clearly needs more room. The command returns `.result.pane.pane_id`; use that exact ID for the next command. Never infer IDs from pane order, and never omit `--cwd "$PWD"` when creating a sibling pane.
 
-Example: a request to add an API endpoint, update its frontend, and add regression
-coverage yields this plan:
+Before each split, record the concern, owner, dependency, and acceptance evidence. Dispatch independent concerns concurrently; serialize only when a later concern consumes a finalized interface, schema, audit result, or artifact.
 
-```text
-Workspace: current
-└── Tab: endpoint-change
-    ├── Pane: api
-    ├── Pane: frontend (starts after API contract)
-    └── Pane: regression-tests
-```
+## Prompt files and dispatch
 
-Start `api` and `regression-tests` concurrently if their contracts permit it; hold
-`frontend` until the API contract is finalized. If the endpoint is trivial and the
-tests necessarily change with the implementation, keep them in one pane instead of
-manufacturing parallelism. For each split, record the concern, owner, dependency,
-and acceptance evidence before mutating Herdr state.
-
-## Planning and dispatch
-
-Before creation, list:
-
-- concern identifier and owner
-- target workspace and tab
-- dependencies, if any
-- expected output and acceptance evidence
-- explicit non-goals
-
-Create prompt files under a run-specific temporary directory, for example:
+Create a run-specific temporary directory and manifest:
 
 ```text
 /tmp/omp-orchestration/<run-id>/
+├── manifest.md
 ├── concern-a.md
 ├── concern-b.md
-└── manifest.md
+└── reports/
 ```
 
 Each concern file must contain:
@@ -133,29 +109,21 @@ You own `<concern-id>`. Stay focused on this concern.
 <start-now, concurrent, or blocked relationships>
 
 ## Acceptance
-<tests, files, runtime behavior, or report required>
+<tests, files, runtime behavior, exact report path, and handoff required>
 ```
 
-Use Herdr's IDs returned by creation commands. Never infer IDs from pane order. Preserve the caller's `PWD` with `--cwd "$PWD"` when creating a sibling layout.
-
-For each available shell pane:
+Start and prompt using returned IDs and stable names:
 
 ```bash
 herdr agent start <stable-name> --kind omp --pane <returned-pane-id>
 herdr agent prompt <stable-name> \
-  "Read /tmp/omp-orchestration/<run-id>/<stable-name>.md, then invoke the plan skill before implementation." \
+  "Read /tmp/omp-orchestration/<run-id>/<stable-name>.md, then invoke the assigned skill." \
   --wait
 ```
 
-The prompt should be short because the full contract is in the file. Dispatch independent concerns in parallel where possible. Serialize only when a later concern consumes a finalized interface, schema, or artifact.
+Prompt acceptance can briefly report stale `idle` even while startup is occurring. Confirm with a fresh `herdr agent list`; require observed `working` before treating dispatch as active. If it remains `idle`, inspect the declared handoff or targeted pane evidence rather than assuming failure. Never use prompt acceptance alone as completion evidence.
 
-For issue-oriented work, orchestration coordinates the concerns but does not replace
-`/to-issues` or publish GitHub issues. Once the approved plan is ready, `/to-issues`
-owns the durable drafts under `context/issues/<slug>/` and the parent/child manifest.
-Child prompts may name the issue concern and expected draft path, but public issue
-content must remain in the issue workflow rather than in temporary orchestration
-files.
-
+For issue-oriented work, orchestration coordinates but does not replace `/to-issues` or publish GitHub issues. Once the selected source plan is ready, `/to-issues` owns the exact durable drafts under the selected durable root recorded in preflight and the parent/child manifest. Child prompts may name a concern and expected draft path, but public issue content stays in the issue workflow. The orchestrator hands audit reports and the selected source path to `/to-issues`; it does not reinterpret them.
 
 ## Status-only supervision
 
@@ -179,50 +147,42 @@ herdr agent wait <agent-name> --until idle --timeout 120000
 
 Interpret states as follows:
 
-- `working`: execution is active; do not interrupt or read output routinely.
-- `idle` or `done`: the agent has stopped active work; inspect expected artifacts and collect its concise result.
-- `blocked`: surface the exact blocker and ask the user only if the orchestrator cannot resolve it safely.
+- `working`: active; do not interrupt or read output routinely.
+- `idle` or `done`: settled lifecycle state; collect the required report and verify artifacts.
+- `blocked`: record the exact blocker and resolve it safely or ask the user only when necessary.
+- `failed`: record failure and inspect targeted diagnostics; do not label it a timeout.
 - `unknown`: investigate with targeted pane/process inspection.
-- timeout: report that completion was not observed; do not claim success.
+- `timeout`: completion was not observed within the wait window; distinguish it from failure and do not claim success.
 
-When an agent reaches a settled state, verify its declared deliverables and run the parent-level gates. A status is evidence of lifecycle completion, not proof that the implementation is correct.
+Idle/done proves only that active work stopped. Status never proves correctness, artifact validity, tests, or approval. At settlement, verify declared deliverables and run parent-level gates.
 
-### Child completion report
+### Fixed child completion report
 
-Every child must explicitly report when its concern is finished, blocked, or failed.
-The report is a hand-back to the orchestrator, not a replacement for lifecycle state:
+Every child must provide this exact concise schema when finished, blocked, or failed, in its response or at the exact declared report path. Keep lifecycle state separate from source and issue-set status so the report can be handed to `/to-issues` without changing its meaning:
 
 ```text
 Concern: <stable concern id>
 State: done | blocked | failed
-Result: <one-sentence outcome>
+Result: <one sentence>
+Source status: approved | proposed | needs-review | blocked | none
+Issue-set status: draft | needs-review | blocked | none
 Changed paths: <paths or none>
-Verification: <commands and observed results>
+Verification: <commands and observed results, or not run with reason>
 Assumptions/risks: <none or explicit items>
+Handoff: <next agent, durable artifact path, or none>
 ```
 
-Keep that report in the agent's response when it is short. If the result or logs are
-too large for a reliable response, have the child write the complete report to a
-run-specific temporary Markdown file and reply with only its path. Read that file
-after the agent settles, verify the paths and evidence independently, and include
-the concise result in the parent synthesis. A temp report is private coordination
-state; it is not a durable plan, issue draft, or public GitHub issue body.
+If the report is too large for a reliable response, the child writes the complete report to its run-specific path and replies only with that path. After settlement, read the report and independently verify every declared path and evidence. Missing or malformed reports keep the concern unverified.
 
-For a multi-pane run, maintain a short `team-brief.md` beside the prompt and report
-files in the run-specific temporary directory. Update it as concerns settle with
-one line per concern: state, outcome, changed paths, verification, and blockers.
-Use the brief for the main pane's synthesis; keep detailed logs and child reports in
-their panes or temporary files. The brief is a coordination summary only and must
-not be mistaken for an issue draft or publication approval.
+## Artifact barrier, completion, and synthesis
 
+Do not synthesize until every required child is settled and every declared report exists and has been read. Then verify the barriers required by the selected mode: canonical source and exact durable output root always; audit completion only when an audit was requested; issue-set approval and publication authorization only for those actions. A prompt sent, an idle state, or a report alone never completes a concern.
 
-## Completion and synthesis
+For each concern, record:
 
-Do not synthesize from assumptions. For each concern, record:
-
-- final Herdr state
-- plan and implementation result
-- affected paths
+- final Herdr state and whether it timed out or failed
+- plan/implementation result
+- affected paths and exact durable handoff paths
 - verification evidence
 - unresolved risks or honest gaps
 
@@ -247,8 +207,8 @@ Then report:
 - <only real unresolved items>
 ```
 
-Never mark a concern complete because a prompt was sent. Never claim a whole layout is complete while a required concern is still working, blocked, failed, or unverified.
+Never claim the whole layout is complete while a required concern is working, blocked, failed, timed out, missing its report, or unverified. Do not claim publication from a Draft run.
 
 ## Safety and approval boundaries
 
-Proceed autonomously for ordinary layout creation, prompt-file generation, agent startup, and status polling. Ask before destructive actions, closing user-owned Herdr state, permission changes, new dependencies, or materially ambiguous layout choices with different user-visible consequences. Do not commit or open PRs unless the surrounding workflow explicitly requires it.
+Proceed autonomously for ordinary layout creation, temporary prompt/report generation, agent startup, and status polling. Ask before destructive actions, closing user-owned Herdr state, permission changes, new dependencies, or materially ambiguous layouts with different user-visible consequences. Do not commit, open PRs, create GitHub issues, or publish unless the surrounding workflow explicitly requires it and its approval gate has passed.
