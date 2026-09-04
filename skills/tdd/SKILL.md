@@ -14,6 +14,11 @@ When exploring the codebase, read the project's domain docs (`context/`, `CONTEX
 Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification — "user can checkout with valid cart" tells you exactly what capability exists — and survives refactors because it doesn't care about internal structure.
 
 See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
+### Backend vs. Frontend Tests
+
+- **Backend tests are permanent**: Durable behavioral regression coverage that verifies business logic, API contracts, data boundaries, error states, and edge cases.
+- **Frontend tests are temporary verification scaffolding**: Used during TDD to drive and prove observable UI behavior during development. Once behavior is verified, clean them up before committing unless the user explicitly asks to keep them, avoiding fragile UI maintenance overhead.
+
 
 ## Seams — where tests go
 

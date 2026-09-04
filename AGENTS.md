@@ -16,7 +16,7 @@ Whenever you add, rename, remove, or re-route a skill, update `skill-index`'s SK
 
 ## Operating Rules
 
-1. **Test-driven development (TDD) — mandatory** — No implementation without a test. Write a failing test first and watch it fail (red), then write the minimal code to make it pass (green), then refactor. Never write production code without a failing test driving it; this applies to every change, not just non-trivial ones. Keep red→green cycles small and fast. For frontend work: write frontend tests initially to verify behavior is implemented during development, then delete those frontend tests before committing changes (they exist solely to verify implementation, leaving durable regression coverage at backend/API contract boundaries). Rule 8 defines what counts as a meaningful test; skipping only happens when that analysis concludes no test would catch a regression.
+1. **Test-driven development (TDD) — mandatory** — No implementation without a test. Write a failing test first and watch it fail (red), then write the minimal code to make it pass (green), then refactor. Never write production code without a failing test driving it; this applies to every change, not just non-trivial ones. Keep red→green cycles small and fast. Tests must focus strictly on observable behavior and thoroughly cover edge cases and invariants. Backend tests are permanent: they provide durable behavioral regression coverage protecting API contracts, database integrity, error paths, and business logic. For frontend work: write frontend tests initially to drive development and verify requested behavior is implemented; before committing changes, delete those frontend tests unless the human explicitly requested to retain them (they are temporary verification scaffolding to prove behavior during development, leaving durable regression coverage at backend/API contract boundaries without ongoing frontend test maintenance). Rule 8 defines what counts as a meaningful test; skipping only happens when that analysis concludes no test would catch a regression.
 2. **Verify with lint, tests, and build** — Before reporting any work complete, run the repo's linter, its test suite (`npm test` or equivalent), and its build (`npm run build` or equivalent), and confirm all three pass. If a repo uses another toolchain (pnpm, yarn, cargo, …), use its equivalent commands. Never claim something works without running the checks that prove it.
 3. **Read before writing** — Inspect relevant code, callers, tests, configuration, docs, and scoped instructions before editing.
 4. **Define success first** — State the observable outcome and what evidence will prove it.
@@ -69,10 +69,20 @@ Whenever you add, rename, remove, or re-route a skill, update `skill-index`'s SK
 20. **Codify repeated steps** — Before re-running a multi-step operation by hand, check `scripts/` and hub commands for an existing helper. When the same operation recurs and no helper exists, offer to script it — to cut agent token spend or give the user a reusable command. Offer, don't build: only create with approval.
 21. **Ask before destructive or permission-expanding steps** — No new dependencies, destructive migrations, irreversible deletion, public contract breaks, permission expansion, or unrelated architecture changes without explicit authorization.
 
-## Human Ownership & Progressive Disclosure
+## Human Ownership & Progressive Disclosure: Architecture, Design & Behavior
 
-Communication must flow idea downward before implementation details move upward:
-1. Problem -> 2. Behavior -> 3. Why -> 4. Important Decisions -> 5. Architecture / System Picture -> 6. Edge Cases & Failures -> 7. Tradeoffs -> 8. Teach-Back -> 9. Code details on request.
+All communication between human and agent is strictly centered on **observable behavior, system architecture, interfaces, data contracts, and key decisions**. Implementation is delegated: the agent writes the cleanest, highest-standard code it can, and the human evaluates code during review gates or asks for details explicitly.
+
+Communication flows idea downward before implementation details move upward:
+1. **Problem** — What problem are we solving and why does it matter?
+2. **Observable Behavior (Primary Focus)** — Deeply clarified: what changes from the user or caller perspective, input/output contract shifts, scenarios, and before → after behavior.
+3. **The Why** — Why this approach solves the problem.
+4. **Important Decisions** — Up to 3 load-bearing decisions (Decision, Why, Alternative, Tradeoff, Future Effect).
+5. **Architecture / System Picture** — System shape, component boundaries, seams, interfaces, and data flow.
+6. **Edge Cases & Failures** — How edge cases are handled, where failure boundaries lie, error contracts, and recovery.
+7. **Tradeoffs** — What is accepted, compromised, or given up.
+8. **Teach-Back Checkpoint** — 2–4 punchy points the human can state and defend in a standup without reading the diff.
+9. **Code Details on Request** — Code details, syntax, and diffs are strictly on-demand. Zero unsolicited code chatter.
 
 ### Universal Ownership Gate
 Before completing any non-trivial task, verify:
@@ -80,17 +90,20 @@ Before completing any non-trivial task, verify:
 
 For meaningful architectural work, default to surfacing up to the 3 load-bearing decisions (Decision, Why, Alternative, Tradeoff, Future Effect) and 2–4 teach-back points. Mechanical and routine changes stay lightweight (Outcome, Verification, landmark file).
 
-Calibrate technical vocabulary and depth to `context/tutor/learner-profile.md` using the Goldilocks Rule (Current Understanding + 1). Introduce technical terms after the concept is understood.
+Calibrate technical vocabulary and depth to `context/tutor/learner-profile.md` using the Goldilocks Rule (Current Understanding + 1): balance boredom and overwhelm to keep the human in flow state. Introduce technical terms only after the concept is understood.
 
 Full mode schemas (Planning, Implementation, Research) and guidance: `references/communication.md`.
 
 ## Human in the Loop
 
-The agent owns delegated execution. The human owns intent, architecture,
-acceptance, and understanding of anything shipped.
+The agent owns delegated execution. The human owns intent, architecture, acceptance, and understanding of anything shipped.
 
+- **Focus on behavior and design**: Conversations center on desired behavior, system shapes, data contracts, and trade-offs. Implementation mechanics are autonomously handled by the agent.
+- **Autonomous coding, zero code clutter**: The agent implements to the highest engineering standards without narrating code, syntax, line numbers, or file lists unless explicitly requested.
+- **Review over narration**: Code quality is evaluated during review gates (PR and commit reviews). The human will call out defects, style issues, or regressions during review.
 - Write code a reviewer can understand once, verify, and extend locally — boring-explicit over clever compression, variation at clear boundaries.
 - Keep related behavior together and dependencies narrow; keep tests readable, deterministic, behavior-focused, and maintained with production code.
+- Clean up temporary frontend test scaffolding before committing; preserve durable backend and contract tests.
 - Update established documentation when behavior, APIs, configuration, architecture, or workflows change; review the final diff as a maintainer and remove accidental complexity before completion.
 ### Active Workflow Mode
 Generated workflow profiles take precedence over default workflow preferences only within this block and for new sessions. A profile tunes workflow only; it cannot weaken or bypass safety, correctness, verification, repository, or user-approval rules.
