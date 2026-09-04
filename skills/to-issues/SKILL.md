@@ -1,13 +1,13 @@
 ---
 name: to-issues
-description: Turn an approved repository plan into focused, reviewable implementation issues, with a separate human-approved publication path for GitHub issues.
-argument-hint: "[approved plan path, plan directory, or settled brief]"
+description: Turn a repository plan or settled brief into focused, reviewable local issue drafts, with a separate human-approved publication path for GitHub issues.
+argument-hint: "[plan path, plan directory, or settled brief]"
 shell-timeout: 20
 ---
 
 # To Issues
 
-Convert a repository-grounded, **approved plan** into a concise implementation plan reference and a set of focused issues. Each issue is sized for exactly one reviewable PR. Produce local drafts first; publish GitHub issues only in explicit publication mode after the required approvals.
+Convert one repository-grounded plan or settled brief into a concise local issue set. Each issue is sized for exactly one reviewable PR and must explain the human-level why and how so any software engineer joining the team can understand, with zero prior context, the problem, why it matters, what needs to be built, and how to verify it.
 
 This skill organizes work. It does not implement code, create branches or worktrees, deliver issues, or invent an orchestration system.
 
@@ -15,173 +15,205 @@ This skill organizes work. It does not implement code, create branches or worktr
 
 The invocation must use one of these modes:
 
-- **Draft mode (default):** read and validate the source plan, enrich incomplete issues, establish each issue's stable local draft path and plan-step identity, produce the issue set and a parent/child manifest locally, and present them for approval. Do not call GitHub issue-creation or mutation APIs.
-- **Publication mode:** only after the human explicitly requests publication of the already-reviewed draft set. Revalidate the source and draft, show the publication manifest, obtain publication approval, then create or update the mapped GitHub issues idempotently. Before publication, local draft path plus plan-step identity is the stable local identity; after publication, the GitHub issue number and URL are canonical. Publication does not start implementation or issue delivery.
+- **Draft mode (default):** an explicit invocation or request to draft authorizes local drafting. Read and reconcile the source, preserve its status and gaps, enrich only from available evidence, establish stable local draft paths and plan-step identities, write or update the issue set, manifest, review summary, and completion report, then present the result. Source-plan approval is not required merely to create local drafts. Draft mode never calls GitHub issue-creation or mutation APIs.
+- **Publication mode:** only after the human explicitly requests publication of an already-reviewed draft set. Revalidate the source and drafts, show the publication manifest, obtain separate publication approval immediately before mutation, then create or update the mapped GitHub issues idempotently. Publication does not start implementation or issue delivery.
 
-If the mode is not clear, use Draft mode and ask before any publication action.
+If the mode is not clear, use Draft mode. Never infer publication approval from an invocation, a plan approval, an issue-set review, or a prior publication request.
 
 ## When to use
 
-- An approved `/plan` artifact needs to become a set of implementation issues.
-- A settled brief already contains enough repository evidence, behavior, scope, dependencies, and verification to be drafted into issues.
-- An existing draft issue set needs review, correction, enrichment, or explicit publication.
+- A plan or settled brief needs to become local implementation-issue drafts.
+- An existing local issue set needs review, correction, enrichment, or rerun.
+- An already-reviewed local issue set is explicitly ready for GitHub publication.
 
-Do not use this skill to clarify an unresolved product decision, research an ungrounded idea, or implement an issue.
+Do not use this skill to clarify an unresolved product decision, research an ungrounded idea, or implement an issue. Route unresolved decisions to `/issue-discovery` when appropriate and return plan-level redesign, decomposition, dependency, or behavior changes to `/plan`.
 
-## Required input and approval gate
+## Required input and authorization
 
-The normal source is a plan produced by `/plan`, including its `00-index.md` and referenced step files. The source must be approved by the human before issue drafting begins. “Approved” means an explicit approval in the current conversation or an unambiguous approval record attached to the plan. A path alone is not approval.
+The normal source is a plan produced by `/plan`, including its `00-index.md` and referenced step files. A settled brief may be used when it contains the same evidence. A path alone is not source approval, but an explicit invocation/request to draft is sufficient authorization for Draft mode.
 
-Before drafting, verify that the source contains, or explicitly records the absence of:
+Before drafting, read the complete source and referenced artifacts. Check whether it contains, or explicitly records the absence of:
 
-- goal, current behavior, target behavior, scope and non-goals;
+- goal, current behavior, target behavior, scope, and non-goals;
 - repository evidence and assumptions;
 - decisions and tradeoffs;
 - work items with acceptance criteria, verification, ownership, and dependencies;
-- work position: `Start now`, `Concurrent`, or `Blocked`, including the blocker and reason;
-- a plan path or durable source identifier.
+- work position: `Start now`, `Concurrent`, or `Blocked`, including blocker and reason;
+- a durable source path or plan-step identity.
 
-If the plan is missing approval, materially unresolved, stale, contradictory, or not readable, stop and report the exact gap. Do not silently turn an unresolved plan into issues. Unresolved design, behavior, dependency, or decomposition decisions block drafting and must return to `/plan` (or `/issue-discovery` when the open item is a settled-decision issue). If the human asks to continue, record the assumption and keep the affected issue in a blocked or review-needed state rather than pretending it is ready.
+If the source is Proposed, unapproved, materially unresolved, stale, contradictory, incomplete, or not readable, do not stop merely because it is unsuitable for a ready delivery issue. Draft what can be grounded and record the exact gap in the affected issue metadata, manifest, review summary, and completion report. Mark affected items `needs-review` or `blocked`; do not fabricate acceptance, verification, ownership, implementation details, or decisions. A missing or unreadable source may yield only a review/blocked report and no invented issue set.
 
-A pasted brief may be used only when it is settled enough to satisfy the same contract. Cite concrete repository paths and line ranges when available; never invent files, symbols, commands, or evidence.
+Source-plan approval gaps are metadata for Draft mode, not a hard draft blocker. Issue-set approval is still required before publication, and publication always requires a separate explicit approval immediately before GitHub mutation.
 
 ## Relationship to sibling skills
 
-- **`/plan` owns** intent clarification, repository and external research, architecture and design decisions, decomposition, dependency reasoning, and the canonical plan. If any of those are materially open, return to `/plan`.
-- **`/to-issues` owns** compiling that one approved canonical plan into complete, behavior-first, public-language delivery-issue drafts, completeness checks, stable local identities and relationships, review/enrichment, and optional publication gating. It does not replace the plan, redesign it, or change its decisions without approval.
-- **`/issue-discovery` owns** publishing a settled ambiguity as a decision issue. It is not a substitute for `/plan`; route unresolved behavior, research, or decomposition there first. A decision issue may be a dependency for an issue, but must not be disguised as an implementation issue.
-- **`/issue-delivery` owns** taking one ready published issue through an isolated worktree, implementation, verification, review, commits, and a human-approved draft PR. One issue maps to one PR; invoke delivery separately for each ready issue.
+- **`/plan` owns** intent clarification, repository and external research, architecture and design decisions, decomposition, dependency reasoning, and the canonical plan. Any proposed change to those decisions returns to `/plan`.
+- **`/to-issues` owns** compiling the source into complete, behavior-first, public-language local issue drafts, completeness checks, stable local identities and relationships, review/enrichment, rerun safety, and optional publication gating. It does not replace the plan or silently change it.
+- **`/issue-discovery` owns** publishing a settled ambiguity as a decision issue. A decision issue may be a dependency, but must not be disguised as an implementation issue.
+- **`/issue-delivery` owns** taking one ready published issue through an isolated worktree, implementation, verification, review, commits, and a human-approved draft PR. One issue maps to one PR.
+
+### Two-phase audit and conversion
+
+Treat drafting as two distinct phases:
+
+1. **Audit:** reconcile the source and existing local drafts; identify approval/status gaps, stale evidence, collisions, missing fields, contradictory decisions, circular dependencies, and unresolved assumptions.
+2. **Conversion:** write or update only the concerns already defined by the source. Preserve source identities, decisions, acceptance, verification, dependencies, and work positions. Do not use conversion to repair a plan-level problem by inventing a decomposition or redesign.
+
+The audit may mark an issue `needs-review` or `blocked`; that status does not prevent honest local drafting. Any proposed plan-level correction is reported as a return-to-`/plan` item.
 
 ### Input/output contract
 
-**Input:** one explicitly approved, canonical `/plan` artifact (including its index and referenced artifacts), or a settled brief that satisfies the same evidence contract. **Output:** a local, reviewable issue set in concern order, with each issue identified before publication by its stable local draft path and plan-step identity, preserved acceptance, verification, dependency reasons, work positions and reasons, plus a parent/child manifest and review summary. After publication, the GitHub issue number and URL are the canonical identity. Any proposed redesign, decomposition, dependency change, or other plan-level correction is a return-to-`/plan` item, not issue enrichment.
+**Input:** one plan or settled brief plus any existing local draft set. **Output:** a local, reviewable issue set in source concern order, each identified before publication by a stable local draft path and plan-step identity, with preserved acceptance, verification, dependency reasons, work positions and reasons, plus a parent/child manifest, review summary, and completion report. After publication, the GitHub issue number and URL are canonical. Draft mode makes no GitHub mutations.
 
 ## Workflow
 
-### 1. Read and reconcile the source
+### 1. Audit and reconcile the source
 
-Read the complete plan and referenced artifacts. This is a conversion and completeness pass, not a second planning or design stage. Do not repeat repository or external research; only check current evidence for staleness or contradictions when needed to draft safely. Preserve each plan concern or step identity and its mapping to the stable local draft path, along with decisions, acceptance, verification, dependency reasons, and work positions. Identify stale evidence, collisions, missing acceptance or verification, circular dependencies, and unresolved assumptions.
+Read the complete source and referenced artifacts, then inspect any existing draft artifacts under the initiative's durable issue path. This is a conversion and completeness pass, not a second planning or design stage. Check current evidence only when needed to identify staleness or contradiction safely. Preserve each concern or step identity and its mapping to the local draft path.
 
-Do not recast `Start now`, `Concurrent`, or `Blocked` as an invented execution schedule. Preserve those labels and their reasons verbatim enough to remain meaningful:
+Do not recast work positions as an invented execution schedule:
 
 - **Start now:** no declared blocker; work may begin once its issue is approved and published.
-- **Concurrent:** independent of the named sibling(s); state any shared-file or shared-contract collision, which makes work sequential instead.
+- **Concurrent:** independent of the named sibling(s); state any shared-file or shared-contract collision, which may require sequential implementation.
 - **Blocked:** cannot begin or cannot be verified until the named dependency or decision is resolved; state the reason and what unblocks it.
 
 ### 2. Build and enrich the issue set
 
-Create one issue for each independently understandable, implementable, testable, reviewable concern already defined by the approved plan. Do not invent a new decomposition, split or merge concerns, reorder work, or alter dependencies to make drafting easier; flag any such need and return it to `/plan`. Prefer a behavior-complete vertical slice only when that preserves the plan's concern boundary. Dependencies must remain acyclic and retain their reasons.
+Create one issue for each independently understandable, implementable, testable, reviewable concern already defined by the source. Do not invent a new decomposition, split or merge concerns, reorder work, or alter dependencies to make drafting easier. Dependencies must remain acyclic and retain their reasons.
 
-Each issue must preserve its source plan concern or step identity and receive a stable local draft path under the issue area before publication. Record the path and plan-step identity together as the local identity; keep both stable across edits and reruns. Do not require or invent a synthetic visible issue ID. After publication, use the GitHub issue number and URL as the canonical identity. If an existing draft has conflicting paths or plan-step mappings, flag the collision rather than silently renaming or remapping it.
+Translate each technical plan concept into a simple explanation of the main idea, the human-level problem and impact, and the technical work needed to solve it. Write so a SWE with zero prior context can understand the issue immediately. Each issue preserves exactly one source concern or step identity and receives a stable local draft path. Do not require or invent a synthetic visible issue ID. Enrich incomplete issues only with evidence already present or narrowly scoped staleness checks. If safe enrichment is impossible, retain the issue as `needs-review` or `blocked` and state the exact gap.
 
-Enrich incomplete issues only with evidence already present in the approved plan or with narrowly scoped checks for staleness needed for safe drafting. An issue is incomplete when it lacks behavior, scope, non-goals, binary acceptance, exact verification, ownership, dependency reason, plan reference, or work position. Preserve the plan's acceptance, verification, dependencies and positions; do not rewrite them as design choices. Mark assumptions and unresolved questions. If enrichment cannot make an issue safe to deliver, leave it `Review needed` or `Blocked`; do not fabricate acceptance criteria, test commands, ownership, or implementation details. Present every material enrichment for human review.
+### 3. Draft durable local artifacts
 
-### 3. Draft the local artifacts
+In Draft mode, first select the initiative's durable issue root during preflight:
 
-In Draft mode, write or update local Markdown artifacts under `context/issues/<slug>/`, where `<slug>` names the approved initiative (for example, `context/issues/events-redesign/`). Keep the approved source plan under `context/plans/<slug>/`. Do not create GitHub issues. The draft set must include:
+1. If an existing draft manifest or issue set identifies a repository-local root, use that exact root on every rerun. For example, `context/plans/<slug>/issues/` is valid when that is the repository's established convention.
+2. Otherwise use the repository's documented default issue root. Do not invent a new root, make `context/issues/<slug>/` absolute, or silently relocate an existing draft set. If no documented default is discoverable, record the missing convention and produce a review/blocked report rather than guessing.
+3. Record the selected root, how it was established, source path, and rerun decision in preflight metadata and in the manifest.
 
-Use stable, readable filenames within that slug directory, for example
-`001-parent.md`, `002-api-contract.md`, and `003-frontend.md`. The numeric prefix
-is local ordering only, not a public issue ID; the plan-step identity and later
-GitHub issue number remain the authoritative mappings. Keep all issues for the
-initiative in the slug directory rather than creating an extra directory for each
-concern unless a repository-specific convention requires it.
+The selected root must be one durable directory for the initiative. Do not create GitHub issues, README/index changes, tests, branches, worktrees, or implementation artifacts.
 
-1. the issue documents or a clearly delimited issue-set document;
-2. a parent/child issue manifest; and
-3. a review summary listing changed enrichments, assumptions, collisions, missing evidence, and publication readiness.
+Keep all initiative issues in the selected root. Use stable readable filenames such as `001-parent.md`, `002-api-contract.md`, and `003-frontend.md`. Numeric prefixes are local ordering only, not public issue IDs. The plan-step identity plus local draft path is the stable pre-publication identity.
 
-Use the repository's established plan location and naming conventions. Do not create README/index changes or tests merely to assert this documentation contract.
+Explain the main idea plainly in every draft before adding detail: what is changing, who or what it helps, and the outcome. Then describe the human-level why and the technical how using standard SWE terms and concrete behavior. The draft set must include:
 
-The manifest must be stable and machine-readable enough for a human to audit, while remaining plain Markdown. For each issue record:
+1. issue documents or one clearly delimited issue-set document;
+2. a parent/child manifest;
+3. a review summary listing audit findings, enrichments, assumptions, collisions, missing evidence, selected root, and publication readiness; and
+4. a completion report at `<selected-root>/completion-report.md` recording source, selected root, preflight decision, artifacts examined, files created or updated, statuses, unresolved concerns, and whether any GitHub mutation occurred.
 
-- source plan concern or step identity, title, and stable local draft path (the pre-publication local identity);
+When orchestration supplies fixed completion-report fields, the completion report must contain every such field. If those fields do not belong in the public issue artifacts, write a companion report at `<selected-root>/orchestration-completion-report.md`, link it from the manifest and review summary, and still record the explicit completion-report path in preflight metadata. A report is not complete merely because the issue files exist.
+
+Reruns are idempotent: re-read the existing manifest and completion report first, reuse the recorded selected root, and match by the stable local draft path and plan-step identity. Update existing artifacts in place and do not create duplicate parent/child drafts or a second issue root. Never silently rename, relocate, or remap a conflicting existing path or identity; record the collision as `needs-review`, preserve the original root, and stop conversion for that conflicting item. Preserve manually added review notes unless the source explicitly supersedes them.
+
+The manifest remains plain Markdown but must be stable and machine-readable enough for audit. For each issue record:
+
+- source plan concern or step identity, title, and stable local draft path;
 - parent local draft path or `none`, child local draft paths, and dependency local draft paths with reasons;
-- preserved work position (`Start now`, `Concurrent`, or `Blocked`) and blocker reason;
+- preserved work position and blocker reason;
 - publication state: `draft`, `approved`, `published`, `existing`, `needs-review`, or `blocked`;
-- after publication, the canonical GitHub issue number and URL, or `unpublished` before publication;
+- canonical GitHub issue number and URL after publication, or `unpublished` before publication;
+- source approval/status gap, if any;
+- selected durable issue root;
+- completion-report path, including any orchestration companion report; and
 - plan reference and last-reviewed source revision/date.
 
-The parent is a concise umbrella issue that links to the approved plan and all child issues. Before publication, local draft paths and plan-step identities are used for these relationships; after issue URLs exist, convert those references to GitHub issue links and use issue numbers in dependency text. Child issues link back to the parent and to relevant siblings/dependencies. Do not imply that the parent is itself a delivery issue unless it owns a single concern. Do not create child issues for unresolved decisions; route those to `/issue-discovery` when appropriate.
 
-### 4. Use the issue format
+The parent is a concise umbrella issue linking to the source plan and all child drafts. Before publication, use local paths and plan-step identities. After publication, convert relationships to reciprocal GitHub links and `#number` references. Do not imply that the parent is a delivery issue unless it owns a single concern. Do not create child issues for unresolved decisions.
 
-Each issue must stand alone and use this shape:
+### 4. Issue format
+
+All issue drafts must follow this exact section structure:
 
 ```markdown
-# Focused outcome
+# <Action-oriented descriptive title in plain English>
 
 <!-- Local draft metadata; omit this block from the published issue body. -->
 **Plan-step identity:** <source plan step or concern>
-**Local draft path:** <durable path under `context/issues/<slug>/`>
+**Local draft path:** <path under the selected durable issue root>
 
-## Why
+## Main idea
+1–3 plain-English sentences summarizing the change, who/what it is for, and the outcome. Any engineer reading this should instantly grasp the core concept in 5 seconds without prior context.
 
-Why this outcome matters, grounded in the approved plan.
+## Problem & Context (The Human Why)
+Explain the background and the pain point simply:
+- What is broken, missing, difficult, or unhandled today?
+- Why does this matter to users, developers, or system reliability?
+- Ground in real software/user impact, never in internal planning steps or agent meta-process.
 
-## Target behavior
-Observable behavior before/after; include user or system contract.
+## Proposed Solution & What is Needed (The How)
+Explain simply what needs to be built or changed:
+- High-level concept and data/control flow before/after.
+- Concrete technical changes required (e.g. database schema changes, new endpoints, UI components, background jobs).
+- Clear, step-by-step technical guidance in standard software engineering terms.
 
-## Scope
-What this issue owns, including relevant files/modules when verified.
-
-## Out of scope
-Explicit non-goals and neighboring work left to other issues.
+## Scope & Files
+- **In scope:** Specific files, modules, endpoints, or components this issue owns.
+- **Out of scope (non-goals):** Explicit boundaries and neighboring work left to subsequent issues.
 
 ## Acceptance criteria
-Binary, behavior-first criteria. Include errors, boundaries, compatibility, and data/security constraints where relevant.
+Concrete, observable, testable outcomes:
+- [ ] <Observable behavior 1: given X, when Y, then Z>
+- [ ] <Observable behavior 2: error/boundary handling>
+- [ ] <Observable behavior 3: backward compatibility or data integrity>
 
-## Verification
-Exact commands or reproducible checks, expected results, and any unavailable proof.
+## How to verify
+Exact, reproducible steps and commands any SWE can run locally:
+1. <Setup or migration step>
+2. <Command / curl / test execution with expected output>
+3. <Teardown or reversal check if applicable>
 
-## Dependencies and position
-- Depends on: <local draft path and plan-step identity, or none> — reason
-- Blocks: <local draft path and plan-step identity, or none> — reason
-- Position: <Start now | Concurrent | Blocked> — reason
-
-## Likely ownership
-Files/modules and shared-contract collision risk, based on evidence.
+## Dependencies & Sequencing
+- **Depends on:** <prerequisite issue or none> — explain why it is needed before starting
+- **Blocks / Unblocks:** <subsequent issue or none> — explain what this enables
+- **Position:** <Start now | Concurrent | Blocked> — reason
 
 ## Plan reference
-<durable local plan path and section>
+<durable source path and section>
 ```
 
-### 5. Public-language rules
+### 5. Zero-context clarity and language rules
 
-Issue bodies are public project records. Write for maintainers and contributors, not for this assistant or an internal workflow. Use plain, specific language and technical domain terms only when they help implementation. Do not include prompts, agent names, model/tool instructions, hidden paths, internal routing vocabulary, orchestration machinery, worker/fleet terminology, waves, shards, queues, schedules, or private conversation context.
+Apply the **Zero-Context SWE Principle**: any SWE on the team with no knowledge of prior discussions or plans must immediately understand the problem, why it matters, what is needed, and how to verify it from the issue alone.
 
-Keep implementation detail that is necessary for correctness, but describe it as repository behavior, constraints, interfaces, risks, and verification. Never put YAML manifests, execution graphs, batch instructions, or “run these agents” directions in public issue bodies. One issue remains one concern and one PR even when the manifest records relationships.
+Issue narratives must use plain English, active voice, and standard software engineering terms such as endpoints, database tables, components, props, hooks, services, functions, tests, CLI flags, and schemas. Explain the main idea before implementation detail, and define unavoidable specialized terms in context.
+
+Strictly prohibit agent and process jargon in issue narratives. Do not mention agents, subagents, orchestrators, prompt files, fleets, workers, dispatch, waves, shards, plan indices, reconciliation passes, durable roots, preflight checks, manifests, or internal step IDs. Keep plan-step identity and local draft path only in the dedicated metadata comment at the top. Never include private planning context, execution instructions, YAML manifests, execution graphs, batch instructions, or directions to run agents in the published body. One issue remains one concern and one PR even when local metadata records relationships.
 
 ### 6. Review and approval gates
 
-Before presenting a draft as ready, perform a structural review:
+Before presenting drafts, verify:
 
-- every issue maps to exactly one approved plan concern or step, with its local draft path and plan-step identity preserved;
-- every issue has one concern, one PR scope, acceptance, verification, ownership, and a plan reference;
-- local draft paths and plan-step identities are unique, stable, and consistently used; parent/child and dependency links are reciprocal and acyclic, with dependency reasons preserved;
-- `Start now`/`Concurrent`/`Blocked` positions and reasons are preserved;
-- public bodies contain no internal orchestration language;
-- incomplete, stale, conflicting, or assumption-dependent issues are clearly marked;
-- no issue introduces a plan-level redesign, decomposition, dependency, or behavior decision; such changes are returned to `/plan`.
+- every issue maps to exactly one source concern or step, with stable path and identity;
+- every issue has one concern, one PR scope, acceptance, verification, ownership, and source reference, or is clearly marked `needs-review`/`blocked`;
+- local paths and identities are unique, stable, and consistently used;
+- parent/child and dependency links are reciprocal and acyclic, with reasons preserved;
+- work positions and reasons are preserved;
+- the **Zero-Context SWE Readability Gate** passes: an engineer with no prior discussions or plans can understand the main idea, human-level why, technical how, expected outcome, and verification steps from the issue alone;
+- public bodies contain no agent or process jargon or other internal workflow language;
+- source gaps, stale evidence, contradictions, and assumptions are explicit; and
+- no issue introduces a plan-level redesign, decomposition, dependency, or behavior decision.
 
-Then present the plan reference, issue list, manifest, enrichments, and unresolved assumptions. **Issue-set approval is required before publication.** Approval to draft is not approval to publish. In Publication mode, present the exact issue actions (parent create/update, each child create/update, labels if any, and links), then obtain a separate explicit **publication approval** immediately before mutation. If approval is withdrawn or scope changes, return to Draft mode.
+Present the source reference, issue list, manifest, review summary, completion report, enrichments, and unresolved assumptions. **Issue-set approval is required before publication.** Draft authorization is not issue-set approval, and issue-set approval is not publication approval. In Publication mode, present exact create/update actions and obtain separate explicit publication approval immediately before mutation. If approval is withdrawn or scope changes, return to Draft mode.
+
 
 ### 7. Publish idempotently (Publication mode only)
 
-Before mutation, re-read the approved plan and draft manifest and verify the working repository/repository identity. For each draft, first use the manifest's recorded GitHub issue number/URL when present. For an unpublished draft, search for an existing issue using only an exact, approved title and plan reference (or an established repository-native field); accept a match only when it is unique and materially consistent with the local draft. Do not require or add a synthetic visible identifier. If matches disagree, duplicates exist, or an existing issue has changed materially, stop and ask for reconciliation; never create a second issue automatically.
+Before mutation, re-read the source and draft manifest and verify the repository identity. Use recorded issue numbers/URLs first. For an unpublished draft, search using only an exact approved title and source reference or an established repository-native field; accept a match only when it is unique and materially consistent. If matches disagree, duplicates exist, or an issue changed materially, stop for reconciliation.
 
-Create or update only the approved parent and children. Preserve existing issue discussion and unrelated labels/body content; make the smallest safe update. Once issue URLs exist, replace local draft-path/plan-step dependency references with reciprocal GitHub issue links and `#number` references; do not publish unresolved local references as if they were canonical. Record issue numbers and URLs back in the local manifest only after successful responses, making them the canonical identities thereafter. A partial failure leaves completed mappings intact, marks remaining entries `needs-review`, and is safe to resume: re-check titles, plan references, and recorded mappings before retrying rather than retrying blindly. Never publish an issue marked `needs-review` or `blocked` without explicit approval of that exception.
+Create or update only explicitly approved parent and children. Preserve existing discussion and unrelated labels/body content; make the smallest safe update. Never publish `needs-review` or `blocked` drafts without explicit approval of that exception. Once URLs exist, replace local relationship references with reciprocal GitHub links and `#number` references. Record mappings locally only after successful responses. A partial failure preserves completed mappings, marks remaining entries `needs-review`, and is safe to resume after rechecking mappings and titles.
 
-Publication creates issues only. It does not create branches, worktrees, PRs, assignments, implementation commits, or delivery orchestration. After publication, tell the human which issues are ready, concurrent, or blocked and point to `/issue-delivery` for one issue at a time.
+Publication creates issues only. It does not create branches, worktrees, PRs, assignments, commits, or delivery orchestration. After publication, report which issues are ready, concurrent, or blocked and point to `/issue-delivery` for one issue at a time.
 
 ## Done when
 
-- An approved plan was consumed, with source gaps and assumptions reported.
-- Every issue has a stable local draft path and plan-step identity before publication, and a canonical GitHub issue number/URL after publication, plus one-PR scope, public-language body, binary acceptance, exact verification, ownership, plan reference, and explicit dependency/position.
-- Parent/child and dependency relationships are represented in a local manifest before publication and become reciprocal GitHub links with `#number` references after publication.
-- Incomplete work is enriched from evidence or clearly marked for review/blocking.
+- Every drafted issue explains the main idea, the human-level why, and the technical how in simple standard SWE terms understandable without prior context.
+- An explicit invocation/request authorized Draft mode and local artifacts were produced or an exact source-gap report was recorded.
+- Every drafted issue has a stable local path and plan-step identity, one-PR scope, public-language body, binary acceptance or an explicit review/block status, verification or an explicit proof gap, ownership, source reference, and dependency/position.
+- Parent/child and dependency relationships are represented in the local manifest before publication and become reciprocal GitHub links with `#number` references after publication.
+- Reruns update existing local drafts by stable identity without duplicates or silent remapping.
 - Draft mode made no GitHub mutations.
-- Publication, if requested, had separate issue-set and publication approvals and used idempotent existing-issue safeguards.
+- Publication, if requested, had separate issue-set and immediate publication approvals and used idempotent existing-issue safeguards.
 - No implementation, branch/worktree, PR, README/index, test, or orchestration machinery was created by this skill.
 
-Report the changed sections/artifacts and unresolved assumptions in the final response. Do not claim publication, verification, or approval that did not occur.
+Report the exact changed artifacts, source gaps, unresolved assumptions, statuses, and completion-report path. Do not claim publication, verification, or approval that did not occur.
