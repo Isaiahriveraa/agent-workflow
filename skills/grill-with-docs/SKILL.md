@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: A relentless interview to sharpen a plan or design, which also creates docs (ADRs and glossary) in the worktree context directory as we go.
+description: An artifact-agnostic architecture-and-behavior interview for plans, issue drafts, design briefs, RFCs, tickets, and ideas, creating glossary and ADR records in the worktree context directory.
 disable-model-invocation: true
 ---
 
@@ -8,8 +8,8 @@ Run a relentless grilling session. Delegate the domain modeling (glossary, ADRs,
 
 ## Document style: terminal first
 
-Every plan, grill transcript, glossary entry, and ADR must be comfortable to
-read in a terminal. Treat plain text as the source of truth; do not use
+Every artifact, grill transcript, glossary entry, and ADR must be comfortable
+to read in a terminal. Treat plain text as the source of truth; do not use
 Mermaid, HTML, callout syntax, or layout that depends on a graphical renderer.
 
 - Prefer short headings, numbered sections, and bullets over dense prose.
@@ -26,15 +26,31 @@ Mermaid, HTML, callout syntax, or layout that depends on a graphical renderer.
 Recommended flow shape:
 
 ```text
-[Decision] -> [Plan update] -> [Glossary / ADR] -> [Q&A transcript]
+[Decision] -> [Artifact update] -> [Glossary / ADR] -> [Q&A transcript]
 ```
 
-This changes presentation only. The interview remains exhaustive, and the
-plan remains the source of truth for resolved decisions.
+This changes presentation only. The active artifact remains the source of truth
+for resolved decisions.
 
-## The interview
+## Artifact-agnostic interview
 
-Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one.
+First identify the artifact under discussion, its authority and editability,
+the goal, and the relevant repository context. Then hold a natural
+conversation about the artifact, not a checklist. Ask one question at a time
+and adapt the next question to the answer.
+
+Walk the decision map as far as the artifact requires:
+
+1. Problem and intended outcome.
+2. Observable behavior and acceptance boundaries.
+3. Architecture and system shape.
+4. Interfaces, data contracts, schemas, migrations, and compatibility.
+5. Edge cases, failures, and recovery.
+6. Trade-offs and long-term effects.
+7. Teach-back: have the user restate the load-bearing decisions.
+
+Skip branches that repository evidence or earlier decisions already settle,
+but do not skip unresolved dependencies or failure behavior.
 
 ### How to ask
 
@@ -45,40 +61,30 @@ Interview me relentlessly about every aspect of this plan until we reach a share
 
 ### How to recommend (teach, don't just pick)
 
-Before asking each question, give your recommendation as a teaching answer:
+Before each real decision question, teach before you ask:
 
-Lead every recommendation with the verdict in ONE plain line; rationale
-comes after. The user must be able to stop reading after that line and
-still decide.
+1. Lead with a plain one-line recommendation.
+2. Name the realistic options and explain what each buys, costs, and changes
+   long term.
+3. Give the specific rationale for this artifact, repository, constraints, and
+   goal.
+4. End with the decision question stated plainly.
 
-1. Name the realistic options you weighed.
-2. Walk the trade-offs - what each option buys, what it costs, and the
-   long-term consequences (maintenance, complexity, scalability).
-3. Verdict plus WHY it fits THIS project - cite our actual codebase,
-   constraints, and goals.
-4. End with the question itself, stated plainly.
-
-By the end of the session I should be able to explain every decision myself,
-without reading the code.
-
-If a question can be answered by exploring the codebase, explore the codebase instead.
+The user must be able to explain every resolved decision without reading code.
+If repository exploration can answer a question, explore instead.
 
 ## If I ask YOU a question (clarification, not an answer)
 
 When my reply is itself a question - "what does X mean?", "why option A over
-option B?", "what are the trade-offs?" - that is a CLARIFICATION REQUEST, not
-an answer:
+option B?", or "what are the trade-offs?" - it is a clarification request,
+not an answer:
 
-- Do NOT log it as a Q&A pair. Do NOT edit the plan. Do NOT create glossary
-  or ADR entries. Do NOT mark anything resolved or delegated.
-- Do NOT advance to the next question.
-- Instead: answer in the "Explaining on follow-ups" style below -- define
-  the term, compare the options, but lead with the one-liner and keep
-  deeper mechanics available on request.
-- Then RE-ASK the original question (restate it more clearly if that helps)
-  and wait again.
+- Do not log a Q&A pair, edit the artifact, or create glossary/ADR entries.
+- Do not advance or mark anything resolved.
+- Explain using the "Explaining on follow-ups" rules, then re-ask the original
+  question plainly and wait.
 
-A question round only closes when I give a position, choice, or constraint.
+A round closes only when I give a position, choice, or constraint.
 
 ## Explaining on follow-ups
 
@@ -106,35 +112,44 @@ question and clarification answer.
 
 ## After each answer
 
-Only run this section when my reply actually ANSWERS the open question (a
-position, choice, or constraint). If my reply was instead itself a question,
-stop and follow "If I ask YOU a question" above before doing any of these
-steps.
+Only run this section when my reply actually answers the open question with a
+position, choice, or constraint. If it is a clarification request, follow the
+section above instead.
 
-1. **Modify the plan artifact** being grilled in-place — edit the plan itself to reflect the resolved decision (updated terminology, corrected assumptions, clarified scope, reordered priorities). The artifact IS the source of truth; don't let it go stale while side-files accumulate.
+1. **Update the writable artifact in place** with the resolved decision:
+   terminology, assumptions, scope, priorities, interfaces, or failure
+   behavior. If the artifact is read-only or external, state that and record
+   the decision in the local transcript instead; never claim it was edited.
+   The artifact remains the source of truth whenever it is writable.
 
-2. **If a term was resolved** or an ADR criterion was met, use `/domain-modeling` to capture it. It handles glossary updates and ADR creation in the worktree context directory with the right format and location.
+2. **If a term was resolved** or an ADR criterion was met, use
+   `/domain-modeling` to capture it. It handles glossary updates and ADR
+   creation in the worktree context directory with the right format and
+   location.
 
-3. **Log the Q&A pair** to the worktree context directory:
+3. **Append the Q&A pair immediately** to one worktree context transcript. On
+   the first answer, create the session transcript if needed:
    ```bash
    python3 ~/.agents/scripts/new-artifact.py \
      --type grill \
      --topic "<session topic>"
    ```
-   Fill in the generated file with the Q&A transcript.
-
-Do NOT batch these writes. Write immediately after each question-answer round.
+   Keep that generated path for the session and append later rounds to the
+   same file. Do not create a new transcript for every answer, and do not
+   batch these writes.
 
 ## Location convention
 
-### Plans, grill, glossary
+### Artifacts, grill, glossary
 Land in the current worktree:
 
 ```
 {git-root}/context/
-├── glossary/glossary.md       ← domain glossary (via domain-modeling)
-├── grill/                     ← Q&A transcripts
-└── plans/                     ← plan artifacts (modified in-place)
+├── designs/                  ← design artifacts, when locally created
+├── issues/                   ← issue artifacts or drafts, when local
+├── glossary/glossary.md      ← domain glossary (via domain-modeling)
+├── grill/                    ← Q&A transcripts
+└── plans/                    ← plan artifacts, when local
 ```
 
 ### ADRs
