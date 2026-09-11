@@ -38,18 +38,7 @@ or
 
 /design → /plan → /implement
 ```
-
-Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition.
-
-The supporting skills below remain available for focused needs, but they do not replace this delivery path.
-
-### Pipeline stages
-
-| Stage | Skill | What it produces | Where |
-|-------|-------|------------------|-------|
-| Design | `/design` | Evidence-backed design: intent, behavior, scope, decisions, and constraints | `context/designs/` |
-| Plan | `/plan` | Repository-grounded execution plan with concerns, dependencies, parallelism, and verification | `context/plans/<slug>/` |
-| Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
+Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition. The supporting skills below remain available for focused needs, but they do not replace this delivery path. ### Pipeline stages | Stage | Skill | What it produces | Where | |-------|-------|------------------|-------| | Design | `/design` | Evidence-backed design: intent, behavior, scope, decisions, and constraints | `context/designs/` | | Plan | `/plan` | Repository-grounded execution plan with concerns, dependencies, parallelism, and verification | `context/plans/<slug>/` | | Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
 | Approval | Human review | Approved ticket set ready for delivery | Conversation or plan record |
 | Delivery | `issue-delivery` | One published issue delivered through an isolated worktree to a verified draft PR | GitHub issue number → draft PR |
 
@@ -109,7 +98,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `to-spec/` | Conversation → spec issue |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Background-agent research → single cited Markdown file |
-| `issue-delivery/` | Receive one published, ready child issue (or explicitly single-concern issue), verify dependencies and readiness, and deliver it through an isolated sibling worktree to a verified draft PR; route incomplete issues back to `to-issues` for enrichment; does not create issues or schedule batches |
+| `issue-delivery/` | Terminal follow-up to `to-issues`: takes one published issue number (or URL), reads the issue and its `## Plan reference`, and delivers it through an isolated worktree, TDD, quality code, review, atomic commits, and a human-approved draft PR; one issue = one branch = one PR; does not create issues or schedule batches |
 | `implement/` | Orchestrator: tdd → code-review → commit |
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
@@ -117,8 +106,8 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `code-review/` | Adversarial review — three reviewers (behavioral, contract/spec, maintainability), one adjudicator |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
-| `commit/` | Normal `commit` invocation runs the pre-commit code-review gate; `commit --no` or `commit --no-review` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files. |
-| `pr/` | PR discipline (mandatory before any PR) |
+| `commit/` | Normal `commit` invocation runs the pre-commit code-review gate; `commit --no` or `commit --no-review` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition. |
+| `pr/` | Senior developer PR workflow: auto-detects single PR, stacked PRs (gh stack), or parallel worktrees; generates review-ready descriptions focused on rationale and behavior |
 | `handoff/` | Session handoff documents |
 | `ch/` | Handoff shorthand — /ch as a skill |
 | `recall/` | Resume from handoff |
