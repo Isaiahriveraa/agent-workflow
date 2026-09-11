@@ -12,7 +12,7 @@ This skill is a **compatibility workflow** for publishing decision GitHub issues
 ## What `/plan` owns
 
 - **Behavior clarification** — pinning down what "done" means.
-- **Repository research** — grounding claims in file:line evidence.
+- **Repository research** — grounding claims in concrete repository and architectural evidence.
 - **Decomposition** — breaking work into concerns, dependencies, and steps.
 
 If the idea still needs any of the above, run `/plan` first. This skill only publishes the resulting decision issues.

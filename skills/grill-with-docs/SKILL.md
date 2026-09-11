@@ -39,6 +39,26 @@ the goal, and the relevant repository context. Then hold a natural
 conversation about the artifact, not a checklist. Ask one question at a time
 and adapt the next question to the answer.
 
+### Mandatory opening orientation
+
+The first response must explain what is being grilled before offering a
+recommendation. Never open with an option, verdict, or solution.
+
+Introduce the active artifact in plain English:
+
+- **Artifact:** name the supplied plan, issue, design brief, RFC, ticket, or
+  idea.
+- **What it says:** summarize the proposed change in one or two sentences.
+- **What we are grilling:** state the problem, intended behavior, architecture,
+  contracts/schema, failure handling, and long-term decisions that will be
+  pressure-tested.
+- **Starting point:** identify what is already clear and the first unresolved
+  question.
+
+Then ask only that first framing question. Once the user answers it, use the
+recommendation format below for real design-choice questions. If the artifact
+or its goal is unclear, ask the user to identify it before discussing options.
+
 Walk the decision map as far as the artifact requires:
 
 1. Problem and intended outcome.
@@ -134,6 +154,9 @@ section above instead.
      --type grill \
      --topic "<session topic>"
    ```
+   The `grill` generator profile is the structural source of truth for the
+   transcript. Fill in its generated scaffold and preserve its frontmatter
+   rather than copying a separate full Markdown template.
    Keep that generated path for the session and append later rounds to the
    same file. Do not create a new transcript for every answer, and do not
    batch these writes.

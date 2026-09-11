@@ -8,12 +8,6 @@ disable-model-invocation: true
 
 Convert an idea into a durable design handoff without silently changing the user's intent. This skill is general-purpose: it applies to product behavior, backend systems, data flows, APIs, workflows, integrations, and user-facing surfaces.
 
-## Boundary with `/plan`
-
-Design owns the problem framing, observable desired behavior, scope and non-goals, design-level decisions and trade-offs, relevant system boundaries, and evidence capture. It produces the authoritative statement of **what** should be true and **why**, grounded in the repository and any necessary external sources.
-
-Design does not decompose implementation concerns, assign tickets, prescribe coding order, specify implementation commands, or otherwise turn the design into an execution plan. Those concerns belong to `/plan` after the design is accepted. Do not duplicate `/plan` instructions in the design artifact.
-
 ## Output contract
 
 Produce exactly one Markdown design artifact for this invocation. The authoritative inputs to `/plan` are this artifact's **Desired behavior**, **Scope**, **Non-goals**, **Constraints**, **Decisions and trade-offs**, **System shape and boundaries**, **Edge cases and failure behavior**, **Evidence**, **Open questions**, and **Acceptance** sections; **Raw intent** remains the source of the user's intent. `/plan` should verify citations and current repository state rather than repeat research that is already sufficient in the artifact. Supplemental research belongs in `/plan` only for material gaps or stale/contested evidence.
@@ -29,7 +23,7 @@ Do not edit application code, routing files, or unrelated artifacts.
 
 - Preserve the user's raw intent verbatim near the beginning of the artifact. Do not improve, reinterpret, or normalize it without labeling the change.
 - Clarify only issues that are materially ambiguous: questions whose answers would change behavior, scope, architecture, safety, data, compatibility, or acceptance. Record unanswered questions instead of inventing answers.
-- Inspect the repository before making claims about current behavior. Cite evidence as `path/to/file:line` (or an equivalent precise repository reference).
+- Inspect the repository before making claims about current behavior. Cite concrete files, modules, and interfaces without brittle line numbers.
 - Label statements as **Verified**, **Assumption**, **Decision**, or **Open question**. An absence of evidence is not evidence of absence.
 - Treat external research as evidence, not as a substitute for design judgment. Prefer primary sources and maintained reference implementations; cite URLs, versions, and relevant sections.
 
@@ -52,7 +46,7 @@ Explore the relevant repository areas, following existing patterns, interfaces, 
 - existing conventions or precedents worth preserving; and
 - conflicting, stale, or missing evidence.
 
-Use targeted reads and searches. Cite every material repository claim with file-and-line evidence. Separate verified observations from assumptions derived from incomplete inspection.
+Use targeted reads and searches. Ground repository claims in concrete files, modules, and interfaces without brittle line-number assumptions. Separate verified observations from assumptions derived from incomplete inspection.
 
 ### 4. Research external evidence when needed
 
@@ -87,17 +81,21 @@ Create the worktree-local artifact using the existing convention:
 python3 ~/.agents/scripts/new-artifact.py --type designs --topic "<short design title>"
 ```
 
-The command creates one timestamped Markdown file under `context/designs/` with design frontmatter (`date`, `title`, `type: design`). Fill that file with the sections above; do not create a second summary file, sidecar, or duplicate handoff. Preserve the generated filename and report its path.
+The `designs` generator profile is the structural source of truth for the
+artifact: fill in its generated scaffold and preserve its frontmatter and
+required headings rather than copying a separate full Markdown template.
+The command creates one timestamped Markdown file under `context/designs/`
+with design frontmatter (`date`, `title`, `type: design`). Preserve the
+generated filename and report its path. Do not create a second summary file,
+sidecar, or duplicate handoff.
 
-If the generator is unavailable, create one timestamped, slugged Markdown file in `context/designs/` matching the same frontmatter and naming convention, and state the deviation in the artifact's evidence notes.
+If the generator is unavailable, create one timestamped, slugged Markdown file
+in `context/designs/` matching the same frontmatter and naming convention, and
+state the deviation in the artifact's evidence notes.
 
-### 7. Close for `/plan`
+### 7. Close and report status
 
-Set the artifact's **Status** to exactly `ready-for-plan` when no open material decision prevents planning, or `blocked` when such a decision remains. Finish the artifact with a concise **Plan consumption note**:
-
-> `/plan` should treat this artifact as the authoritative design input, read it in full, validate its repository evidence and citations against the current repository, and resolve or explicitly carry forward any stale assumptions or open questions. It should not repeat sufficient research or require a separate handoff document; supplemental research is only for material gaps.
-
-The note is guidance, not a request to begin implementation. In the final response, give the artifact path and the status; do not repeat the whole design.
+Set the artifact's **Status** to exactly `ready-for-plan` when no open material decision prevents planning, or `blocked` when such a decision remains. In the final response, give the artifact path and the status; do not repeat the whole design.
 
 ## Completion checklist
 

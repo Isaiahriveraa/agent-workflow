@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Turn messy intent into a repository-grounded, dependency-aware, production-minded local plan. Clarify the goal, research the repo with file:line evidence, choose durable but proportionate foundations, decompose into independent concerns with explicit dependencies, and write vertical-slice steps with observable acceptance. Use when the user wants a plan before implementation.
+description: Turn messy intent into a repository-grounded, dependency-aware, production-minded local plan. Clarify the goal, research the repo with concrete architectural evidence, choose durable but proportionate foundations, decompose into independent concerns with explicit dependencies, and write vertical-slice steps with observable acceptance. Use when the user wants a plan before implementation.
 argument-hint: "[I need you to plan]"
 shell-timeout: 20
 ---
@@ -38,7 +38,7 @@ Before planning, make sure you understand the goal. Ask the human to resolve any
 
 ### 2. Research the repository
 
-Ground every claim in the repo. Locate the files, modules, symbols, callers, configs, and tests involved; read representative implementation and test files. Cite concrete evidence as `path/to/file.ext:line`. Distinguish verified facts from assumptions; flag stale or conflicting architecture. Never invent files, symbols, or commands.
+Ground every claim in the repo. Locate the files, modules, symbols, callers, configs, and tests involved; read representative implementation and test files. Identify relevant files and entry points without brittle line-number assumptions. Distinguish verified facts from assumptions; flag stale or conflicting architecture. Never invent files, symbols, or commands.
 
 ### 3. Research proven external implementations and documentation
 
@@ -58,13 +58,17 @@ The plan's repository evidence and external evidence sections must make it possi
 
 ### 4. Define current vs desired behavior
 
-- **Current behavior** — what exists today, with evidence.
+- **Current behavior** — what exists today, referencing the relevant files, modules, or entry points without embedding code diffs.
 - **Desired behavior** — what must exist after, observably.
+- **Recommended approach & architecture** — explain the best way to approach the problem in clear, simple language (e.g. recommended algorithm, design patterns, data flow, how to optimize for the project's use case and goals). Think long term: why is this the optimal strategy? Never write code diffs or inline code implementations inside the plan; provide architectural clarity and let the implementer write the code against the live codebase.
 - **Reuse / conventions / architecture constraints** — existing concepts, contracts, invariants, or decisions to reuse; repo conventions (style, naming, layout, error handling, state); architecture constraints that bound the design.
+### 5. Decompose into deliverable capabilities (vertical slices)
 
-### 5. Decompose into concerns
+Break the work into independent, demonstrable deliverable capabilities. Balance separation of concerns with developer usability: avoid hyper-fragmenting a single feature into shallow, disjointed micro-tickets. Never slice by technical layer (e.g. separate tickets for database schema, API route, and UI component); horizontal layers cannot be verified end-to-end and force reviewers to evaluate incomplete systems without observable behavior.
 
-Break the work into independent concerns, each sized for one reviewable unit. Base the decomposition on how each concern is independently **understood**, **implemented**, **tested**, **reviewed**, and **delivered** — not on file layout. If a concern cannot be understood, implemented, tested, reviewed, and delivered on its own, split it.
+- **Initiative scale:** An initiative plan typically decomposes into **4 to 8 deliverable steps** (represented by step files `01-*.md`, `02-*.md` in `00-index.md`). If an initiative requires 15+ steps, it is almost certainly hyper-fragmented or needs to be split into multiple initiatives.
+- **Deliverable concern boundary:** Each step file must represent one cohesive, independently demonstrable capability that a developer can understand in 30 seconds, implement, test, and ship.
+- **Internal implementation phases vs. deliverable concerns:** Inside a step file, breaking down the tactical execution into sequential phases or sub-slices (e.g. `### Slice 1: Models`, `### Slice 2: Route`, `### Slice 3: UI`, `### Slice 4: Verification`) provides execution guidance. These sub-slices are **tactical checklist items for implementing that single step**, NOT separate deliverable steps or separate GitHub issues.
 
 ### 6. Declare dependencies
 
@@ -78,8 +82,7 @@ Dependencies must be acyclic. Protect shared files: if two steps touch the same 
 
 ### 7. Order as vertical slices
 
-Prefer behavior-complete vertical slices: "persist device registration end-to-end", not "add table", "add repo", "add endpoint". Do not force a vertical slice when the result is oversized or unreviewable.
-
+Prefer behavior-complete vertical slices: "persist device registration end-to-end (API + UI)", not horizontal slices like "add table", "add repo", "add endpoint". When a developer completes a step, the capability should be demonstrable and verifiable. Do not force a vertical slice when the result is oversized or unreviewable.
 ### 8. Stack only when criteria hold
 
 Stacking (running steps in sequence where each builds on the previous) is allowed only when **both** the dependency criterion (the later step genuinely depends on the earlier one) **and** the review criterion (each step is still independently reviewable) hold. Otherwise keep steps concurrent or split them.
@@ -122,17 +125,16 @@ Do not confuse long-term thinking with premature abstraction or infrastructure. 
 List what is explicitly out of scope, so nobody expands the plan.
 
 ## Local output
-### Plan output contract for `/to-issues`
 
-The saved plan is the complete execution contract that `/to-issues` consumes without redesign. It must state its approval status, and every concern has a stable identifier (for example, `C-01`) plus a machine-auditable mapping to its implementation-ready step(s), observable acceptance criteria, verification command and expected result, dependencies (including start-now/concurrent/blocked status and reasons), and work position in the execution order. Keep those mappings consistent across `00-index.md` and step files; `/to-issues` may compile them into issues but must not invent concerns, reorder dependencies, or resolve missing design decisions.
+Write the completed plan under the current worktree's `context/plans/<slug>/` directory. Create `context/` and `context/plans/` when absent. Any multi-step plan has a `00-index.md` at the root of the plan directory.
 
+Initialize the bundle from the repository generator before filling it:
 
-Write the plan under the current worktree's `context/plans/<slug>/` directory. Create `context/` and `context/plans/` when absent.
+```sh
+python3 ~/.agents/scripts/new-artifact.py --type plans <slug>
+```
 
-The human-facing plan presentation follows the **Planning Mode** protocol in `references/communication.md`: Problem, Desired Behavior, System Shape & Seams, up to 3 Key Decisions to challenge before code is written, Tradeoffs & Edge Cases, and Definition of Done. Point the human to the saved plan file under `context/plans/<slug>/`.
-
-- Any multi-step plan has a `00-index.md` at the root of the plan directory.
-- Avoid unnecessary nesting; simple single-concern work may be one file.
+Treat the generated `00-index.md` as the starting scaffold; do not replace it with an ad hoc template or write plan artifacts outside the canonical path. Simple single-concern work may be one file.
 
 ### 00-index.md fields
 
@@ -142,28 +144,19 @@ The human-facing plan presentation follows the **Planning Mode** protocol in `re
 
 ### Implementation-ready step fields
 
-Each step file includes:
+Each step file provides clear architectural and tactical direction without writing code inside the plan:
 
-- **Goal** — one sentence.
-- **Repository evidence** — file:line references grounding the change.
-- **Changes** — concrete changes to files/modules.
-- **Tests / edge cases** — behavior to verify and real edge cases.
-- **Acceptance criteria** — binary, observable.
-- **Verification** — exact command + expected result.
+- **Goal** — one clear sentence defining the objective.
+- **Relevant files & context** — files, modules, and symbols to touch, with location references (e.g. `src/server/auth.ts`) so implementers know where to look.
+- **Approach & technical strategy** — explain the best way to go about it in clear language (e.g., recommended algorithm, design pattern, data flow, how to optimize for the project's use case).
+- **Scope & Non-goals** — explicit **In-scope** boundaries vs. **Out-of-scope** non-goals.
+- **Architectural decisions & trade-offs** — long-term considerations: why this approach is chosen, what alternatives were rejected, and how it aligns with future project goals.
+- **Tests & edge cases** — behavior to verify and critical edge cases (failure, boundary, race conditions) for the implementer to handle.
+- **Acceptance criteria** — binary, observable outcomes reachable through public interfaces.
+- **Verification** — how to verify the step (test commands, checks, or observable results).
 - **Dependencies** — start-now / concurrent / blocked with reasons.
 - **Architecture impact** — Module/Interface/Implementation/Depth/Seam/Adapter/Leverage/Locality.
-- **Long-term decisions** — for material decisions: Foundation/Why now/Alternatives/Guardrail/Escalation signal.
-- **Non-goals** — what this step does not touch.
-
-## Relationship to sibling skills
-
-- `/to-issues` consumes an **approved** plan and breaks it into focused issues.
-- `/issue-delivery` delivers a **ready** issue through an isolated worktree to a draft PR.
-- `/to-spec` remains a GitHub spec workflow (Problem/Stories/Decisions/OutOfScope).
-- `/research` supplies the mandatory external-evidence pass for plans when no relevant design artifact exists; with a verified sufficient artifact, use targeted supplemental research only for material gaps, stale or conflicting evidence, or missing decisions. Invoke it standalone when a cited research Markdown artifact is needed without a plan.
-- `/design` may provide the optional `context/designs/*.md` source-of-truth input for this skill; `/plan` reads it directly, verifies it, and consumes it without creating a separate handoff artifact.
-- `/codebase-design` is unchanged; it deepens module interfaces, this skill plans work.
-
+- **Implementation sub-slices / checklist (optional)** — ordered tactical phases for executing this step (e.g., model -> endpoint -> UI -> smoke test). These provide execution clarity for the developer or agent, but remain internal checklist items within this single deliverable step.
 ## Stop and ask
 
 Stop and ask the human before proceeding when a decision is **materially unresolved** — behavior, architecture, or security — and the plan would commit to one side without their input. Do not ask for trivial or reversible choices.
@@ -171,7 +164,7 @@ Stop and ask the human before proceeding when a decision is **materially unresol
 ## Done when
 
 - Intent is clarified and recorded.
-- Every claim is grounded in file:line evidence.
+- Every claim is grounded in repository and architectural evidence without brittle line numbers.
 - Concerns decompose by independent understand/implement/test/review/deliver.
 - Dependencies are explicit, acyclic, with start-now/concurrent/blocked reasons.
 - Steps are vertical slices, stacked only when dependency and review criteria hold.

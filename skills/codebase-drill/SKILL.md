@@ -158,9 +158,10 @@ In a full-stack app the same roles repeat on both sides of the network: the fron
 
 Also make the user reason about:
 
-- separation of concerns
+- deep modules vs shallow modules (Ousterhout: leverage at the interface)
+- locality of behavior and high functional cohesion (Carson Gross, Dave Farley)
+- rule of three: avoiding premature abstraction (Sandi Metz: duplication is cheaper than the wrong abstraction)
 - low coupling, high cohesion
-- reusing abstractions, avoiding duplicated logic
 - behavioral tests vs implementation details
 - error boundaries
 - domain validation vs request validation
@@ -177,12 +178,12 @@ Do **not** lecture before the user needs them. Make them encounter situations wh
 Do not lecture — recognize and question. After the user implements, or while studying similar existing code, ask:
 
 - **Naming**: "Does this name say *what* it does or *how*? What would be clearer?"
-- **Responsibility**: "Is this function doing one thing? What is the smallest thing it could own?"
-- **Duplication**: "Does this logic already exist somewhere? Where should it live instead?"
+- **Depth & Leverage**: "Does this module hide substantial complexity behind a small, simple interface, or is it a shallow pass-through?"
+- **Locality of Behavior**: "Can a reviewer understand what this does in one place, or does this split impose an indirection tax across multiple files?"
+- **Duplication vs Abstraction**: "Has this pattern appeared three times with identical domain meaning, or are we creating a premature abstraction with boolean flags?"
 - **Magic values**: "What does this literal mean here? Where should it be declared so it has a name?"
-- **Depth**: "Which module should hide this complexity behind a simple name?"
 
-Drill until the user spots these unprompted: intention-revealing names, one responsibility per function/module, reuse over reimplementation, small functions that read like plain English, errors handled explicitly, variation expressed as data.
+Drill until the user spots these unprompted: intention-revealing names, deep modules that hide complexity, locality of behavior, rule of three over premature abstraction, errors handled explicitly, variation expressed as data.
 
 ## Error & Edge-Case Handling
 

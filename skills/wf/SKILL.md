@@ -20,9 +20,9 @@ An optional base branch (e.g. `main`, `development`) may also be provided. Defau
 Invoke the `commit` skill at `~/.agents/skills/commit/SKILL.md`:
 
 1. Inspect the full working tree (staged, unstaged, untracked, and any relevant hunks).
-2. Group changes into atomic Conventional Commit candidates.
+2. Inventory responsibilities, then propose the most-split valid atomic plan — no commit joins two responsibilities without a named dependency (see the commit skill's Responsibility Unit).
 3. The normal `commit` path runs the pre-commit code-review gate (unless the current changes already match its review marker). If `wf` was invoked with `--no` or `--no-review`, forward that flag to the nested `commit` invocation; it skips only that gate. Commit approval, staging/atomicity, verification, push approval, and PR approval remain required.
-4. Present the full **Proposed Commit Plan** (messages, files, hunks when applicable, verification).
+4. Present the full **Proposed Commit Plan** (responsibility inventory; per commit: message, responsibility, dependency, files, hunks when applicable, verification).
 5. **STOP — wait for explicit user approval.**
 6. Execute the approved plan commit by commit: stage whole files when a file belongs to one concern; use hunk-level staging only for mixed-concern or deliberately partial files, with pre/post-commit verification.
 

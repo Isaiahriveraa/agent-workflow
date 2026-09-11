@@ -25,13 +25,16 @@ ADRs belong to the current worktree's context directory:
 {git-root}/context/adr/{YYYY-MM-DD_HH-MM-SS}_{slug}.md
 ```
 
-Create files lazily — only when you have something to write. Use the helper script:
+Create files lazily — only when you have something to write. Use the
+corresponding generator profiles below; each generated scaffold is the
+structural source of truth to fill in, including its frontmatter and required
+fields. Do not replace it with a separate full Markdown template.
 
 ```bash
-# Create a glossary entry
+# Create a glossary entry with the glossary profile
 python3 ~/.agents/scripts/new-artifact.py --type glossary --topic "<term>"
 
-# Create an ADR under {git-root}/context/adr/
+# Create an ADR with the adr profile under {git-root}/context/adr/
 python3 ~/.agents/scripts/new-artifact.py --type adr --topic "<decision title>"
 ```
 

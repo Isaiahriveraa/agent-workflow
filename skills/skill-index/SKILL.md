@@ -72,7 +72,7 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 ## Quick utilities
 
 - **Resolve merge conflicts** → **`/skill:resolving-merge-conflicts`** — structured conflict resolution.
-- **Commit** → **`/skill:commit`** — normal `commit` invocation runs the pre-commit code-review gate; `commit --no` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files.
-- **PR** → **`/skill:pr`** — break work into PR-sized chunks.
+- **Commit** → **`/skill:commit`** — normal `commit` invocation runs the pre-commit code-review gate; `commit --no` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition.
+- **PR** → **`/skill:pr`** — auto-detects strategy (single PR, gh stack, or parallel worktrees) and generates review-ready PR descriptions focused on rationale and behavior.
 - **Herdr terminal multiplexer** → **`/skill:herdr`** — inspect and control workspaces, tabs, panes, and coding agents inside Herdr.
 - **Multi-context Herdr layout** → **`/skill:orchestration`** — propose a nested workspace/tab/pane tree, dispatch prompt-file-backed OMP agents, and supervise through lifecycle status

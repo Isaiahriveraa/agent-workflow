@@ -71,150 +71,57 @@ Also check if the session produced or referenced **context artifacts** (plans, r
 
 ### 3. Write content
 
-Open the generated file and replace the template content with the full handoff.
+Open the generated file and fill in the scaffold. The `handoffs` generator
+profile is the structural source of truth: preserve its frontmatter and
+complete the generated structure rather than replacing it with a separately
+invented template.
 
-Use the following structure. Write in plain Markdown — no callout syntax, no Obsidian wiki-links, no Mermaid unless essential for data flow understanding. Mermaid is acceptable ONLY for complex multi-component flows where a diagram conveys more than prose.
+The completed artifact must retain this metadata and section structure:
 
-```markdown
----
-date: {ISO timestamp from now.mjs}
-author: {Author name from git-context.mjs}
-commit: {Current commit hash}
-branch: {Current branch name}
-repository: {Repository name}
-topic: "{Feature/Task Name} - Handoff"
-tags: [handoff]
-status: complete
-last_updated: {Same ISO timestamp}
-last_updated_by: {Author name}
-type: handoff
----
+- Frontmatter: `date`, `author`, `commit`, `branch`, `repository`, `topic`,
+  `tags`, `status`, `last_updated`, `last_updated_by`, and `type: handoff`.
+- `# Agent Handoff: ...`
+- `## Active Goal`
+- `## Current State`
+- `## Latest User Intent`
+- `## Locked Decisions`
+- `## Do Not Repeat` (when applicable)
+- `## Work Completed`
+- `## Relevant Files`
+- `## Remaining Work`
+- `## Resume Here`
+- `## Open Questions or Blockers` (when applicable)
+- `## Verification Status`
+- `## Success Criteria`
 
-# Agent Handoff: {Concise Active Task}
+Write in plain Markdown — no callout syntax, no Obsidian wiki-links, and no
+Mermaid unless essential for data-flow understanding. Mermaid is acceptable
+only for complex multi-component flows where a diagram conveys more than
+prose. Use the generated scaffold's field guidance while preserving all
+verified-versus-assumed, evidence, path, status, and approval requirements
+below.
 
-## Active Goal
+### Required section guidance
 
-A short, direct description of the user's latest confirmed objective.
-What the next agent is expected to complete.
-
-If the session produced a plan, FRD, design document, or other spec artifact on
-the context directory, link it here:
-
-- Plan: `{context/plans/path-to-plan.md}`
-- Research: `{path/to/research.md}`
-- ADR: `{path/to/adr.md}`
-
-## Current State
-
-Describe what is true right now — code state, behavior, test results.
-
-- What works:
-- What is incomplete:
-- What is broken or known-buggy:
-- What has been verified (and how):
-- What is assumed but not verified:
-
-Separate verified facts from assumptions.
-
-## Latest User Intent
-
-The user's final resolved requirements. Only include the latest confirmed
-intent, not the full history. Earlier corrections should NOT appear here.
-
-If the user changed their mind during the session:
-
-- **Original intent:** (briefly, only if relevant context)
-- **Correction:** (what the user said to change)
-- **Active intent:** (what to do now)
-
-## Locked Decisions
-
-For each locked decision that affects implementation:
-
-- **Decision:** {what was decided}
-- **Why:** {reason}
-- **Constraint:** {what this means for the next agent}
-
-Keep entries short. Omit this section if no decisions were made.
-
-## Do Not Repeat
-
-List previously attempted, rejected, or corrected approaches that the next
-agent might otherwise repeat. Be specific about why each was wrong.
-
-- {Approach} — {why rejected}
-
-Omit this section if none exist.
-
-## Work Completed
-
-### {Change Name}
-
-**What changed:** {one-line description}
-**Why:** {rationale}
-**Files:** `{path/to/file.ext}`
-**Verification:** {test/command/manual check result, or "Not yet verified"}
-
-Repeat for each meaningful completed change. Do not list cosmetic or
-unimportant edits.
-
-## Relevant Files
-
-### `{path/to/file.ext}`
-**Status:** Read | Created | Modified | Deleted
-**Role:** {what this file controls}
-**Changes:** {what changed — only if modified}
-**Next use:** {inspect, modify, no further changes expected}
-
-Only include files relevant to continuing the active task.
-
-## Remaining Work
-
-Tasks are ordered by dependency. Each must be immediately executable.
-
-### Task N: {Action-Oriented Name}
-
-**Objective:** {specific result}
-**Files:** `{path/to/file}`
-**Depends on:** {prior task or None}
-**Notes:** {essential implementation details only}
-**Verify:** {exact check}
-**Done when:** {binary completion condition}
-
-## Resume Here
-
-State the exact next action, file to open, and what to do.
-
-> {The single next step. Example: Open `skills/handoff/SKILL.md` and replace the current template with the agent-handoff structure. After editing, run `cargo test` to verify compatibility.}
-
-## Open Questions or Blockers
-
-Include only unresolved questions that prevent or materially change implementation.
-
-- **Question:** {what}
-- **Why it matters:** {why the answer changes the approach}
-- **Default:** {safest assumption if unanswered}
-- **Blocked:** {yes/no — can work continue without an answer?}
-
-Omit this section if none exist.
-
-## Verification Status
-
-- Tests passed: {list}
-- Tests failed: {list}
-- Commands run: {list}
-- Manual checks: {list}
-- Unverified: {areas not yet checked}
-
-Never state that something works unless it was actually verified.
-
-## Success Criteria
-
-Checklist for the active task:
-
-- [ ] {criterion 1}
-- [ ] {criterion 2}
-```
+- `Active Goal`: the latest confirmed objective and the next agent's task;
+  include links to relevant context artifacts.
+- `Current State`: what works, what is incomplete or broken, and what was
+  verified; separate verified facts from assumptions.
+- `Latest User Intent`: only the latest confirmed intent, including corrections
+  when relevant.
+- `Locked Decisions`: each decision, why it was made, and its constraint.
+- `Do Not Repeat`: rejected or corrected approaches and why.
+- `Work Completed`: each meaningful change, rationale, files, and verification.
+- `Relevant Files`: only continuation-relevant paths, with status, role,
+  changes, and next use.
+- `Remaining Work`: dependency-ordered executable tasks with objective, files,
+  dependencies, notes, exact verification, and binary completion condition.
+- `Resume Here`: the exact next action, file, and operation.
+- `Open Questions or Blockers`: only material unresolved questions, impact,
+  safest default, and whether work is blocked.
+- `Verification Status`: passed and failed tests, commands, manual checks, and
+  unverified areas; never claim unverified behavior works.
+- `Success Criteria`: a checklist for the active task.
 
 ### 4. Approve
 

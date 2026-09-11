@@ -1,136 +1,149 @@
 ---
 name: pr
-description: "Generate PR descriptions, split branches into concern-tight PRs, or convert dirty branches into clean stacked draft PRs. Three submodes: `/pr` (generate description), `/pr split` (split by concern), `/pr stack` (stacked draft PRs from dirty branch)."
+description: "Senior Developer PR workflow: auto-detects whether changes belong in a single PR, stacked PRs (gh stack), or parallel worktrees. Generates review-ready PR descriptions focused on rationale and observable behavior, splits mixed concerns, and manages stacks. Use when preparing, reviewing, or opening pull requests."
 ---
 
-# PR
+# PR — Senior Developer Pull Request Workflow
 
-Three submodes:
+The goal of this skill is to craft **Senior Developer Pull Requests**: PRs where concerns are cleanly separated, responsibilities are unambiguous, and reviewing is effortless. Reviewers should understand the human/system rationale in seconds, see exactly how behavior changes without deciphering code trivia, and have total confidence in merging.
 
-- `/pr` — Generate a PR description for the current branch
-- `/pr split` — Split current branch into concern-tight PRs (sub-700 lines each)
-- `/pr stack` — Convert a dirty branch into a clean stack of draft PRs
+You do **not** need to decide ahead of time whether to run `/pr`, `/pr split`, or `/pr stack`. By default, this skill inspects your branch diff, **auto-detects the optimal PR strategy**, and proposes it for approval before touching any Git state.
 
 ---
 
-## When to Use
+## The 3 Senior Developer PR Strategies
 
-- Starting a new feature or project needing PR boundaries
-- Changes span more than 5-7 files or will take more than 1-2 hours
-- Need a PR description generated from an actual branch diff
-- Current branch mixes unrelated concerns that should be separate PRs
+When invoked, the skill evaluates the current branch against the target base branch across three core dimensions: **Concern Cohesion**, **Dependency Relationship**, and **Diff Size/Reviewability**. It then auto-proposes one of three strategies:
+
+```
+                      ┌────────────────────────────────────────┐
+                      │    Inspect Branch Diff Against Base    │
+                      └───────────────────┬────────────────────┘
+                                          │
+                  ┌───────────────────────┴───────────────────────┐
+                  ▼                                               ▼
+         [ Single Concern ]                             [ Multiple Concerns ]
+                  │                                               │
+         ┌────────┴────────┐                             ┌────────┴────────┐
+         ▼                 ▼                             ▼                 ▼
+   ( < 500 lines )   ( > 500 lines )             [ Dependent? ]    [ Independent? ]
+         │                 │                             │                 │
+         ▼                 ▼                             ▼                 ▼
+   ┌───────────┐     ┌───────────┐                 ┌───────────┐     ┌───────────┐
+   │ Strategy 1│     │ Split by  │                 │ Strategy 2│     │ Strategy 3│
+   │ Single PR │     │ Natural   │                 │ Stacked   │     │ Parallel  │
+   │           │     │ Seams     │                 │ PRs       │     │ Worktrees │
+   │           │     │ (Stack/WT)│                 │ (gh stack)│     │           │
+   └───────────┘     └───────────┘                 └───────────┘     └───────────┘
+```
+
+### Strategy 1: Single PR — *Single Cohesive Concern*
+- **When auto-detected**: The diff represents one clear, undivided concern (e.g. one feature, one bugfix, one refactor), is appropriately sized (< 500–700 lines), and is logically self-contained.
+- **Reviewer experience**: Fast, comprehensive review in one pass. Reviewer reads the problem, understands the behavioral shift, verifies the tests, and approves.
+- **Execution**: Generates the senior-developer PR description and opens a single draft PR targeting the base branch.
+
+### Strategy 2: Stacked PRs (`gh stack`) — *Sequentially Dependent Concerns*
+- **When auto-detected**: The changes span multiple concerns that build sequentially on top of each other (e.g. Step 1: Schema/Database Migration → Step 2: Domain Logic/API Endpoints → Step 3: UI/Consumer Interface).
+- **Why a stack**: Reviewers evaluate and approve foundational architecture first before reviewing dependent consumer code. Diffs stay small and focused without blocking downstream progress.
+- **Execution**: Uses `gh stack` to create a bottom-up sequence of draft PRs, where each PR carries one concern and targets the branch immediately below it.
+
+### Strategy 3: Parallel Worktrees / Independent PRs — *Mutually Independent Concerns*
+- **When auto-detected**: The branch mixes multiple concerns that do *not* depend on each other (e.g. an unrelated bugfix noticed mid-task, a tooling/deps chore, and a new feature).
+- **Why parallel worktrees**: Independent concerns should never be grouped together or block each other. Per `AGENTS.md` Concern Discipline, each belongs in its own isolated worktree (`~/.agents/scripts/new-worktree.sh <branch>`) targeting `main`/`development` directly.
+- **Execution**: Extracts the independent concerns into dedicated worktrees/branches, allowing each to be reviewed, approved, and merged in parallel without coupling.
 
 ---
 
 ## Core Principle: Dual Discipline
 
-Every PR must pass **two levels of separation**, enforced at every submode:
+Every PR proposal must pass **two levels of separation**:
 
 ### Level 1 — PR Concern Discipline
-Each PR addresses exactly **one concern**. Files spanning different domains, change types, motivations, or architectural layers belong in separate PRs.
+Each PR addresses exactly **one concern** (one user-facing capability, bug fix, or refactor). Files spanning different domains (mobile vs server), change types (`feat` vs `fix` vs `chore`), or unrelated motivations belong in separate PRs.
 
+For a new capability or feature, prefer **behavior-complete vertical slices** (schema + backend + UI + tests in one PR) within review budget (~200–500 lines). Do NOT split a single feature into separate horizontal layer PRs (e.g. schema PR, API PR, UI PR) unless crossing true team or repository boundaries; horizontal PRs cannot be verified end-to-end and force reviewers to evaluate incomplete systems.
 ### Level 2 — Commit Discipline
-Within a PR, **each commit addresses exactly one logical unit**. A single PR may have multiple commits, but no commit may mix unrelated changes.
+Within each PR, **each commit addresses exactly one logical unit**. A single PR may have multiple commits, but no commit may mix unrelated changes.
 
-### Stack Decision
-Use stacked PRs for dependent concerns, not merely for smaller diffs:
-
-- **Independent concerns:** use separate branches/worktrees based on the base branch; each PR targets the base branch.
-- **Dependent concerns:** use one `gh stack`; each branch contains one concern and each PR targets the branch immediately below it.
-- A stack must still satisfy the one-concern-per-PR and one-logical-unit-per-commit rules.
-- Merge stacks from the bottom upward. After a lower PR merges, verify that GitHub or `gh stack sync` retargeted and rebased the remaining branches.
-
-**Examples of valid within-PR commit splits:**
-
-| PR Concern | Good Commits (separated) | Bad Commits (lumped) |
-|---|---|---|
-| Update app config | `chore: add .env to gitignore` + `chore: update deps` + `chore: wire main.dart` | `chore: update everything` |
-| Add auth feature | `feat: add auth screen` + `feat: add auth service` | `feat: add auth` |
-| Refactor widgets | `refactor: extract shared button mixin` + `refactor: clean up header layout` | `refactor: fix widgets` |
-
-**Commit boundary test**: If a commit's message needs "and" to describe what it does, it should be split.
+**The "And" Test**: If a commit or PR summary needs "and" to explain what it does, it contains multiple concerns and must be split.
 
 ---
 
-## Proposal Gate: Propose Before Executing
+## Auto-Detection & Proposal Gate
 
-**Both `/pr split` and `/pr stack` MUST propose the full plan before touching git, branches, or PRs.** No execution happens until the user approves.
+**The skill MUST inspect and propose the strategy before touching Git state, creating branches, or opening PRs.**
 
-The proposal must list, in order:
-
-```
-PROPOSED PLAN
-=============
-PR #1 — <prefix>: <title>
-  Branch: <branch-name>
-  Files: <file-a>, <file-b>
-  Commits:
-    1. <prefix>(<scope>): <summary>
-    2. <prefix>(<scope>): <summary>
-
-PR #2 — <prefix>: <title>
-  Branch: <branch-name>
-  Files: <file-c>, <file-d>
-  Commits:
-    1. <prefix>(<scope>): <summary>
+### Step 1: Discovery & Analysis
+Run read-only inspection commands:
+```bash
+git branch --show-current
+git status --short
+git log --oneline <base>..HEAD
+git diff --stat <base>...HEAD
+git diff --name-only <base>...HEAD
 ```
 
-**Rules:**
-- Present the plan in a clearly formatted block.
-- Do NOT proceed until the user explicitly approves.
-- If user requests adjustments, update the plan and re-propose.
-- Only after approval, execute the full plan in sequence.
+Evaluate:
+1. **Domains**: Are there mobile, backend, CLI, or infra changes mixed together?
+2. **Motivations**: Are there feature additions, bugfixes, and chores/refactors mixed together?
+3. **Dependencies**: Does concern B require concern A, or could B merge right now without A?
+4. **Volume**: Is any single concern > 700 lines?
+
+### Step 2: Present the Proposed PR Plan
+Present the proposal in this exact format:
+
+```text
+PROPOSED PR PLAN
+================
+Auto-Detected Strategy: [Strategy 1: Single PR | Strategy 2: Stacked PRs (gh stack) | Strategy 3: Parallel Worktrees]
+Rationale: <Why this strategy was selected based on diff analysis and dependencies>
+
+PR Breakdown:
+1. PR: <type>(<scope>): <concise title>
+   - Branch: <branch-name> -> Base: <base-branch>
+   - Concern: <one-sentence description of the concern>
+   - Files: <list of files or summary>
+   - Commits:
+     - <type>(<scope>): <unit 1>
+     - <type>(<scope>): <unit 2>
+
+2. PR: <type>(<scope>): <concise title> (if Strategy 2 or 3)
+   - Branch: <branch-name> -> Base: <stacked parent or base-branch>
+   - Concern: <one-sentence description of the concern>
+   ...
+
+Draft PR Description(s):
+--------------------------------------------------------------------------------
+## Rationale
+<The human/system why, problem solved, alternatives considered>
+
+## Observable Behavior
+<What the user or caller experiences; contract changes; NO diff recaps>
+
+## Verification
+<Specific tests added or run to verify behavior>
+--------------------------------------------------------------------------------
+Approval required before creating branches, worktrees, stacks, or PRs.
+```
+
+**STOP — wait for explicit user approval.** Never create branches or PRs before the user says `approved`, `proceed`, or `yes`.
 
 ---
 
-## Submode: `/pr` — PR Description
+## Senior Developer PR Description Standard
 
-Generate a PR description based on the actual branch diff. Sized to the change.
+Reviewers read PR descriptions to understand **why** the change was made and **what** the observable behavior is. They already have the "Files changed" tab to inspect the code lines, functions, and files.
 
-### Operating Rules
-
-- Do not open a PR or push commits without approval.
-- After creating or editing a PR, verify the stored body with `gh pr view --json body`.
-  Confirm that section headers are present, blank lines are real newline characters
-  rather than literal `\\n` text, and the body contains no unintended Markdown
-  formatting artifacts. If verification fails, correct the body before reporting
-  the PR as complete.
-- Inspect the branch against the intended base branch first.
-- Size the PR before writing it.
-- Describe the **rationale (why)** and **observable behavior**, NOT code implementation details. The diff already displays code changes; the PR body must convey why the change exists, how the system behaves now, and how tests verified that behavior.
-- Describe only what is actually in the committed branch diff against the base branch.
-- Omit `## Stack Context` unless the branch is explicitly part of a stacked PR.
-- Do not mention local-only files, ignored files, or plans/research artifacts unless they are committed and reviewer-relevant.
-- Do not invent provenance from the conversation. If it is not visible in `git log`, `git diff --stat`, `git diff --name-only`, or the inspected diff, leave it out.
-- Keep reviewer-facing text repo-clean: no machine-specific absolute paths, no local home-directory references.
-- If `thoughts/` or other artifact directories are not part of the committed diff, do not mention them.
-
-### Required Discovery
-
-1. Check branch state: `git branch --show-current`, `git status --short`
-2. Determine the base branch (default: upstream default or user-specified).
-3. Inspect the change against base: `git log --oneline <base>..HEAD`, `git diff --stat <base>...HEAD`, `git diff --name-only <base>...HEAD`
-4. **Inspect commit granularity**: run `git log --oneline <base>..HEAD` and check that each commit message describes a single logical unit. If any commit mixes unrelated files, flag it and suggest splitting before PR creation.
-5. Decide PR size: `small` (1-2 commits), `medium` (several related commits), `large` (cross-cutting, architectural).
-   If the branch mixes unrelated stories, stop and say so before writing.
-
-### PR Description Philosophy: The "Why" and "Behavior", Never Implementation
-
-Reviewers read PR descriptions to understand **why** the change was made and **what** the observable behavior is. They already have the "Files changed" tab in GitHub to inspect the code lines, functions, and files.
-
-- **Rationale (The Why)**: Explain the problem, bug, limitation, or user need that prompted this change. Why does this PR exist? What happens if we don't merge it? Why this approach over alternatives?
+- **Rationale (The Why)**: Explain the problem, bug, limitation, or user need that prompted this change. Why does this PR exist? What happens without it? Why this approach over alternatives?
 - **Observable Behavior (The What)**: Describe the observable outcome from the perspective of the user, caller, or consumer. What can someone do now that they couldn't before? How does system behavior change?
 - **NEVER recite code implementation details**: Never dump a line-by-line or file-by-file code recap (e.g. "added helper X, updated method Y, imported Z"). That is implementation trivia already visible in the diff. Explain behavior, not code plumbing.
 - **Verification proves behavior**: Verification exists to prove the behavior was implemented as intended. Explicitly call out tests added or updated to verify that behavior (e.g. "Added `test_name` to verify that..."), followed by the commands run and observable outcomes.
-- **Don't repeat yourself**: If the summary/observable behavior and rationale overlap, combine them as `## Summary & Rationale` instead of repeating the same context across two sections.
+- **No-Repeat Rule**: If summary and rationale overlap, combine them as `## Summary & Rationale` instead of repeating yourself.
 - **Omit Stack Context unless stacked**: Only include `## Stack Context` when the PR is part of a multi-PR stack. Never include it for normal standalone PRs.
-### PR Description Structure
-Every PR body uses these core sections. Each **must** be a markdown header (`##`) in the output body text. Include the HTML comments with guiding questions.
 
-**No-Repeat Rule**: If summary and rationale overlap, just use `## Summary & Rationale`. Don't repeat yourself.
+### PR Description Template (Default)
 
-#### Standard Layout (Default)
-
+```markdown
 ## Rationale
 
 <!--
@@ -154,9 +167,11 @@ Every PR body uses these core sections. Each **must** be a markdown header (`##`
 - List specific tests added or updated to verify behavior (e.g., "Added <test-name> to verify <behavior>").
 - What automated commands or manual checks were run, and what were the observed results?
 -->
+```
 
-#### Overlapping Layout (When Summary & Rationale Coincide)
+### Overlapping Layout (When Summary & Rationale Coincide)
 
+```markdown
 ## Summary & Rationale
 
 <!--
@@ -171,9 +186,11 @@ Every PR body uses these core sections. Each **must** be a markdown header (`##`
 - List specific tests added or updated to verify behavior (e.g., "Added <test-name> to verify <behavior>").
 - What automated commands or manual checks were run, and what were the observed results?
 -->
+```
+
 ### Stack Context (Stacked PRs ONLY)
 
-Include this section **only** if the PR is part of a PR stack (`/pr stack` or dependent branches). Omit entirely for standalone PRs:
+Include this section **only** when the PR is part of a multi-PR stack (`gh stack`):
 
 ```markdown
 ## Stack Context
@@ -182,203 +199,52 @@ Include this section **only** if the PR is part of a PR stack (`/pr stack` or de
 - Base PR: #<number> or `<base-branch>` for the bottom PR
 - Depends on: #<number> or `N/A` for the bottom PR
 ```
-### Writing Standard
-
-Professional, direct, plain. No filler, no marketing, no "this PR aims to", no "please review", no AI attribution, no generated-by footers.
 
 ---
 
-## Submode: `/pr split` — Split Branch into Concern-Tight PRs
+## Execution Runbooks (Post-Approval Only)
 
-Split the current branch into small, concern-tight PRs targeting `development` (or specified base branch). Each PR carries exactly one concern and stays under 700 diff lines.
-
-### Concern Boundaries
-
-Files belong in different PRs when they span:
-- **Different domains** (mobile vs website vs server)
-- **Different change types** (`feat` vs `fix` vs `refactor` vs `chore`)
-- **Different motivations** (adding a feature vs cleaning up dead code vs adding docs)
-- **Different architectural layers** (UI components vs services vs shaders)
-
-Prefix rules: `feat:`, `fix:`, `refactor:`, `chore:` (dead code deletion is `chore:`, NOT `refactor:`).
-
-### Size Gate
-
-Every PR diff MUST be under 700 lines. If a concern exceeds it, split further by natural seams.
-
-### Execution Steps
-
-**Phase 1 — Analyze & Categorize**: Inspect the branch diff against the merge base. Group changed files by concern domain, change type, and motivation. Within each concern group, further split files into logical commit units. Mark each group as independent or dependent on another group; only dependent groups belong in a stack.
-
-**Phase 2 — Propose**: Present the full plan showing every PR, every branch name, every file in each PR, and every commit with its message (per the Proposal Gate above). Do NOT execute anything yet.
-
-**Phase 3 — Execute (only after approval)**:
-
-3a. **Create branches with commit discipline**:
+### Executing Strategy 1: Single PR
+1. Confirm commits on the branch are clean and granular (`git log --oneline <base>..HEAD`).
+2. Push branch: `git push -u origin <branch>`.
+3. Create draft PR:
    ```bash
-   git checkout -b <branch-name> <merge-base>
-   git checkout <source-branch> -- <file1> <file2> ...
+   gh pr create --draft --base <base> --title "<type>(<scope>): <summary>" --body-file <temp-body-file>
    ```
-   **Then stage and commit files in logical groups** — do NOT lump all files into one commit:
+4. Verify created PR: `gh pr view --json body,title,state`. Confirm proper line breaks, headers, and draft status.
+
+### Executing Strategy 2: Stacked PRs (`gh stack`)
+1. Create or adopt branches in dependency order; each branch contains only its proposed concern.
+2. Initialize and sync the stack:
    ```bash
-   git add <file-A>          # first logical unit
-   git commit -m 'type(scope): summary of unit A'
-   git add <file-B> <file-C> # second logical unit
-   git commit -m 'type(scope): summary of unit B and C'
+   gh stack init --base <base> <branch-1> <branch-2> ...
+   gh stack sync
+   gh stack submit
    ```
-   Each commit must pass the "and" test — if the message needs "and", split.
+3. Use `gh stack submit` to create the linked draft PRs on GitHub with their concern-specific titles and descriptions.
+4. Verify stack structure: PR 1 targets `<base>`, PR 2 targets `<branch-1>`, PR 3 targets `<branch-2>`.
+5. Stacks merge bottom-up: after PR 1 merges, use `gh stack sync` to rebase and retarget PR 2.
 
-   Example: for a PR updating deps AND wiring main.dart:
+### Executing Strategy 3: Parallel Worktrees
+1. For each independent concern, create an isolated Git worktree:
+   ```bash
+   ~/.agents/scripts/new-worktree.sh <branch-name>
    ```
-   git add pubspec.yaml pubspec.lock
-   git commit -m "chore(scope): update dependencies"
-   git add lib/main.dart
-   git commit -m "chore(scope): wire new components into app entry point"
+2. In each worktree, stage and commit only that concern's files using atomic commit discipline.
+3. Verify each worktree independently (`npm test`, `git diff --stat`).
+4. Push each branch and open a draft PR targeting `<base>` directly.
+5. Each PR reviews and merges independently. Once merged, clean up each worktree:
+   ```bash
+   ~/.agents/scripts/cleanup-worktree.sh <branch-name>
    ```
-
-3b. **Verify each branch**: diff --stat, wc -l < 700, log --oneline — **also verify commits are well-separated** (`git log --oneline` shows each commit targeting one unit).
-
-3c. **Merge ordering — CRITICAL**: Merge SEQUENTIALLY from lowest-risk first (chore > refactor > feat). After each merge, sync remaining branches with base before merging next.
-
-3d. **Open PRs** using `gh pr create` with proper bodies sized to each diff.
 
 ---
-
-## Submode: `/pr stack` — Dirty Branch → Clean Stacked Draft PRs
-
-Tracking file at `context/pr-stack/<dirty-branch>_<YYYY-MM-DD>.md` in the current worktree.
-
-**Phase 0: Health check** — `git fetch origin <base>`, `git status --short`. Ensure clean working tree.
-
-**Phase 1: Setup** — Resolve branches, create tracking file with PR stack table.
-
-**Phase 2: Analysis** — Examine the branch: `git log --oneline`, `git diff --stat`, `git diff --name-only`. Categorize changes by concern (Setup, Schema, Backend, Frontend, Tests, Fixes, Refactors). Order by dependency. **Within each category, further group files by logical commit unit.**
-
-**Phase 2.5 — Propose**: Present the full plan showing every PR, every branch name, every file, and every commit within each PR (per the Proposal Gate). Do NOT create any branches or PRs yet.
-
-**Phase 3: Create each PR (only after approval)**
-
-Prefer `gh stack` for branch tracking, cascading rebases, pushing, and linked PR creation:
-
-The `gh-stack` extension is installed as a machine prerequisite; do not reinstall it during each workflow invocation.
-
-```bash
-gh stack init --base <base> <branch-1> <branch-2> ...
-gh stack sync
-gh stack submit
-```
-
-`gh stack submit` creates or updates the stacked PRs and links them on GitHub. Use its interactive editor to set concern-specific titles, descriptions, and draft status; use `gh stack submit --auto` only when generated metadata is acceptable. For an existing set of branches managed outside `gh stack`, use `gh stack link <branch-1> <branch-2> ...`.
-
-Before submitting:
-- Create or adopt branches in dependency order; each branch contains only its proposed concern.
-- If the source branch already has clean concern commits, adopt the branches with `gh stack init`. If it is dirty or mixed, create the proposed branches and selectively check out only each concern's files before committing.
-- **Split into multiple commits per commit discipline rules** — stage files in logical groups, committing each group separately. Do NOT lump all files for the PR into one commit.
-- Run focused tests for each layer where practical.
-
-During iteration:
-- Use `gh stack sync` for fetch, cascading rebase, push, and PR-state synchronization.
-- Use `gh stack rebase` when interactive conflict resolution is needed; use `gh stack rebase --abort` to restore the pre-rebase state.
-- If conflicts remain, resolve only the affected concern and record the resolution in the tracking file.
-- Keep the tracking file as a lightweight audit record; `gh stack` and GitHub are the source of truth for current stack/PR state.
-
-**Phase 4: Summary** — Print the PR stack with merge order instructions. Stacks merge bottom-up; use `gh stack merge <stack-number-or-pr-number>` when the required checks and approvals are complete.
-
-### Rules
-
-- MUST: always draft, stack PRs, branch naming `{type}/<kebab>` (e.g. `feat/setup`, `fix/validation`), use `rtk` prefix, update tracking file after every PR, size body to this concern only.
-- MUST: split commits within each PR by logical unit — no "and" in commit messages.
-- MUST: propose the full plan and get user approval before any execution.
-- MUST NOT: use unprotected `git push --force`, merge in dirty branch changes, mention dirty branch in PR body, or run interactive rebase on shared branches.
-- MAY: use `gh stack` commands that perform protected `--force-with-lease` updates as part of a cascading rebase.
-
-### Failure Recovery
-
-- `gh stack init` or `gh stack sync` reports divergence → stop, inspect the local and GitHub stack composition, then resolve explicitly; do not force an unrelated branch into the stack.
-- `gh stack rebase` conflicts → resolve only the affected concern, then `gh stack rebase --continue`; use `--abort` if the proposed resolution is unclear.
-- `gh stack submit` fails → verify `gh auth status`, branch cleanliness, and remote access before retrying.
-- A concern has no commits after extraction → skip that PR and re-sequence the stack.
-
-### Verification Checklist
-
-- [ ] All PRs verified as drafts via `gh pr list`
-- [ ] Each PR's base branch is correct (previous PR's branch or base-branch)
-- [ ] PR bodies are non-empty and concern-specific
-- [ ] PR bodies were fetched after creation/edit and verified to contain real line breaks, correct headers, and no unintended formatting artifacts
-- [ ] **Each PR has well-separated commits** — `git log --oneline` per branch shows no commit that mixes unrelated files
-- [ ] Tracking file has all PR URLs and statuses, committed to the dirty branch
-- [ ] No extraneous files committed on stack/ branches
-
----
-
-## Branch Naming Convention
-
-```
-feat/description             # New features (e.g., feat/project-setup, feat/hero-section)
-fix/issue-description        # Bug fixes (e.g., fix/header-mobile-menu)
-refactor/what-changed        # Code improvements
-docs/what-documented         # Documentation only
-chore/what-updated           # Config, deps, tooling
-```
-
-## PR Size Guidelines
-
-| Size | Files | Recommendation |
-|------|-------|----------------|
-| Tiny | 1-2 | Perfect for fixes |
-| Small | 3-5 | Ideal PR size |
-| Medium | 6-10 | Acceptable for features |
-| Large | 11-20 | Consider splitting |
-| Huge | 20+ | MUST split |
 
 ## Red Flags (Stop and Split)
-
-- More than 10 files modified
-- Multiple unrelated changes
+- More than 10 files modified in a single PR
+- Multiple unrelated change types (`feat` mixed with `refactor` or `chore`)
 - "While I'm here, let me also..."
-- Can't describe in one sentence
-- Review would take > 30 minutes
+- The PR description requires "and" in the title or summary
+- A reviewer would take > 20 minutes to understand the diff
 
-## Workflow Per PR
-
-```
-1. Create branch from main
-2. Implement ONLY this PR's scope
-3. Test locally
-4. Create PR with clear description (invoke this skill's `/pr` submode)
-5. Review and merge to main
-6. Delete branch
-7. Pull main
-8. Repeat for next PR
-```
-
-## Discipline Reminders
-
-Before committing, ask yourself:
-- [ ] Is this PR focused on ONE thing?
-- [ ] Would a reviewer understand this in < 15 minutes?
-- [ ] Does main stay deployable after merge?
-- [ ] Am I tempted to add "just one more thing"? (Don't!)
-
-## Emergency: PR Getting Too Large
-
-If your current work is getting too big:
-
-1. **Stop** - Don't add more changes
-2. **Assess** - What's the smallest shippable unit?
-3. **Stash** - `git stash` extra changes
-4. **Ship** - Create PR with smallest unit
-5. **Continue** - Pop stash, start next PR
-
----
-
-**NEVER include in any PR body:**
-- AI attribution
-- Generated-by footers
-- Over-explaining small diffs
-- File-by-file changelogs unless explicitly requested
-- Code implementation details (internal helpers, variable names, plumbing mechanics) instead of observable behavior
-- Unnecessary `## Stack Context` on non-stacked PRs
----
-
-**Remember**: A 5-file PR merged today > a 50-file PR "almost done"
+**Remember**: A 5-file PR merged today > a 50-file PR "almost done". Effortless reviewability is the standard of senior engineering.
