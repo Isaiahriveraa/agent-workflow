@@ -14,14 +14,14 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/cancel/SKILL.md",
       "skillPath": "skills/cancel/SKILL.md",
-      "skillFolderHash": "d806b64f63f436dec1e23527814921ddad1020bc"
+      "skillFolderHash": "b50a5b6a04db5a85afd116ea2143b30390292524"
     },
     "code-review": {
       "source": ".agents",
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/code-review/SKILL.md",
       "skillPath": "skills/code-review/SKILL.md",
-      "skillFolderHash": "859af7a9c0d322eeffb397ae690f38187092efca"
+      "skillFolderHash": "d04c48dd490b6a97d50745f04e703cf5f60788f3"
     },
     "codebase-design": {
       "source": ".agents",
@@ -35,7 +35,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/design",
       "skillPath": "skills/design/SKILL.md",
-      "skillFolderHash": "ad89a84f283536d61f33f552ab4c6de6f7d0c03e"
+      "skillFolderHash": "1bee862e745251dadf264d566dec5d233570ea0e"
     },
     "commit": {
       "source": ".agents",
@@ -49,7 +49,7 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/mattpocock/skills.git",
       "skillPath": "skills/engineering/diagnose/SKILL.md",
-      "skillFolderHash": "93e27d8f051ea5495ce225f8e91448241dc8ada7",
+      "skillFolderHash": "da558dbe453a050086cd2dbefa24fa4b33c48791",
       "pluginName": "mattpocock-skills",
       "installedAt": "2026-05-24T03:48:02.060Z",
       "updatedAt": "2026-05-24T03:48:02.060Z"
@@ -59,7 +59,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/domain-modeling/SKILL.md",
       "skillPath": "skills/domain-modeling/SKILL.md",
-      "skillFolderHash": "3d114d7ed095193635f5c57318d10e675734cad8"
+      "skillFolderHash": "6e80eeea6e2d1241205eff969fcb48d475d7df38"
     },
     "e2e-testing-patterns": {
       "source": "wshobson/agents",
@@ -75,7 +75,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/enforce",
       "skillPath": "skills/enforce/SKILL.md",
-      "skillFolderHash": "0fabde8aa1b279ea86a16e3f5e76dafb0d73e88e",
+      "skillFolderHash": "bee85f9fec2dd7ce31384919d5a2cfbfbb943d66",
       "installedAt": "2026-07-16T00:00:00.000Z",
       "updatedAt": "2026-07-16T00:00:00.000Z"
     },
@@ -84,7 +84,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/spawn",
       "skillPath": "skills/spawn/SKILL.md",
-      "skillFolderHash": "dbb3fd968555f2c09eb77782e4ae147e40805682",
+      "skillFolderHash": "c6925b57994f8ca839bfb5c0098300f624a1954d",
       "installedAt": "2026-07-16T00:00:00.000Z",
       "updatedAt": "2026-09-09T00:00:00.000Z"
     },
@@ -102,14 +102,14 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/issue-discovery/SKILL.md",
       "skillPath": "skills/issue-discovery/SKILL.md",
-      "skillFolderHash": "33943a5c74768227fedacfa2ab82286e205a930f"
+      "skillFolderHash": "212a057588b1bb6d7a42475eaf476c4d91ad6036"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
       "sourceUrl": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git",
       "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
-      "skillFolderHash": "b3ab45c714a7222dbf41bff153fc0570640e356b",
+      "skillFolderHash": "0045877df95bc4964ba6abb8b564ec0fb6909f5e",
       "installedAt": "2026-02-17T06:42:06.050Z",
       "updatedAt": "2026-02-17T06:42:06.050Z"
     },
@@ -118,7 +118,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/tutor/SKILL.md",
       "skillPath": "skills/tutor/SKILL.md",
-      "skillFolderHash": "c745bee62f5aeb4fd63f45801cc78e0b1ace8637"
+      "skillFolderHash": "efb97af95f89e5f5be5cfcbe37e6080d105983d4"
     },
     "to-spec": {
       "source": ".agents",
@@ -139,7 +139,7 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/anthropics/skills.git",
       "skillPath": "skills/frontend-design/SKILL.md",
-      "skillFolderHash": "5410fbf325c9522cb79dfc8fc90b4f367926e523",
+      "skillFolderHash": "914dd4e51fd677137975671e7c837211a518333c",
       "installedAt": "2026-02-18T07:29:30.327Z",
       "updatedAt": "2026-02-18T07:29:30.327Z"
     },
@@ -148,7 +148,7 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/mattpocock/skills.git",
       "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
-      "skillFolderHash": "9ad6d86d61e450e33025964dcff84287cb67e711",
+      "skillFolderHash": "d0a18749c96ccaf78637f2a8f5701cfbb1c4912f",
       "pluginName": "mattpocock-skills",
       "installedAt": "2026-05-24T03:48:02.062Z",
       "updatedAt": "2026-05-24T03:48:02.062Z"
@@ -158,28 +158,28 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/handoff/SKILL.md",
       "skillPath": "skills/handoff/SKILL.md",
-      "skillFolderHash": "bb9c2fa70d3c4c9eba36202f0893e64294968213"
+      "skillFolderHash": "a9f70836401baafa4a1d7e6a40db3107fb081c96"
     },
     "impeccable": {
       "source": ".agents",
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/impeccable/SKILL.md",
       "skillPath": "skills/impeccable/SKILL.md",
-      "skillFolderHash": "e1de7303a7685c7fe2962d544fafd1da2aaaa11c"
+      "skillFolderHash": "6740a0efe13ec4a4d342b56adfb01f046dfdc808"
     },
     "implement": {
       "source": ".agents",
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/implement/SKILL.md",
       "skillPath": "skills/implement/SKILL.md",
-      "skillFolderHash": "260b25eac4468565b2bbe1b850bfe04ab2a4017a"
+      "skillFolderHash": "01973588423afb528f140375a7fae7ab0d62d226"
     },
     "next-best-practices": {
       "source": "vercel-labs/next-skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/vercel-labs/next-skills.git",
       "skillPath": "skills/next-best-practices/SKILL.md",
-      "skillFolderHash": "c78f952d4e98bf3694856dbf70c03a6037d4e258",
+      "skillFolderHash": "24732948e63c9fa08ac5afb3ad6a49b5df33d863",
       "installedAt": "2026-02-20T02:10:15.648Z",
       "updatedAt": "2026-02-20T02:10:15.648Z"
     },
@@ -197,7 +197,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan/SKILL.md",
       "skillPath": "skills/plan/SKILL.md",
-      "skillFolderHash": "af3316cf8dd5d3100bc71ea2c6ed0d671b04f124",
+      "skillFolderHash": "521a2a41618ee183c13caf5f84d43eae1663e2ed",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-09-05T00:00:00.000Z"
     },
@@ -206,7 +206,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/pr/SKILL.md",
       "skillPath": "skills/pr/SKILL.md",
-      "skillFolderHash": "3506a491a2d17d6f5dc4bbfd0fb73fa278f4442b",
+      "skillFolderHash": "c2252eb9bf7918a1cd70e26f6c3acce460d22f3f",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-09-04T00:00:00.000Z"
     },
@@ -215,7 +215,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/prompt-master/SKILL.md",
       "skillPath": "skills/prompt-master/SKILL.md",
-      "skillFolderHash": "059e315e549ebd2c782c1bc7e9826c09ef85a196"
+      "skillFolderHash": "cbc934f56bb0c39e13297fde1111aa0edf3d11b7"
     },
     "prototype": {
       "source": ".agents",
@@ -231,7 +231,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/recall/SKILL.md",
       "skillPath": "skills/recall/SKILL.md",
-      "skillFolderHash": "82ea3c3cf447098813730dea4f42ea79ff5b9e7a"
+      "skillFolderHash": "70cac700fb52831bcd80b42900b8982901736f5f"
     },
     "resolving-merge-conflicts": {
       "source": ".agents",
@@ -252,14 +252,14 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/shadcn/SKILL.md",
       "skillPath": "skills/shadcn/SKILL.md",
-      "skillFolderHash": "c5a5c3a8e380ab7d49369c68a715b2da6b1bcc44"
+      "skillFolderHash": "0d653cce62e29c0e7a5725d3f30a3339b9fc66d5"
     },
     "supabase-postgres-best-practices": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/supabase/agent-skills.git",
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
-      "skillFolderHash": "8e5a86aa92990a706512a6454e3a6a6345a950b4",
+      "skillFolderHash": "4d074aeabbcd340cf39b478d542d9a6df64d05e1",
       "installedAt": "2026-02-20T02:10:16.533Z",
       "updatedAt": "2026-02-20T02:10:16.533Z"
     },
@@ -268,14 +268,14 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/tdd/SKILL.md",
       "skillPath": "skills/tdd/SKILL.md",
-      "skillFolderHash": "f5cd3df79c253650f68e88389dd13a0a2c3dadd2"
+      "skillFolderHash": "61cbbda0b9084b235f3813a02a3b58bd9d213312"
     },
     "codebase-drill": {
       "source": ".agents",
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/codebase-drill",
       "skillPath": "skills/codebase-drill/SKILL.md",
-      "skillFolderHash": "406a12dd6b18fe56b9a164c066609192c3e51869",
+      "skillFolderHash": "1aa40c101062da061250bd07ffc5fcf3fb04a496",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-08-19T19:09:54.846045Z"
     },
@@ -284,7 +284,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/learn-plan",
       "skillPath": "skills/learn-plan/SKILL.md",
-      "skillFolderHash": "a6b2c76b398c628c875142f02eed794be30122fd",
+      "skillFolderHash": "cc21017ca594cd42207c2a447ede59ee20a0a1dd",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
@@ -293,7 +293,7 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/shadcn/improve.git",
       "skillPath": "skills/improve/SKILL.md",
-      "skillFolderHash": "7d77d76815e6deb704427f17f6e393f55e3cb6da",
+      "skillFolderHash": "14a189e068fb0e0c2891b231672ff73553f12d22",
       "installedAt": "2026-08-20T05:01:20.324Z",
       "updatedAt": "2026-08-20T05:01:20.324Z"
     },
@@ -302,7 +302,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/frontend-implement",
       "skillPath": "skills/frontend-implement/SKILL.md",
-      "skillFolderHash": "3e0fbebe5bd61c021f825cdac4db2e77a563b6f6",
+      "skillFolderHash": "1b28474b99ddc10a9b3fd101815a9bdf92af878f",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-08-20T00:00:00.000Z"
     },
@@ -311,7 +311,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/research",
       "skillPath": "skills/research/SKILL.md",
-      "skillFolderHash": "985569f15739c713d6784887c3d186d4ef9ac85b",
+      "skillFolderHash": "f21e404bd942e960f188d40ff93ae85444a65b9b",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
@@ -320,7 +320,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-issues",
       "skillPath": "skills/to-issues/SKILL.md",
-      "skillFolderHash": "204a9206ee2a13d3597aad5795c630fdff853060",
+      "skillFolderHash": "a64b8f796229b8c64217772eba9a6e6b57b70ec8",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-09-05T00:00:00.000Z"
     },
@@ -338,7 +338,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/herdr",
       "skillPath": "skills/herdr/SKILL.md",
-      "skillFolderHash": "99815e4ae319659f6ab21014addd6dc8bd15615c",
+      "skillFolderHash": "237ad2ab2d8123e2bb37956d3a41eed141f2d22a",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
