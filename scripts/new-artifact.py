@@ -1,369 +1,196 @@
 #!/usr/bin/env python3
-"""Create worktree-local context artifacts with ISO-timestamp filenames.
-
-Writes to {git-root}/context/{type}/{YYYY-MM-DD_HH-MM-SS}_{slug}.md.
-"""
+"""Create worktree-local context artifacts with truthful, profile-based scaffolds."""
 
 import argparse
 import datetime
 import pathlib
+import re
 import subprocess
 import sys
 
 TYPES = (
-    "handoffs", "reflections", "grill",
-    "glossary", "adr", "prd", "issues", "reviews", "maps", "discover", "frd", "tickets",
-    "decisions", "research", "designs", "solutions", "plans",
-    "test-cases",
+    "handoffs", "reflections", "grill", "adr", "prd", "issue", "review", "reviews", "maps",
+    "glossary", "research", "designs", "solutions", "decisions", "plans", "test-cases",
+    "discover", "frd", "tickets", "issues",
 )
 
 
 def display_time(t: datetime.datetime) -> str:
-    """14:28 -> 2:28 PM."""
-    ampm = "AM" if t.hour < 12 else "PM"
     hour12 = t.hour % 12 or 12
-    return f"{hour12}:{t.minute:02d} {ampm}"
+    return f"{hour12}:{t.minute:02d} {'AM' if t.hour < 12 else 'PM'}"
 
 
 def slug(raw: str) -> str:
-    """Dash-separated, filename-safe."""
-    s = raw.strip()
-    for bad in '/\\:*?"<>|':
-        s = s.replace(bad, "")
-    s = "-".join(s.split())
-    while "--" in s:
-        s = s.replace("--", "-")
-    return s.strip("-") or "untitled"
+    s = re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-")
+    return s or "untitled"
 
 
 def readable(raw: str) -> str:
-    """Human title for inside the file."""
-    s = raw.strip() or "untitled"
-    for bad in '/\\:*?"<>|':
-        s = s.replace(bad, "")
-    return s
+    s = re.sub(r"\s+", " ", raw.strip())
+    return s or "Untitled"
 
 
 def iso_filename(t: datetime.datetime) -> str:
-    """YYYY-MM-DD_HH-MM-SS for ISO-prefixed filenames."""
-    return f"{t.year:04d}-{t.month:02d}-{t.day:02d}_{t.hour:02d}-{t.minute:02d}-{t.second:02d}"
+    return f"{t:%Y-%m-%d_%H-%M-%S}"
 
 
-def artifact_ext(_: str) -> str:
-    """All context artifacts use plain Markdown."""
-    return ".md"
+def frontmatter(title: str, date_str: str, kind: str, extra: str = "") -> str:
+    return f"---\ndate: {date_str}\ntitle: {title}\ntype: {kind}\n{extra}---\n\n"
 
 
-# --- Templates ---
-
-def reflection_template(title: str, date_str: str, time_str: str) -> str:
-    result  = f"# {title}\n"
-    result += f"*{date_str} - {time_str}*\n"
-    result += "\n## Cold recall (do this first, before opening anything)\n"
-    result += "(from memory: what did I do last session? Don't peek.)\n"
-    result += "\n## Files I touched (and why)\n"
-    result += "\n## Structure changes (and why)\n"
-    result += "\n## My rationale\n"
-    result += "\n## The big picture\n"
-    result += "(Where does this fit in what I'm building?)\n"
-    result += "\n## Explain it to someone with zero context\n"
-    result += "(The Feynman test. If it won't come out clean, that's the gap.)\n"
-    result += "\n## Mode\n"
-    result += "(Drive or Delegate? What did I drive vs. hand off?)\n"
-    result += "\n## Friction and next thread\n"
-    result += "(What's still fuzzy, and what do I pick up next time?)\n"
+def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str:
+    profiles = {
+        "handoffs": ("handoff", "Agent Handoff", ["Active Goal", "Current State", "Latest User Intent", "Locked Decisions", "Do Not Repeat", "Work Completed", "Relevant Files", "Remaining Work", "Open Questions or Blockers", "Resume Here", "Verification", "Success Criteria", "Completion"]),
+        "designs": ("design", "Design", ["Summary", "Raw intent", "Current behavior", "Desired behavior", "Scope", "Non-goals", "Constraints", "Decisions and trade-offs", "System shape and boundaries", "Edge cases and failure behavior", "Evidence", "Open questions", "Acceptance", "Status"]),
+        "research": ("research", "Research", ["Question", "Conclusion", "Key Evidence", "Options & Tradeoffs", "Recommendation & System Impact", "Remaining Uncertainty", "Sources"]),
+        "review": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
+        "reviews": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
+        "plans": ("plan", "Plan", ["Overview", "Problem", "Desired Behavior", "System Shape & Seams", "Decisions and Trade-offs", "Concerns and Dependencies", "Acceptance", "Verification", "Non-goals", "Status"]),
+        "discover": ("discover", "Discovery", ["Question", "Context", "Findings", "Decisions", "Next Steps"]),
+        "frd": ("frd", "Functional Requirements", ["Functional Requirements", "Problem Statement", "Requirements", "Acceptance Criteria"]),
+        "tickets": ("tickets", "Tickets", ["Summary", "Scope", "Acceptance Criteria"]),
+    }
+    kind_name, heading, sections = profiles.get(kind, (kind.rstrip("s"), kind.title(), ["Summary", "Details", "Notes"]))
+    if kind_name == "handoff":
+        extra = "author: unknown\ncommit: unknown\nbranch: unknown\nrepository: unknown\ntopic: " + title + " - Handoff\ntags: [handoff]\nstatus: scaffold\nlast_updated: " + date_str + "\nlast_updated_by: unknown\n"
+        result = frontmatter(title, date_str, kind_name, extra)
+    else:
+        result = frontmatter(title, date_str, kind_name)
+    result += f"# {heading}: {title}\n*{date_str} - {time_str}*\n\n"
+    for section in sections:
+        result += f"## {section}\n\n<!-- Record only verified information, decisions, or clearly labeled placeholders. -->\n\n"
+    if kind == "designs":
+        result = result.replace("## Status\n\n<!-- Record only verified information, decisions, or clearly labeled placeholders. -->", "## Status\n\n- <!-- Choose exactly one: ready-for-plan | blocked -->")
     return result
 
 
-def handoff_template(title: str, date_str: str, time_str: str) -> str:
-    lines = [
-        f"# Agent Handoff: {title}",
-        f"*{date_str} - {time_str}*",
-        "",
-        "## Active Goal",
-        "",
-        "## Current State",
-        "",
-        "## Latest User Intent",
-        "",
-        "## Locked Decisions",
-        "",
-        "## Do Not Repeat",
-        "",
-        "## Work Completed",
-        "",
-        "## Relevant Files",
-        "",
-        "## Remaining Work",
-        "",
-        "## Resume Here",
-        "",
-        "## Open Questions or Blockers",
-        "",
-        "## Verification Status",
-        "",
-        "## Success Criteria",
-        "",
-    ]
-    return "\n".join(lines)
-
-
 def grill_template(title: str, date_str: str, time_str: str) -> str:
-    lines = [
-        f"# {title} - Grill Session",
-        f"*{date_str} - {time_str}*",
-        "",
-        "## Summary",
-        "Plan stress-test session. Key terms challenged, resolved decisions, ADRs created, and remaining open questions.",
-        "",
-        "## Starting Question",
-        "*What was the plan or idea being grilled?*",
-        "",
-        "### Open Questions",
-        "- *(add questions still needing resolution)*",
-        "",
-        "## Terms Challenged",
-        "",
-        "| Term | Issue | Resolution |",
-        "|---|---|---|",
-        "| {term} | {what was fuzzy} | {how it was resolved} |",
-        "",
-        "## Decisions Made",
-        "",
-        "### Decision: {title}",
-        "**Context:** {what prompted the decision}",
-        "**Why:** {rationale}",
-        "**Tradeoff:** {what was given up}",
-        "**Status:** Approved / Pending",
-        "",
-        "## ADRs Created",
-        "",
-        "- `adr/NNNN-slug.md` - {title}",
-        "",
-        "## Key Insights",
-        "",
-        "### Follow-ups",
-        "- [ ] {action item}",
-        "",
-        "## Related",
-        "",
-        "- `context/glossary/glossary.md`",
-        "- `context/handoffs/...`",
-        "- `context/plans/...`",
-        "",
-    ]
-    return "\n".join(lines)
+    return frontmatter(title, date_str, "grill") + f"# Grill Session: {title}\n*{date_str} - {time_str}*\n\n## Opening Orientation\n\n<!-- State the terminal-first goal, current context, and one question to answer. -->\n\n## Q&A Transcript\n\n<!-- Record one question and answer exchange at a time; do not invent answers. -->\n\n## Summary\n\n<!-- Terminal-first transcript summary; no invented answers. -->\n\n### Open Questions\n\n- <!-- Ask one question at a time. -->\n\n### Terms Challenged\n\n| Term | Issue | Resolution |\n|---|---|---|\n\n### Decisions Made\n\n- <!-- Add only decisions reached in this session. -->\n\n### Follow-ups\n\n- <!-- Add a next step only when it is grounded in the transcript. -->\n"
 
-def empty_template(title: str, date_str: str, time_str: str) -> str:
-    return f"# {title}\n*{date_str} - {time_str}*\n\n"
+
 
 
 def adr_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: adr\nstatus: proposed\n---\n\n"
-    s += f"# {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Status\n\nProposed\n\n## Context\n\n\n## Decision\n\n\n## Consequences\n\n"
-    return s
-
-def prd_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: prd\n---\n\n"
-    s += f"# PRD: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Problem Statement\n\n\n## Solution\n\n\n## User Stories\n\n\n## Implementation Decisions\n\n\n## Testing Decisions\n\n\n## Out of Scope\n\n\n## Further Notes\n\n"
-    return s
-
-
-def issue_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: issue\n---\n\n"
-    s += f"# Issue: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## What to build\n\n\n## Acceptance Criteria\n\n- [ ]\n\n## Blocked by\n\nNone - can start immediately\n"
-    return s
-
-
-def review_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: review\n---\n\n"
-    s += f"# Review: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Summary\n\n\n## Findings\n\n"
-    return s
-
-
-def map_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: decision-map\n---\n\n"
-    s += f"# Decision Map: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Tickets\n\n"
-    return s
+    return frontmatter(title, date_str, "adr", "status: proposed\n") + f"# {title}\n*{date_str} - {time_str}*\n\n## Context\n\n<!-- Problem and forces. -->\n\n## Decision\n\n<!-- State the decision, or leave this as proposed. -->\n\n## Consequences\n\n<!-- Record positive, negative, and neutral consequences. -->\n"
 
 
 def glossary_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: glossary\n---\n\n"
-    s += f"# Glossary: {title}\n*{date_str} - {time_str}*\n\n"
-    return s
+    return frontmatter(title, date_str, "glossary") + f"# Glossary: {title}\n*{date_str} - {time_str}*\n\n**{title}**: <!-- Definition. -->\n\n_Avoid_: <!-- Terms or interpretations to avoid. -->\n\nRelationships: <!-- Related terms and distinctions. -->\n\nFlagged ambiguities: <!-- Unresolved meaning or usage questions. -->\n\nExample dialogue: <!-- Short truthful usage example. -->\n"
 
 
-def research_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: research\n---\n\n"
-    s += f"# Research: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Summary\n\n\n## Findings\n\n\n## Open Questions\n\n"
-    return s
+def generic_template(kind: str, title: str, date_str: str, time_str: str) -> str:
+    return profile_template(kind, title, date_str, time_str)
 
 
-def design_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: design\n---\n\n"
-    s += f"# Design: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Summary\n\n\n## Architecture\n\n\n## Decisions\n\n"
-    return s
-
-
-def solutions_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: solutions\n---\n\n"
-    s += f"# Solutions: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Options\n\n\n## Recommendation\n\n"
-    return s
-
-
-def decision_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: decision\n---\n\n"
-    s += f"# Decision: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Context\n\n\n## Decision\n\n\n## Consequences\n\n"
-    return s
-
-
-def plan_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: plan\n---\n\n"
-    s += f"# Plan: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Overview\n\n"
-    return s
-
-def discover_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: discover\n---\n\n"
-    s += f"# Discovery: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Summary\n\n\n## Findings\n\n\n## Next Steps\n\n"
-    return s
-
-
-def frd_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: frd\n---\n\n"
-    s += f"# Functional Requirements: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Problem Statement\n\n\n## Requirements\n\n\n## Acceptance Criteria\n\n"
-    return s
-
-
-def tickets_template(title: str, date_str: str, time_str: str) -> str:
-    s = f"---\ndate: {date_str}\ntitle: {title}\ntype: tickets\n---\n\n"
-    s += f"# Ticket: {title}\n*{date_str} - {time_str}*\n\n"
-    s += "## Summary\n\n\n## Scope\n\n\n## Acceptance Criteria\n\n"
-    return s
-
-
-
-
-# --- Router ---
-def template(art_type: str, title: str, date_str: str, time_str: str, iso_date: str | None = None) -> str:
-    templates = {
-        "handoffs": handoff_template,
-        "reflections": reflection_template,
-        "grill": grill_template,
-        "glossary": glossary_template,
-        "adr": adr_template,
-        "prd": prd_template,
-        "issues": issue_template,
-        "reviews": review_template,
-        "maps": map_template,
-        "discover": discover_template,
-        "frd": frd_template,
-        "tickets": tickets_template,
-        "research": research_template,
-        "designs": design_template,
-        "solutions": solutions_template,
-        "decisions": decision_template,
-        "plans": plan_template,
-        "test-cases": empty_template,
-    }
-    tpl = templates.get(art_type, empty_template)
-    content = tpl(title, date_str, time_str)
-    # Replace frontmatter display date with machine-parseable ISO date
-    if iso_date and content.startswith("---"):
-        content = content.replace(f"date: {date_str}", f"date: {iso_date}", 1)
-    return content
-# --- Main ---
+def template(art_type: str, title: str, date_str: str, time_str: str, iso_date=None) -> str:
+    if art_type == "grill":
+        return grill_template(title, date_str, time_str)
+    if art_type == "adr":
+        return adr_template(title, date_str, time_str)
+    if art_type == "glossary":
+        return glossary_template(title, date_str, time_str)
+    return generic_template(art_type, title, date_str, time_str)
 
 
 def git_root() -> pathlib.Path | None:
-    """Return the current worktree root, or None outside a Git worktree."""
     try:
-        git_top = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-        if not git_top:
-            return None
-        return pathlib.Path(git_top).resolve()
-    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        result = subprocess.run(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, check=True)
+        return pathlib.Path(result.stdout.strip())
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return None
+
+
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create a worktree-local context artifact.")
-    parser.add_argument("--type", choices=TYPES, default="handoffs",
-                        help="Artifact type")
-    parser.add_argument("--topic", dest="topic_flag",
-                        help="Topic for the generated file")
-    parser.add_argument("topic", nargs="*",
-                        help="Topic for the generated file")
+    parser.add_argument("--type", choices=TYPES, required=True, dest="art_type")
+    parser.add_argument("--topic", nargs="*", dest="topic_flag", help="Topic for the generated file")
+    parser.add_argument("topic", nargs="*", help="Topic for the generated file")
     return parser.parse_args()
+
+
+def bundle_files(kind: str, title: str, date_str: str, time_str: str) -> dict[str, str]:
+    if kind == "plans":
+        index = profile_template("plans", title, date_str, time_str)
+        index += "## Concern map\n\n<!-- List stable concern IDs and their step files. -->\n\n## Dependency graph\n\n<!-- Record start-now, concurrent, and blocked relationships. -->\n\n## Step index\n\n<!-- No concerns have been invented by this scaffold. -->\n"
+        return {
+            "00-index.md": index,
+        }
+    return {
+        "000-index.md": (
+            f"# {title}\n\n"
+            "<!-- Local issue draft scaffold; no child concerns have been invented. -->\n\n"
+            "**Plan-step identity:** <!-- Local plan concern or step identity. -->\n"
+            "**Local draft path:** <!-- Path under context/issues/<concern>/. -->\n\n"
+            "## Summary\n\n"
+            "<!-- Plain-English overview of the goal, who it helps, and what will be accomplished. -->\n\n"
+            "## Current behavior\n\n"
+            "<!-- Ground this in observed impact: what is missing, broken, or unhandled today? -->\n\n"
+            "## Intended behavior\n\n"
+            "<!-- Describe the target behavior, flow, or experience in plain English. -->\n\n"
+            "## Context & Sub-issues\n\n"
+            "- **Part of initiative:** <!-- Index issue or initiative name. -->\n"
+            "- **Depends on:** <!-- Prerequisite issue or none. -->\n"
+            "- **Blocks / Unblocks:** <!-- Subsequent issue or none. -->\n"
+            "- **Position:** <!-- Start now | Concurrent | Blocked. -->\n\n"
+            "## Expected outcome\n\n"
+            "- [ ] <!-- Observable outcome: what success looks like upon completion. -->\n\n"
+            "## Plan reference\n\n"
+            "- **Source Plan:** <!-- Durable source plan path or URL. -->\n"
+            "> **Note for implementers:** This plan is a **rough draft and guidance document**, not an unalterable specification. Use it for architectural context, guidance, and inspiration. Validate assumptions, inspect live code, and think through edge cases yourself during implementation.\n"
+        ),
+    }
 
 
 def main() -> None:
     args = parse_args()
-    now = datetime.datetime.now()
-    raw_topic = args.topic_flag or " ".join(args.topic) or "untitled"
-    title = readable(raw_topic)
-
-    repo_root = git_root()
-    if repo_root is None:
+    raw_topic = " ".join(args.topic_flag or args.topic).strip() or "untitled"
+    title, root = readable(raw_topic), git_root()
+    if root is None:
         print("Error: artifact creation requires a Git worktree.", file=sys.stderr)
         sys.exit(1)
-    root = repo_root / "context"
-
-    short_month = now.strftime("%b")
-    date_str = f"{short_month} {now.day}, {now.year}"
-    iso_date = f"{now.year:04d}-{now.month:02d}-{now.day:02d}"
-    time_str = display_time(now)
-
-    # Determine folder and filename
-    art_type = args.type
-
-    if art_type == 'glossary':
-        folder = root / 'glossary'
+    now = datetime.datetime.now()
+    date_str, time_str = f"{now:%Y-%m-%d}", display_time(now)
+    if args.art_type == "glossary":
+        folder = root / "context" / "glossary"
+        filepath = folder / "glossary.md"
         folder.mkdir(parents=True, exist_ok=True)
-        filepath = folder / 'glossary.md'
-        term_header = f"**{title}**:\n"
-        term_body = f"{{A one or two sentence description of {title}}}\n_Avoid_: \n"
+        term = f"**{title}**: <!-- Definition. -->\n"
         if filepath.exists():
-            with open(filepath, "a", encoding="utf-8") as f:
-                f.write(f"\n{term_header}{term_body}")
-            print(f"Appended to: {filepath}")
-            return
+            existing = filepath.read_text(encoding="utf-8")
+            if term not in existing:
+                with filepath.open("a", encoding="utf-8") as handle:
+                    handle.write("\n" + term)
+                print(f"Appended to: {filepath}")
+            else:
+                print(f"Already present: {filepath}")
         else:
-            header = f"# Glossary\n\n{term_header}{term_body}"
-            filepath.write_text(header, encoding="utf-8")
+            filepath.write_text(glossary_template(title, date_str, time_str), encoding="utf-8")
             print(f"Created: {filepath}")
+        return
+    if args.art_type in ("plans", "issues"):
+        folder = root / "context" / args.art_type / slug(raw_topic)
+        files = bundle_files(args.art_type, title, date_str, time_str)
+        if folder.exists():
+            print(f"Already exists: {folder}")
+            for name in files:
+                print(f"Existing: {folder / name}")
             return
-    else:
-        iso_part = iso_filename(now)
-        ext = artifact_ext(art_type)
-        folder = root / art_type
-        filename = f"{iso_part}_{slug(raw_topic)}{ext}"
+        folder.mkdir(parents=True, exist_ok=False)
+        for name, content in files.items():
+            (folder / name).write_text(content, encoding="utf-8")
+            print(f"Created: {folder / name}")
+        return
+    folder = root / "context" / args.art_type
     folder.mkdir(parents=True, exist_ok=True)
-    filepath = folder / filename
-
+    filepath = folder / f"{iso_filename(now)}_{slug(raw_topic)}{'.md'}"
     if filepath.exists():
         print(f"Already exists: {filepath}")
         return
-
-    content = template(art_type, title, date_str, time_str, iso_date)
-    filepath.write_text(content, encoding="utf-8")
+    filepath.write_text(template(args.art_type, title, date_str, time_str), encoding="utf-8")
     print(f"Created: {filepath}")
-    return
+
 
 if __name__ == "__main__":
     main()
