@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@prototype-kit": ["./src/kit.tsx"],
+      "@prototype": ["./template/prototype.tsx"]
+    }
+  },
+  "include": ["src/**/*", "template/**/*"]
+}

@@ -6,7 +6,8 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/skill-index",
       "skillPath": "skills/skill-index/SKILL.md",
-      "skillFolderHash": "73092d38d21c553993fb592849579924ecfe0207"
+      "skillFolderHash": "3599d62e0bcdec0811caa855c85a8837b1cd4911",
+      "updatedAt": "2026-09-11T05:04:15.000Z"
     },
     "cancel": {
       "source": ".agents",
@@ -217,14 +218,13 @@
       "skillFolderHash": "059e315e549ebd2c782c1bc7e9826c09ef85a196"
     },
     "prototype": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/mattpocock/skills.git",
-      "skillPath": "skills/engineering/prototype/SKILL.md",
-      "skillFolderHash": "a22819f8d110489053cc72ac66589e86578b1f31",
-      "pluginName": "mattpocock-skills",
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/prototype/SKILL.md",
+      "skillPath": "skills/prototype/SKILL.md",
+      "skillFolderHash": "ee955a9afbaf1f0332c66c8ea5b1e8739d44ef7f",
       "installedAt": "2026-05-24T03:48:02.064Z",
-      "updatedAt": "2026-05-24T03:48:02.064Z"
+      "updatedAt": "2026-09-11T04:34:30.000Z"
     },
     "recall": {
       "source": ".agents",
