@@ -47,6 +47,27 @@ Do not group changes merely because:
 * they are part of the same user request
 * committing them together is easier
 
+## The Responsibility Unit
+
+A commit's unit is one responsibility: one behavior change with one reason to
+exist.
+
+The commit series is the reviewer's table of contents. If a reviewer must hold
+two ideas in their head to approve one commit, the split failed.
+
+A candidate commit is one responsibility only when all three tests hold:
+
+1. One-sentence test — its purpose is one sentence with no conjunction and no
+   comma-separated concept list.
+2. Alone-revert test — reverting only this commit leaves a coherent repository:
+   no dead code, orphaned references, or half-applied concept.
+3. Independent-approve test — a reviewer can approve or reject it without
+   having an opinion about the other commits in the series.
+
+A pull request concern is a cohesive capability; a commit responsibility is one
+behavior change inside it. One pull request normally contains several commits,
+and a single pull-request concern is never a reason for one omnibus commit.
+
 ## Phase 0: Pre-Commit Review Gate (informational)
 
 By default, Phase 0 is review-or-marker-skip: run the code-review gate unless
@@ -122,9 +143,15 @@ Before staging, unstaging, committing, or modifying Git state:
 3. Understand the purpose of each changed file.
 4. Inspect file-level diffs.
 5. Inspect individual hunks when a file contains multiple concerns.
-6. Group changes into atomic commit candidates.
-7. Present the complete proposed commit structure to the user.
-8. Stop and wait for explicit approval.
+6. Inventory responsibilities: list every distinct behavior change in the
+   working tree — imperative, one line each, no conjunctions. Read the list
+   back: any line containing "and" is two responsibilities; split the line.
+7. Map every hunk to exactly one inventory line. A hunk mapping to two lines is
+   a mixed hunk and must be patch-split.
+8. Propose the most-split valid plan: one commit per inventory line, then merge
+   only pairs that pass the Dependency test with a named, observed failure.
+9. Present the complete proposed commit structure to the user.
+10. Stop and wait for explicit approval.
 
 During Phase 1, NEVER run:
 
@@ -265,10 +292,31 @@ If yes, split them.
 
 ### Dependency
 
-Keep changes together only when separating them would produce an invalid,
-unbuildable, misleading, or unusable intermediate commit.
+Default to splitting. Merge two responsibilities only when you can name the
+concrete failure of splitting them — what breaks and which check proves it —
+and record it as:
 
-Dependency is a valid grouping reason. Convenience is not.
+```text
+Dependency: <X> cannot land without <Y> because <observed failure>
+```
+
+These are not dependencies:
+
+* "they were designed together"
+* "the contract only makes sense with its implementation"
+* "it is one feature or one vertical slice"
+* "the tests are shared"
+* "splitting is extra work"
+
+A vertical slice — domain contract, state reducer, wiring — is normally several
+responsibilities that land in sequence. Ordering is how a split is made legal:
+when the contract, the reducer, and the wiring can be ordered so each
+intermediate commit is valid, the split is legal and required.
+
+When an intermediate commit is genuinely unusable until the next one lands,
+that is a finding to report with its cost: propose the split and let the user
+choose. Only an observed, named failure justifies a merge. If you cannot name
+the broken check, split.
 
 ## Mixed Files and Hunk-Level Staging
 
@@ -367,13 +415,18 @@ Aim for 50 characters when practical.
 
 Hard limit: 72 characters.
 
-## The “And” Heuristic
+## One Subject, One Story
 
-Treat `and`, `also`, `plus`, or `/` in a subject as a warning that the commit
-may contain multiple stories.
+The subject and the Purpose MUST NOT contain `and`, `also`, `plus`, `/`, `+`,
+or a comma joining two concepts.
 
-Do not enforce this mechanically when one indivisible behavior naturally
-requires the wording.
+Two exceptions are allowed, and each MUST be named in the proposal as
+`Indivisible:` with its reason:
+
+1. One indivisible operation that happens to read with a conjunction, such as
+   `fix(parser): validate key and value pairs`.
+2. A mechanical rename where the old and new names appear together; prefer
+   `switch X to Y` over `replace X with Y`.
 
 Bad:
 
@@ -388,13 +441,22 @@ feat(search): add artifact filtering
 refactor(sidebar): simplify navigation state
 ```
 
-Acceptable when it is genuinely one indivisible operation:
+When a subject or Purpose fails this gate and no exception is claimed, that is
+a Failure Condition: do not present the plan.
 
-```text
-fix(parser): validate key and value pairs
-```
+## Bundling Anti-Patterns
 
-Atomicity is determined by intent, not by banning a word blindly.
+* Concept-list subject — `feat(domain): add contracts, quote freezing, and
+  state reducers` names three concepts, so it is three commits.
+* Slice bundle — a contract, its logic, and its wiring committed together
+  because they were written together; the inventory lists three lines.
+* Layer bundle — `refactor: extract helpers, update callers, adjust tests` when
+  each part can land independently.
+* While-I-was-there — an unrelated fix riding along with a feature.
+* Test coupon — tests for unrelated behaviors in one `test:` commit.
+
+Detection is mechanical: run the one-sentence test on both the subject and the
+Purpose. Any conjunction or comma list means split before presenting the plan.
 
 ## Commit Body
 
@@ -448,12 +510,23 @@ Before touching Git state, output:
 ```text
 ## Proposed Commit Plan
 
+### Responsibility Inventory
+1. <verb phrase — one responsibility>
+2. <verb phrase — one responsibility>
+
 ### Commit 1
 Message:
 <type>(<scope>): <summary>
 
 Purpose:
-<one precise explanation of the logical story>
+<one sentence naming the single behavior change; no conjunctions or concept
+lists>
+
+Dependency:
+<none — lands independently | blocked by Commit N because <observed failure>>
+
+Indivisible:
+<not claimed | the reason a split is impossible, with the check that proves it>
 
 Review gate:
 <default review ran | marker matched and review skipped | explicitly skipped
@@ -499,6 +572,10 @@ For a single commit, still show the full proposal.
 
 Do not output only commit messages. The user must be able to review exactly
 which files and hunks belong to each commit.
+
+Every inventory line must appear in exactly one commit, and every commit must
+map to exactly one inventory line. When the mapping is not one-to-one, the
+plan must name the dependency or indivisible exception that justifies it.
 
 Diff Scope must show the exact line counts for the changes covered by the
 proposal: `git diff --numstat` for per-file added/removed counts and
@@ -656,6 +733,10 @@ Do not copy poor historical practices such as vague messages or mixed commits.
 Stop without committing when:
 
 * the user has not approved the plan
+* a subject or Purpose contains a conjunction and no Indivisible exception is
+  claimed
+* two responsibilities are grouped with no named, observed dependency
+* the inventory lines do not account for every change in the diff
 * the diff cannot be understood confidently
 * files contain secrets
 * changes cannot be separated safely
@@ -673,6 +754,12 @@ The workflow is complete only when:
 * the pre-commit review gate ran, was correctly skipped via the marker, or was
   explicitly skipped with `--no`/`--no-review`, and that choice was reported
 * every commit represents one logical story
+* every commit subject and Purpose passes the one-sentence test, or claims a
+  named Indivisible exception
+* every inventory line appears in exactly one commit, and every commit maps to
+  exactly one inventory line
+* every commit that merges two responsibilities names the observed dependency
+  that justifies the merge
 * each message accurately describes its exact staged diff
 * one-concern files were staged as whole files when appropriate
 * mixed-concern and deliberately partial files were separated by hunk
