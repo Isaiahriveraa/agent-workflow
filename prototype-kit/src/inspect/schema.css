@@ -1,0 +1,142 @@
+.schema-view {
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 1.1rem;
+}
+
+.schema-title {
+  margin: 0 0 0.9rem;
+  font-size: 1.15rem;
+}
+
+.schema-fields {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.schema-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.85fr) minmax(0, 1.15fr);
+  gap: 1rem;
+  align-items: start;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+.schema-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.schema-field {
+  min-width: 0;
+}
+
+.schema-field-name,
+.schema-unlisted-name {
+  font-weight: 700;
+}
+
+.schema-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.schema-type,
+.schema-required,
+.schema-permitted,
+.schema-default,
+.schema-note {
+  display: inline-block;
+}
+
+.schema-type {
+  color: var(--accent-dark);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
+}
+
+.schema-required {
+  color: var(--muted);
+}
+
+.schema-permitted,
+.schema-default,
+.schema-note {
+  flex-basis: 100%;
+}
+
+.schema-example {
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+}
+
+.schema-example-value,
+.schema-unlisted-value {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88rem;
+}
+
+.schema-empty-example,
+.schema-unlisted-status {
+  color: var(--tone-warn);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.schema-empty-state,
+.schema-values-empty {
+  margin: 0;
+  padding: 0.8rem;
+  color: var(--muted);
+  background: var(--surface-soft);
+  border: 1px dashed var(--line);
+  border-radius: 0.45rem;
+}
+
+.schema-values-empty {
+  margin-top: 0.8rem;
+  color: var(--tone-warn);
+}
+
+.schema-unlisted {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.85fr) minmax(0, 1.15fr);
+  gap: 0.3rem 1rem;
+  align-items: baseline;
+  margin-top: 0.7rem;
+  padding: 0.7rem;
+  border: 1px dashed var(--tone-warn);
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--tone-warn) 14%, transparent);
+}
+
+.schema-unlisted-status {
+  grid-column: 2;
+}
+
+@media (max-width: 640px) {
+  .schema-row,
+  .schema-unlisted {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .schema-unlisted-status {
+    grid-column: auto;
+  }
+}

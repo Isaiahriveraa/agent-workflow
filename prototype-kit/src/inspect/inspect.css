@@ -1,0 +1,176 @@
+.sdata-view {
+  color: var(--ink);
+  font: inherit;
+  min-width: 0;
+}
+
+.sdata-title {
+  color: var(--ink);
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.sdata-root {
+  min-width: 0;
+}
+
+.sdata-group {
+  border-left: 1px solid var(--line);
+  margin: 0.2rem 0;
+  padding-left: 0.8rem;
+}
+
+.sdata-group-summary {
+  color: var(--muted);
+  font-weight: 650;
+  padding: 0.2rem 0;
+}
+
+.sdata-group-body {
+  min-width: 0;
+}
+
+.sdata-entry {
+  align-items: baseline;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
+  padding: 0.25rem 0;
+}
+
+.sdata-key {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.sdata-entries {
+  min-width: 0;
+}
+
+.sdata-value-wrap,
+.sdata-value {
+  overflow-wrap: anywhere;
+}
+
+.sdata-value-wrap {
+  display: block;
+  grid-column: 2;
+}
+
+.sdata-value {
+  color: var(--ink);
+}
+
+.sdata-plain,
+.sdata-plain-text {
+  white-space: pre-wrap;
+}
+
+.sdata-date {
+  color: var(--muted);
+}
+
+.sdata-link {
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.sdata-link:focus-visible,
+.sdata-group-summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sdata-tone-neutral,
+.sdata-tone-good,
+.sdata-tone-warn,
+.sdata-tone-stop {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.82em;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+}
+
+.sdata-status {
+  white-space: nowrap;
+}
+
+.sdata-tone-neutral {
+  background: color-mix(in srgb, var(--tone-neutral) 14%, transparent);
+  color: var(--tone-neutral);
+}
+
+.sdata-tone-good {
+  background: color-mix(in srgb, var(--tone-good) 14%, transparent);
+  color: var(--tone-good);
+}
+
+.sdata-tone-warn {
+  background: color-mix(in srgb, var(--tone-warn) 14%, transparent);
+  color: var(--tone-warn);
+}
+
+.sdata-tone-stop {
+  background: color-mix(in srgb, var(--tone-stop) 14%, transparent);
+  color: var(--tone-stop);
+}
+
+.sdata-no-value,
+.sdata-opaque,
+.sdata-notice,
+.sdata-field-meta,
+.sdata-remainder,
+.sdata-dropped {
+  color: var(--muted);
+}
+
+.sdata-no-value,
+.sdata-opaque,
+.sdata-notice,
+.sdata-remainder {
+  font-style: italic;
+}
+
+.sdata-opaque {
+  border: 1px dashed var(--line);
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.sdata-notice,
+.sdata-remainder,
+.sdata-dropped {
+  display: block;
+  padding: 0.35rem 0;
+}
+
+.sdata-remainder,
+.sdata-dropped {
+  font-size: 0.85em;
+}
+
+.sdata-field-meta {
+  font-size: 0.78em;
+  grid-column: 1;
+}
+
+.sdata-unlisted {
+  border-left: 3px solid var(--tone-warn);
+  padding-left: 0.5rem;
+}
+.prototype-state {
+  margin-top: 16px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink) 90%, var(--surface));
+  color: var(--surface);
+}
+
+.prototype-state pre {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  font: 12px ui-monospace, SFMono-Regular, monospace;
+  color: var(--surface);
+}
