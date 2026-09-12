@@ -1,0 +1,117 @@
+.seq-board {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.seq-svg {
+  display: block;
+  min-width: 100%;
+  height: auto;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.seq-lane {
+  color: var(--ink);
+}
+
+.seq-lane-name,
+.seq-lane-sub,
+.seq-hop-label,
+.seq-hop-error-text,
+.seq-hop-affordance,
+.seq-empty {
+  pointer-events: none;
+}
+
+.seq-lane-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.seq-lane-sub {
+  fill: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+}
+
+.seq-lane-rule {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.seq-current-marker {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+  stroke: var(--accent);
+  stroke-width: 1;
+  rx: 6;
+}
+
+.seq-hop {
+  outline: none;
+}
+
+.seq-hop-past {
+  opacity: 0.5;
+}
+
+.seq-hop-future {
+  opacity: 0.72;
+}
+
+.seq-hop-current {
+  opacity: 1;
+}
+
+.seq-hop:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.seq-hop-error {
+  color: var(--tone-stop);
+}
+
+.seq-hop-path {
+  fill: none;
+  stroke: var(--accent-dark);
+  stroke-width: 2;
+}
+
+.seq-hop-path-not-built {
+  stroke: var(--muted);
+  stroke-dasharray: 7 5;
+}
+
+.seq-hop-arrow {
+  fill: var(--accent-dark);
+}
+
+.seq-hop-error-text {
+  fill: var(--tone-stop);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.seq-hop-label {
+  fill: var(--ink);
+  font-size: 0.78rem;
+}
+
+.seq-hop-affordance {
+  fill: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.seq-empty {
+  fill: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
