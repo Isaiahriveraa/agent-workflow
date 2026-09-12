@@ -1,117 +1,144 @@
 .seq-board {
   width: 100%;
   overflow-x: auto;
-  overflow-y: visible;
+  padding: var(--space-2);
   background: var(--surface);
   border: 1px solid var(--line);
+  border-radius: var(--radius-md);
 }
 
 .seq-svg {
   display: block;
-  min-width: 100%;
+  width: 100%;
   height: auto;
+  margin-inline: auto;
+  overflow: visible;
   color: var(--ink);
-  font-family: inherit;
-}
-
-.seq-lane {
-  color: var(--ink);
+  font-family: var(--font-ui);
 }
 
 .seq-lane-name,
 .seq-lane-sub,
-.seq-hop-label,
-.seq-hop-error-text,
-.seq-hop-affordance,
 .seq-empty {
   pointer-events: none;
 }
 
 .seq-lane-name {
-  font-size: 0.9rem;
-  font-weight: 700;
+  fill: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 650;
 }
 
 .seq-lane-sub {
   fill: var(--muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
 }
 
 .seq-lane-rule {
-  stroke: var(--line);
+  stroke: var(--line-strong);
   stroke-width: 1;
-  stroke-dasharray: 3 5;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
 }
 
-.seq-current-marker {
-  fill: color-mix(in srgb, var(--accent) 14%, transparent);
-  stroke: var(--accent);
-  stroke-width: 1;
-  rx: 6;
-}
-
+/*
+ * One hop, one colour. `--seq-line` is the whole state vocabulary: past hops fade towards the
+ * board, future hops keep most of the accent, and the step under review takes it undiluted.
+ */
 .seq-hop {
+  --seq-line: color-mix(in srgb, var(--accent) 58%, var(--surface));
   outline: none;
+  cursor: pointer;
 }
 
 .seq-hop-past {
-  opacity: 0.5;
-}
-
-.seq-hop-future {
-  opacity: 0.72;
+  --seq-line: color-mix(in srgb, var(--accent) 26%, var(--surface));
 }
 
 .seq-hop-current {
-  opacity: 1;
+  --seq-line: var(--accent);
+}
+
+.seq-hop-path {
+  fill: none;
+  stroke: var(--seq-line);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+
+.seq-hop-current .seq-hop-path {
+  stroke-width: 2.5;
+}
+
+.seq-hop-path-not-built {
+  stroke-dasharray: 6 5;
+}
+
+.seq-hop-arrow {
+  fill: var(--seq-line);
+}
+
+.seq-hop-halt {
+  stroke: var(--tone-stop);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.seq-hop-error {
+  --seq-line: var(--tone-stop);
+}
+
+/* The halo knocks the lane rules out from behind the words, so a label stays readable anywhere. */
+.seq-hop-label {
+  fill: var(--ink-soft);
+  font-size: var(--text-sm);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 7px;
+  stroke-linejoin: round;
+}
+
+.seq-hop-past .seq-hop-label {
+  fill: var(--muted);
+}
+
+.seq-hop-current .seq-hop-label {
+  fill: var(--accent-dark);
+  font-weight: 650;
+  stroke: var(--accent-soft);
+  stroke-width: 12px;
+}
+
+.seq-hop-error-text {
+  fill: var(--tone-stop);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
+
+.seq-hop-affordance {
+  fill: var(--tone-warn);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 6px;
+  stroke-linejoin: round;
 }
 
 .seq-hop:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 4px;
-}
-
-.seq-hop-error {
-  color: var(--tone-stop);
-}
-
-.seq-hop-path {
-  fill: none;
-  stroke: var(--accent-dark);
-  stroke-width: 2;
-}
-
-.seq-hop-path-not-built {
-  stroke: var(--muted);
-  stroke-dasharray: 7 5;
-}
-
-.seq-hop-arrow {
-  fill: var(--accent-dark);
-}
-
-.seq-hop-error-text {
-  fill: var(--tone-stop);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.seq-hop-label {
-  fill: var(--ink);
-  font-size: 0.78rem;
-}
-
-.seq-hop-affordance {
-  fill: var(--muted);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  border-radius: var(--radius-xs);
 }
 
 .seq-empty {
   fill: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--text-base);
 }

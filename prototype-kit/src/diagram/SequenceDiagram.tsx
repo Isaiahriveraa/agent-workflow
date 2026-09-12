@@ -1,5 +1,12 @@
 import type { KeyboardEvent, ReactNode } from "react";
-import { computeLayout, type DiagramParticipant, type DiagramStep, type SequenceHop, type SequencePath } from "./sequence.ts";
+import {
+  computeLayout,
+  type DiagramParticipant,
+  type DiagramStep,
+  type SequenceHop,
+  type SequenceLine,
+  type SequencePath,
+} from "./sequence.ts";
 import "./diagram.css";
 
 export type SequenceDiagramProps = {
@@ -10,18 +17,32 @@ export type SequenceDiagramProps = {
   title?: string;
 };
 
+/** The board grows on a large screen but never past this, so the type stays a type size. */
+const MAX_SCALE = 1.35;
+
 function pathForHop(path: SequencePath): string {
   if (path.kind === "line") {
     return `M ${path.x1} ${path.y} L ${path.x2} ${path.y}`;
   }
-  return `M ${path.x} ${path.y} C ${path.x + path.width} ${path.y}, ${path.x + path.width} ${path.y + path.height}, ${path.x} ${path.returnY}`;
+  // A self-hop leaves the lane, drops, and returns with a rounded corner so it reads as one gesture.
+  const radius = Math.min(8, path.width / 2, path.height / 2);
+  const right = path.x + path.width;
+  const bottom = path.y + path.height;
+  return [
+    `M ${path.x} ${path.y}`,
+    `H ${right - radius}`,
+    `Q ${right} ${path.y} ${right} ${path.y + radius}`,
+    `V ${bottom - radius}`,
+    `Q ${right} ${bottom} ${right - radius} ${bottom}`,
+    `H ${path.x}`,
+  ].join(" ");
 }
 
 function arrowPoints(hop: SequenceHop): string | null {
-  if (hop.path === null || hop.path.kind === "loop") return null;
-  const direction = hop.path.x2 > hop.path.x1 ? 1 : -1;
-  const x = hop.path.x2;
-  return `${x},${hop.baselineY} ${x - direction * 9},${hop.baselineY - 5} ${x - direction * 9},${hop.baselineY + 5}`;
+  const arrow = hop.arrow;
+  if (arrow === null) return null;
+  const back = arrow.x - arrow.direction * 9;
+  return `${arrow.x},${arrow.y} ${back},${arrow.y - 5} ${back},${arrow.y + 5}`;
 }
 
 function activateOnKey(event: KeyboardEvent<SVGGElement>, onSelectStep: () => void): void {
@@ -31,18 +52,31 @@ function activateOnKey(event: KeyboardEvent<SVGGElement>, onSelectStep: () => vo
   }
 }
 
+/** Renders positioned lines as one text element; the geometry already decided every baseline. */
+function textLines(lines: readonly SequenceLine[], x: number, className: string): ReactNode {
+  return (
+    <text className={className} x={x} textAnchor="middle">
+      {lines.map((line) => (
+        <tspan key={line.id} x={x} y={line.y}>
+          {line.text}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
 function renderHop(hop: SequenceHop, index: number, currentStep: number | undefined, onSelectStep?: (index: number) => void): ReactNode {
   const state = hop.current ? "current" : currentStep !== undefined && index < currentStep ? "past" : "future";
-  const stateClass = `seq-hop-${state}`;
-  const accessibleName = hop.error === undefined
-    ? hop.built ? hop.label.accessibleName : `${hop.label.accessibleName}; not built`
-    : `${hop.label.accessibleName}; ${hop.error}`;
+  const accessibleName = hop.error !== undefined
+    ? `${hop.label.accessibleName}; ${hop.error}`
+    : hop.built ? hop.label.accessibleName : `${hop.label.accessibleName}; not built`;
   const interactive = onSelectStep !== undefined;
   const pathClass = hop.built ? "seq-hop-path" : "seq-hop-path seq-hop-path-not-built";
+  const arrow = arrowPoints(hop);
   return (
     <g
       key={hop.id}
-      className={`seq-hop ${stateClass}${hop.error === undefined ? "" : " seq-hop-error"}`}
+      className={`seq-hop seq-hop-${state}${hop.error === undefined ? "" : " seq-hop-error"}`}
       aria-label={accessibleName}
       {...(interactive ? {
         tabIndex: 0,
@@ -52,16 +86,21 @@ function renderHop(hop: SequenceHop, index: number, currentStep: number | undefi
         onKeyDown: (event: KeyboardEvent<SVGGElement>) => activateOnKey(event, () => onSelectStep(index)),
       } : {})}
     >
-      {hop.path === null ? (
-        <text className="seq-hop-error-text" x={hop.label.x} y={hop.baselineY}>{hop.error ?? "Unable to render step"}</text>
+      {hop.path === null || arrow === null ? (
+        <path className="seq-hop-halt" d={`M ${hop.label.x} ${hop.baselineY + 6} h 26`} />
       ) : (
         <>
           <path className={pathClass} d={pathForHop(hop.path)} />
-          {arrowPoints(hop) === null ? null : <polygon className="seq-hop-arrow" points={arrowPoints(hop) ?? ""} />}
+          <polygon className="seq-hop-arrow" points={arrow} />
         </>
       )}
-      <text className="seq-hop-label" x={hop.label.x} y={hop.label.y} textAnchor="middle">{hop.label.display}</text>
-      {!hop.built ? <text className="seq-hop-affordance" x={hop.label.x} y={hop.label.y + 14} textAnchor="middle">not built</text> : null}
+      {textLines(hop.label.lines, hop.label.x, "seq-hop-label")}
+      {hop.errorY === null ? null : (
+        <text className="seq-hop-error-text" x={hop.label.x} y={hop.errorY} textAnchor="middle">{hop.error ?? "Unable to render step"}</text>
+      )}
+      {hop.affordanceY === null ? null : (
+        <text className="seq-hop-affordance" x={hop.label.x} y={hop.affordanceY} textAnchor="middle">not built</text>
+      )}
     </g>
   );
 }
@@ -73,15 +112,21 @@ export function SequenceDiagram({ participants, steps, currentStep, onSelectStep
   const accessibleTitle = `${diagramTitle}; current step: ${current}`;
   return (
     <div className="seq-board">
-      <svg className="seq-svg" width={layout.width} height={layout.height} viewBox={`0 0 ${layout.width} ${layout.height}`} role="img" aria-label={accessibleTitle}>
-        {layout.currentStepMarker === null ? null : (
-          <rect className="seq-current-marker" x={layout.currentStepMarker.x} y={layout.currentStepMarker.y} width={layout.currentStepMarker.width} height={layout.currentStepMarker.height} />
-        )}
+      {/* Drawn at design size so text never shrinks, and capped so a huge monitor does not zoom it. */}
+      <svg
+        className="seq-svg"
+        width={layout.width}
+        height={layout.height}
+        viewBox={`0 0 ${layout.width} ${layout.height}`}
+        style={{ minWidth: layout.width, maxWidth: Math.round(layout.width * MAX_SCALE) }}
+        role="img"
+        aria-label={accessibleTitle}
+      >
         {layout.lanes.map((lane) => (
-          <g className="seq-lane" key={lane.id}>
-            <text className="seq-lane-name" x={lane.x} y={24} textAnchor="middle">{lane.name}</text>
-            {lane.sub === undefined ? null : <text className="seq-lane-sub" x={lane.x} y={42} textAnchor="middle">{lane.sub}</text>}
-            <line className="seq-lane-rule" x1={lane.x} x2={lane.x} y1={52} y2={layout.height - 18} />
+          <g key={lane.id}>
+            {textLines(lane.nameLines, lane.x, "seq-lane-name")}
+            {textLines(lane.subLines, lane.x, "seq-lane-sub")}
+            <line className="seq-lane-rule" x1={lane.x} x2={lane.x} y1={layout.ruleTop} y2={layout.ruleBottom} />
           </g>
         ))}
         {layout.empty === null ? layout.hops.map((hop, index) => renderHop(hop, index, currentStep, onSelectStep)) : (
