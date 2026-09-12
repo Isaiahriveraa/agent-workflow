@@ -1,24 +1,80 @@
+/*
+ * Design tokens for the prototype workspace. Everything visual reads from here, so a prototype
+ * re-themes the Kit by overriding custom properties rather than copying rules.
+ */
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color: var(--ink);
-  background: var(--surface-soft);
-  line-height: 1.5;
-  --ink: #292622;
-  --muted: #706b64;
-  --line: #ded8cf;
+  color-scheme: light;
+
+  /* Surfaces: ivory paper, white boards, a warm inset for controls. */
+  --paper: #f6f4ef;
   --surface: #fffdfa;
-  --surface-soft: #f8f5f0;
-  --accent: #9a4f2f;
-  --accent-dark: #79371f;
-  --focus: #c66d47;
-  --tone-neutral: #706b64;
-  --tone-neutral-soft: #f1eee9;
-  --tone-good: #2d6a4f;
-  --tone-good-soft: #e4f0e8;
-  --tone-warn: #9a641f;
-  --tone-warn-soft: #f7ecd8;
-  --tone-stop: #9b3d31;
-  --tone-stop-soft: #f8e3df;
+  --surface-soft: #f1eee7;
+  --surface-sunken: #e9e5db;
+
+  /* Ink: near-black text, softened for secondary copy. */
+  --ink: #14130f;
+  --ink-soft: #38352f;
+  --muted: #5f5a51;
+
+  --line: #e4dfd3;
+  --line-strong: #cdc6b6;
+
+  /* Clay: one accent, used for structure. Semantic tones carry the rest of the colour. */
+  --accent: #c05a35;
+  --accent-dark: #96401f;
+  --accent-soft: #f7e8e0;
+  --on-accent: #fffdfa;
+  --focus: #7a3216;
+
+  --tone-neutral: #5f5a51;
+  --tone-neutral-soft: #f1eee7;
+  --tone-good: #1f6b45;
+  --tone-good-soft: #e2f0e7;
+  --tone-warn: #8a5a10;
+  --tone-warn-soft: #f7eeda;
+  --tone-stop: #a03225;
+  --tone-stop-soft: #f9e4df;
+
+  --font-display: ui-serif, "New York", "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* A desktop-only scale: readable at 1440p without shrinking on a 5K board. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.3125rem;
+  --text-title: clamp(1.375rem, 1.08rem + 0.65vw, 1.9rem);
+
+  --leading-tight: 1.22;
+  --leading-snug: 1.32;
+  --leading-normal: 1.55;
+
+  --radius-xs: 4px;
+  --radius-sm: 7px;
+  --radius-md: 11px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ch measures the digit zero, so the character count below is roughly 1.4x this number. */
+  --measure: 54ch;
+  --measure-wide: 88ch;
+
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 *,
@@ -29,17 +85,48 @@
 
 body {
   margin: 0;
-  background: var(--surface-soft);
+  background: var(--paper);
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: var(--leading-tight);
+}
+
+h3,
+h4 {
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  line-height: var(--leading-snug);
+}
+
+p {
+  max-width: var(--measure);
+  margin: 0 0 var(--space-3);
+}
+
+p:last-child {
+  margin-bottom: 0;
 }
 
 button,
-select {
+select,
+input {
   font: inherit;
+  color: inherit;
 }
 
-button:focus-visible,
-select:focus-visible,
-summary:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--focus) 35%, transparent);
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
+}
+
+:where(button, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
