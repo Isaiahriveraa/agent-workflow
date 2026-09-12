@@ -222,9 +222,9 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/prototype/SKILL.md",
       "skillPath": "skills/prototype/SKILL.md",
-      "skillFolderHash": "ee955a9afbaf1f0332c66c8ea5b1e8739d44ef7f",
+      "skillFolderHash": "4b0ce59dfa2c994059bf88e404f4f930ec7411b5",
       "installedAt": "2026-05-24T03:48:02.064Z",
-      "updatedAt": "2026-09-11T04:34:30.000Z"
+      "updatedAt": "2026-09-12T21:35:16.000Z"
     },
     "recall": {
       "source": ".agents",
