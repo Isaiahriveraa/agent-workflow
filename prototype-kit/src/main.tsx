@@ -12,13 +12,13 @@ import "@excalidraw/excalidraw/index.css";
 import "./kit.css";
 import definition from "@prototype";
 import type { PrototypeDefinition, PrototypeVariant } from "@prototype-kit";
-import { SegmentedControl } from "./components/ui.tsx";
+import { Button, SegmentedControl } from "./components/ui.tsx";
 import { Split } from "./Split.tsx";
 
 class PreviewBoundary extends Component<{ children: ReactNode }, { error: Error | null; retry: number }> {
   state: { error: Error | null; retry: number } = { error: null, retry: 0 };
   render() {
-    if (this.state.error) return <div className="preview-error" role="alert"><h2>Preview failed</h2><p>{this.state.error.message}</p><button type="button" onClick={() => this.setState({ error: null, retry: this.state.retry + 1 })}>Retry</button></div>;
+    if (this.state.error) return <div className="preview-error" role="alert"><h2>Preview failed</h2><p>{this.state.error.message}</p><Button variant="primary" onClick={() => this.setState({ error: null, retry: this.state.retry + 1 })}>Retry</Button></div>;
     return <>{this.state.retry > 0 ? <div key={this.state.retry}>{this.props.children}</div> : this.props.children}</>;
   }
 }
@@ -51,7 +51,7 @@ function validateDefinition(value: unknown): string | null {
 }
 function safeFilename(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "prototype"; }
 
-const styles = `.prototype-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;padding:24px 32px;border-bottom:1px solid var(--line);background:var(--surface)}.prototype-kicker{font:600 11px ui-monospace,SFMono-Regular,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}.prototype-topbar h1,.preview-heading h2{margin:5px 0;font-size:clamp(21px,2vw,28px);line-height:1.15;letter-spacing:-.02em}.prototype-topbar p{max-width:680px;margin:8px 0 0;color:var(--muted);font-size:15px}.prototype-controls{display:flex;gap:8px;align-items:center;flex-shrink:0}.prototype-controls button,.preview-panel button{border:1px solid #cfc6ba;border-radius:5px;background:var(--surface);color:var(--ink);padding:9px 13px;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}.prototype-controls button:hover,.preview-panel button:hover{background:#f4ebe3;border-color:#bda994}.prototype-controls button:first-child{background:var(--accent);border-color:var(--accent);color:#fff}.prototype-controls button:first-child:hover{background:var(--accent-dark)}.prototype-mode{margin:0}.prototype-mode .ui-segmented-legend{font-size:11px}.prototype-workspace{height:calc(100vh - 105px);min-height:0}.prototype-workspace .split{height:100%}.mode-split .split{height:100%}.whiteboard-panel{min-width:0;height:100%;border-right:1px solid var(--line);background:#fff}.preview-panel{overflow:auto;padding:30px clamp(20px,3vw,40px);background:var(--surface-soft)}.preview-heading{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:22px}.preview-heading label{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--muted)}.preview-heading select{padding:8px 28px 8px 9px;border:1px solid #cfc6ba;border-radius:5px;background:var(--surface);color:var(--ink)}.preview-error,.prototype-load-error,.definition-error{padding:16px;border:1px solid #d69b8c;border-radius:6px;background:#fff5f2;color:#713524}.preview-error button{margin-top:8px}.mode-preview .split{grid-template-columns:minmax(0,1fr)!important}.mode-preview .split-primary,.mode-preview .split-divider{display:none}.mode-preview .split-secondary{grid-column:1}.mode-whiteboard .split{grid-template-columns:minmax(0,1fr)!important}.mode-whiteboard .split-divider,.mode-whiteboard .split-secondary{display:none}.mode-whiteboard .split-primary{grid-column:1}@media(max-width:959px){.prototype-topbar{padding:18px 16px;display:block}.prototype-controls{margin-top:16px;flex-wrap:wrap}.prototype-workspace{height:calc(100vh - 145px)}}`;
+const styles = `#root{display:flex;flex-direction:column;height:100vh;overflow:hidden}.prototype-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-6);padding:var(--space-5) var(--space-6);border-bottom:1px solid var(--line);background:var(--surface)}.prototype-kicker{font:650 11px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-dark)}.prototype-topbar h1{margin:6px 0 0;font-size:var(--text-title)}.prototype-topbar p{max-width:var(--measure);margin:var(--space-2) 0 0;color:var(--muted)}.prototype-controls{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;flex-shrink:0}.prototype-mode{margin:0}.prototype-mode .ui-segmented-legend{font-size:11px}.prototype-workspace{flex:1 1 auto;min-height:0}.prototype-workspace .split{height:100%}.whiteboard-panel{min-width:0;height:100%;border-right:1px solid var(--line);background:var(--surface)}.preview-panel{display:flex;flex-direction:column;gap:var(--space-6);min-height:100%;padding:var(--space-6) clamp(var(--space-5),2.6vw,var(--space-7));background:var(--paper)}.preview-heading{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;margin-bottom:var(--space-5)}.preview-heading label{display:grid;gap:var(--space-1);font-size:var(--text-xs);font-weight:650;color:var(--muted)}.preview-heading select{padding:8px 28px 8px 10px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--surface)}.preview-error,.prototype-load-error,.definition-error{padding:var(--space-4);border:1px solid var(--tone-stop);border-radius:var(--radius-sm);background:var(--tone-stop-soft);color:var(--tone-stop)}.preview-error button{margin-top:var(--space-2)}.mode-preview .split{grid-template-columns:minmax(0,1fr)!important}.mode-preview .split-primary,.mode-preview .split-divider{display:none}.mode-preview .split-secondary{grid-column:1}.mode-whiteboard .split{grid-template-columns:minmax(0,1fr)!important}.mode-whiteboard .split-divider,.mode-whiteboard .split-secondary{display:none}.mode-whiteboard .split-primary{grid-column:1}`;
 type ViewMode = "preview" | "whiteboard" | "split";
 
 function defaultView(prototype: PrototypeDefinition): ViewMode {
@@ -74,7 +74,7 @@ function Workspace({ prototype }: { prototype: PrototypeDefinition }) {
   });
   const selected = useMemo(() => prototype.variants.find((variant) => variant.id === selectedId) ?? prototype.variants[0], [prototype.variants, selectedId]);
   const loadInput = useRef<HTMLInputElement>(null);
-  const [ratio, setRatio] = useState(0.575);
+  const [ratio, setRatio] = useState(0.42);
 
   function chooseVariant(id: string) {
     const params = new URLSearchParams(window.location.search);
@@ -119,7 +119,7 @@ function Workspace({ prototype }: { prototype: PrototypeDefinition }) {
         <div className="prototype-mode">
           <SegmentedControl label="View mode" options={[{ value: "preview", label: "Preview" }, { value: "whiteboard", label: "Whiteboard" }, { value: "split", label: "Split" }]} value={view} onChange={chooseView} />
         </div>
-        <button type="button" onClick={saveDiagram}>Save diagram</button><button type="button" onClick={() => loadInput.current?.click()}>Load diagram</button><input ref={loadInput} hidden type="file" accept=".excalidraw,application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadDiagram(file); event.target.value = ""; }} />
+        <Button variant="secondary" onClick={saveDiagram}>Save diagram</Button><Button variant="secondary" onClick={() => loadInput.current?.click()}>Load diagram</Button><input ref={loadInput} hidden type="file" accept=".excalidraw,application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadDiagram(file); event.target.value = ""; }} />
       </div>
     </header>
     {loadError && <div className="prototype-load-error" role="alert">{loadError}</div>}
