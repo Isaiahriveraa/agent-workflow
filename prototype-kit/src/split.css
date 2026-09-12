@@ -1,0 +1,39 @@
+.split {
+  --split-divider-width: 0.75rem;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+  background: var(--surface);
+}
+
+.split-primary,
+.split-secondary {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.split-divider {
+  width: var(--split-divider-width);
+  min-width: var(--split-divider-width);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: var(--surface-soft);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.split-divider:hover,
+.split-divider-dragging {
+  background: color-mix(in srgb, var(--line) 35%, var(--surface-soft));
+}
+
+.split-divider:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
