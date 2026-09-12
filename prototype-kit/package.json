@@ -7,7 +7,9 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "lint": "biome lint src template server.mjs vite.config.mjs",
+    "lint": "biome lint src template scripts server.mjs vite.config.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "test:units": "node --test --experimental-strip-types src/inspect/*.test.ts src/diagram/*.test.ts src/split.test.ts",
     "typecheck": "tsc --noEmit",
     "build": "vite build"
   },
