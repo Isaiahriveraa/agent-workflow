@@ -1,12 +1,5 @@
-import type {
-  ComponentType,
-  ButtonHTMLAttributes,
-  DetailsHTMLAttributes,
-  HTMLAttributes,
-  PropsWithChildren,
-  ReactNode,
-} from "react";
 import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
+import type { ComponentType } from "react";
 import type { SceneData as ExcalidrawSceneData } from "@excalidraw/excalidraw/types";
 
 export type { ExcalidrawSceneData };
@@ -25,155 +18,68 @@ export interface PrototypeDefinition {
   variants: readonly PrototypeVariant[];
 }
 
-export function Panel({
-  title,
-  children,
-  className,
-  ...props
-}: PropsWithChildren<{ title: string } & HTMLAttributes<HTMLElement>>) {
-  return (
-    <section
-      className={["prototype-panel", className].filter(Boolean).join(" ")}
-      aria-label={title}
-      {...props}
-    >
-      <h2>{title}</h2>
-      {children}
-    </section>
-  );
-}
+// Explanation-first prototypes: what the model is, how its chain runs, what is optional detail.
+export { CausalWalkthrough } from "./explain/CausalWalkthrough.tsx";
+export type { CausalStep, CausalWalkthroughProps } from "./explain/CausalWalkthrough.tsx";
+export { ModelOverview } from "./explain/ModelOverview.tsx";
+export type { ModelOverviewProps } from "./explain/ModelOverview.tsx";
 
-export function ActionButton({
-  children,
-  className,
-  type,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      {...props}
-      className={["prototype-action", className].filter(Boolean).join(" ")}
-      type={type ?? "button"}
-    >
-      {children}
-    </button>
-  );
-}
+// Values and declared shapes, one grammar.
+export { StructuredDataView } from "./inspect/StructuredDataView.tsx";
+export type { StructuredDataViewProps } from "./inspect/StructuredDataView.tsx";
+export { SchemaView } from "./inspect/SchemaView.tsx";
+export type { SchemaViewProps } from "./inspect/SchemaView.tsx";
+export { StateInspector } from "./inspect/StateInspector.tsx";
+export type { StateInspectorProps } from "./inspect/StateInspector.tsx";
+export type { FieldSpec, ReconcileResult, ReconciledField } from "./inspect/schema.ts";
+export type { StructuredDataOptions } from "./inspect/walk.ts";
+export type { Tone } from "./tone.ts";
 
-function formatValue(value: unknown): string {
-  try {
-    const serialized = JSON.stringify(value, null, 2);
-    if (serialized === undefined) throw new Error("Value is not JSON-compatible");
-    return serialized;
-  } catch {
-    return "Unable to display this state: value is not JSON-compatible.";
-  }
-}
+// Who talks to whom, in order, and which file owns each step.
+export { SequenceDiagram } from "./diagram/SequenceDiagram.tsx";
+export type { SequenceDiagramProps } from "./diagram/SequenceDiagram.tsx";
+export type { DiagramParticipant, DiagramStep } from "./diagram/sequence.ts";
 
-export interface StateInspectorProps extends HTMLAttributes<HTMLElement> {
-  value: unknown;
-}
+// Display vocabulary and controls. prototype-action stays the button family's base class.
+export {
+  ActionButton,
+  Bullets,
+  Button,
+  Card,
+  CardGrid,
+  Chip,
+  DataTable,
+  Mono,
+  Note,
+  Panel,
+  Rows,
+  Section,
+  SegmentedControl,
+  TechnicalDetails,
+  Toolbar,
+} from "./components/ui.tsx";
+export type {
+  BulletItem,
+  BulletsProps,
+  ButtonProps,
+  ButtonVariant,
+  CardGridProps,
+  CardProps,
+  ChipProps,
+  DataTableColumn,
+  DataTableProps,
+  DataTableRow,
+  MonoProps,
+  NoteProps,
+  Row,
+  RowsProps,
+  SectionProps,
+  SegmentedControlProps,
+  SegmentedOption,
+  TechnicalDetailsProps,
+  ToolbarProps,
+} from "./components/ui.tsx";
 
-export function StateInspector({ value, className, ...props }: StateInspectorProps) {
-  return (
-    <section
-      className={["prototype-state", className].filter(Boolean).join(" ")}
-      aria-live="polite"
-      aria-label="Current state"
-      {...props}
-    >
-      <h3>Current state</h3>
-      <pre>{formatValue(value)}</pre>
-    </section>
-  );
-}
-
-export interface ModelOverviewProps extends HTMLAttributes<HTMLElement> {
-  title: string;
-  summary?: ReactNode;
-  children?: ReactNode;
-}
-
-/** A compact, semantic explanation of what a prototype model does. */
-export function ModelOverview({
-  title,
-  summary,
-  children,
-  className,
-  ...props
-}: ModelOverviewProps) {
-  return (
-    <section
-      className={["prototype-overview", "prototype-model-overview", className].filter(Boolean).join(" ")}
-      aria-label={title}
-      {...props}
-    >
-      <h2>{title}</h2>
-      {summary ? <p className="prototype-model-summary">{summary}</p> : null}
-      {children}
-    </section>
-  );
-}
-
-export interface CausalStep {
-  id: string;
-  title: string;
-  description: ReactNode;
-  actor?: ReactNode;
-  outcome?: ReactNode;
-}
-
-export interface CausalWalkthroughProps extends HTMLAttributes<HTMLElement> {
-  steps: readonly CausalStep[];
-  title?: string;
-}
-
-/** Renders a causal chain as an ordered list so its sequence is understandable without styling. */
-export function CausalWalkthrough({
-  steps,
-  title = "Causal walkthrough",
-  className,
-  ...props
-}: CausalWalkthroughProps) {
-  return (
-    <section
-      className={["causal-walkthrough", "prototype-causal-walkthrough", className].filter(Boolean).join(" ")}
-      aria-label={title}
-      {...props}
-    >
-      <h2>{title}</h2>
-      <ol className="prototype-causal-steps">
-        {steps.map((step) => (
-          <li className="prototype-causal-step" key={step.id}>
-            <h3>{step.title}</h3>
-            {step.actor ? <p className="prototype-causal-actor"><strong>Actor:</strong> {step.actor}</p> : null}
-            <div className="prototype-causal-description">{step.description}</div>
-            {step.outcome ? <p className="prototype-causal-outcome"><strong>Outcome:</strong> {step.outcome}</p> : null}
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-export interface TechnicalDetailsProps extends PropsWithChildren<DetailsHTMLAttributes<HTMLDetailsElement>> {
-  summary: ReactNode;
-}
-
-/** Native disclosure for optional implementation context; keyboard behavior comes from details/summary. */
-export function TechnicalDetails({
-  summary,
-  children,
-  className,
-  ...props
-}: TechnicalDetailsProps) {
-  return (
-    <details
-      className={["technical-details", "prototype-technical-details", className].filter(Boolean).join(" ")}
-      {...props}
-    >
-      <summary>{summary}</summary>
-      <div className="prototype-technical-content">{children}</div>
-    </details>
-  );
-}
+// Two panes, a movable divider, ratio owned by the caller.
+export { Split } from "./Split.tsx";
+export type { SplitProps } from "./Split.tsx";

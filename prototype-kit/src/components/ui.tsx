@@ -10,6 +10,49 @@ import {
 import type { Tone } from "../tone.ts";
 import "./ui.css";
 
+export function Panel({
+  title,
+  children,
+  className,
+  ...props
+}: PropsWithChildren<{ title: string } & HTMLAttributes<HTMLElement>>) {
+  return (
+    <section className={["prototype-panel", className].filter(Boolean).join(" ")} aria-label={title} {...props}>
+      <h2>{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+export interface TechnicalDetailsProps extends PropsWithChildren<DetailsHTMLAttributes<HTMLDetailsElement>> {
+  summary: ReactNode;
+}
+
+/** Native disclosure for optional implementation context; keyboard behavior comes from details/summary. */
+export function TechnicalDetails({ summary, children, className, ...props }: TechnicalDetailsProps) {
+  return (
+    <details className={["technical-details", className].filter(Boolean).join(" ")} {...props}>
+      <summary>{summary}</summary>
+      <div>{children}</div>
+    </details>
+  );
+}
+
+export function ActionButton({
+  children,
+  className,
+  type,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button {...props} className={["prototype-action", className].filter(Boolean).join(" ")} type={type ?? "button"}>
+      {children}
+    </button>
+  );
+}
+
+
+
 export type SectionProps = {
   title: ReactNode;
   hint?: ReactNode;

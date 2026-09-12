@@ -1,0 +1,72 @@
+.prototype-overview {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.prototype-overview h2,
+.prototype-overview h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.prototype-overview p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.causal-walkthrough {
+  margin: 0 0 18px;
+}
+
+.causal-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.causal-step-body {
+  min-width: 0;
+}
+.causal-step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.causal-step:last-child {
+  border-bottom: 0;
+}
+
+.causal-step-marker {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.causal-step h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.causal-step p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.causal-step-description {
+  color: var(--muted);
+  font-size: 14px;
+}

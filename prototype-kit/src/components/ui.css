@@ -215,7 +215,33 @@
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+.prototype-panel {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 1px 1px color-mix(in srgb, var(--ink) 6%, transparent);
+}
 
+.prototype-panel h2 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  line-height: 1.25;
+}
 
+.technical-details {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
 
+.technical-details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
 
+.technical-details[open] summary {
+  color: var(--accent-dark);
+}
