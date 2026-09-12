@@ -7,11 +7,13 @@
     "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "paths": {
       "@prototype-kit": ["./src/kit.tsx"],
       "@prototype": ["./template/prototype.tsx"]
     }
   },
-  "include": ["src/**/*", "template/**/*"]
+  "include": ["src/**/*", "template/**/*"],
+  "exclude": ["src/**/*.test.ts"]
 }
