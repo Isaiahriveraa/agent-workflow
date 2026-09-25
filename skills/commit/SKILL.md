@@ -728,6 +728,14 @@ Repository conventions may determine:
 
 Do not copy poor historical practices such as vague messages or mixed commits.
 
+## Concerns That Belong On Different Branches
+
+Responsibilities that cannot share one commit series are not always a failure: independent concerns,
+or concerns where one cannot be verified without the other, need separate branches. That is a branch
+decision, not a commit decision. Run `/skill:split-dirty-worktree` to inventory the dirty tree,
+choose one branch vs a `gh stack` vs separate worktrees, and plan the commits per branch; then run
+this workflow once per branch.
+
 ## Failure Conditions
 
 Stop without committing when:

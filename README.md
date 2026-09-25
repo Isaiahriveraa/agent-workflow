@@ -122,6 +122,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `domain-modeling/` | Sharpen terminology, ADR management |
 | `commit/` | Normal `commit` invocation runs the pre-commit code-review gate; `commit --no` or `commit --no-review` explicitly skips that gate only. Atomic staging uses whole-file staging for files belonging entirely to one concern and hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition. |
 | `pr/` | Senior developer PR workflow: auto-detects single PR, stacked PRs (gh stack), or parallel worktrees; generates review-ready descriptions focused on rationale and behavior |
+| `split-dirty-worktree/` | Oversized dirty tree → branch topology (one branch, `gh stack` of dependent layers, or separate worktrees of independent concerns) plus the commits for each branch; read-only until approved, then hands off to `commit/` and `pr/` |
 | `handoff/` | Session handoff documents |
 | `ch/` | Handoff shorthand — /ch as a skill |
 | `recall/` | Resume from handoff |
