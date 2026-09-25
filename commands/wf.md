@@ -1,6 +1,7 @@
 ---
 description: Commit the current work with the commit skill, then push and open a PR via the pr skill — one concern, two approval gates
 argument-hint: "[--no|--no-review] [base-branch]"
+---
 
 # wf — Commit and PR in One Flow
 

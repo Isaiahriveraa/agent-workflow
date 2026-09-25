@@ -1,6 +1,6 @@
 ---
 name: later
-description: Record a future improvement idea as a short markdown note in the project's future/ folder, organized by topic (security, architecture, performance, testing, operations, ...). Each note follows a Problem / How we could fix it / Rationale template so it can be scanned and tackled later. Use when the user says "later: <idea>", "note this for later", or wants to capture a future improvement without implementing it.
+description: "Record a future improvement idea as a short markdown note in the project's future/ folder, organized by topic (security, architecture, performance, testing, operations, ...). Each note follows a Problem / How we could fix it / Rationale template so it can be scanned and tackled later. Use when the user says \"later: <idea>\", \"note this for later\", or wants to capture a future improvement without implementing it."
 argument-hint: "[topic:] idea"
 disable-model-invocation: true
 ---

@@ -1,6 +1,6 @@
 ---
 description: Record a future improvement idea as a short markdown note in the project's future/ folder, organized by topic (security, architecture, performance, testing, operations, ...). Each note follows a Problem / How we could fix it / Rationale template so it can be scanned and tackled later.
-argument-hint: [topic:] idea
+argument-hint: "[topic:] idea"
 ---
 
 # later — Record a Future Improvement
