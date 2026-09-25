@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Senior Developer PR workflow: auto-detects whether changes belong in a single PR, stacked PRs (gh stack), or parallel worktrees. Generates review-ready PR descriptions focused on rationale and observable behavior, splits mixed concerns, and manages stacks. Use when preparing, reviewing, or opening pull requests."
+description: "Senior Developer PR workflow: auto-detects whether changes belong in a single PR, stacked PRs (gh stack), or parallel worktrees. Writes short, scannable PR descriptions that say what the change is for and why it was needed, splits mixed concerns, and manages stacks. Use when preparing, reviewing, or opening pull requests."
 ---
 
 # PR — Senior Developer Pull Request Workflow
@@ -115,13 +115,17 @@ PR Breakdown:
 Draft PR Description(s):
 --------------------------------------------------------------------------------
 ## Rationale
-<The human/system why, problem solved, alternatives considered>
+<One sentence: what this is for, or the failure it prevents.> <One more sentence: why this approach.>
 
 ## Observable Behavior
-<What the user or caller experiences; contract changes; NO diff recaps>
+- <one line: what a caller or buyer sees change>
+- <one line, only if there is a second>
 
 ## Verification
-<Specific tests added or run to verify behavior>
+- `<test name>` — the behavior it locks in
+
+## Stack Context
+- #<prev> ← this ← #<next> · <N> source lines
 --------------------------------------------------------------------------------
 Approval required before creating branches, worktrees, stacks, or PRs.
 ```
@@ -132,73 +136,50 @@ Approval required before creating branches, worktrees, stacks, or PRs.
 
 ## Senior Developer PR Description Standard
 
-Reviewers read PR descriptions to understand **why** the change was made and **what** the observable behavior is. They already have the "Files changed" tab to inspect the code lines, functions, and files.
+Keep the standard headers — they are what a reviewer scans — and keep what sits under them small.
+**Target ~150 words / 10 lines in total.** The overload never comes from the headers; it comes from
+paragraphs written under them.
 
-- **Rationale (The Why)**: Explain the problem, bug, limitation, or user need that prompted this change. Why does this PR exist? What happens without it? Why this approach over alternatives?
-- **Observable Behavior (The What)**: Describe the observable outcome from the perspective of the user, caller, or consumer. What can someone do now that they couldn't before? How does system behavior change?
-- **NEVER recite code implementation details**: Never dump a line-by-line or file-by-file code recap (e.g. "added helper X, updated method Y, imported Z"). That is implementation trivia already visible in the diff. Explain behavior, not code plumbing.
-- **Verification proves behavior**: Verification exists to prove the behavior was implemented as intended. Explicitly call out tests added or updated to verify that behavior (e.g. "Added `test_name` to verify that..."), followed by the commands run and observable outcomes.
-- **No-Repeat Rule**: If summary and rationale overlap, combine them as `## Summary & Rationale` instead of repeating yourself.
-- **Omit Stack Context unless stacked**: Only include `## Stack Context` when the PR is part of a multi-PR stack. Never include it for normal standalone PRs.
+- **Rationale — two sentences.** Line 1 is the purpose or the failure; line 2 is why this approach.
+  No alternatives essay and no tradeoff catalogue.
+- **Observable Behavior — one line per bullet.** What a caller or buyer sees change. Three bullets
+  is a lot; a fifth means the PR is doing too much.
+- **Verification — one bullet per test**: `<test name>` — the behavior it locks in. One line for the
+  whole suite at most, never a pass count.
+- **Nothing repeated.** The three headers already partition the story; telling one fact under two of
+  them is what makes a description feel long.
+- **Plain words.** The project's domain term or the ordinary English word. Never an operator, class,
+  or field name where a verb will do.
+- **Say what only the author knows**: what broke, why it matters, the constraint being honoured.
+  Mechanism is already in the diff — depth is what review is for, not what the description is for.
+- **Respect the reader's attention.** If a detail only matters to someone editing those lines, it
+  belongs in the code or the review thread. Overload costs more than a missing sentence.
+- **`## Files` is never needed** (the Files Changed tab has it), and `## Stack Context` is one line.
+- **Length is the split detector.** If it will not fit in ~150 words, or needs "Also included…", the
+  PR holds a second concern — split it instead of documenting it.
 
 ### PR Description Template (Default)
 
 ```markdown
 ## Rationale
 
-<!--
-- What problem, limitation, or user pain existed? (The Human/System Why)
-- What happens without this change?
-- Why was this solution chosen over alternatives, and what tradeoffs were accepted?
--->
+<One sentence: what this is for, or the failure it prevents.> <One more sentence: why this
+approach.>
 
 ## Observable Behavior
 
-<!--
-- What observable outcome or behavior does this produce from the perspective of the user or caller?
-- Focus STRICTLY on what the system does and how behavior changes.
-- DO NOT list code-level implementation details, file-by-file changes, or repeat the diff.
--->
+- <one line: what a caller or buyer sees change>
+- <one line, only if there is a second>
 
 ## Verification
 
-<!--
-- How was the behavior verified as implemented as intended?
-- List specific tests added or updated to verify behavior (e.g., "Added <test-name> to verify <behavior>").
-- What automated commands or manual checks were run, and what were the observed results?
--->
-```
+- `<test name>` — the behavior it locks in
 
-### Overlapping Layout (When Summary & Rationale Coincide)
-
-```markdown
-## Summary & Rationale
-
-<!--
-- State why this change exists and what observable behavior it produces in one cohesive narrative.
-- Do NOT repeat yourself across separate headers. Focus on the why and observable behavior, never code implementation.
--->
-
-## Verification
-
-<!--
-- How was the behavior verified as implemented as intended?
-- List specific tests added or updated to verify behavior (e.g., "Added <test-name> to verify <behavior>").
-- What automated commands or manual checks were run, and what were the observed results?
--->
-```
-
-### Stack Context (Stacked PRs ONLY)
-
-Include this section **only** when the PR is part of a multi-PR stack (`gh stack`):
-
-```markdown
 ## Stack Context
 
-- Position: <N> of <M>
-- Base PR: #<number> or `<base-branch>` for the bottom PR
-- Depends on: #<number> or `N/A` for the bottom PR
+- #<prev> ← this ← #<next> · <N> source lines
 ```
+
 
 ---
 
