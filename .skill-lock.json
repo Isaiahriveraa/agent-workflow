@@ -6,8 +6,9 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/skill-index",
       "skillPath": "skills/skill-index/SKILL.md",
-      "skillFolderHash": "3599d62e0bcdec0811caa855c85a8837b1cd4911",
-      "updatedAt": "2026-09-11T05:04:15.000Z"
+      "skillFolderHash": "60175018a70dae5ecbcc5557e437c01808734f2f",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     },
     "cancel": {
       "source": ".agents",
@@ -220,11 +221,11 @@
     "prototype": {
       "source": ".agents",
       "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/prototype/SKILL.md",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/prototype",
       "skillPath": "skills/prototype/SKILL.md",
-      "skillFolderHash": "4b0ce59dfa2c994059bf88e404f4f930ec7411b5",
-      "installedAt": "2026-05-24T03:48:02.064Z",
-      "updatedAt": "2026-09-12T21:35:16.000Z"
+      "skillFolderHash": "2de888d555df2f8b1a0d33078373743b2945c922",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     },
     "recall": {
       "source": ".agents",
@@ -348,6 +349,15 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan-standup-notes",
       "skillPath": "skills/plan-standup-notes/SKILL.md",
       "skillFolderHash": "7998c4bb91c1d13beae36f839872f68e75149881",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "explain": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/explain",
+      "skillPath": "skills/explain/SKILL.md",
+      "skillFolderHash": "5ca2494a5a3ef2d59e2f9f344765cef477c54270",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     }
