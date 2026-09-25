@@ -20,7 +20,6 @@ This directory documents the OpenCode-specific integration boundary.
 - Available plugin hooks: `chat.message`, `chat.params`, `chat.headers`, `permission.ask`, `command.execute.before`, `tool.execute.before`, `tool.execute.after`, `shell.env`, `experimental.session.compacting`, `experimental.chat.messages.transform`, `experimental.chat.system.transform`, `experimental.text.complete`.
 - The hub manages these plugins as hub-owned scripts under `~/.config/opencode/plugins/`:
   - `rtk.ts` — RTK command rewriting
-  - `decisions-check-plugin.ts` — undocumented-change detection via `experimental.session.compacting`
 
 ## Generator Contract
 - `sync.sh gen-opencode-agents` generates OpenCode-compatible agent frontmatter from hub agents.
