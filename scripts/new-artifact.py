@@ -41,7 +41,7 @@ def frontmatter(title: str, date_str: str, kind: str, extra: str = "") -> str:
 def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str:
     profiles = {
         "handoffs": ("handoff", "Agent Handoff", ["Active Goal", "Current State", "Latest User Intent", "Locked Decisions", "Do Not Repeat", "Work Completed", "Relevant Files", "Remaining Work", "Open Questions or Blockers", "Resume Here", "Verification", "Success Criteria", "Completion"]),
-        "designs": ("design", "Design", ["Summary", "Raw intent", "Current behavior", "Desired behavior", "Scope", "Non-goals", "Constraints", "Decisions and trade-offs", "System shape and boundaries", "Edge cases and failure behavior", "Evidence", "Open questions", "Acceptance", "Status"]),
+        "designs": ("design", "Design", ["Summary", "Raw intent", "Current behavior", "Desired behavior", "Scope", "Non-goals", "Constraints", "Decisions and trade-offs", "System shape and boundaries", "Edge cases and failure behavior", "Evidence", "Grill interview", "Open questions", "Acceptance", "Status"]),
         "research": ("research", "Research", ["Question", "Conclusion", "Key Evidence", "Options & Tradeoffs", "Recommendation & System Impact", "Remaining Uncertainty", "Sources"]),
         "review": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
         "reviews": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
