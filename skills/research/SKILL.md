@@ -22,4 +22,4 @@ Its job:
 
 ## Completion
 
-The human-facing synthesis follows the **Research Mode** protocol in `references/communication.md`: Question, Conclusion, Key Evidence, Options & Tradeoffs, Recommendation & System Impact, and Remaining Uncertainty. Reference the cited Markdown file in the response.
+The human-facing synthesis follows the **Research Mode** protocol in `references/communication.md`: Question, Conclusion, Key Evidence, Options & Tradeoffs, Recommendation, and Remaining Uncertainty. Reference the cited Markdown file in the response.

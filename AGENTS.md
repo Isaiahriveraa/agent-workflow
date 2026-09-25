@@ -6,164 +6,74 @@ DO NOT ASK "SHOULD I PROCEED?" FOR OBVIOUS, LOW-RISK NEXT STEPS. IF BLOCKED, TRY
 
 Top-level contract for this `.agents` hub. Commands, skills, adapters, and deeper `AGENTS.md` files extend it; deeper rules override only their scope.
 
+## Rules
+
+1. **TDD** — Failing test first, watch it fail, then the minimal code to pass. No production code without a driving test. Backend tests are permanent; frontend tests are temporary scaffolding — delete before commit unless the human asked to keep them.
+2. **Verify before claiming done** — Run the repo's lint, tests, and build; read the output. Never report a check as passing unless it ran. Report the tests you added and the behavior each one locks in; a whole-suite pass count is not evidence of your change.
+3. **Read before writing** — Inspect the code, callers, tests, and config you are about to change.
+4. **Define success first** — State the observable outcome and the evidence that will prove it.
+5. **Surgical changes, clean repo** — Touch only what the task needs, match repo conventions, update docs when behavior or config changes, and remove dead code the change exposes.
+6. **Simplicity & deep modules** — Small interfaces hiding rich behavior. No shallow wrappers, speculative layers, or classitis (Ousterhout).
+7. **Locality of behavior** — Behavior obvious at the unit that owns it: colocate helpers with their caller, keep things that change together together, and use explicit intention-revealing names.
+8. **Test behavior, not implementation** — Assert through public interfaces only; a harmless refactor must not break a test. Cover what can regress; skip tests that only re-assert code. Over-testing is waste.
+9. **Errors explicit** — Never swallow failures; preserve context with idiomatic error/result types.
+10. **One source of truth** — Search for an existing concept, contract, or invariant before adding code, tests, config, schemas, queries, scripts, CI, docs, or UI; reuse, extend, or parameterize it first.
+    - **Duplication beats the wrong abstraction (Sandi Metz)**. Wait for the **Rule of Three (AHA)**: extract only when three real uses reveal a stable contract with no caller flags, boolean switches, or special-case branches.
+    - An abstraction needing flags or conditional options to satisfy different callers is the wrong abstraction — inline it back into callers.
+    - Fix duplication at the source, not every caller; consolidate only when the change is local, safe, and in scope.
+    - Don't unify values that merely look equal today but differ in meaning, ownership, or lifecycle — preserve meaningful semantic differences, and note intentional duplication in one short comment.
+    - Before finishing, ask: "If this changes tomorrow, how many places must be edited?" Reduce that number where correctness and clarity improve.
+11. **Code explains itself; plain language over jargon** — Write simple, understandable code a reader without your context can follow. Never invent terminology: use the project's canonical domain term or the ordinary English word. Aim for the balance — great-quality code that is easy to read, not clever code that is hard to read, and not verbose padding either.
+    - **Names** — identifiers say what the thing is or does (rule 7); no invented acronyms or abbreviations that only make sense after reading the body.
+    - **Comments** — plain product language, same bar as names; a comment only its author understands is a defect. Non-obvious contracts use the behavior-tag block (rule 12); everything else uses brief plain-English prose.
+    - **Docs, commits, PRs** — a reader outside the current context understands them without a glossary.
+    - Established domain and framework vocabulary is fine; the test is whether a competent newcomer would have to ask what a term means. If it needs defining at the call site, it is the wrong term.
+12. **Document non-obvious contracts** — A short `@behavior / @param / @returns / @exceptions` block when the signature does not already say it; never restate types.
+13. **Optimize hot paths only** — No N+1 queries, no needless re-renders, batch and paginate. Measure before micro-optimizing; cold paths favor readability.
+14. **Refactor safely** — Preserve observable behavior in small reversible steps; never mix features into a refactor.
+15. **Never bypass correctness** — No unsafe casts, ignored type errors, empty catches, or equivalent suppression.
+16. **Evidence over confidence; fail clearly** — Report uncertainty, failed checks, and known risks directly. Escalate a sustained blocker with concrete options.
+17. **Ask before anything destructive** — Deleting working code, files, tests, docs, branches, worktrees, or stashes; `git reset --hard`, force-push, or history rewrite; schema or data drops; new dependencies. Name what is lost, ask one clear question, then wait.
+18. **Pushback is a conversation, not a cue to revert** — Restate what you did and why, name the tradeoff you accepted, then ask what they want changed. Never delete or revert first and explain after.
+19. **Codify repeated steps** — Reuse existing `scripts/` helpers; when an operation recurs with no helper, offer to script it. Offer, don't build.
+20. **Explain at the decision level** — Lead with the result and the evidence. Explain in plain language at the architecture/overview level, surfacing the load-bearing decisions (up to 3: Decision / Why / Alternative / Tradeoff) and making the case for why each is the best long-term choice — we are always producing production code to the highest standard, balanced against simplicity and flexibility. Keep code and low-level implementation detail out of the explanation unless the human asks for them, and keep mechanical work mechanical. Optimize for the human's cognitive load and their ability to keep making good calls, not for demonstrating thoroughness.
+21. **YAGNI — build only what the task requires** — Write the code the requested outcome needs, and nothing for imagined futures. Before adding anything, name the concrete requirement it serves in this task — a caller, a failing case, an acceptance criterion. If you cannot name one, omit it.
+    - **Over-validating** — re-checking what the type system, a constructor, or an earlier boundary already guarantees, or guarding states that cannot occur. Validate once and completely where untrusted data crosses into trusted code (user input, external APIs, deserialized payloads, cross-service calls); do not re-check it inside that boundary.
+    - **Overcommitting** — building for a feature, flag, config, or migration that is not planned or asked for. Ship the current concern; queue the idea for later instead of half-implementing it now.
+    - **Speculative generality** — options, parameters, interfaces, or wrapper layers with one caller and no second case in sight (rule 6; extraction waits for rule 10's Rule of Three).
+    - **Defensive padding** — fallbacks, retries, or broad catches for failures with no reachable cause; dead config and unused knobs.
+    - **Unrequested polish** — extra endpoints, fields, screens, or "while I'm here" refactors that widen the diff past the task.
+    YAGNI is not license to skip required work: a missing boundary check, an unhandled real error, or absent coverage for a promised behavior is a defect, not restraint (rules 9, 15). The line is "the code we can defend today", not "the most we could imagine".
+
 ## Skills & Routing
 
-`skill-index` is the skill index and router: it maps every user-reachable skill and how the flows fit together. When deciding which skill fits a situation, read `skill-index`'s SKILL.md first.
+`skill-index` routes every skill — read its SKILL.md before choosing one. Skills are user-invoked (frontmatter `disable-model-invocation: true`) or model-invoked. Adding, renaming, removing, or re-routing a skill means updating `skill-index`'s SKILL.md and the README skills table.
 
-Skills are either **user-invoked** (frontmatter `disable-model-invocation: true`; reachable only when the human names them) or **model-invoked** (the agent may reach them automatically).
+## Commit & PR Discipline
 
-Whenever you add, rename, remove, or re-route a skill, update `skill-index`'s SKILL.md and the README skills table so the map stays accurate. A new skill it never mentions, or a stale one it still routes to, is a router that lies.
+One concern per branch and PR. Develop every concern in its own worktree — `~/.agents/scripts/new-worktree.sh <branch>` — and tear it down after merge with `~/.agents/scripts/cleanup-worktree.sh <branch>`. Never start a second concern in an existing worktree; queue a mid-task idea as the next concern instead of switching tracks. All commits go through the `commit` skill and all PRs through the `pr` skill — never commit or open a PR directly.
 
-## Operating Rules
+## Implementation Mode
 
-1. **Test-driven development (TDD) — mandatory** — No implementation without a test. Write a failing test first and watch it fail (red), then write the minimal code to make it pass (green), then refactor. Never write production code without a failing test driving it; this applies to every change, not just non-trivial ones. Keep red→green cycles small and fast. Tests must focus strictly on observable behavior and thoroughly cover edge cases and invariants. Backend tests are permanent: they provide durable behavioral regression coverage protecting API contracts, database integrity, error paths, and business logic. For frontend work: write frontend tests initially to drive development and verify requested behavior is implemented; before committing changes, delete those frontend tests unless the human explicitly requested to retain them (they are temporary verification scaffolding to prove behavior during development, leaving durable regression coverage at backend/API contract boundaries without ongoing frontend test maintenance). Rule 8 defines what counts as a meaningful test; skipping only happens when that analysis concludes no test would catch a regression.
-2. **Verify with lint, tests, and build** — Before reporting any work complete, run the repo's linter, its test suite (`npm test` or equivalent), and its build (`npm run build` or equivalent), and confirm all three pass. If a repo uses another toolchain (pnpm, yarn, cargo, …), use its equivalent commands. Never claim something works without running the checks that prove it.
-3. **Read before writing** — Inspect relevant code, callers, tests, configuration, docs, and scoped instructions before editing.
-4. **Define success first** — State the observable outcome and what evidence will prove it.
-5. **Keep changes surgical and the repository clean** — Touch only what the task requires and match repository conventions; remove dead code, stale comments, and abandoned scaffolding exposed by the change without expanding scope.
-6. **Prefer simplicity & deep modules** — Use the smallest maintainable solution. Design deep modules: small, simple interfaces that hide rich behavior, algorithms, data structures, and edge-case handling (Ousterhout). Avoid shallow modules and "classitis"—classes, functions, or micro-wrappers whose interface is as complex as the trivial logic they wrap. Add interfaces, layers, or patterns only for a genuine boundary, testing seam, proven variation, or recurring problem.
-7. **Design for humans & locality of behavior** — Favor explicit, intention-revealing names using canonical domain language; avoid vague, clever, verbose, or directory-redundant names. Prioritize Locality of Behavior (LoB): the behavior of a unit of code should be obvious upon inspecting that unit. Keep functional cohesion high—things that change together stay together. Colocate private helpers and domain logic with their primary caller rather than scattering them across technical layers; avoid the "indirection tax" where understanding a single action forces a developer to traverse multiple files. Balance simplicity with flexibility: make likely next changes local without speculative extension points. Apply SOLID pragmatically, not ceremonially. Write code that reads like plain English; add a ≤2-line why/behavior comment only when the code alone can't convey a non-obvious decision. If a why needs more than two lines, rename or restructure instead of writing a longer comment.
-8. **Test observable behavior, not implementation; test only what matters** — Assert outcomes reachable through public interfaces only (user-visible output, accessible roles/names/labels, returned values, error results) — never internals (class names, DOM nesting, private helpers, internal state). No implementation details should ever leak into tests; aim strictly for high cohesion and low coupling so tests verify contracts without fragility. A test must survive harmless refactors unchanged; if a behavior test breaks, the behavior changed or the test over-coupled. Cover what can break or regress and carries real value; deliberately skip tests that only re-assert code, duplicate coverage, or lock down trivial wiring. When repeated setup makes tests noisy, create a small testing helper so tests describe behavior. Prefer unit, then focused integration/contract, then minimal end-to-end. Over-testing is waste — every test costs maintenance.
-9. **Handle errors explicitly** — Never swallow failures. Preserve useful context with idiomatic error/result types.
-10. **Document contracts with behavior tags** — For API endpoints and functions with a non-obvious input/output contract, use a short JSDoc-style block instead of prose. Describe behavior, not implementation; the signature stays the source of truth for types:
+Default: direct implementation — one session owns plan, implement, test, and verify. Sub-agents are opt-in via `spawn` (parallel decomposition), `enforce` (review gate before accepting delegated work), and `code-review` (adversarial verification). When you delegate, give full context (goal, scope, constraints, files, interfaces, tests, non-goals) and stay accountable for correctness and integration.
 
-    ```
-    /*
-     * @behavior  <one sentence — what it does and who calls it>
-     * @param     <name> — <its role in the behavior, not its type>
-     * @returns   <what the caller gets and can rely on>
-     * @exceptions <error/result values the caller must handle>
-     */
-    ```
-
-    - Omit any tag that adds nothing; never restate the type signature. @exceptions is required when the function can fail in a way the caller must handle.
-    - Keep auth/security requirements in the code that enforces them, not the comment.
-    - Ordinary helpers and self-evident signatures use the ≤2-line inline rule (7) instead.
-
-    Exceptions — do NOT use the block when:
-    - The signature's names and types already make the behavior obvious.
-    - The function is trivial: pass-through, getter/setter, one-line adapter.
-    - The comment would only restate what the code or type system already says.
-11. **Optimize where it runs hot; keep it simple where it doesn't** — Default to the simplest correct solution, but write efficient code by default in hot paths:
-    - **Frontend**: avoid needless re-renders (stable callbacks/memoization where they matter, keyed lists), virtualize or paginate long lists, don't block the main thread (lazy images, deferred work).
-    - **Backend**: no N+1 queries, index-aware, batch where possible, keep payloads minimal.
-    - When unsure, measure: profile before micro-optimizing; in cold paths (setup, config, rarely-run code) readability wins. If you optimize, keep the code English-readable and comment *why* the optimization exists.
-12. **Refactor safely** — Preserve observable behavior with tests and small reversible steps; do not mix unrelated features into refactors.
-13. **Prefer evidence over confidence** — Never claim success when a relevant test, command, or runtime check can verify it.
-14. **Fail clearly** — Report uncertainty, failed checks, incomplete work, and known risks directly.
-15. **Use authoritative sources** — Check official documentation for unfamiliar or changing APIs before implementation.
-16. **Never bypass correctness** — No unsafe casts, ignored type errors, empty catches, or equivalent suppression.
-17. **Escalate prolonged blockers** — After sustained investigation ask with concrete options and evidence.
-18. **Be extremely concise** — When reporting to the user, sacrifice grammar for concision. Shortest path from facts to understanding.
-19. **Prefer one source of truth over repeated knowledge** — Before adding code, tests, configuration, schemas, queries, scripts, CI, documentation, or UI, search for an existing concept, contract, invariant, or decision that already solves the problem. Reuse, extend, parameterize, or compose it before creating code smell.
-
-    - **Duplication is far cheaper than the wrong abstraction (Sandi Metz)**: Do not hastily extract a shared abstraction on the second occurrence. Two occurrences define a resemblance, not a pattern. Wait for the **Rule of Three (AHA — Avoid Hasty Abstractions)**: centralize into a shared function, module, or component only when three real uses reveal a stable, invariant contract without needing caller flags, boolean switches, or special-case branches.
-    - If an abstraction requires boolean parameter flags or conditional options to satisfy different callers, it is the wrong abstraction: inline it back into callers.
-    - Express true variations as data or explicit variants when the underlying contract is identical; don't duplicate the shared base.
-    - Fix duplication at the source, not at every caller.
-    - Apply this to repeated logic, literals, validation, error handling, permissions, formatting, API shapes, database rules, test setup, and documentation.
-    - Don't unify values that merely happen to be equal today but differ in meaning, ownership, or lifecycle.
-    - Don't create speculative abstractions, generic frameworks, or forced inheritance to avoid harmless one-off code; preserve meaningful semantic differences.
-    - Consolidate related duplication when the change is local, safe, and in scope.
-    - Before finishing, ask: “If this changes tomorrow, how many places must be edited?” Reduce that number where correctness and clarity improve.
-    - If duplication stays intentional, record the semantic reason in one short comment or the completion report.
-20. **Codify repeated steps** — Before re-running a multi-step operation by hand, check `scripts/` and hub commands for an existing helper. When the same operation recurs and no helper exists, offer to script it — to cut agent token spend or give the user a reusable command. Offer, don't build: only create with approval.
-21. **Ask before anything destructive** — Deletion, rollback, and teardown are the human's call, never "cleanup". Get explicit approval first for: removing code, files, tests, or docs that currently work; deleting a branch, worktree, or stash; `git reset --hard`, force-push, or history rewrite; dropping data or schema; new dependencies. State what you would remove and what is lost, ask one clear question, then wait for the answer. "You're right" is not approval, and neither is your own judgment that the change was over-engineered.
-22. **Pushback is a conversation, not a cue to revert** — Disagreement, a question, or "are you sure?" is not proof you were wrong: the human may be probing the reasoning, holding context you lack, or misreading the change. Never answer pushback by deleting, reverting, or rewriting your work. Instead: (1) restate what you actually did and why, (2) name the tradeoff you accepted and the cost of the alternative, (3) ask what they want changed — then wait for the decision.
-
-    - "Why did you add all this error handling?" → Explain the failure it prevents, then ask whether to drop it. Don't strip it out and declare yourself wrong.
-    - "I don't think we need this abstraction." → Make the case, or concede to an explicit instruction — never delete first and explain after.
-    - "Are you sure?" → Treat it as a request for evidence, not a verdict. Show the evidence; the human decides.
-    - Unclear objection → Ask what they are objecting to. You may have misread them, or they may have misread the change.
-    - Exception: teardown already approved as part of a flow — after a merge, ask once ("Merged `<branch>`. Delete the worktree and local branch?"); that approval covers that teardown only.
-
-## Human Ownership & Progressive Disclosure: Architecture, Design & Behavior
-
-All communication between human and agent is strictly centered on **observable behavior, system architecture, interfaces, data contracts, and key decisions**. Implementation is delegated: the agent writes the cleanest, highest-standard code it can, and the human evaluates code during review gates or asks for details explicitly.
-
-Communication flows idea downward before implementation details move upward:
-1. **Problem** — What problem are we solving and why does it matter?
-2. **Observable Behavior (Primary Focus)** — Deeply clarified: what changes from the user or caller perspective, input/output contract shifts, scenarios, and before → after behavior.
-3. **The Why** — Why this approach solves the problem.
-4. **Important Decisions** — Up to 3 load-bearing decisions (Decision, Why, Alternative, Tradeoff, Future Effect).
-5. **Architecture / System Picture** — System shape, component boundaries, seams, interfaces, and data flow.
-6. **Edge Cases & Failures** — How edge cases are handled, where failure boundaries lie, error contracts, and recovery.
-7. **Tradeoffs** — What is accepted, compromised, or given up.
-8. **Teach-Back Checkpoint** — 2–4 punchy points the human can state and defend in a standup without reading the diff.
-9. **Code Details on Request** — Code details, syntax, and diffs are strictly on-demand. Zero unsolicited code chatter.
-
-### Universal Ownership Gate
-Before completing any non-trivial task, verify:
-> Can the user explain and defend the problem, decisions, tradeoffs, and failure behavior in a standup or interview without reading the diff?
-
-For meaningful architectural work, default to surfacing up to the 3 load-bearing decisions (Decision, Why, Alternative, Tradeoff, Future Effect) and 2–4 teach-back points. Mechanical and routine changes stay lightweight (Outcome, Verification, landmark file).
-
-Calibrate technical vocabulary and depth to `context/tutor/learner-profile.md` using the Goldilocks Rule (Current Understanding + 1): balance boredom and overwhelm to keep the human in flow state. Introduce technical terms only after the concept is understood.
-
-Full mode schemas (Planning, Implementation, Research) and guidance: `references/communication.md`.
-
-## Human in the Loop
-
-The agent owns delegated execution. The human owns intent, architecture, acceptance, and understanding of anything shipped.
-
-- **Focus on behavior and design**: Conversations center on desired behavior, system shapes, data contracts, and trade-offs. Implementation mechanics are autonomously handled by the agent.
-- **Autonomous coding, zero code clutter**: The agent implements to the highest engineering standards without narrating code, syntax, line numbers, or file lists unless explicitly requested.
-- **Review over narration**: Code quality is evaluated during review gates (PR and commit reviews). The human will call out defects, style issues, or regressions during review.
-- Write code a reviewer can understand once, verify, and extend locally — boring-explicit over clever compression, variation at clear boundaries.
-- Keep related behavior together and dependencies narrow: colocate by domain feature rather than slicing by technical layer (avoid scattering a single feature across disjoint /controllers, /services, /models, and /helpers); keep tests readable, deterministic, behavior-focused, and maintained with production code.
-- Clean up temporary frontend test scaffolding before committing; preserve durable backend and contract tests.
-- Update established documentation when behavior, APIs, configuration, architecture, or workflows change; review the final diff as a maintainer and remove accidental complexity before completion.
 ### Active Workflow Mode
 Generated workflow profiles take precedence over default workflow preferences only within this block and for new sessions. A profile tunes workflow only; it cannot weaken or bypass safety, correctness, verification, repository, or user-approval rules.
 <!-- ACTIVE WORKFLOW PROFILE:START -->
-<!-- mode: tutor -->
-# Tutor
+<!-- mode: ship-fast -->
+# Ship Fast
 
-A learning-first workflow overlay that keeps the human in the driver’s seat.
+A focused execution overlay for well-scoped work.
 
-- Start with the goal and relevant context, then ask the learner to predict the approach, likely failure modes, and expected result before implementation.
-- Explain the flow end to end: inputs, decisions, state changes, outputs, and how evidence will establish correctness. Connect details to existing patterns and name important tradeoffs.
-- Prefer **DRIVE** for meaningful work: guide with questions and let the learner implement. Use **DELEGATE** when appropriate, but require an explain-back of the design, assumptions, and resulting changes.
-- Use small steps and checkpoints. Invite the learner to choose between viable options, explain why, and revise predictions from observed evidence rather than guessing.
-- Before handoff, perform an ownership check: the learner can state what changed, why it works, what was verified, key tradeoffs, and what they would investigate next.
+- Execute directly when the requested change is clear; do not add ceremony, abstractions, or speculative scope.
+- Keep explanations proportional: briefly state the plan and meaningful decisions, while mechanical work stays mechanical.
+- Inspect only the context needed to make a correct change, reuse existing repository patterns, and keep the diff narrow.
+- Ask when requirements or approval boundaries are genuinely ambiguous; otherwise make the smallest informed decision and proceed.
+- Report what changed, what was verified, and any remaining uncertainty.
 
 This overlay cannot override the base safety, correctness, verification, repository, or approval rules. Those rules always govern execution and delivery.
 <!-- ACTIVE WORKFLOW PROFILE:END -->
 
-## Concern Discipline
-
-Every branch and PR addresses exactly one concern. This keeps the PR list small, reviewable, and fast to land.
-
-- **One concern per branch/PR** — A concern is one feature, fix, refactor, or chore. Never mix two concerns in one branch or PR. If a commit message needs "and", it's two concerns.
-- **Concern discipline is for Git, not code-level fragmentation** — Do not confuse "one concern per PR" with dogmatic micro-separation inside code. A PR concern is a cohesive user-facing capability, fix, or refactor; inside that PR, design deep modules and preserve Locality of Behavior rather than shredding code into dozens of shallow single-line functions or single-use files.
-- **Dedicated worktree for everything** — Every task, concern, or PR must be developed in its own isolated Git worktree created via `~/.agents/scripts/new-worktree.sh <branch>`: one worktree = one branch = one concern = one PR. Never make implementation changes directly in the main working tree or mix multiple concerns. Dedicated worktrees guarantee that every concern can always produce a clean, isolated PR without stashing or branch-switching friction.
-- **New idea mid-task** — When the user raises a new idea while work is in flight, do not switch tracks. Acknowledge it, finish the current concern, then propose the idea as the next PR. If the current PR is a prerequisite for it, say so and sequence it after. If it is independent, spin up a separate worktree instead of queueing it.
-- **Parallel concerns → separate worktrees** — Independent concerns proceed in parallel across their respective worktrees. Never start a second concern inside an existing worktree.
-- **Commit** — Every commit goes through the `commit` skill (plan, get approval, then stage). Never commit directly.
-- **PR** — Every PR goes through the `pr` skill (check size, one concern per PR, generate the body). Never open a PR directly.
-- **Propose before executing** — When multiple concerns are on the table, present the branch/worktree plan and merge sequencing for approval first. The agent owns execution; the human approves the plan, the commits, and the PRs.
-- **Clean up after merge** — As soon as a branch is merged into the desired target branch, tear down its worktree immediately with `~/.agents/scripts/cleanup-worktree.sh <branch>`: it removes the worktree, deletes the merged local branch, asks before deleting the remote branch, and runs `git worktree prune`. Never leave merged branches or stale worktrees behind — a clean `git worktree list` is the baseline for easy PR review.
-
-## Implementation Mode
-
-Default to direct implementation: one model, one session, working back and forth with the user. The main agent owns the whole cycle — plan, implement, test, verify — in a single context. This is the primary mode because it maximizes throughput and keeps every decision in one head. Do not fan out sub-agents by default.
-
-Sub-agent workflows are opt-in, invoked through skills only when a task genuinely benefits from parallel decomposition:
-
-- `spawn` — split a large, multi-file task with clear seams into parallel units.
-- `enforce` — review-with-rationale gate before accepting delegated work, and hygiene pass over existing code.
-- `code-review` — adversarial verification after integration.
-
-When you do delegate, give each sub-agent complete context (goal, scope, constraints, relevant files, interfaces, repository rules, tests, expected output, explicit non-goals), split only independently decoupled work, require each to report decisions, files changed, verification, assumptions, and unresolved risks, and run the `enforce` gate before accepting. The main agent stays accountable for correctness, integration, and final acceptance.
-
 ## Verification
 
-Before claiming completion:
-
-1. Identify evidence for each important claim.
-2. Run relevant tests, lint, typecheck, build, and runtime checks.
-3. Read and interpret the output — never report a check as passing unless it was executed and its output inspected.
-4. Fix failures and rerun checks.
-5. Confirm requested behavior and integration paths work.
-6. State checks not run and why.
-7. Confirm no hidden pending work or known errors remain.
+Before claiming completion: run tests, lint, typecheck, and build and read the output; fix failures and rerun; confirm the requested behavior works end-to-end; state checks not run and why; confirm no pending work or known errors remain. Report the tests you added and the behavior each proves, with at most one line for the overall suite ("all backend tests pass") — never recite a whole-suite count.

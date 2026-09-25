@@ -127,7 +127,7 @@ below.
 
 Save the document.
 
-Once this is completed, respond with the human-facing progressive-disclosure summary: **Active Goal**, **Current State**, **Locked Decisions**, and a **Teach-Back checkpoint**, followed by the handoff path:
+Once this is completed, respond with the human-facing summary: **Active Goal**, **Current State**, and **Locked Decisions**, followed by the handoff path:
 
 ```
 Handoff written to:
@@ -136,7 +136,7 @@ Handoff written to:
 **Next step:** `/skill:recall {path-from-script}`
 ```
 
-The written 12-section artifact remains for agent continuation; the session response is for the human and must follow the progressive-disclosure format above, using the communication guidance in `references/communication.md`.
+The written 12-section artifact remains for agent continuation; the session response is for the human and must follow the summary format above, using the communication guidance in `references/communication.md`.
 
 ## Context Selection Rules
 
@@ -226,4 +226,4 @@ After writing the handoff file, immediately copy just the path to the clipboard.
 printf '%s' "$HANDOFF_PATH" | pbcopy   # copies the path string, not the document
 ```
 
-The human-facing response must follow progressive disclosure (Active Goal, Current State, Locked Decisions, Teach-Back checkpoint), and `$HANDOFF_PATH` is the path printed by the `new-artifact.py` script. The user's clipboard must contain only the document path.
+The human-facing response lists Active Goal, Current State, and Locked Decisions, and `$HANDOFF_PATH` is the path printed by the `new-artifact.py` script. The user's clipboard must contain only the document path.

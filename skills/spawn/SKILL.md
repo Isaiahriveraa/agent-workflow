@@ -13,7 +13,7 @@ Split a complex task into atomically independent work units, write an exhaustive
 
 `skill(name="spawn")` turns one high-level task into parallel sub-agents that each have **everything they need** to ship independently. No "where does X live?" No "what pattern should I follow?" — the orchestrator absorbs the full context burden so each sub-agent can execute cleanly. If a question still arrives, you answer it: you are the sub-agent's point of contact, not a one-shot dispatcher.
 
-**Division of labor — the orchestrator never implements.** Sub-agents write **all** code, including every fix and revision. Your job is architecture, steering, and review: decompose the work, specify each unit's algorithm and behavior in prose, review what comes back against that spec, and send imperfect work back with direction. Any code you catch yourself writing — even a one-line fix — is a broken loop: hand it to the responsible sub-agent instead. You own the code's quality; they own its keystrokes.
+**Division of labor — the orchestrator never implements.** Sub-agents write **all** code, including every fix and revision. Your job is architecture, steering (the brain), and review: decompose the work, specify each unit's algorithm and behavior in prose, review what comes back against that spec, and send imperfect work back with direction. Any code you catch yourself writing — even a one-line fix — is a broken loop: hand it to the responsible sub-agent instead. You own the code's quality; they own its keystrokes.
 
 ---
 
