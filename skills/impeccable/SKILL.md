@@ -11,6 +11,18 @@ Core principles:
 - Dream big and bold. Distinct, beautiful, outstanding and highly inspiring work.
 - Verify in bounded passes, not a loop, and the ceiling covers the whole cycle: screenshots, defect scans, micro-edits, and rebuilds alike. Build fully, inspect once with a batched round (desktop and mobile together), fix everything it shows in one batch, confirm with at most one more round, and stop polishing. Open-ended self-QA burns the user's money doing worse what the finish handoffs do better.
 
+## Prototype before implementing (gate)
+
+If the visual direction is unproven — anything the user has not seen yet — build it and show it before writing it into the app. Don't guess, and don't wait to be asked.
+
+1. Build it for real, at true scale: a small, disposable front-end artifact in the target project's own front-end language. Not a scaled-down mock.
+2. Announce it first, in one line: "before I write components, here's a throwaway so you can pick the direction."
+3. Expose the real forks as switchable variants. A verbal decision is slow and lossy; a visual one takes five seconds.
+4. Fold the user's choice back into the plan before implementing.
+5. Implement only after explicit approval.
+
+Skip when the direction is already fixed by an existing design system, or the change is non-visual.
+
 ## Setup
 
 1. Run `node .agents/skills/impeccable/scripts/context.mjs` once per session (if the runtime shows this skill's loaded base directory, run `node <skill-base-dir>/scripts/context.mjs`; keep cwd at the user's project). Pass a named source file or route as `--target <path>`. It loads PRODUCT.md, DESIGN.md, the matching surface brief, and native-platform guidance when applicable; follow its directives and do not rerun it.

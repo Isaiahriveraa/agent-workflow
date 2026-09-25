@@ -10,6 +10,18 @@ Frontend code without aesthetic intent reads as AI slop — Inter, SaaS blue, th
 
 The brief is the product. Boldness is the standard. Half-commitments produce the slop the skill exists to prevent.
 
+## Prototype before implementing (gate)
+
+If the visual direction is unproven — anything the user has not seen yet — build it and show it before writing it into the app. Don't guess, and don't wait to be asked.
+
+1. Build it for real, at true scale: a small, disposable front-end artifact in the target project's own front-end language. Not a scaled-down mock.
+2. Announce it first, in one line: "before I write components, here's a throwaway so you can pick the direction."
+3. Expose the real forks as switchable variants. A verbal decision is slow and lossy; a visual one takes five seconds.
+4. Fold the user's choice back into the plan before implementing.
+5. Implement only after explicit approval.
+
+Skip when the direction is already fixed by an existing design system, or the change is non-visual.
+
 Two invocation modes:
 - **Full checkpoint** (default): scan → 7-dimension interview → inject guidelines
 - **Headless** (`--headless`): scan → inject findings as guidelines → stop (no interview)

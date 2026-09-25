@@ -7,6 +7,18 @@ description: Creates smooth animations and micro-interactions using Framer Motio
 
 Build delightful animations and interactions with Framer Motion's declarative API.
 
+## Prototype before implementing (gate)
+
+If the motion direction is unproven — anything the user has not seen yet — build it and show it before writing it into the app. Don't guess, and don't wait to be asked.
+
+1. Build it for real, at true scale: a small, disposable front-end artifact in the target project's own front-end language. Not a scaled-down mock.
+2. Announce it first, in one line: "before I add motion, here's a throwaway so you can pick the direction."
+3. Expose the real forks as switchable variants. A verbal decision is slow and lossy; a visual one takes five seconds.
+4. Fold the user's choice back into the plan before implementing.
+5. Implement only after explicit approval.
+
+Skip when the motion is already fixed by an existing design system, or the change is non-visual.
+
 ## Core Workflow
 
 1. **Identify animation needs**: Entrance, exit, hover, gestures

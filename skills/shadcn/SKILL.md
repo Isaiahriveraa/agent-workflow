@@ -11,6 +11,18 @@ A framework for building ui, components and design systems. Components are added
 
 > **IMPORTANT:** Run all CLI commands using the project's package runner: `npx shadcn@latest`, `pnpm dlx shadcn@latest`, or `bunx --bun shadcn@latest` — based on the project's `packageManager`. Examples below use `npx shadcn@latest` but substitute the correct runner for the project.
 
+## Prototype before implementing (gate)
+
+If the visual direction is unproven — anything the user has not seen yet — build it and show it before writing it into the app. Don't guess, and don't wait to be asked.
+
+1. Build it for real, at true scale: a small, disposable front-end artifact in the target project's own front-end language. Not a scaled-down mock.
+2. Announce it first, in one line: "before I write components, here's a throwaway so you can pick the direction."
+3. Expose the real forks as switchable variants. A verbal decision is slow and lossy; a visual one takes five seconds.
+4. Fold the user's choice back into the plan before implementing.
+5. Implement only after explicit approval.
+
+Skip when the direction is already fixed by an existing design system, or the change is non-visual.
+
 ## Current Project Context
 
 ```json
