@@ -1,15 +1,15 @@
 ---
-name: prototype
-description: Build a disposable browser prototype to answer a design, logic, schema, or visual question with the shared Excalidraw whiteboard and live-preview workspace.
+name: explain
+description: Build a disposable browser explanation workspace — an editable Excalidraw whiteboard plus live React previews — to answer a design, logic, schema, or visual question. Use when the user wants a question explained rather than app UI prototyped.
 ---
 
-# Prototype
+# Explain
 
-A prototype is **throwaway code that answers a question**. The default workspace is a browser shell with an editable Excalidraw whiteboard and one or more live React previews. It is deliberately separate from production code and clearly marked as disposable.
+An explanation is **throwaway code that answers a question**. The default workspace is a browser shell with an editable Excalidraw whiteboard and one or more live React previews. It is deliberately separate from production code and clearly marked as disposable.
 
 ## Choose and frame the question
 
-Choose one primary prototype shape before coding:
+Choose one primary explanation shape before coding:
 
 - **Architectural decision:** compare two or more system structures, boundaries, or ownership choices and show why one produces the desired consequences.
 - **Current → intended behavior:** make an observed flow, state transition, or interaction concrete, then show the smallest change that leads to the intended result.
@@ -19,7 +19,7 @@ Use [LOGIC.md](LOGIC.md) for logic, state, schema, and data-model questions. Use
 
 ## Shared explanation contract
 
-The prototype is an explanation, not a pile of controls or raw scene/state data. Build its narrative in this order:
+An explanation is a narrative, not a pile of controls or raw scene/state data. Build it in this order:
 
 1. **Decision/question** — what choice or uncertainty matters.
 2. **Causal walkthrough** — trigger or input → owner/component → state or data change → consequence/observable outcome.
@@ -30,9 +30,13 @@ Use a consistent causal diagram grammar: boxes are actors, components, entities,
 
 Read diagrams in this order: title/question, legend and current/intended boundary, left-to-right or top-to-bottom trigger flow, then labels/constraints and exception branches, and finally notes and implementation implications. Keep the overview legible at the initial viewport; use progressive disclosure in the preview (details, inspector, or variant controls) rather than shrinking one diagram until it cannot be read.
 
+## Excalidraw label fit
+
+Every diagram label must be fully readable in its rendered box. For multi-line text, create a rectangle with enough width and height for the label, bind the text to it with matching element IDs (`boundElements` on the rectangle and `containerId` on the text), and set the text's `autoResize` to `false`. Do not use standalone text over a box and assume it will wrap. After rendering, inspect the initial viewport and adjust the container or shorten the label until no text is clipped, overlaps a border, or requires horizontal scrolling.
+
 ## Browser workspace setup
 
-`Prototype Kit` is permanent hub-owned software; each attached prototype is disposable project-local source. Attach it directly to the current branch checkout, or use a dedicated linked worktree when stronger isolation is useful. The CLI accepts either kind of Git checkout and refuses only paths outside a Git repository.
+`Explain UI` is permanent hub-owned software; each attached explanation is disposable project-local source. Attach it directly to the current branch checkout, or use a dedicated linked worktree when stronger isolation is useful. The CLI accepts either kind of Git checkout and refuses only paths outside a Git repository.
 
 1. Choose the project directory. By default, commands run against the current working directory; use `--project <path>` elsewhere. A dedicated worktree is optional:
 
@@ -40,16 +44,16 @@ Read diagrams in this order: title/question, legend and current/intended boundar
    rtk proxy bash ~/.agents/scripts/new-worktree.sh <branch>
    ```
 
-2. Once per hub checkout, install Prototype Kit dependencies:
+2. Once per hub checkout, install Explain UI dependencies:
 
    ```sh
-   npm ci --prefix <hub>/prototype-kit
+   npm ci --prefix <hub>/skills/explain/explain-ui
    ```
 
-3. From the current checkout or selected worktree, attach a named prototype:
+3. From the current checkout or selected worktree, attach a named explanation:
 
    ```sh
-   node ~/.agents/scripts/prototype.mjs init <slug>
+   node ~/.agents/scripts/explain.mjs init <slug>
    ```
 
    Append `--project <path>` to target another checkout.
@@ -57,27 +61,27 @@ Read diagrams in this order: title/question, legend and current/intended boundar
 4. Start it in the foreground (or supervise it with process tooling):
 
    ```sh
-   node ~/.agents/scripts/prototype.mjs dev <slug> [--port <number>]
+   node ~/.agents/scripts/explain.mjs dev <slug> [--port <number>]
    ```
 
    When done, remove disposable source and local links with:
 
    ```sh
-   node ~/.agents/scripts/prototype.mjs clean <slug>
+   node ~/.agents/scripts/explain.mjs clean <slug>
    ```
 
-   `clean` also accepts `--project <path>`, safely removes the prototype folder, and removes an empty `prototypes/` parent.
+   `clean` also accepts `--project <path>`, safely removes the explanation folder, and removes an empty `explanations/` parent.
 
-The initializer creates `prototypes/<slug>/prototype.tsx`, an entry HTML file, and local `.kit` and `node_modules` links. The generated `prototype.tsx` is project-owned and editable; add local components/assets beside it as needed.
+The initializer creates `explanations/<slug>/explanation.tsx`, an entry HTML file, and local `.kit` and `node_modules` links. The generated `explanation.tsx` is project-owned and editable; add local components/assets beside it as needed.
 
 The authoring contract is intentionally small:
 
-- `prototype.tsx` default-exports a `PrototypeDefinition` with a nonempty `title`, `question`, and one or more `variants`.
+- `explanation.tsx` default-exports an `ExplanationDefinition` with a nonempty `title`, `question`, and one or more `variants`.
 - Each variant has a unique `id`, display `title`, and React `component`.
-- Import `ModelOverview`, `CausalWalkthrough`, and `TechnicalDetails` for explanation-first prototypes; use `Panel`, `ActionButton`, and `StateInspector` for focused interaction and evidence. Import Excalidraw conversion helpers and related types from `@prototype-kit`.
+- Import `ModelOverview`, `CausalWalkthrough`, and `TechnicalDetails` for explanation-first workspaces; use `Panel`, `ActionButton`, and `StateInspector` for focused interaction and evidence. Import Excalidraw conversion helpers and related types from `@explain-ui`.
 - Select variants with `?variant=<id>`. Unknown or missing IDs use the first variant; switching variants resets that preview while preserving the whiteboard.
 
-The `.kit` and `node_modules` entries are symlinks into Prototype Kit. **Never edit files through those links.** Reusable workspace changes belong in the hub's `prototype-kit`; experiment changes belong in the attached checkout's visible source.
+The `.kit` and `node_modules` entries are symlinks into Explain UI. **Never edit files through those links.** Reusable workspace changes belong in the hub's `skills/explain/explain-ui`; experiment changes belong in the attached checkout's visible source.
 
 ## Author and verify
 
@@ -99,7 +103,7 @@ There is no automatic persistence or recovery. Preview interactions and state re
 
 ## Restrictions
 
-Keep the relevant model portable and browser controls thin. Do not bind it to React, Excalidraw, a database, or network I/O; do not add production integrations, persistence, backend bridges, or diagram-to-code promises unless they are the question. Do not hide state changes, rely on global keyboard handlers, or let prototype controls intercept canvas shortcuts. Use the host app's native framework only when layout, auth, data, routing, or responsive context genuinely matters and that context is requested. Mark workspace/source disposable. The Prototype Kit itself is permanent maintained software and deserves normal engineering care; an attached prototype must be deleted or folded into production after the question is answered.
+Keep the relevant model portable and browser controls thin. Do not bind it to React, Excalidraw, a database, or network I/O; do not add production integrations, persistence, backend bridges, or diagram-to-code promises unless they are the question. Do not hide state changes, rely on global keyboard handlers, or let explanation controls intercept canvas shortcuts. Use the host app's native framework only when layout, auth, data, routing, or responsive context genuinely matters and that context is requested. Mark workspace/source disposable. The Explain UI kit itself is permanent maintained software and deserves normal engineering care; an attached explanation must be deleted or folded into production after the question is answered.
 
 ## Capture the answer
 

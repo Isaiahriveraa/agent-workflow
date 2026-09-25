@@ -8,7 +8,7 @@ const [major, minor] = process.versions.node.split(".").map(Number);
 
 if (major < 22 || (major === 22 && minor < 12)) {
   console.error(
-    `prototype-kit tests need Node 22.12 or newer to run TypeScript test files; this is Node ${process.versions.node}. The Kit and its dev server still support Node 20.19.`,
+    `explain-ui tests need Node 22.12 or newer to run TypeScript test files; this is Node ${process.versions.node}. The kit and its dev server still support Node 20.19.`,
   );
   process.exit(1);
 }

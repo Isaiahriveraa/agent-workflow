@@ -1,11 +1,10 @@
-import {
-  useId,
-  type ButtonHTMLAttributes,
-  type CSSProperties,
-  type DetailsHTMLAttributes,
-  type HTMLAttributes,
-  type PropsWithChildren,
-  type ReactNode,
+import type {
+  ButtonHTMLAttributes,
+  CSSProperties,
+  DetailsHTMLAttributes,
+  HTMLAttributes,
+  PropsWithChildren,
+  ReactNode,
 } from "react";
 import type { Tone } from "../tone.ts";
 import "./ui.css";
@@ -17,7 +16,7 @@ export function Panel({
   ...props
 }: PropsWithChildren<{ title: string } & HTMLAttributes<HTMLElement>>) {
   return (
-    <section className={["prototype-panel", className].filter(Boolean).join(" ")} aria-label={title} {...props}>
+    <section className={["explain-panel", className].filter(Boolean).join(" ")} aria-label={title} {...props}>
       <h2>{title}</h2>
       {children}
     </section>
@@ -45,7 +44,7 @@ export function ActionButton({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button {...props} className={["prototype-action", className].filter(Boolean).join(" ")} type={type ?? "button"}>
+    <button {...props} className={["explain-action", className].filter(Boolean).join(" ")} type={type ?? "button"}>
       {children}
     </button>
   );
@@ -216,7 +215,7 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "aria-pr
 };
 
 export function Button({ variant = "secondary", pressed, className, type = "button", ...buttonProps }: ButtonProps) {
-  const classes = ["prototype-action", `prototype-action--${variant}`, className].filter(Boolean).join(" ");
+  const classes = ["explain-action", `explain-action--${variant}`, className].filter(Boolean).join(" ");
   return <button {...buttonProps} type={type} className={classes} aria-pressed={pressed === undefined ? undefined : pressed} />;
 }
 
@@ -241,26 +240,18 @@ export type SegmentedControlProps = {
 };
 
 export function SegmentedControl({ options, value, onChange, label }: SegmentedControlProps) {
-  const name = useId();
   return (
-    <fieldset className="ui-segmented">
-      <legend className="ui-segmented-legend">{label}</legend>
+    <div className="ui-segmented">
+      <span className="ui-segmented-legend">{label}</span>
       {options.map((option) => (
-        <label
-          className={`ui-segmented-option${option.value === value ? " ui-segmented-option-selected" : ""}`}
+        <button
+          type="button"
+          className="ui-segmented-option"
           key={option.value}
-        >
-          <input
-            className="ui-segmented-input"
-            type="radio"
-            name={name}
-            value={option.value}
-            checked={option.value === value}
-            onChange={() => onChange(option.value)}
-          />
-          <span className="ui-segmented-option-label">{option.label}</span>
-        </label>
+          aria-pressed={option.value === value}
+          onClick={() => onChange(option.value)}
+        >{option.label}</button>
       ))}
-    </fieldset>
+    </div>
   );
 }

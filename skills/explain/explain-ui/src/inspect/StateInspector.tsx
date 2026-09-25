@@ -12,7 +12,7 @@ export interface StateInspectorProps extends HTMLAttributes<HTMLElement> {
 
 export function StateInspector({ value, className, ...props }: StateInspectorProps) {
   return (
-    <section className={["prototype-state", className].filter(Boolean).join(" ")} aria-live="polite" aria-label="Current state" {...props}>
+    <section className={["explain-state", className].filter(Boolean).join(" ")} aria-live="polite" aria-label="Current state" {...props}>
       <h3>Current state</h3>
       <pre>{formatValue(value)}</pre>
     </section>

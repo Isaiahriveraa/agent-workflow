@@ -16,7 +16,7 @@ function excalidrawAssets() {
     ".woff2": "font/woff2",
   };
   return {
-    name: "prototype-kit-excalidraw-assets",
+    name: "explain-ui-excalidraw-assets",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
         if (request.method !== "GET" && request.method !== "HEAD") {
@@ -62,20 +62,20 @@ function excalidrawAssets() {
   };
 }
 
-export function createPrototypeConfig({ root, port, strictPort = false, template = false }) {
+export function createExplainConfig({ root, port, strictPort = false, template = false }) {
   const canonicalRoot = path.resolve(root);
-  const entry = template ? path.join(toolkitDir, "template", "prototype.tsx") : path.join(canonicalRoot, "prototype.tsx");
+  const entry = template ? path.join(toolkitDir, "template", "explanation.tsx") : path.join(canonicalRoot, "explanation.tsx");
   return {
     root: canonicalRoot,
     configFile: false,
     envDir: false,
-    envPrefix: "PROTOTYPE_PUBLIC_",
+    envPrefix: "EXPLAIN_PUBLIC_",
     css: { postcss: {} },
     plugins: [react(), excalidrawAssets()],
     resolve: {
       alias: {
-        "@prototype": entry,
-        "@prototype-kit": path.join(toolkitDir, "src", "kit.tsx"),
+        "@explanation": entry,
+        "@explain-ui": path.join(toolkitDir, "src", "kit.tsx"),
       },
       dedupe: ["react", "react-dom"],
     },
@@ -93,20 +93,20 @@ export function createPrototypeConfig({ root, port, strictPort = false, template
 }
 
 /**
- * Start a foreground Vite dev server for one attached prototype.
+ * Start a foreground Vite dev server for one attached explanation.
  * @param {{ root: string, port?: number }} options
  */
-export async function startPrototypeServer({ root, port }) {
+export async function startExplainServer({ root, port }) {
   if (port !== undefined && (!Number.isInteger(port) || port < 1024 || port > 65535)) {
-    throw new Error("Prototype server port must be an integer between 1024 and 65535.");
+    throw new Error("Explanation server port must be an integer between 1024 and 65535.");
   }
-  const server = await createServer(createPrototypeConfig({
+  const server = await createServer(createExplainConfig({
     root: path.resolve(root),
     port: port ?? 5173,
     strictPort: port !== undefined,
   }));
   await server.listen();
   const url = server.resolvedUrls?.local?.[0] ?? `http://127.0.0.1:${server.config.server.port}/`;
-  console.log(`Prototype server ready at ${url}`);
+  console.log(`Explanation server ready at ${url}`);
   return server;
 }

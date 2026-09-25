@@ -1,16 +1,16 @@
-.prototype-overview {
+.explain-overview {
   margin-bottom: 18px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
 }
 
-.prototype-overview h2,
-.prototype-overview h3 {
+.explain-overview h2,
+.explain-overview h3 {
   margin: 0 0 6px;
   font-size: 18px;
 }
 
-.prototype-overview p {
+.explain-overview p {
   margin: 0;
   color: var(--muted);
 }

@@ -23,8 +23,8 @@ import {
   type DataTableColumn,
   type DataTableRow,
   type FieldSpec,
-  type PrototypeDefinition,
-} from "@prototype-kit";
+  type ExplanationDefinition,
+} from "@explain-ui";
 
 export type QueueState = {
   pending: number;
@@ -148,9 +148,9 @@ const scene = {
     { type: "arrow", x: 650, y: 225, width: 110, height: 0, endArrowhead: "arrow", strokeColor: "#3566a8" },
     { type: "text", x: 90, y: 355, text: "Trigger → owner → state change → outcome", fontSize: 18 },
   ]),
-} satisfies NonNullable<PrototypeDefinition["scene"]>;
+} satisfies NonNullable<ExplanationDefinition["scene"]>;
 
-const definition: PrototypeDefinition = {
+const definition: ExplanationDefinition = {
   title: "Queue Worker Simulation",
   question: "How does a queued job move from client request to worker completion?",
   scene,

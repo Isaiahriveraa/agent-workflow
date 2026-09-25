@@ -7,10 +7,10 @@ export interface ModelOverviewProps extends HTMLAttributes<HTMLElement> {
   children?: ReactNode;
 }
 
-/** A compact, semantic explanation of what a prototype model does. */
+/** A compact, semantic explanation of what a explanation model does. */
 export function ModelOverview({ title, summary, children, className, ...props }: ModelOverviewProps) {
   return (
-    <section className={["prototype-overview", className].filter(Boolean).join(" ")} aria-label={title} {...props}>
+    <section className={["explain-overview", className].filter(Boolean).join(" ")} aria-label={title} {...props}>
       <h2>{title}</h2>
       {summary ? <p>{summary}</p> : null}
       {children}

@@ -6,13 +6,13 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const REFUSAL_ERROR =
-	"ERROR: Refusing to attach prototype outside a git repository.";
+	"ERROR: Refusing to attach explanation outside a git repository.";
 const INDEX_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visual Prototype</title>
+    <title>Visual Explanation</title>
     <script>
       window.EXCALIDRAW_ASSET_PATH = "/excalidraw/";
     </script>
@@ -35,7 +35,7 @@ const REQUIRED_PACKAGES = [
 
 const scriptPath = fs.realpathSync(fileURLToPath(import.meta.url));
 const hubRoot = path.resolve(path.dirname(scriptPath), "..");
-const toolkitRoot = path.join(hubRoot, "prototype-kit");
+const toolkitRoot = path.join(hubRoot, "skills", "explain", "explain-ui");
 const toolkitDependencies = path.join(toolkitRoot, "node_modules");
 
 function fail(message) {
@@ -85,7 +85,7 @@ function dependenciesReady() {
 
 function validateSlug(slug) {
 	if (typeof slug !== "string" || !SLUG_PATTERN.test(slug)) {
-		fail(`Invalid prototype slug: ${slug ?? ""}`);
+		fail(`Invalid explanation slug: ${slug ?? ""}`);
 		return false;
 	}
 	return true;
@@ -101,23 +101,23 @@ function lstatOrNull(file) {
 }
 
 function preflightDestination(worktree, slug) {
-	const prototypes = path.join(worktree, "prototypes");
-	const destination = path.join(prototypes, slug);
-	const parentStat = lstatOrNull(prototypes);
+	const explanations = path.join(worktree, "explanations");
+	const destination = path.join(explanations, slug);
+	const parentStat = lstatOrNull(explanations);
 	if (parentStat?.isSymbolicLink()) {
-		fail(`Refusing symlinked prototypes directory: ${prototypes}`);
+		fail(`Refusing symlinked explanations directory: ${explanations}`);
 		return null;
 	}
 	if (parentStat && !parentStat.isDirectory()) {
-		fail(`Refusing non-directory prototypes path: ${prototypes}`);
+		fail(`Refusing non-directory explanations path: ${explanations}`);
 		return null;
 	}
 	const destinationStat = lstatOrNull(destination);
 	if (destinationStat?.isSymbolicLink()) {
-		fail(`Refusing symlinked prototype destination: ${destination}`);
+		fail(`Refusing symlinked explanation destination: ${destination}`);
 		return null;
 	}
-	return { prototypes, destination, destinationStat };
+	return { explanations, destination, destinationStat };
 }
 
 function isRegularFile(file) {
@@ -137,7 +137,7 @@ function isCorrectLink(file, expected) {
 
 function initializedStatus(destination) {
 	const missing = [];
-	for (const name of ["prototype.tsx", "index.html", ".gitignore"]) {
+	for (const name of ["explanation.tsx", "index.html", ".gitignore"]) {
 		if (!isRegularFile(path.join(destination, name))) missing.push(name);
 	}
 	if (!isCorrectLink(path.join(destination, ".kit"), toolkitRoot))
@@ -151,29 +151,29 @@ function initializedStatus(destination) {
 
 function refuseExisting(destination, missing) {
 	return fail(
-		`Existing prototype attachment is incomplete or mismatched at ${destination}: ${missing.join(", ")}. Refusing to overwrite.`,
+		`Existing explanation attachment is incomplete or mismatched at ${destination}: ${missing.join(", ")}. Refusing to overwrite.`,
 	);
 }
 
-function initPrototype(worktree, slug) {
+function initExplanation(worktree, slug) {
 	if (!dependenciesReady()) return dependencyFailure();
 	const preflight = preflightDestination(worktree, slug);
 	if (!preflight) return false;
-	const { prototypes, destination, destinationStat } = preflight;
+	const { explanations, destination, destinationStat } = preflight;
 	if (destinationStat) {
 		if (!destinationStat.isDirectory())
 			return refuseExisting(destination, ["directory"]);
 		const missing = initializedStatus(destination);
 		if (missing.length) return refuseExisting(destination, missing);
-		console.log(`Prototype already initialized: ${destination}`);
+		console.log(`Explanation already initialized: ${destination}`);
 		return true;
 	}
 	try {
-		fs.mkdirSync(prototypes, { recursive: true });
+		fs.mkdirSync(explanations, { recursive: true });
 		fs.mkdirSync(destination);
 		fs.copyFileSync(
-			path.join(toolkitRoot, "template", "prototype.tsx"),
-			path.join(destination, "prototype.tsx"),
+			path.join(toolkitRoot, "template", "explanation.tsx"),
+			path.join(destination, "explanation.tsx"),
 		);
 		fs.writeFileSync(path.join(destination, "index.html"), INDEX_HTML);
 		fs.writeFileSync(path.join(destination, ".gitignore"), GITIGNORE);
@@ -185,23 +185,23 @@ function initPrototype(worktree, slug) {
 		);
 	} catch (error) {
 		return fail(
-			`Failed to initialize prototype at ${destination}: ${error.message}`,
+			`Failed to initialize explanation at ${destination}: ${error.message}`,
 		);
 	}
-	console.log(`Initialized prototype at ${destination}`);
+	console.log(`Initialized explanation at ${destination}`);
 	return true;
 }
 
-function cleanPrototype(worktree, slug) {
-	const prototypes = path.join(worktree, "prototypes");
-	const destination = path.join(prototypes, slug);
-	const parentStat = lstatOrNull(prototypes);
+function cleanExplanation(worktree, slug) {
+	const explanations = path.join(worktree, "explanations");
+	const destination = path.join(explanations, slug);
+	const parentStat = lstatOrNull(explanations);
 	if (parentStat?.isSymbolicLink()) {
-		fail(`Refusing symlinked prototypes directory: ${prototypes}`);
+		fail(`Refusing symlinked explanations directory: ${explanations}`);
 		return false;
 	}
 	if (parentStat && !parentStat.isDirectory()) {
-		fail(`Refusing non-directory prototypes path: ${prototypes}`);
+		fail(`Refusing non-directory explanations path: ${explanations}`);
 		return false;
 	}
 	const destinationStat = lstatOrNull(destination);
@@ -211,14 +211,14 @@ function cleanPrototype(worktree, slug) {
 				fs.unlinkSync(destination);
 			else fs.rmSync(destination, { recursive: true, force: true });
 		}
-		if (parentStat?.isDirectory() && fs.readdirSync(prototypes).length === 0)
-			fs.rmdirSync(prototypes);
+		if (parentStat?.isDirectory() && fs.readdirSync(explanations).length === 0)
+			fs.rmdirSync(explanations);
 	} catch (error) {
 		return fail(
-			`Failed to clean prototype at ${destination}: ${error.message}`,
+			`Failed to clean explanation at ${destination}: ${error.message}`,
 		);
 	}
-	console.log(`Cleaned prototype at ${destination}`);
+	console.log(`Cleaned explanation at ${destination}`);
 	return true;
 }
 
@@ -229,13 +229,13 @@ function parsePort(value) {
 	return Number.isInteger(port) && port >= 1024 && port <= 65535 ? port : null;
 }
 
-async function devPrototype(worktree, slug, port) {
+async function devExplanation(worktree, slug, port) {
 	if (!dependenciesReady()) return dependencyFailure();
 	const preflight = preflightDestination(worktree, slug);
 	if (!preflight) return false;
 	const { destination, destinationStat } = preflight;
 	if (!destinationStat?.isDirectory())
-		return fail(`Prototype is not initialized: ${destination}`);
+		return fail(`Explanation is not initialized: ${destination}`);
 	const missing = initializedStatus(destination);
 	if (missing.length) return refuseExisting(destination, missing);
 	const serverModule = await import(
@@ -243,12 +243,12 @@ async function devPrototype(worktree, slug, port) {
 	);
 	let server;
 	try {
-		server = await serverModule.startPrototypeServer({
+		server = await serverModule.startExplainServer({
 			root: fs.realpathSync(destination),
 			port,
 		});
 	} catch (error) {
-		return fail(`Failed to start prototype server: ${error.message}`);
+		return fail(`Failed to start explanation server: ${error.message}`);
 	}
 	let closing = false;
 	const close = async () => {
@@ -292,17 +292,17 @@ async function main() {
 	}
 	if (!["init", "dev", "clean"].includes(parsed.action) || !parsed.slug)
 		return fail(
-			"Usage: prototype.mjs <init|dev|clean> <slug> [--project <path>] [--port <number>]",
+			"Usage: explain.mjs <init|dev|clean> <slug> [--project <path>] [--port <number>]",
 		);
 	if (!validateSlug(parsed.slug)) return false;
 	const worktree = canonicalProject(parsed.options.project);
 	if (!worktree) return false;
-	if (parsed.action === "init") return initPrototype(worktree, parsed.slug);
-	if (parsed.action === "clean") return cleanPrototype(worktree, parsed.slug);
+	if (parsed.action === "init") return initExplanation(worktree, parsed.slug);
+	if (parsed.action === "clean") return cleanExplanation(worktree, parsed.slug);
 	const port = parsePort(parsed.options.port);
 	if (parsed.options.port !== undefined && port === null)
 		return fail("Invalid port: expected an integer from 1024 through 65535.");
-	return devPrototype(worktree, parsed.slug, port);
+	return devExplanation(worktree, parsed.slug, port);
 }
 
 const result = await main();

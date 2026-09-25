@@ -7,18 +7,18 @@ import { afterEach, describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const tempRoots = [];
-const scriptPath = fileURLToPath(new URL("./prototype.mjs", import.meta.url));
+const scriptPath = fileURLToPath(new URL("./explain.mjs", import.meta.url));
 const hubRoot = path.resolve(path.dirname(scriptPath), "..");
-const toolkitRoot = path.join(hubRoot, "prototype-kit");
+const toolkitRoot = path.join(hubRoot, "skills", "explain", "explain-ui");
 const refusalMessage =
-	"ERROR: Refusing to attach prototype outside a git repository.";
+	"ERROR: Refusing to attach explanation outside a git repository.";
 
 afterEach(() => {
 	for (const root of tempRoots.splice(0))
 		fs.rmSync(root, { recursive: true, force: true });
 });
 
-function runPrototype(args, options = {}) {
+function runExplain(args, options = {}) {
 	const result = spawnSync(process.execPath, [scriptPath, ...args], {
 		cwd: options.cwd ?? hubRoot,
 		encoding: "utf8",
@@ -30,7 +30,7 @@ function runPrototype(args, options = {}) {
 	};
 }
 
-function makePrimaryRepo(prefix = "prototype-fixture-") {
+function makePrimaryRepo(prefix = "explain-fixture-") {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 	tempRoots.push(root);
 	execFileSync("git", ["init", "-q"], { cwd: root });
@@ -40,9 +40,9 @@ function makePrimaryRepo(prefix = "prototype-fixture-") {
 		"git",
 		[
 			"-c",
-			"user.name=Prototype Tests",
+			"user.name=Explain Tests",
 			"-c",
-			"user.email=prototype-tests@example.test",
+			"user.email=explain-tests@example.test",
 			"commit",
 			"-qm",
 			"initial",
@@ -52,7 +52,7 @@ function makePrimaryRepo(prefix = "prototype-fixture-") {
 	return root;
 }
 
-function makeLinkedWorktree(prefix = "prototype-worktree-") {
+function makeLinkedWorktree(prefix = "explain-worktree-") {
 	const primary = makePrimaryRepo();
 	const worktree = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 	tempRoots.push(worktree);
@@ -63,7 +63,7 @@ function makeLinkedWorktree(prefix = "prototype-worktree-") {
 			"add",
 			"-q",
 			"-b",
-			`prototype-test-${Date.now()}-${Math.random()}`,
+			`explain-test-${Date.now()}-${Math.random()}`,
 			worktree,
 			"HEAD",
 		],
@@ -75,7 +75,7 @@ function makeLinkedWorktree(prefix = "prototype-worktree-") {
 }
 
 function attachmentPath(worktree, slug) {
-	return path.join(worktree, "prototypes", slug);
+	return path.join(worktree, "explanations", slug);
 }
 
 function assertFailure(result) {
@@ -97,7 +97,7 @@ function escapeRegExp(value) {
 
 function withToolkitDependenciesTemporarilyHidden(callback) {
 	const dependencies = path.join(toolkitRoot, "node_modules");
-	const backup = `${dependencies}.prototype-test-backup-${process.pid}`;
+	const backup = `${dependencies}.explain-test-backup-${process.pid}`;
 	const existed =
 		fs.existsSync(dependencies) ||
 		fs.lstatSync(dependencies, { throwIfNoEntry: false });
@@ -111,20 +111,20 @@ function withToolkitDependenciesTemporarilyHidden(callback) {
 	}
 }
 
-describe("prototype CLI checkout validation", () => {
+describe("explanation CLI checkout validation", () => {
 	it("allows a primary checkout", () => {
 		const primary = makePrimaryRepo();
-		const result = runPrototype(["init", "queue-demo", "--project", primary]);
+		const result = runExplain(["init", "queue-demo", "--project", primary]);
 		assert.equal(result.status, 0, result.output);
 		assert.equal(fs.existsSync(attachmentPath(primary, "queue-demo")), true);
 	});
 
 	it("refuses a non-git directory", () => {
 		const directory = fs.mkdtempSync(
-			path.join(os.tmpdir(), "prototype-non-git-"),
+			path.join(os.tmpdir(), "explain-non-git-"),
 		);
 		tempRoots.push(directory);
-		const result = runPrototype(["init", "queue-demo", "--project", directory]);
+		const result = runExplain(["init", "queue-demo", "--project", directory]);
 		assertFailure(result);
 		assert.match(result.output, new RegExp(escapeRegExp(refusalMessage)));
 	});
@@ -140,10 +140,10 @@ describe("prototype CLI checkout validation", () => {
 			"queue demo",
 			"queue--demo",
 		]) {
-			const result = runPrototype(["init", slug, "--project", worktree]);
+			const result = runExplain(["init", slug, "--project", worktree]);
 			assertFailure(result);
 			assert.equal(
-				fs.existsSync(path.join(worktree, "prototypes", slug)),
+				fs.existsSync(path.join(worktree, "explanations", slug)),
 				false,
 				slug,
 			);
@@ -151,7 +151,7 @@ describe("prototype CLI checkout validation", () => {
 	});
 });
 
-describe("prototype CLI init", () => {
+describe("explanation CLI init", () => {
 	it("attaches a valid slug to a linked worktree with the complete layout", () => {
 		const { worktree } = makeLinkedWorktree();
 		const slug = "queue-demo";
@@ -173,7 +173,7 @@ describe("prototype CLI init", () => {
 			lockfile,
 			path.join(hostDependencies, "sentinel"),
 		].map((file) => fs.readFileSync(file));
-		const result = runPrototype(["init", slug, "--project", worktree]);
+		const result = runExplain(["init", slug, "--project", worktree]);
 		assert.equal(result.status, 0, result.output);
 		for (const [index, file] of [
 			manifest,
@@ -184,7 +184,7 @@ describe("prototype CLI init", () => {
 		}
 		const destination = attachmentPath(worktree, slug);
 		for (const entry of [
-			"prototype.tsx",
+			"explanation.tsx",
 			"index.html",
 			".gitignore",
 			".kit",
@@ -192,7 +192,7 @@ describe("prototype CLI init", () => {
 		]) {
 			assert.equal(fs.existsSync(path.join(destination, entry)), true, entry);
 		}
-		for (const file of ["prototype.tsx", "index.html", ".gitignore"]) {
+		for (const file of ["explanation.tsx", "index.html", ".gitignore"]) {
 			assert.equal(
 				fs.lstatSync(path.join(destination, file)).isFile(),
 				true,
@@ -223,27 +223,27 @@ describe("prototype CLI init", () => {
 			assert.match(gitignore, new RegExp(`^${escapeRegExp(line)}$`, "m"));
 	});
 
-	it("is idempotent and preserves authored prototype and extra files", () => {
+	it("is idempotent and preserves authored explanation and extra files", () => {
 		const { worktree } = makeLinkedWorktree();
 		const slug = "queue-demo";
-		const first = runPrototype(["init", slug, "--project", worktree]);
+		const first = runExplain(["init", slug, "--project", worktree]);
 		assert.equal(first.status, 0, first.output);
 		const destination = attachmentPath(worktree, slug);
 		const authored = "export default { title: 'local edit' };\n";
 		const extra = path.join(destination, "notes.txt");
-		fs.writeFileSync(path.join(destination, "prototype.tsx"), authored);
+		fs.writeFileSync(path.join(destination, "explanation.tsx"), authored);
 		fs.writeFileSync(extra, "keep me\n");
 		const before = Object.fromEntries(
-			["prototype.tsx", "index.html", ".gitignore"].map((file) => [
+			["explanation.tsx", "index.html", ".gitignore"].map((file) => [
 				file,
 				fs.readFileSync(path.join(destination, file)),
 			]),
 		);
 
-		const second = runPrototype(["init", slug, "--project", worktree]);
+		const second = runExplain(["init", slug, "--project", worktree]);
 		assert.equal(second.status, 0, second.output);
 		assert.deepEqual(
-			fs.readFileSync(path.join(destination, "prototype.tsx")),
+			fs.readFileSync(path.join(destination, "explanation.tsx")),
 			Buffer.from(authored),
 		);
 		assert.deepEqual(fs.readFileSync(extra), Buffer.from("keep me\n"));
@@ -258,15 +258,15 @@ describe("prototype CLI init", () => {
 	it("refuses a partial attachment without overwriting remaining authored files", () => {
 		const { worktree } = makeLinkedWorktree();
 		const slug = "partial";
-		const first = runPrototype(["init", slug, "--project", worktree]);
+		const first = runExplain(["init", slug, "--project", worktree]);
 		assert.equal(first.status, 0, first.output);
 		const destination = attachmentPath(worktree, slug);
-		fs.writeFileSync(path.join(destination, "prototype.tsx"), "authored\n");
+		fs.writeFileSync(path.join(destination, "explanation.tsx"), "authored\n");
 		fs.unlinkSync(path.join(destination, "index.html"));
-		const result = runPrototype(["init", slug, "--project", worktree]);
+		const result = runExplain(["init", slug, "--project", worktree]);
 		assertFailure(result);
 		assert.equal(
-			fs.readFileSync(path.join(destination, "prototype.tsx"), "utf8"),
+			fs.readFileSync(path.join(destination, "explanation.tsx"), "utf8"),
 			"authored\n",
 		);
 		assert.equal(fs.existsSync(path.join(destination, "index.html")), false);
@@ -275,19 +275,19 @@ describe("prototype CLI init", () => {
 	it("detects a bad symlink and refuses to relink it", () => {
 		const { worktree } = makeLinkedWorktree();
 		const slug = "tampered";
-		const first = runPrototype(["init", slug, "--project", worktree]);
+		const first = runExplain(["init", slug, "--project", worktree]);
 		assert.equal(first.status, 0, first.output);
 		const destination = attachmentPath(worktree, slug);
 		fs.unlinkSync(path.join(destination, ".kit"));
 		fs.symlinkSync(
-			path.join(os.tmpdir(), "missing-prototype-kit"),
+			path.join(os.tmpdir(), "missing-explain-ui"),
 			path.join(destination, ".kit"),
 		);
-		const result = runPrototype(["init", slug, "--project", worktree]);
+		const result = runExplain(["init", slug, "--project", worktree]);
 		assertFailure(result);
 		assert.equal(
 			fs.readlinkSync(path.join(destination, ".kit")),
-			path.join(os.tmpdir(), "missing-prototype-kit"),
+			path.join(os.tmpdir(), "missing-explain-ui"),
 		);
 	});
 
@@ -296,7 +296,7 @@ describe("prototype CLI init", () => {
 		const destination = attachmentPath(worktree, "not-a-directory");
 		fs.mkdirSync(path.dirname(destination), { recursive: true });
 		fs.writeFileSync(destination, "do not replace\n");
-		const result = runPrototype([
+		const result = runExplain([
 			"init",
 			"not-a-directory",
 			"--project",
@@ -306,78 +306,78 @@ describe("prototype CLI init", () => {
 		assert.equal(fs.readFileSync(destination, "utf8"), "do not replace\n");
 	});
 
-	it("rejects a symlinked prototypes parent", () => {
+	it("rejects a symlinked explanations parent", () => {
 		const { worktree } = makeLinkedWorktree();
 		const outside = fs.mkdtempSync(
-			path.join(os.tmpdir(), "prototype-outside-"),
+			path.join(os.tmpdir(), "explain-outside-"),
 		);
-		fs.symlinkSync(outside, path.join(worktree, "prototypes"));
-		const result = runPrototype(["init", "queue-demo", "--project", worktree]);
+		fs.symlinkSync(outside, path.join(worktree, "explanations"));
+		const result = runExplain(["init", "queue-demo", "--project", worktree]);
 		assertFailure(result);
 		assert.equal(fs.readdirSync(outside).length, 0);
 	});
 
 	it("handles project and worktree paths containing spaces", () => {
-		const { worktree } = makeLinkedWorktree("prototype worktree with spaces-");
-		const result = runPrototype(["init", "space-safe", "--project", worktree]);
+		const { worktree } = makeLinkedWorktree("explanation worktree with spaces-");
+		const result = runExplain(["init", "space-safe", "--project", worktree]);
 		assert.equal(result.status, 0, result.output);
 		assert.equal(fs.existsSync(attachmentPath(worktree, "space-safe")), true);
 	});
 });
 
-describe("prototype CLI clean", () => {
-	it("removes an initialized prototype and its empty parent directory", () => {
+describe("explanation CLI clean", () => {
+	it("removes an initialized explanation and its empty parent directory", () => {
 		const { worktree } = makeLinkedWorktree();
 		const slug = "queue-demo";
-		const init = runPrototype(["init", slug, "--project", worktree]);
+		const init = runExplain(["init", slug, "--project", worktree]);
 		assert.equal(init.status, 0, init.output);
 		const destination = attachmentPath(worktree, slug);
 		const canonicalDestination = path.join(
 			fs.realpathSync(worktree),
-			"prototypes",
+			"explanations",
 			slug,
 		);
 		fs.writeFileSync(path.join(destination, "notes.txt"), "keep during init\n");
 
-		const result = runPrototype(["clean", slug, "--project", worktree]);
+		const result = runExplain(["clean", slug, "--project", worktree]);
 		assert.equal(result.status, 0, result.output);
 		assert.match(
 			result.output,
-			new RegExp(`Cleaned prototype at ${escapeRegExp(canonicalDestination)}`),
+			new RegExp(`Cleaned explanation at ${escapeRegExp(canonicalDestination)}`),
 		);
 		assert.equal(fs.existsSync(destination), false);
 		assert.equal(fs.existsSync(path.dirname(destination)), false);
 	});
 
-	it("succeeds when the prototype does not exist", () => {
+	it("succeeds when the explanation does not exist", () => {
 		const primary = makePrimaryRepo();
-		const result = runPrototype(["clean", "missing", "--project", primary]);
+		const result = runExplain(["clean", "missing", "--project", primary]);
 		assert.equal(result.status, 0, result.output);
 		const canonicalDestination = path.join(
 			fs.realpathSync(primary),
-			"prototypes",
+			"explanations",
 			"missing",
 		);
 		assert.match(
 			result.output,
-			new RegExp(`Cleaned prototype at ${escapeRegExp(canonicalDestination)}`),
+			new RegExp(`Cleaned explanation at ${escapeRegExp(canonicalDestination)}`),
 		);
-		assert.equal(fs.existsSync(path.join(primary, "prototypes")), false);
+		assert.equal(fs.existsSync(path.join(primary, "explanations")), false);
 	});
 });
 
-describe("prototype CLI dependency and dev validation", () => {
+describe("explanation CLI dependency and dev validation", () => {
 	it("recommends npm ci when toolkit dependencies are missing for init and dev", () => {
 		const { worktree } = makeLinkedWorktree();
 		withToolkitDependenciesTemporarilyHidden(() => {
-			const init = runPrototype([
+			const init = runExplain([
 				"init",
 				"missing-deps",
 				"--project",
 				worktree,
 			]);
 			assertDependencyFailure(init);
-			const dev = runPrototype(["dev", "missing-deps", "--project", worktree]);
+			const dev = runExplain(["dev", "missing-deps", "--project", worktree]);
 			assertDependencyFailure(dev);
 		});
 	});
@@ -385,7 +385,7 @@ describe("prototype CLI dependency and dev validation", () => {
 	it("rejects dev ports outside the valid range or that are not integers", () => {
 		const { worktree } = makeLinkedWorktree();
 		for (const port of ["80", "70000", "abc", "1023", "65536", "5173.5"]) {
-			const result = runPrototype([
+			const result = runExplain([
 				"dev",
 				"queue-demo",
 				"--project",

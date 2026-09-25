@@ -10,8 +10,8 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "paths": {
-      "@prototype-kit": ["./src/kit.tsx"],
-      "@prototype": ["./template/prototype.tsx"]
+      "@explain-ui": ["./src/kit.tsx"],
+      "@explanation": ["./template/explanation.tsx"]
     }
   },
   "include": ["src/**/*", "template/**/*"],

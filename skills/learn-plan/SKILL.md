@@ -29,7 +29,7 @@ Before planning any backend feature: **first check what already exists, then run
 
 > Real example: before planning email delivery, we ran one authenticated SMTP send from `iuga@uw.edu` via `smtp.uw.edu:587` and watched it land in an inbox. The plan then treated email as solved — "the terminal test proved the hardest part; everything else is UX around it."
 >
-> This mirrors the `prototype` skill (throwaway code that answers a question), but earlier and lighter: you spike to *prove feasibility*, not to *answer a design question*.
+> This mirrors the `explain` skill (throwaway code that answers a question), but earlier and lighter: you spike to *prove feasibility*, not to *answer a design question*.
 
 ## 2. Explain the big picture, then the layers
 

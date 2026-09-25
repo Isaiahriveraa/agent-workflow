@@ -631,6 +631,9 @@ existing = lock.setdefault("skills", {})
 now = "2026-05-25T14:00:00.000Z"
 added = 0
 
+# Directories inside a skill folder that are tooling/dependencies, not skill content.
+SKIPPED_DIRS = {"node_modules", ".git", "dist", ".vite"}
+
 # Scan hub skills directory for skill subdirs
 if os.path.isdir(skills_dir):
     for entry in sorted(os.listdir(skills_dir)):
@@ -645,7 +648,8 @@ if os.path.isdir(skills_dir):
 
         # Compute folder hash
         hasher = hashlib.sha256()
-        for root, dirs, files in sorted(os.walk(skill_dir)):
+        for root, dirs, files in os.walk(skill_dir):
+            dirs[:] = sorted(name for name in dirs if name not in SKIPPED_DIRS)
             for fname in sorted(files):
                 fpath = os.path.join(root, fname)
                 try:

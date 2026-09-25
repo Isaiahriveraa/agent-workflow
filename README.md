@@ -68,17 +68,17 @@ Workflow skills (`spawn`, `enforce`, `pr`, `to-issues`) are invoked via `skill(n
 
 Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge.
 
-### Prototype Kit browser workspace
+### Explain UI browser workspace
 
-`Prototype Kit` provides the default browser workspace for disposable whiteboard, schema, logic, and visual-design experiments. Attach it directly to the current Git checkout, or use a linked worktree when stronger isolation is useful:
+`Explain UI` provides the default browser workspace for disposable whiteboard, schema, logic, and visual-design experiments. Attach it directly to the current Git checkout, or use a linked worktree when stronger isolation is useful:
 
 ```sh
-npm ci --prefix <hub>/prototype-kit
-node ~/.agents/scripts/prototype.mjs init <slug> [--project <path>]
-node ~/.agents/scripts/prototype.mjs dev <slug> [--project <path>] [--port <number>]
+npm ci --prefix <hub>/skills/explain/explain-ui
+node ~/.agents/scripts/explain.mjs init <slug> [--project <path>]
+node ~/.agents/scripts/explain.mjs dev <slug> [--project <path>] [--port <number>]
 ```
 
-Edit only the generated project source (`prototypes/<slug>/prototype.tsx` and local files). `.kit` and `node_modules` are links to the central Prototype Kit and must not be edited through a prototype. Save and load diagrams explicitly from the workspace; preview state is disposable and not automatically persisted.
+Edit only the generated project source (`explanations/<slug>/explanation.tsx` and local files). `.kit` and `node_modules` are links to the central Explain UI and must not be edited through an explanation. Save and load diagrams explicitly from the workspace; preview state is disposable and not automatically persisted.
 
 ## Adapters
 
@@ -101,7 +101,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 
 | Skill | Role |
 |-------|------|
-| `prototype/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants |
+| `explain/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants (Explain UI lives at `skills/explain/explain-ui/`) |
 | `design/` | Shape intent and design-level decisions into an evidence-backed artifact for `/plan` |
 | `plan/` | Validate upstream artifacts, investigate only research gaps, and decompose a canonical execution plan → local plan files in `context/plans/<slug>/` |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
@@ -164,7 +164,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 ├── agents/                # Specialist expert agents
 ├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules
-│   ├── prototype/          # Pipeline skills
+│   ├── explain/            # Explain UI browser explanation workspace
 │   ├── plan/
 │   ├── to-issues/
 │   ├── issue-discovery/

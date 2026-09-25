@@ -187,7 +187,7 @@
  * Buttons carry state as a fill, never an outline: the toolbar reads as one row of switches and
  * the pressed control is the only one that looks lit.
  */
-.prototype-action {
+.explain-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -203,18 +203,18 @@
   transition: background 120ms ease, color 120ms ease;
 }
 
-.prototype-action:hover { background: var(--surface-sunken); color: var(--ink); }
-.prototype-action[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-dark); }
-.prototype-action--primary { background: var(--accent); color: var(--on-accent); }
-.prototype-action--primary:hover { background: var(--accent-dark); color: var(--on-accent); }
-.prototype-action--primary[aria-pressed="true"] { background: var(--accent-dark); color: var(--on-accent); }
-.prototype-action--secondary { background: var(--surface-sunken); }
-.prototype-action--secondary:hover { background: var(--line); }
-.prototype-action--ghost { color: var(--accent-dark); }
-.prototype-action--ghost:hover { background: var(--accent-soft); }
-.prototype-action--danger { background: var(--tone-stop); color: var(--on-accent); }
-.prototype-action--danger:hover { background: color-mix(in srgb, var(--tone-stop) 82%, black); color: var(--on-accent); }
-.prototype-action:disabled { cursor: not-allowed; opacity: 0.4; }
+.explain-action:hover { background: var(--surface-sunken); color: var(--ink); }
+.explain-action[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-dark); }
+.explain-action--primary { background: var(--accent); color: var(--on-accent); }
+.explain-action--primary:hover { background: var(--accent-dark); color: var(--on-accent); }
+.explain-action--primary[aria-pressed="true"] { background: var(--accent-dark); color: var(--on-accent); }
+.explain-action--secondary { background: var(--surface-sunken); }
+.explain-action--secondary:hover { background: var(--line); }
+.explain-action--ghost { color: var(--accent-dark); }
+.explain-action--ghost:hover { background: var(--accent-soft); }
+.explain-action--danger { background: var(--tone-stop); color: var(--on-accent); }
+.explain-action--danger:hover { background: color-mix(in srgb, var(--tone-stop) 82%, black); color: var(--on-accent); }
+.explain-action:disabled { cursor: not-allowed; opacity: 0.4; }
 
 .ui-toolbar {
   display: flex;
@@ -227,16 +227,15 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-1);
   margin: 0;
-  padding: 3px;
+  padding: 0;
   border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
+  background: transparent;
 }
 
 .ui-segmented-legend {
-  padding: 0.3rem 0.55rem 0.3rem 0.35rem;
+  padding: 0.4rem 0.45rem 0.4rem 0;
   color: var(--muted);
   font-size: var(--text-xs);
   font-weight: 650;
@@ -244,35 +243,37 @@
 
 .ui-segmented-option {
   display: inline-flex;
-}
-
-.ui-segmented-input {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: 0;
-  opacity: 0;
-}
-
-.ui-segmented-option-label {
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
   padding: 0.4rem 0.8rem;
+  border: 1px solid transparent;
   border-radius: var(--radius-xs);
+  background: var(--surface);
   color: var(--ink-soft);
+  font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.ui-segmented-option-selected .ui-segmented-option-label {
+.ui-segmented-option:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.ui-segmented-option[aria-pressed="true"] {
   background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
   color: var(--accent-dark);
 }
 
-.ui-segmented-input:focus-visible + .ui-segmented-option-label {
+.ui-segmented-option:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
-.prototype-panel {
+.explain-panel {
   padding: var(--space-5);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -280,12 +281,12 @@
   box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 5%, transparent);
 }
 
-.prototype-panel h2 {
+.explain-panel h2 {
   margin: 0 0 var(--space-3);
   font-size: var(--text-lg);
 }
 
-.prototype-panel > p {
+.explain-panel > p {
   max-width: var(--measure);
 }
 

@@ -5,20 +5,20 @@ import type { SceneData as ExcalidrawSceneData } from "@excalidraw/excalidraw/ty
 export type { ExcalidrawSceneData };
 export { convertToExcalidrawElements };
 
-export interface PrototypeVariant {
+export interface ExplanationVariant {
   id: string;
   title: string;
   component: ComponentType;
 }
 
-export interface PrototypeDefinition {
+export interface ExplanationDefinition {
   title: string;
   question: string;
   scene?: ExcalidrawSceneData;
-  variants: readonly PrototypeVariant[];
+  variants: readonly ExplanationVariant[];
 }
 
-// Explanation-first prototypes: what the model is, how its chain runs, what is optional detail.
+// Explanation-first explanations: what the model is, how its chain runs, what is optional detail.
 export { CausalWalkthrough } from "./explain/CausalWalkthrough.tsx";
 export type { CausalStep, CausalWalkthroughProps } from "./explain/CausalWalkthrough.tsx";
 export { ModelOverview } from "./explain/ModelOverview.tsx";
@@ -40,7 +40,7 @@ export { SequenceDiagram } from "./diagram/SequenceDiagram.tsx";
 export type { SequenceDiagramProps } from "./diagram/SequenceDiagram.tsx";
 export type { DiagramParticipant, DiagramStep } from "./diagram/sequence.ts";
 
-// Display vocabulary and controls. prototype-action stays the button family's base class.
+// Display vocabulary and controls. explain-action stays the button family's base class.
 export {
   ActionButton,
   Bullets,

@@ -1,5 +1,5 @@
 /*
- * Design tokens for the prototype workspace. Everything visual reads from here, so a prototype
+ * Design tokens for the explanation workspace. Everything visual reads from here, so a explanation
  * re-themes the Kit by overriding custom properties rather than copying rules.
  */
 :root {
