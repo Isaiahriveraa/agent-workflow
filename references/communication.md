@@ -22,10 +22,10 @@ Keep it proportional: no walls of text, no narrating routine syntax or line-by-l
 
 **Research** — Question → Conclusion → Key Evidence → Options & Tradeoffs → Recommendation → Remaining Uncertainty.
 
-## Testing Scaffolding
+## Tests
 
-- Backend tests are permanent: durable behavioral regression coverage for API contracts, data integrity, error paths, and business logic.
-- Frontend tests are temporary: write them to prove behavior during development, delete before commit unless the human asked to keep them.
+- Tests that prove behavior are permanent, frontend included: durable regression coverage for business logic, API contracts, data boundaries, error states, and user-visible UI behavior.
+- Tests that pin how the UI is built are scaffolding — markup shape, class names, styles, DOM snapshots, internal state. Delete them before commit unless the human asked to keep them.
 - Report the tests you added and the behavior each one proves. At most one line for the overall suite ("all backend tests pass") — never a whole-suite pass count.
 
 ## Review
