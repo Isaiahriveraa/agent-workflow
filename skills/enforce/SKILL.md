@@ -21,7 +21,7 @@ The reviewer explains; the enforcer writes. You see the full rationale before an
 
 ## Enforcement Spec
 
-The rules being enforced come from `~/.agents/AGENTS.md` — the numbered list under `## Operating Rules` (contract docs, error handling, no type suppressions, code smell cleanup, surgical scope, tests at public seams) — plus, in gate mode, the delegated prompt's acceptance criteria and forbidden shortcuts. The hub file is the single source of truth; never a project-local copy.
+The rules being enforced come from `~/.agents/AGENTS.md` — the numbered rules under `## Rules` — plus, in gate mode, the delegated prompt's acceptance criteria and forbidden shortcuts. The hub file is the single source of truth; never a project-local copy.
 
 ## Phase 1 — Review (read-only)
 
@@ -29,7 +29,7 @@ Produce the **rationale table**. No edits in this phase — the output is the co
 
 | ID | File:line | What | Why (rule) | Impact | Smallest fix |
 |---|---|---|---|---|---|
-| F1 | `src/auth.ts:42` | `catch (e) {}` swallows errors | AGENTS.md rule 7 — errors explicit | silent token-refresh failure | log + rethrow |
+| F1 | `src/auth.ts:42` | `catch (e) {}` swallows errors | AGENTS.md — **Errors explicit** | silent token-refresh failure | log + rethrow |
 
 Every row needs a verbatim quote at `file:line`, the rule it violates, an observable impact, and the smallest fix. A row without evidence is dropped. No style noise, no "might/could" without a path.
 

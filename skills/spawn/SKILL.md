@@ -73,7 +73,7 @@ For each unit, write a prompt with all of these sections. Specify each unit's **
 
 **7. DONE WHEN** — Binary pass/fail checklist:
 - [ ] File created with exports A, B, C
-- [ ] Contract-bearing functions documented per rule 10; no boilerplate elsewhere
+- [ ] Contract-bearing functions documented (AGENTS.md **Document non-obvious contracts**); no boilerplate elsewhere
 - [ ] LSP diagnostics clean on changed files
 - [ ] No new dependencies added
 - [ ] Pattern matches [exact reference file]
@@ -126,7 +126,7 @@ For each sub-agent output, verify:
 * [ ] It avoids hidden coupling.
 * [ ] It has appropriate error handling.
 * [ ] It has appropriate tests or verification.
-* [ ] Contract-bearing functions documented per rule 10; no boilerplate elsewhere.
+* [ ] Contract-bearing functions documented (AGENTS.md **Document non-obvious contracts**); no boilerplate elsewhere.
 * [ ] No TODOs, placeholders, pass stubs, or fake implementations remain.
 * [ ] LSP/lint/type diagnostics are clean on changed files where applicable.
 * [ ] The work can integrate cleanly with the other sub-agent outputs.
@@ -208,12 +208,12 @@ Acceptance is not the end: after synthesis, invoke `skill(name="code-review")` f
 
 ---
 
-## Contract Documentation (per AGENTS.md rule 10)
+## Contract Documentation (per AGENTS.md **Document non-obvious contracts**)
 
-Sub-agents follow the hub's contract rule (AGENTS.md rule 10), not a docstring-everywhere mandate:
+Sub-agents follow the hub's contract rule (AGENTS.md **Document non-obvious contracts**), not a docstring-everywhere mandate:
 
-- Contract-bearing functions — API endpoints and functions with a non-obvious input/output contract — get the rule-10 block template from AGENTS.md. Fill in every applicable field; write `N/A` for the rest.
-- Ordinary helpers and UI components get no boilerplate: short why-comments only, per rule 7.
+- Contract-bearing functions — API endpoints and functions with a non-obvious input/output contract — get the contract block template from AGENTS.md. Fill in every applicable field; write `N/A` for the rest.
+- Ordinary helpers and UI components get no boilerplate: short why-comments only (AGENTS.md **Code explains itself**).
 
 If a required contract doc feels verbose or unwieldy, **deepen the module**: simplify the parameters, hide internal orchestration details, and define edge cases out of existence (Ousterhout). Do not mechanically split a function into shallow wrappers just to shorten documentation; splitting an awkward function produces two awkward functions that callers and reviewers must coordinate.
 
