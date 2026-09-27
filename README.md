@@ -117,6 +117,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `spawn/` | Max-context sub-agent decomposition |
 | `tdd/` | Red-green-refactor with seam discipline |
 | `code-review/` | Adversarial review — three reviewers (behavioral, contract/spec, maintainability), one adjudicator |
+| `code-judgment/` | Behavior-preserving cleanup before review — dead code, YAGNI, names, comments, module shape, cohesion/coupling |
 | `pair-reviewer/` | Interactive reading partner for a branch or worktree the user names: resolves the target, gathers its plan, commit history, and code, then talks through the answers in 2-5 sentences and stops, critiquing only on request (`/skill:pair-reviewer <branch-or-worktree>`); depth follows you — evidence, provenance, and the `REVIEW-THINKING.md` method come when asked; "probe me" withholds a finding behind a location hint so you guess it first; read-only, hands off to `code-review/` for a full adversarial pass |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |

@@ -410,6 +410,15 @@
       "skillFolderHash": "2de888d555df2f8b1a0d33078373743b2945c922",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "code-judgment": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/code-judgment",
+      "skillPath": "skills/code-judgment/SKILL.md",
+      "skillFolderHash": "6cdf4dfe372d9b66e95b8345337401f46b7fa1ca",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
   "dismissed": {
