@@ -31,7 +31,7 @@ Applies unless overridden. Bias: caution over speed.
 ---
 ## Skill Routing
 
-Skill routing is defined in the hub contract — `~/.agents/AGENTS.md` → `## Skill Routing` — and is the single source of truth. Invoke matching skills with `skill(name="skill-name")`. Do not maintain a second copy here; update the hub table instead.
+Skill routing is defined in the hub contract — `~/.agents/AGENTS.md` → `## Skills & Routing` — and is the single source of truth. Invoke matching skills with `skill(name="skill-name")`. Do not maintain a second copy here; update the hub table instead.
 
 ---
 
