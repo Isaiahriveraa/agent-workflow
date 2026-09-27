@@ -112,7 +112,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Background-agent research → single cited Markdown file |
 | `issue-delivery/` | Terminal follow-up to `to-issues`: takes one published issue number (or URL), reads the issue and its `## Plan reference`, and delivers it through an isolated worktree, TDD, quality code, review, atomic commits, and a human-approved draft PR; one issue = one branch = one PR; does not create issues or schedule batches |
-| `implement/` | Orchestrator: tdd → code-review → commit |
+| `implement/` | Orchestrator: tdd → code-judgment → code-review → commit |
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
 | `tdd/` | Red-green-refactor with seam discipline |

@@ -21,7 +21,7 @@ Most work travels this route:
 7. **Need to pick a visual direction?** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own front-end stack; expose the real forks as switchable variants, let the user choose, then implement the chosen one.
 8. **Need a spec issue?** → **`/skill:to-spec`** — synthesize the conversation into a GitHub spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning.
 9. **Standalone cited research?** → **`/skill:research`** — background-agent research using web search and primary sources, producing one cited Markdown evidence artifact; use it to fill a gap or independently when no upstream artifact exists.
-10. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), review changes (`/skill:code-review`), commit (`/skill:commit`).
+10. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit`).
 
 Downstream stages validate and reuse upstream artifacts; they investigate only gaps and do not duplicate upstream design or research.
 

@@ -45,7 +45,7 @@ Sub-agent types to use (all read-only by design):
 6. **Re-dispatch only for gaps** — If you hit something unknown mid-implementation (unfamiliar API, hidden coupling, missing context), dispatch a targeted read-only sub-agent to investigate that one thing, then continue. Never let a sub-agent implement in your place.
 7. **Verify without a browser** — Run the repo's linter, typecheck, test suite, and build. The passing tests are the proof that the behavior you described works. **Do NOT run Playwright, browser automation, or visual QA unless the user explicitly instructed it.** If the user wants visual verification, they will invoke `/visual-qa` or `/playwright` themselves.
 
-End of flow: implementation verified, report back to the user. Do not auto-run `/code-review` or `/commit` — the user decides whether to review or commit next. Note that per AGENTS.md **TDD**, tests that prove behavior are permanent, frontend included; tests that only pin how the UI is built — markup, classes, styles, snapshots, internal state — are scaffolding to clean up before committing unless the user explicitly requested to retain them.
+End of flow: implementation verified, report back to the user. Do not auto-run `/code-judgment`, `/code-review`, or `/commit` — the user decides whether to clean, review, or commit next. Note that per AGENTS.md **TDD**, tests that prove behavior are permanent, frontend included; tests that only pin how the UI is built — markup, classes, styles, snapshots, internal state — are scaffolding to clean up before committing unless the user explicitly requested to retain them.
 
 ## Research-only delegation template
 

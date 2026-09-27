@@ -63,6 +63,7 @@ One issue produces at most one branch, one worktree, one concern-tight PR, and o
 | `tdd` | Drive every non-trivial behavior: agree observable seams, red → green one vertical slice at a time, refactor only while green. |
 | `implement` | Orchestrate vertical slices with regular focused checks, then project-native full-suite verification. |
 | `code-review` | Review the completed branch diff; resolve blocking findings or surface them in the Publish packet. |
+| `code-judgment` | Clean the completed branch diff before review; behavior-preserving only, tests stay green. |
 | `commit` | Plan, review, and **execute** atomic commits (Conventional Commits, no `and` in a message). It stages and commits itself after the audit and user approval pass. |
 | `pr` | Generate the reviewer-facing PR title/body from the actual branch diff. |
 | `~/.agents/scripts/cleanup-worktree.sh` | Tear down the worktree after the PR merges. |
@@ -137,7 +138,7 @@ Implement the single approved outcome. For large or multi-slice work, decompose 
 2. Invoke `implement` to orchestrate the vertical slices with regular focused checks after each slice. Fix failures at their cause; never hide them.
 3. Make the smallest cohesive change that satisfies the issue's `## Expected outcome` checklist, honoring `## Intended behavior` and validating the `## Plan reference` against live code.
 4. Run the project-native typecheck, lint, build, and tests. If a full suite cannot run, record exactly why and the untested boundary.
-5. Invoke `code-review` on the branch diff. Resolve blocking findings. If a finding needs a product/security/dependency decision, stop and escalate instead of choosing silently.
+5. Invoke `code-judgment` to clean the branch diff (behavior-preserving; tests stay green), then `code-review` on the frozen result. Resolve blocking findings. If a finding needs a product/security/dependency decision, stop and escalate instead of choosing silently.
 
 ### 5. Commit atomically
 

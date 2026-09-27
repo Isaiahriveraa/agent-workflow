@@ -204,7 +204,7 @@ Rejected work returns to the responsible sub-agent — never to your own editor.
 
 A rejection that returns with the same defect twice means your direction was too vague, the spec was underspecified, or the unit exceeds the sub-agent's context: sharpen the behavioral spec, shrink the unit, or bring the decision to the human — do not take over the implementation.
 
-Acceptance is not the end: after synthesis, invoke `skill(name="code-review")` for verification — per AGENTS.md Implementation Mode it is the always-run verification step.
+Acceptance is not the end: after synthesis, run `skill(name="code-judgment")` to clean the result, then invoke `skill(name="code-review")` for verification — per AGENTS.md Implementation Mode it is the always-run verification step.
 
 ---
 
