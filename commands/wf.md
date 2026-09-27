@@ -13,6 +13,8 @@ Runs the full ship path for the current branch: atomic commits → PR. One conce
 
 ## Steps
 
+**Before the commit phase:** if the diff has not been through `code-judgment`, run it now. The pre-commit review gate verifies a frozen diff, so cleanup happens before it — never during.
+
 ### 1. Commit phase (commit skill)
 
 Invoke the `commit` skill at `~/.agents/skills/commit/SKILL.md`:
