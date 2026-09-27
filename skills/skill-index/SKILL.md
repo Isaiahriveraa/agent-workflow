@@ -49,6 +49,7 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 
 - **Build frontend with the main agent implementing** → **`/skill:frontend-implement`** — the main agent is the sole writer of UI code; sub-agents only research, gather context, and propose plans (never write code). User-invoked.
 - **Pick a visual direction before building** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own stack that shows two or more complete options behind one toggle; the gate ahead of implementation.
+- **Anti-slop landing page, portfolio, or redesign** → **`/skill:design-taste-frontend`** — reads the brief, infers the aesthetic direction, then ships with strict anti-pattern bans and a mandatory pre-flight check; not for dashboards or data-heavy product UI.
 - **Explain a design/logic/schema question** → **`/skill:explain`** — the hub's Explain UI browser workspace (Excalidraw whiteboard + live previews).
 
 ## Planning & execution

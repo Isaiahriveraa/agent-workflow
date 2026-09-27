@@ -142,6 +142,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `resolving-merge-conflicts/` | Merge conflict resolution |
 | `frontend-design/` | Visual design guidance |
 | `frontend-implement/` | Frontend implementation mode — main agent writes, sub-agents research only |
+| `design-taste-frontend/` | Anti-slop landing pages, portfolios, and redesigns — brief-first aesthetic inference, strict pre-flight check (leonxlnx/taste-skill) |
 | `ui-ux-pro-max/` | UI/UX design intelligence |
 | `impeccable/` | AI agent design guidance (pbakaus/impeccable) |
 | `framer-motion-animator/` | Framer Motion animations |
@@ -193,6 +194,7 @@ Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase
 │   ├── prompt-master/
 │   ├── frontend-design/
 │   ├── frontend-implement/
+│   ├── design-taste-frontend/
 │   ├── ui-ux-pro-max/
 │   ├── impeccable/
 │   ├── framer-motion-animator/

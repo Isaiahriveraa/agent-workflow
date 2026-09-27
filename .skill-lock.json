@@ -411,6 +411,15 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
+    "design-taste-frontend": {
+      "source": "leonxlnx/taste-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill.git",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "skillFolderHash": "a6d128e53b4ec0238baee751dde33bf707adb5ec",
+      "installedAt": "2026-09-25T18:01:36.818Z",
+      "updatedAt": "2026-09-25T18:01:36.818Z"
+    },
     "code-judgment": {
       "source": ".agents",
       "sourceType": "hub",
