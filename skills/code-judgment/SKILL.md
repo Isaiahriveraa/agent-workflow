@@ -38,15 +38,16 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 | 1 | Dead code | Unused export, parameter, flag, or config key; unreachable branch; orphaned helper | Delete it |
 | 2 | Speculative generality | One caller behind an abstraction; unused options; an interface with one implementation | Inline or delete; extraction waits for the Rule of Three (AGENTS.md **One source of truth**) |
 | 3 | Shallow wrapper | The deletion test: removing it loses no behavior, only indirection | Delete it; call the real thing |
-| 4 | Duplicated logic | The same behavior in two places | Point both at one canonical helper only when the contract is stable; callers needing flags keep their duplication (duplication beats the wrong abstraction) |
-| 5 | Comments | Restates the code, stale, decorative banner | Delete; keep or sharpen only comments explaining non-obvious *why* (AGENTS.md **Code explains itself**) |
-| 6 | Names | Vague, cryptic, misleading, invented acronym | Rename to the project's domain term |
+| 4 | Duplicated logic | The same behavior in two places | Point both at one shared helper only when the contract is stable; callers needing flags keep their duplication (duplication beats the wrong abstraction) |
+| 5 | Comments | Restates the code, stale, or carries jargon/slop — an AI-slop word (see `scripts/slop-lint.py`), a term only this session uses, an unexplained abbreviation | Delete the restating ones; keep or sharpen only comments explaining non-obvious *why* — and rewrite them in plain words (AGENTS.md **Code explains itself**) |
+| 6 | Names | Vague, cryptic, misleading, invented acronym, or jargon the ordinary word already covers | Rename to the project's domain term or the plain word; no shorthand a newcomer cannot read |
 | 7 | Module shape | Fat function or file; feature logic in a general module; wrong layer | Split, move, or deepen the interface (AGENTS.md **Architecture is enforced**; use `codebase-design` vocabulary) |
 | 8 | Cohesion and coupling | Things that change together live apart; unrelated things bundled; imports crossing layers the wrong way | Move them together; dependencies point one way |
-| 9 | Bespoke helper | A canonical helper already does this | Use the canonical one (AGENTS.md **One source of truth**) |
+| 9 | Bespoke helper | One shared helper already does this | Use the shared one (AGENTS.md **One source of truth**) |
 | 10 | Defensive padding | Fallback for an unreachable state; broad catch; re-validation inside a trusted boundary | Remove it (AGENTS.md **YAGNI**) |
 | 11 | Unrequested polish | Anything in the diff serving a request other than this one | Remove it from the diff; queue the idea |
 | 12 | Change locality | A plausible next addition of the same kind would scatter edits across files — or force rewriting the implementation | Reshape so the next case lands behind an existing seam: small interface, behavior behind it, dependencies one-way; still no speculative options or flags (AGENTS.md **YAGNI**) |
+| 13 | Diff prose | Strings, error messages, CLI help, or changed Markdown that says something a customer or teammate would never say | Rewrite plainly; `python3 ~/.agents/scripts/slop-lint.py` over the changed files flags the words (AGENTS.md **Code explains itself**) |
 
 ## Simplicity With Flexibility
 
