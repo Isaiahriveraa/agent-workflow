@@ -41,7 +41,7 @@ def frontmatter(title: str, date_str: str, kind: str, extra: str = "") -> str:
 def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str:
     profiles = {
         "handoffs": ("handoff", "Agent Handoff", ["Active Goal", "Current State", "Latest User Intent", "Locked Decisions", "Do Not Repeat", "Work Completed", "Relevant Files", "Remaining Work", "Open Questions or Blockers", "Resume Here", "Verification", "Success Criteria", "Completion"]),
-        "designs": ("design", "Design", ["Summary", "Raw intent", "Current behavior", "Desired behavior", "Scope", "Non-goals", "Constraints", "Decisions and trade-offs", "System shape and boundaries", "Edge cases and failure behavior", "Evidence", "Grill interview", "Open questions", "Acceptance", "Status"]),
+        "designs": ("design", "Design", ["What we're doing and why", "Raw intent (your words)"]),
         "research": ("research", "Research", ["Question", "Conclusion", "Key Evidence", "Options & Tradeoffs", "Recommendation & System Impact", "Remaining Uncertainty", "Sources"]),
         "review": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
         "reviews": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
@@ -59,8 +59,6 @@ def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str
     result += f"# {heading}: {title}\n*{date_str} - {time_str}*\n\n"
     for section in sections:
         result += f"## {section}\n\n<!-- Record only verified information, decisions, or clearly labeled placeholders. -->\n\n"
-    if kind == "designs":
-        result = result.replace("## Status\n\n<!-- Record only verified information, decisions, or clearly labeled placeholders. -->", "## Status\n\n- <!-- Choose exactly one: ready-for-plan | blocked -->")
     return result
 
 
@@ -117,6 +115,12 @@ def bundle_files(kind: str, title: str, date_str: str, time_str: str) -> dict[st
         return {
             "00-index.md": index,
         }
+    if kind == "designs":
+        index = profile_template("designs", title, date_str, time_str)
+        index += "## Topics\n\n<!-- One card per topic: NN-<topic>.md. Add each card as it is written. -->\n\n## Order and dependencies\n\n<!-- Plain sentences: what must come before what, and why. -->\n\n## Open questions\n\n<!-- Unresolved decisions, with impact and what would resolve them. -->\n\n## Status\n\n- <!-- Choose exactly one: ready-for-plan | blocked -->\n"
+        return {
+            "00-index.md": index,
+        }
     return {
         "000-index.md": (
             f"# {title}\n\n"
@@ -169,7 +173,7 @@ def main() -> None:
             filepath.write_text(glossary_template(title, date_str, time_str), encoding="utf-8")
             print(f"Created: {filepath}")
         return
-    if args.art_type in ("plans", "issues"):
+    if args.art_type in ("plans", "issues", "designs"):
         folder = root / "context" / args.art_type / slug(raw_topic)
         files = bundle_files(args.art_type, title, date_str, time_str)
         if folder.exists():

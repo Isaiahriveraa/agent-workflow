@@ -46,7 +46,6 @@ describe("new-artifact.py", () => {
 		const root = makeRepo();
 		const expected = {
 			handoffs: ["## Active Goal", "## Open Questions or Blockers", "## Resume Here", "## Success Criteria"],
-			designs: ["## Desired behavior", "## Decisions and trade-offs", "## Status"],
 			research: ["## Question", "## Key Evidence", "## Options & Tradeoffs", "## Remaining Uncertainty"],
 			reviews: ["## Rationale Table", "## Remaining Issues", "## Per-module Details"],
 		};
@@ -83,8 +82,18 @@ describe("new-artifact.py", () => {
 		assert.ok(content.includes("### Open Questions"));
 	});
 
-	it("creates canonical plan and issue bundles with stable files", () => {
+	it("creates canonical design, plan, and issue bundles with stable files", () => {
 		const root = makeRepo();
+		const designOutput = run(root, "--type", "designs", "checkout flow");
+		const designRoot = path.join(root, "context", "designs", "checkout-flow");
+		assert.deepEqual(fs.readdirSync(designRoot).sort(), ["00-index.md"]);
+		assert.ok(designOutput.includes(path.join(designRoot, "00-index.md")));
+		const design = fs.readFileSync(path.join(designRoot, "00-index.md"), "utf8");
+		assert.match(design, /type: design/);
+		for (const heading of ["## What we're doing and why", "## Raw intent (your words)", "## Topics", "## Order and dependencies", "## Open questions", "## Status"]) {
+			assert.ok(design.includes(heading), `design missing ${heading}`);
+		}
+
 		const planOutput = run(root, "--type", "plans", "checkout flow");
 		const planRoot = path.join(root, "context", "plans", "checkout-flow");
 		assert.deepEqual(fs.readdirSync(planRoot).sort(), ["00-index.md"]);

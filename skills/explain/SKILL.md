@@ -110,7 +110,7 @@ Keep the relevant model portable and browser controls thin. Do not bind it to Re
 Keep the question and observed answer in a durable artifact before deleting the experiment:
 
 - Logic/state decision: `python3 ~/.agents/scripts/new-artifact.py --type decisions --topic "<verdict>"`
-- Design decision: `python3 ~/.agents/scripts/new-artifact.py --type designs --topic "<verdict>"`
+- Design decision: `python3 ~/.agents/scripts/new-artifact.py --type decisions --topic "<verdict>"`
 - Research finding: `python3 ~/.agents/scripts/new-artifact.py --type research --topic "<finding>"`
 
 Never invent findings or claim an outcome without user or runtime evidence.
