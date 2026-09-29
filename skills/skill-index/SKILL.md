@@ -12,8 +12,8 @@ You don't remember every skill, so ask.
 
 Most work travels this route:
 
-1. **`/design`** — user-invoked intent shaping: make the desired behavior and design-level decisions explicit in an evidence-backed design artifact for `/plan`.
-2. **`/plan`** — the canonical planning entry point. Validate the design artifact and repository state, investigate only missing or stale evidence (including targeted external research), decompose concerns and dependencies, and produce a canonical execution plan for human approval.
+1. **`/design`** — user-invoked intent shaping: talk the behavior through with the user, then write a plain-language design bundle under `context/designs/<slug>/` (a short index plus one walkthrough card per topic) that the user reads, explains back, and approves for `/plan`.
+2. **`/plan`** — the planning entry point. Plan one design topic at a time — the first not yet built, re-checked against the current code. Validate the design artifact and repository state, investigate only missing or stale evidence (including targeted external research), and produce a small execution plan for human approval; later topics are planned when their turn comes.
 3. **Plan approved?** → **`/skill:to-issues`** — mechanically compile only the approved plan into local parent/child issue drafts. Track drafts by file path and the plan manifest; preserve dependencies, work position, and acceptance criteria. After human approval of the issue set, publish a ready child issue (or explicitly single-concern issue) to GitHub, where published work is identified by its issue number; incomplete issues return to **`/skill:to-issues`** for enrichment before entering **`/skill:issue-delivery`**.
 4. **Published issue ready?** → **`/skill:issue-delivery`** — receives one published, ready child issue (or explicitly single-concern issue), identified by its GitHub issue number, verifies dependencies and readiness, and delivers it through an isolated worktree to a verified draft PR; incomplete issues return to **`/skill:to-issues`** for enrichment. It does not create issues or schedule batches.
 5. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
@@ -34,8 +34,8 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 
 - **Clean and simplify a diff before review** → **`/skill:code-judgment`** — behavior-preserving cleanup: dead code, YAGNI, names, comments, module shape, cohesion/coupling. Runs after implementation, before `code-review`.
 
-- **Full code review** → **`/skill:code-review`** — parallel specialist agents auditing the diff.
-- **Full code review** → **`/skill:code-review`** — three independent reviewers (behavioral, contract/spec, maintainability) + adjudicator. Covers both coding standards AND the spec/issue.
+- **Full code review** → **`/skill:code-review`** — the hardener proves failures with failing tests first, parallel specialist reviewers audit the hardened diff, an adjudicator validates claims, and a qa-runner preps the human QA pass.
+- **Full code review** → **`/skill:code-review`** — hardener + three independent reviewers (behavioral, contract/spec, maintainability) + adjudicator + qa-runner prep. Covers both coding standards AND the spec/issue.
 - **Question what a branch's code means, or critique it interactively** → **`/skill:pair-reviewer <branch-or-worktree>`** — resolves the target, gathers its plan, commit history, and code, then answers the current question in short plain conversation and stops, critiquing only when asked. Depth follows you: evidence, provenance, and the review method in `REVIEW-THINKING.md` come on request. Ask it to "probe me" and it hints at a defect instead of naming it, so you guess first. Read-only on the target; user-invoked.
 - **Security audit** → **`/skill:security-review`**.
 
@@ -54,7 +54,7 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 
 ## Planning & execution
 
-- **Plan work** → **`/plan`** — feature/engineering planning with proportionate, durable production decisions; records tradeoffs, guardrails, escalation signals, dependencies, and reviewable delivery steps.
+- **Plan work** → **`/plan`** — one concern at a time against the current code: proportionate, durable production decisions; records tradeoffs, guardrails, escalation signals, dependencies, and reviewable delivery steps.
 - **Understand or present an existing plan** → **`/skill:plan-standup-notes <plan-path>`** — turns the plan into compact iPad handwriting notes, a 30-second standup, and senior-level tradeoffs; explanation only, not implementation.
 - **Approved plan → issues** → **`/skill:to-issues`** — converts the approved plan into local parent/child issue drafts; after human approval, optionally publishes a ready child issue (or explicitly single-concern issue) to GitHub.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues for discovery, not implementation tickets; planning now lives in `/plan`.

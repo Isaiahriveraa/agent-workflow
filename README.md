@@ -38,7 +38,7 @@ or
 
 /design → /plan → /implement
 ```
-Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition. The supporting skills below remain available for focused needs, but they do not replace this delivery path. ### Pipeline stages | Stage | Skill | What it produces | Where | |-------|-------|------------------|-------| | Design | `/design` | Evidence-backed design: intent, behavior, scope, decisions, and constraints | `context/designs/` | | Plan | `/plan` | Repository-grounded execution plan with concerns, dependencies, parallelism, and verification | `context/plans/<slug>/` | | Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
+Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition. The supporting skills below remain available for focused needs, but they do not replace this delivery path. ### Pipeline stages | Stage | Skill | What it produces | Where | |-------|-------|------------------|-------| | Design | `/design` | Plain-language design bundle: a short index plus one walkthrough card per topic (problem, idea, behavior, decisions, why/why-not, what not to build) | `context/designs/<slug>/` | | Plan | `/plan` | Repository-grounded plan for one concern at a time — the next unbuilt design topic, re-checked against the current code — with dependencies and verification | `context/plans/<slug>/` | | Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
 | Approval | Human review | Approved ticket set ready for delivery | Conversation or plan record |
 | Delivery | `issue-delivery` | One published issue delivered through an isolated worktree to a verified draft PR | GitHub issue number → draft PR |
 
@@ -67,6 +67,8 @@ Slash commands in `commands/` extend the tool's native surface:
 Workflow skills (`spawn`, `enforce`, `pr`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
 
 Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge.
+
+`scripts/slop-lint.py` flags AI-slop words and phrases in Markdown prose; run `python3 ~/.agents/scripts/slop-lint.py <file-or-dir>` over docs you write. The `design` and `plan` skills check their output with it.
 
 ### Explain UI browser workspace
 
@@ -103,8 +105,8 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 |-------|------|
 | `explain/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants (Explain UI lives at `skills/explain/explain-ui/`) |
 | `prototype/` | Throwaway, true-scale UI built in the project's own front-end stack that shows two or more complete options behind one toggle to decide an unproven visual direction before implementing |
-| `design/` | Shape intent and design-level decisions into an evidence-backed artifact for `/plan` |
-| `plan/` | Validate upstream artifacts, investigate only research gaps, and decompose a canonical execution plan → local plan files in `context/plans/<slug>/` |
+| `design/` | Shape intent into a plain-language design bundle (index + one walkthrough card per topic) the user reads, explains back, and approves for `/plan` |
+| `plan/` | Plan one concern at a time — the next unbuilt design topic, re-checked against the current code — and turn it into an execution plan → local plan files in `context/plans/<slug>/` |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `to-issues/` | Mechanically compile an approved plan into local parent/child drafts under `context/issues/<slug>/`, tracked by path and manifest while preserving dependencies; after approval, optionally publish ready child issues (or explicitly single-concern issues) to GitHub, where they are identified by issue number |
 | `issue-discovery/` | Ambiguous ideas → decision GitHub issues for discovery (compat — planning lives in `/plan`) |
@@ -116,7 +118,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
 | `tdd/` | Red-green-refactor with seam discipline |
-| `code-review/` | Adversarial review — three reviewers (behavioral, contract/spec, maintainability), one adjudicator |
+| `code-review/` | Adversarial review — hardener (failing tests first), three reviewers (behavioral, contract/spec, maintainability), one adjudicator, and qa-runner prep for the human QA pass |
 | `code-judgment/` | Behavior-preserving cleanup before review — dead code, YAGNI, names, comments, module shape, cohesion/coupling |
 | `pair-reviewer/` | Interactive reading partner for a branch or worktree the user names: resolves the target, gathers its plan, commit history, and code, then talks through the answers in 2-5 sentences and stops, critiquing only on request (`/skill:pair-reviewer <branch-or-worktree>`); depth follows you — evidence, provenance, and the `REVIEW-THINKING.md` method come when asked; "probe me" withholds a finding behind a location hint so you guess it first; read-only, hands off to `code-review/` for a full adversarial pass |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
@@ -154,7 +156,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `orchestration/` | Generalized Herdr orchestration across workspaces, tabs, and panes; prompt-file dispatch and status-only supervision |
 | `skill-index/` | Skill router — ask which skill fits |
 
-Plus agent skills (`agents/`) for specialist roles: continuity-manager, codebase-analyzer, claim-verifier, diff-auditor, roadmap, ui-auditor, and more.
+Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, codebase-locator, reviewer-behavioral, reviewer-contract, reviewer-maintainability, security-reviewer, adjudicator, fixer.
 
 ## Directory Structure
 
