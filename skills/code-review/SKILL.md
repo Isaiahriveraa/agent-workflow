@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review code using independent adversarial reviewers that search for concrete bugs, contract mismatches, and maintainability regressions. Three independent reviewers, one adjudicator, optional fixer. Verifies every claim against actual repository state."
+description: "Review code using independent adversarial reviewers that search for concrete bugs, contract mismatches, and maintainability regressions. A hardener proves failures with failing tests first, three independent reviewers audit the hardened diff, a security-reviewer covers trust-boundary diffs on demand, one adjudicator validates every claim, an optional fixer applies verified fixes, and a qa-runner prepares the human QA pass. Verifies every claim against actual repository state."
 argument-hint: "[scope] [--fix] [--deep] [--artifact]"
 shell-timeout: 10
 ---
@@ -16,6 +16,8 @@ implemented change
       ↓
 run baseline checks
       ↓
+spawn the hardener → failing adversarial tests + smallest fixes
+      ↓
 reviewer A ───┐
             reviewer B ───┼─ independent adversarial review
 reviewer C ───┘
@@ -29,10 +31,15 @@ with --fix: one fixer applies valid feedback
 regression tests + baseline checks
       ↓
 one fresh adversarial validation of the fix
+      ↓
+spawn qa-runner → environment, test data, click-through script
+      ↓
+human runs the QA pass
 ```
 
 Role separation is mandatory:
 - The author or implementer does not review its own reasoning.
+- The hardener writes tests and the smallest fixes; its tests enter the diff before reviewers see it.
 - Reviewers do not implement fixes.
 - Reviewers work in separate contexts and do not see each other's output.
 - Reviewers do not receive the implementer's explanation, confidence, or completion summary.
@@ -160,7 +167,27 @@ Record each command, exit status, and concise failure output in `.git/code-revie
 
 A failing command is evidence, but not automatically a review finding. The review must establish that the selected diff caused or exposed the failure.
 
-### Step 3: Spawn Three Independent Adversarial Reviewers
+### Step 3: Harden First (spawn the hardener)
+
+Before any reviewer sees the change, spawn the hardener so the diff under review already carries tests that prove its failures.
+
+Spawn the `hardener` subagent — a registered agent type whose instructions live in `~/.agents/agents/hardener.md` — with this context. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
+
+```text
+Scope: <resolved scope>
+Patch: .git/code-review.patch
+Changed files: .git/code-review.changed-files
+Design context: <design card path, or the closest task description and acceptance criteria>
+```
+
+The hardener reproduces the real ways this change fails — the design card's edge cases plus: what can happen twice? what can disappear? what else touches this at once? For each scenario it writes a test and must watch it fail before fixing the smallest cause; a scenario that cannot be made to fail is dropped.
+
+After it returns:
+1. Regenerate `.git/code-review.patch`, `.git/code-review.changed-files`, and the baseline output so Steps 4-7 review the hardened diff.
+2. Keep the hardener's scenario table for the report (Step 8).
+3. If the scope has no executable behavior (docs or config only), or the hardener surfaces a design question, continue and note why.
+
+### Step 4: Spawn Three Independent Adversarial Reviewers
 
 Dispatch Reviewer A, Reviewer B, and Reviewer C in parallel in separate subagent contexts.
 They must not receive each other's output or the implementer's reasoning.
@@ -169,162 +196,36 @@ They must not receive each other's output or the implementer's reasoning.
 
 Reviewer A starts as close as practical to the Bun pattern: the patch is its primary context. It receives no task explanation and no implementation reasoning.
 
-Use a `task` subagent with this prompt:
+Spawn the `reviewer-behavioral` subagent — a registered agent type whose instructions live in `~/.agents/agents/reviewer-behavioral.md` — with this context. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
 
 ```text
-You are a blind adversarial code reviewer.
-
-Assume the changed code is wrong. Your only job is to find concrete bugs and reasons the code does not work.
-
-Primary input:
-- Patch: .git/code-review.patch
-- Changed files: .git/code-review.changed-files
-- Baseline output: .git/code-review.baseline.txt
-
-Do not ask for the author's reasoning. Do not infer intent from commit prose. Inspect the patch itself and, only when needed to prove a finding, read surrounding repository code.
-
-Attack the changed behavior using concrete inputs, states, and execution orderings.
-
-Check for:
-- wrong conditions, branch order, off-by-one behavior, and early returns
-- empty, null, negative, malformed, overflow, maximum, and boundary values
-- eager evaluation and unintended side effects
-- errors, cancellation, timeout, retry, and partial-failure behavior
-- invalid, unreachable, or non-terminal state transitions
-- cleanup, ownership, lifetime, and resource-release mistakes
-- async ordering, re-entrancy, stale state, and check-then-act behavior
-- duplicate execution and missing idempotency
-- language or library semantics that compile but behave differently than they look
-- fallback behavior that silently changes externally visible results
-- tests that pass while the actual supported edge case remains broken
-
-For each finding, return exactly:
-
-ID: A<n>
-Title: <specific failure>
-Evidence: <file:line — exact code quote>
-Trigger: <specific input, state, or operation ordering>
-Trace: <2-5 numbered execution steps>
-Impact: <observable incorrect result>
-Regression test: <smallest test that fails before the fix>
-Confidence: <8-10>
-
-Rules:
-- Report only behavior caused by or newly exposed by the reviewed diff.
-- Confidence must be at least 8.
-- Do not report style, naming, formatting, optional refactors, or general hardening.
-- Do not propose a fix.
-- Omit any claim without a concrete trigger and trace.
-- Return NO_FINDINGS when no qualifying findings exist.
+Patch: .git/code-review.patch
+Changed files: .git/code-review.changed-files
+Baseline output: .git/code-review.baseline.txt
 ```
 
 #### Reviewer B — Repository Contract Adversary
 
-Use a separate `task` subagent with this prompt:
+Spawn the `reviewer-contract` subagent — a registered agent type whose instructions live in `~/.agents/agents/reviewer-contract.md` — with this context. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
 
 ```text
-You are an independent adversarial repository reviewer.
-
-Assume the changed code breaks an existing contract. Your only job is to find concrete mismatches between the diff and the rest of the repository.
-
-Inputs:
-- Patch: .git/code-review.patch
-- Changed files: .git/code-review.changed-files
-- Minimal context: .git/code-review.context.txt
-- Baseline output: .git/code-review.baseline.txt
-
-Do not ask for or rely on the author's reasoning. Do not see another reviewer's output.
-
-Read the patch first. Then inspect only the callers, consumers, schemas, registrations, sibling implementations, and tests needed to prove or disprove a contract mismatch.
-
-Check for:
-- callers and callees that now make incompatible assumptions
-- task acceptance criteria missing from the implementation
-- requirements missing or only partially implemented (quote the spec or issue line that demands them)
-- behavior added that the spec or issue did not ask for (scope creep)
-- requirements implemented but wrong (behavior present but not what the spec/issue requires)
-- public API, protocol, event, CLI, or serialized-shape incompatibility
-- producer/consumer filters that disagree
-- missing enum cases, registrations, routes, handlers, commands, or dispatch entries
-- write/read, create/update, migration/rollback, and encode/decode asymmetry
-- changed behavior not mirrored across required sibling implementations
-- tests or fixtures encoding a different supported contract
-- errors represented differently across layers
-- authorization or validation removed before a privileged operation
-- ownership, lifecycle, transaction, or concurrency guarantees violated across components
-- changed dependency behavior that invalidates a repository assumption
-
-For each finding, return exactly:
-
-ID: B<n>
-Title: <specific broken contract>
-Changed evidence: <file:line — exact code quote>
-Contract evidence: <file:line — exact code quote>
-Trigger: <specific input, state, or operation ordering>
-Trace: <2-5 numbered execution steps>
-Impact: <observable incorrect result>
-Regression test: <smallest test proving the mismatch>
-Confidence: <8-10>
-
-Rules:
-- Report only mismatches caused by or newly exposed by the reviewed diff.
-- Confidence must be at least 8.
-- Two concrete evidence locations are required unless an explicit acceptance criterion provides the second fact.
-- Do not report style, naming, formatting, optional refactors, or vague concerns.
-- Do not propose a fix.
-- Return NO_FINDINGS when no qualifying findings exist.
+Patch: .git/code-review.patch
+Changed files: .git/code-review.changed-files
+Minimal context: .git/code-review.context.txt
+Baseline output: .git/code-review.baseline.txt
 ```
 
 #### Reviewer C — Maintainability Adversary
 
-Use a separate `task` subagent with this prompt:
+Spawn the `reviewer-maintainability` subagent — a registered agent type whose instructions live in `~/.agents/agents/reviewer-maintainability.md` — with this context. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
 
 ```text
-You are an adversarial maintainability reviewer.
+Patch: .git/code-review.patch
+Changed files: .git/code-review.changed-files
+Minimal context: .git/code-review.context.txt
+```
 
-Assume the changed code adds avoidable complexity. Your job is to find structural and design regressions in the diff and missed opportunities to make the code dramatically simpler without changing behavior.
-
-Inputs:
-- Patch: .git/code-review.patch
-- Changed files: .git/code-review.changed-files
-- Minimal context: .git/code-review.context.txt
-
-Do not ask for or rely on the author's reasoning. Do not see another reviewer's output.
-
-You are ambitious about structural simplification (code judo): look for reframes that delete whole branches, helpers, or layers while preserving behavior.
-
-Check for:
-- files pushed across the 1000-line boundary without a strong reason
-- new ad-hoc conditionals or special cases bolted onto unrelated flows (spaghetti growth) where a dedicated abstraction, state machine, or policy object would be cleaner
-- thin wrappers, identity abstractions, and pass-through helpers that add a layer without adding value
-- repeated conditionals that reveal a missing model or enum
-- unnecessary optionality, `unknown`, `any`, or cast-heavy code obscuring an invariant that types could express
-- logic in the wrong layer, or bespoke helpers where a canonical repository helper already exists
-- unnecessary sequential orchestration of independent work, and non-atomic partial updates
-- feature logic leaking into general-purpose modules
-- edge cases and 'temporary' branching that will become permanent debt
-- documented repository standards (e.g. CODING_STANDARDS.md, CONTRIBUTING.md) violated by the diff, citing the standard file and rule
-- Fowler smells from the baseline: Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest
-
-For each finding, return exactly:
-
-ID: C<n>
-Title: <specific maintainability regression or missed simplification>
-Evidence: <file:line — exact code quote>
-Standard: <which rule above it violates>
-Impact: <how this makes the code harder to maintain or extend>
-Remedy: <the smallest structural change, e.g. delete the layer, extract the helper, introduce the model, parallelize, make atomic>
-Confidence: <8-10>
-
-Rules:
-- Report only problems caused by or newly exposed by the reviewed diff.
-- Confidence must be at least 8.
-- A high-conviction structural finding beats a long cosmetic list: prefer a small number of findings that delete or reshape code.
-- Do not report naming, formatting, or style.
-- Do not invent remedies that change behavior; the diff must behave identically after the remedy.
-- Return NO_FINDINGS when no qualifying findings exist.
-
-### Step 4: Triggered Deep Review (`--deep` only)
+### Step 5: Triggered Deep Review (`--deep` only)
 
 Deep mode does not mean "spawn every specialist." Dispatch only the specialists whose mechanical trigger appears in the diff. Each specialist remains independent and receives the patch plus only the context required for its domain.
 
@@ -340,7 +241,13 @@ Trigger when changes touch:
 - outbound hosts, URLs, or sockets
 - raw HTML or explicit-trust rendering
 
-Require a concrete untrusted source-to-sensitive-sink trace. Do not report generic hardening suggestions, rate-limit ideas, or theoretical attacks without reachability.
+Spawn the `security-reviewer` subagent — a registered agent type whose instructions live in `~/.agents/agents/security-reviewer.md` — with this context. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
+
+```text
+Patch: .git/code-review.patch
+Changed files: .git/code-review.changed-files
+Minimal context: .git/code-review.context.txt
+```
 
 #### Concurrency Specialist
 Trigger when changes touch:
@@ -384,43 +291,18 @@ Check exact added, removed, or selected versions for:
 
 Advisory findings require authoritative source links and the exact affected range.
 
-### Step 5: Adjudicate All Candidate Findings
+### Step 6: Adjudicate All Candidate Findings
 
-Reviewer output is not yet a code review. Treat every candidate as potentially wrong. Spawn one adjudicator `task` subagent with full repository access.
+Reviewer output is not yet a code review. Treat every candidate as potentially wrong.
 
-The adjudicator receives all candidate findings verbatim, but none of the reviewers' hidden reasoning.
+Spawn the `adjudicator` subagent — a registered agent type whose instructions live in `~/.agents/agents/adjudicator.md` — with full repository access. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
 
-Prompt:
 ```text
-Adjudicate every candidate finding against the actual repository state.
-
 Candidate findings:
 {all reviewer and triggered-specialist findings verbatim}
-
-For each candidate:
-1. Locate every quoted line in the actual file.
-2. Read enough surrounding code to establish the real semantics.
-3. Inspect all cited callers, consumers, schemas, tests, registrations, locks, transactions, and guards.
-4. Reconstruct the claimed trigger and execution trace.
-5. Confirm that the reviewed diff caused or newly exposed the behavior.
-6. Check whether a type invariant, validation, authorization guard, transaction, lock, idempotency key, ownership rule, or existing test prevents the failure.
-7. Identify true duplicates only when trigger, failure, and correction are the same.
-
-Return exactly one row per candidate:
-
-<id> | VERIFIED | <exact file:line evidence and concise reason>
-<id> | WEAKENED | <narrower true claim with exact evidence>
-<id> | REJECTED | <contradicting evidence or missing proof>
-<id> | DUPLICATE-OF <id> | <why both describe the identical defect>
-
-Rules:
-- VERIFIED means the concrete failure is reproducible from repository code.
-- WEAKENED means a real defect exists, but its trigger, reach, or impact was overstated.
-- REJECTED means code contradicts the claim or evidence is insufficient.
-- Related defects with different triggers or observable failures remain separate.
-- Do not create new findings.
-- Do not propose fixes.
 ```
+
+The adjudicator receives none of the reviewers' hidden reasoning.
 
 Apply the adjudication:
 - Keep `VERIFIED` findings.
@@ -430,7 +312,7 @@ Apply the adjudication:
 
 No candidate reaches the user or fixer before adjudication.
 
-### Step 6: Rank Verified Findings
+### Step 7: Rank Verified Findings
 
 Severity is determined by demonstrated impact and reachability, not reviewer confidence.
 
@@ -458,7 +340,7 @@ Use only for a verified low-impact defect, narrowly limited defensive gap, or in
 
 Do not include discussion-only architecture opinions in the default result.
 
-### Step 7: Present the Review
+### Step 8: Present the Review
 
 When `--fix` is absent, stop after presenting the adjudicated review. Read the template at `templates/review.md`, fill the placeholders, and emit the result.
 
@@ -495,33 +377,22 @@ Verdict rules:
 
 Approval means only that no qualifying verified defect was found in the reviewed scope.
 
-### Step 8: Apply Feedback (`--fix` only)
+### Step 9: Apply Feedback (`--fix` only)
 
-Use one `task` subagent as the fixer. It receives:
-- verified and weakened findings
-- adjudicator evidence
-- task acceptance criteria
-- relevant repository rules
-- current baseline output
+Spawn the `fixer` subagent — a registered agent type whose instructions live in `~/.agents/agents/fixer.md` — via a `task` subagent. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same items:
 
-Prompt:
 ```text
-Validate and apply the smallest correct change for each adjudicated finding.
+Findings (verified and weakened):
+{adjudicated findings with adjudicator evidence}
 
-For each finding:
-1. Reconfirm the adjudicator's evidence in current repository state.
-2. Reject the finding if intervening changes made it invalid.
-3. Modify only the code needed to remove the demonstrated failure.
-4. Add or update the smallest regression test that proves the behavior.
-5. Preserve supported behavior outside the failing case.
-6. Do not perform unrelated cleanup or refactoring.
-7. Do not use destructive Git operations.
-8. Do not commit unless the parent workflow explicitly requests a commit.
+Task acceptance criteria:
+{acceptance criteria}
 
-Return per finding:
-<id> | FIXED | <files changed and tests added>
-<id> | REJECTED-AFTER-RECHECK | <contradicting evidence>
-<id> | BLOCKED | <exact unresolved dependency or ambiguity>
+Relevant repository rules:
+{repository rules}
+
+Baseline output:
+{current baseline output}
 ```
 
 After applying fixes:
@@ -533,13 +404,31 @@ After applying fixes:
 
 Do not automatically enter an unbounded review/fix cycle. A second fix pass is allowed only when the fresh fix review identifies a new verified Critical or Important issue caused by the fixer. Stop after two fix passes and report anything remaining.
 
-### Step 9: Completion
+### Step 10: Prepare the Human QA Pass (spawn qa-runner)
+
+After all code changes are settled (including any `--fix` pass), prepare the pass a human will run.
+
+Spawn the `qa-runner` subagent — a registered agent type whose instructions live in `~/.agents/agents/qa-runner.md` — with this context. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
+
+```text
+Scope: <resolved scope>
+Design walkthrough: <design card path, or the task description and acceptance criteria>
+Environment: <branch preview or dev deploy URL; otherwise ask it to report the blocker>
+```
+
+The qa-runner prepares the environment, test data, and a short numbered customer-path script plus one ugly path. It never clicks for the human and never approves.
+
+Carry its output into Step 11 and the final report: the human runs the script and answers "would a customer be fine here?" — record `approved` or the findings. Findings become the next concern, each named with the step that produced it.
+
+### Step 11: Completion
 
 #### Clean review
 ```text
 Review complete.
 No verified Critical or Important findings remain in the selected scope.
 Baseline checks pass.
+Hardener: {n} scenarios tried, {n} reproduced, {n} fixed.
+QA pass prepared — run the Step 10 script and record the human verdict.
 ```
 
 #### Remaining findings
@@ -554,11 +443,11 @@ Review incomplete because required checks could not run.
 - {command} — {external blocker}
 ```
 
-Never hide blocked tests or unresolved verified findings.
+Never hide blocked tests, unresolved verified findings, or a QA pass that could not be prepared.
 
-### Step 10: Optional Artifact (`--artifact` or `--deep`)
+### Step 12: Optional Artifact (`--artifact` or `--deep`)
 
-Write a Markdown document only when `--artifact` is supplied or deep mode produced at least one verified finding. Use the template at `templates/review.md`, fill every `{placeholder}` with reconciled values from Steps 5-6 and 8.
+Write a Markdown document only when `--artifact` is supplied or deep mode produced at least one verified finding. Use the template at `templates/review.md`, fill every `{placeholder}` with reconciled values from Steps 6-7 and 9, and include the hardener's scenario table (Step 3) and the QA script (Step 10) in the body.
 
 Suggested filename:
 ```text
@@ -596,7 +485,7 @@ Recommend `--deep` when the diff includes:
 
 ## Final Principles
 
-- One implementation result, three independent adversarial reviews, one validating apply step.
+- One implementation result, one adversarial-test pass (hardener), three independent adversarial reviews, one validating apply step, one human QA pass.
 - Search for falsifying examples rather than confirming examples.
 - Preserve context separation between author, reviewers, and fixer.
 - Review both local behavior and repository-wide contracts.
@@ -608,9 +497,9 @@ Recommend `--deep` when the diff includes:
 ## Important Notes
 
 - **Frontmatter**: `allowed-tools` is intentionally omitted — the skill inherits tools from the session config.
-- **Clipboard pattern**: After writing artifact in Step 10, run `pbcopy <absolute-path>` for the user.
+- **Clipboard pattern**: After writing artifact in Step 12, run `pbcopy <absolute-path>` for the user.
 - **Exit status**: always exit 0. The status is communicated through the verdict, not the process exit code.
 
 ## Clipboard
 
-After writing the code review artifact to disk at Step 10, immediately run `bash` with `pbcopy <absolute-path>` so the user's clipboard has the file path.
+After writing the code review artifact to disk at Step 12, immediately run `bash` with `pbcopy <absolute-path>` so the user's clipboard has the file path.
