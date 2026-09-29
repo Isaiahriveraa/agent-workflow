@@ -147,7 +147,7 @@ The combination commits the agent to a rank rather than letting it dump everythi
 - **Include line offsets** — Use Grep match lines as anchors. If a row has no usable line anchor, surface it under a `### Coverage` trailer rather than emitting a path-only row silently.
 - **Don't read file contents** — Just report locations.
 - **Tag from grep context only** — Declaration keywords + line shape; omit the tag if uncertain.
-- **Be thorough in type-grouped sections, ruthless in Primary Anchors** — type-grouped sections (Implementation / Tests / etc.) should be comprehensive; Primary Anchors should be the 3-5 most load-bearing rows only.
+- **Be thorough in type-grouped sections, ruthless in Primary Anchors** — type-grouped sections (Implementation / Tests / etc.) should be complete; Primary Anchors should be the 3-5 most load-bearing rows only.
 
 ## What NOT to Do
 
