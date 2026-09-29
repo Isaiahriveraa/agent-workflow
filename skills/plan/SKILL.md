@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Turn messy intent into a repository-grounded, dependency-aware, production-minded local plan. Clarify the goal, research the repo with concrete architectural evidence, choose durable but proportionate foundations, decompose into independent concerns with explicit dependencies, and write vertical-slice steps with observable acceptance. Use when the user wants a plan before implementation.
+description: Turn messy intent into a repository-grounded, dependency-aware, production-minded local plan — one concern at a time, re-checked against the current code. Clarify the goal, research the repo with concrete architectural evidence, choose durable but proportionate foundations, and write vertical-slice steps with observable acceptance. Use when the user wants a plan before implementation.
 argument-hint: "[I need you to plan]"
 shell-timeout: 20
 ---
@@ -19,7 +19,9 @@ Turn messy intent into a repository-grounded, dependency-aware, testable local p
 
 ### 0. Preflight inputs: existing design artifact
 
-Before clarifying or researching, check whether the user supplied or the repository contains a relevant `context/designs/*.md` artifact. If one exists, read it fully and treat it as the design source of truth for the handoff. Verify its current-state evidence, desired behavior, citations, scope, and unresolved questions against the repository and the user's request; never silently trust an incomplete artifact. Carry verified decisions and open questions into the plan, and stop to ask the human when a material question remains unresolved.
+Before clarifying or researching, check whether the user supplied or the repository contains a relevant design bundle under `context/designs/<slug>/` — a `00-index.md` plus one card per topic; older single-file `context/designs/*.md` designs are still valid inputs. If one exists, read its index first — it is the map — then the card this run will plan, and any card that one depends on; treat them as the design source of truth. Verify current-state evidence, desired behavior, citations, scope, and unresolved questions against the repository and the user's request; never silently trust an incomplete design, and never invent scope beyond it without stopping to ask. Carry verified decisions and open questions into the plan, and stop to ask when a material question remains unresolved.
+
+**One concern per run.** A design bundle with several topics is planned one topic at a time. This run plans exactly one: the first topic not yet built in the repository, unless the user names a different one. Find it by walking the index order and checking each card against the current code — never trust status labels or memory of earlier sessions. Re-check the chosen card where it meets the code; if reality has moved in a way the card does not cover, stop and ask before planning around a material difference. Later topics are planned in later runs, against the state their turn finds; do not write steps for them now. If every topic is already built, or the next one is unclear, stop and ask.
 
 This creates two valid paths:
 
@@ -29,7 +31,7 @@ This creates two valid paths:
 The design artifact is an input, not a separate handoff deliverable: write the resulting plan under `context/plans/<slug>/` and make its repository and external evidence traceable there.
 ### Design and issue handoff boundary
 
-`/plan` is the canonical execution-plan owner between `/design` and `/to-issues`. It validates the complete design artifact against the repository and request, verifies and reuses sufficient evidence, and performs only targeted supplemental research for identified gaps. It then owns concern decomposition, dependency and parallelism reasoning, implementation-ready steps, and recording whether the plan is approved. Do not re-author the design's intent or design prose; preserve it as input while translating it into an executable plan. Do not leave decomposition or execution reasoning to `/to-issues`.
+`/plan` owns the execution plan between `/design` and `/to-issues`. It validates the design artifact against the repository and request, verifies and reuses sufficient evidence, and performs only targeted supplemental research for identified gaps. It then owns decomposition of the current concern into steps, dependency and parallelism reasoning, implementation-ready steps, and recording whether the plan is approved. Do not re-author the design's intent or design prose; preserve it as input while translating it into an executable plan. Do not leave decomposition or execution reasoning to `/to-issues`.
 
 
 ### 1. Clarify intent
@@ -66,7 +68,7 @@ The plan's repository evidence and external evidence sections must make it possi
 
 Break the work into independent, demonstrable deliverable capabilities. Balance separation of concerns with developer usability: avoid hyper-fragmenting a single feature into shallow, disjointed micro-tickets. Never slice by technical layer (e.g. separate tickets for database schema, API route, and UI component); horizontal layers cannot be verified end-to-end and force reviewers to evaluate incomplete systems without observable behavior.
 
-- **Initiative scale:** An initiative plan typically decomposes into **4 to 8 deliverable steps** (represented by step files `01-*.md`, `02-*.md` in `00-index.md`). If an initiative requires 15+ steps, it is almost certainly hyper-fragmented or needs to be split into multiple initiatives.
+- **Concern scale:** This run plans a single concern — normally one design topic, or one self-contained piece of work agreed with the user when no design exists. A concern with several demonstrable capabilities can hold several step files (`01-*.md`, `02-*.md` in `00-index.md`); a single concern that needs 15+ steps is hyper-fragmented or should be split, so take that back to the user.
 - **Deliverable concern boundary:** Each step file must represent one cohesive, independently demonstrable capability that a developer can understand in 30 seconds, implement, test, and ship.
 - **Internal implementation phases vs. deliverable concerns:** Inside a step file, breaking down the tactical execution into sequential phases or sub-slices (e.g. `### Slice 1: Models`, `### Slice 2: Route`, `### Slice 3: UI`, `### Slice 4: Verification`) provides execution guidance. These sub-slices are **tactical checklist items for implementing that single step**, NOT separate deliverable steps or separate GitHub issues.
 
@@ -105,7 +107,7 @@ For each step, note its architecture impact using the deep-module vocabulary:
 - **Depth** — how much complexity the interface hides.
 - **Seam** — where the module can be tested or varied.
 - **Adapter** — a boundary translating between contracts.
-- **Leverage** — how much downstream work one decision unlocks.
+- **Leverage** — how much downstream work one decision makes easier.
 - **Locality** — how contained a change is.
 
 ### 11. Make durable, proportionate decisions
@@ -126,7 +128,7 @@ List what is explicitly out of scope, so nobody expands the plan.
 
 ## Local output
 
-Write the completed plan under the current worktree's `context/plans/<slug>/` directory. Create `context/` and `context/plans/` when absent. Any multi-step plan has a `00-index.md` at the root of the plan directory.
+Write the completed plan under the current worktree's `context/plans/<slug>/` directory, where `<slug>` names the concern this run planned. Create `context/` and `context/plans/` when absent. Any multi-step plan has a `00-index.md` at the root of the plan directory.
 
 Initialize the bundle from the repository generator before filling it:
 
@@ -134,12 +136,12 @@ Initialize the bundle from the repository generator before filling it:
 python3 ~/.agents/scripts/new-artifact.py --type plans <slug>
 ```
 
-Treat the generated `00-index.md` as the starting scaffold; do not replace it with an ad hoc template or write plan artifacts outside the canonical path. Simple single-concern work may be one file.
+Treat the generated `00-index.md` as the starting scaffold; do not replace it with an ad hoc template or write plan artifacts outside `context/plans/<slug>/`. Simple single-concern work may be one file.
 
 ### 00-index.md fields
 
-- **Concern map** — each concern and its step(s).
-- **Dependency graph** — start-now / concurrent / blocked relationships.
+- **Concern map** — the design card this plan covers, with its path and its place in the design's order, and the step(s) derived from it. When no design exists, the agreed concern and its step(s).
+- **Dependency graph** — start-now / concurrent / blocked between this concern's steps; order across topics stays in the design index.
 - **Step index** — ordered list of step files with one-line summaries.
 
 ### Implementation-ready step fields
@@ -164,6 +166,7 @@ Stop and ask the human before proceeding when a decision is **materially unresol
 ## Done when
 
 - Intent is clarified and recorded.
+- The plan covers a single concern — the first unbuilt design topic, or one self-contained piece of work agreed with the user — re-checked against the current code.
 - Every claim is grounded in repository and architectural evidence without brittle line numbers.
 - Concerns decompose by independent understand/implement/test/review/deliver.
 - Dependencies are explicit, acyclic, with start-now/concurrent/blocked reasons.
@@ -173,4 +176,5 @@ Stop and ask the human before proceeding when a decision is **materially unresol
 - Every material user-facing decision has a proportionate foundation, explicit tradeoff, guardrail, and escalation signal.
 - Non-goals are explicit.
 - Output is written under `context/plans/<slug>/`, with `00-index.md` for multi-step plans.
+- Prose passes the slop check (`python3 ~/.agents/scripts/slop-lint.py context/plans/<slug>/`); fix every hit except the deep-module vocabulary defined in `codebase-design`.
 - The human has approved the plan.
