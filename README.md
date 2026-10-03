@@ -104,7 +104,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | Skill | Role |
 |-------|------|
 | `explain/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants (Explain UI lives at `skills/explain/explain-ui/`) |
-| `prototype/` | Throwaway, true-scale UI built in the project's own front-end stack that shows two or more complete options behind one toggle to decide an unproven visual direction before implementing |
+| `prototype/` | Throwaway, true-scale UI built in the project's own front-end stack that presents two or more complete, finished-product-quality directions, each at its own URL, to decide an unproven visual direction before implementing |
 | `design/` | Shape intent into a plain-language design bundle (index + one walkthrough card per topic) the user reads, explains back, and approves for `/plan` |
 | `plan/` | Plan one concern at a time — the next unbuilt design topic, re-checked against the current code — and turn it into an execution plan → local plan files in `context/plans/<slug>/` |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |

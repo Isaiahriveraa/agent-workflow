@@ -18,7 +18,7 @@ Most work travels this route:
 4. **Published issue ready?** → **`/skill:issue-delivery`** — receives one published, ready child issue (or explicitly single-concern issue), identified by its GitHub issue number, verifies dependencies and readiness, and delivers it through an isolated worktree to a verified draft PR; incomplete issues return to **`/skill:to-issues`** for enrichment. It does not create issues or schedule batches.
 5. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
 6. **Need to explain a question?** → **`/skill:explain`** — visual browser workspace with an Excalidraw whiteboard and live previews for schema, data-model, design, and logic questions. Route findings to the plan.
-7. **Need to pick a visual direction?** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own front-end stack; expose the real forks as switchable variants, let the user choose, then implement the chosen one.
+7. **Need to pick a visual direction?** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own front-end stack; expose the real forks as complete, finished-product-quality versions, one per URL, and let the user choose, then implement the chosen one.
 8. **Need a spec issue?** → **`/skill:to-spec`** — synthesize the conversation into a GitHub spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning.
 9. **Standalone cited research?** → **`/skill:research`** — background-agent research using web search and primary sources, producing one cited Markdown evidence artifact; use it to fill a gap or independently when no upstream artifact exists.
 10. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit`).
@@ -48,7 +48,7 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 ## Frontend implementation
 
 - **Build frontend with the main agent implementing** → **`/skill:frontend-implement`** — the main agent is the sole writer of UI code; sub-agents only research, gather context, and propose plans (never write code). User-invoked.
-- **Pick a visual direction before building** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own stack that shows two or more complete options behind one toggle; the gate ahead of implementation.
+- **Pick a visual direction before building** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own stack that presents two or more complete directions as finished-product-quality versions, one per URL; the gate ahead of implementation.
 - **Anti-slop landing page, portfolio, or redesign** → **`/skill:design-taste-frontend`** — reads the brief, infers the aesthetic direction, then ships with strict anti-pattern bans and a mandatory pre-flight check; not for dashboards or data-heavy product UI.
 - **Explain a design/logic/schema question** → **`/skill:explain`** — the hub's Explain UI browser workspace (Excalidraw whiteboard + live previews).
 
