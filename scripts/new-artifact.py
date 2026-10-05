@@ -117,7 +117,7 @@ def bundle_files(kind: str, title: str, date_str: str, time_str: str) -> dict[st
         }
     if kind == "designs":
         index = profile_template("designs", title, date_str, time_str)
-        index += "## Topics\n\n<!-- One card per topic: NN-<topic>.md. Add each card as it is written. -->\n\n## Order and dependencies\n\n<!-- Plain sentences: what must come before what, and why. -->\n\n## Open questions\n\n<!-- Unresolved decisions, with impact and what would resolve them. -->\n\n## Status\n\n- <!-- Choose exactly one: ready-for-plan | blocked -->\n"
+        index += "## Topics\n\n<!-- One card per topic: NN-<topic>.md. Add each card as it is written. -->\n\n## Order, dependencies, and parallel work\n\n<!-- Plain sentences: the order, what depends on what and why, and what can move in parallel. Name any shared file or contract that forces sequencing. -->\n\n## Open questions\n\n<!-- Unresolved decisions, with impact and what would resolve them. -->\n\n## Status\n\n- <!-- Choose exactly one: ready-for-plan | blocked -->\n"
         return {
             "00-index.md": index,
         }

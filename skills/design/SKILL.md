@@ -16,7 +16,7 @@ The work has two moves: pull the user's thoughts out of their head, then write t
 
 One bundle: a short index and one card per topic.
 
-- The index is the map: what we're doing and why, the user's own words, the topics, the order, and the status.
+- The index is the map: what we're doing and why, the user's own words, the topics, the order, what depends on what, what can move in parallel, and the status.
 - A card is one topic: the problem, what the user wants, the idea in one breath, a walkthrough that builds and uses each piece, one traced example, the thinking behind the decisions, the architecture now → after, what we build now and what we deliberately don't, and how we'll know it works.
 
 Three tests decide whether the design is done:
@@ -48,7 +48,7 @@ Do not edit application code, routing files, or unrelated artifacts.
 - **What we're doing and why** — two or three sentences.
 - **Raw intent (your words)** — the user's request cleaned into plain bullets; the user should recognize their own thinking with the noise removed. Never add, drop, or change meaning without labeling the change.
 - **Topics** — one line per card, e.g. `01-drafts-survive-closed-tab.md — saved drafts come back when the tab reopens`.
-- **Order and dependencies** — plain sentences: what must come before what, and why. `/plan` walks this order one topic at a time, against the code as it stands.
+- **Order, dependencies, and parallel work** — the sequence, what depends on what, and what can move at the same time. State each dependency as one plain sentence with its reason (`02 depends on 01 because drafts must persist before they can be restored`); state each parallel group directly (`01 and 03 are independent and can be worked on at the same time`). Topics that share a file or shared contract are sequential even when their behavior is independent — name the file or contract. Dependencies must be acyclic. `/plan` walks the order one topic at a time, against the code as it stands; parallel topics can be planned and delivered at the same time.
 - **Open questions** — what is unresolved, with impact and what would resolve it.
 - **Status** — `ready-for-plan` or `blocked`.
 
@@ -101,7 +101,7 @@ If the design depends on an API, protocol, standard, library behavior, security 
 
 ### 4. Agree the map, create the bundle
 
-Propose the topic split — names, one line each, order, dependencies — and get the user's agreement before writing cards. Then create the bundle with the generator and fill the index.
+Propose the topic split — names, one line each, order, dependencies, and parallel groups — and get the user's agreement before writing cards. Then create the bundle with the generator and fill the index.
 
 ### 5. Write one card at a time (interview + teach)
 
@@ -141,7 +141,7 @@ After the last card: the user should be able to explain the whole design out lou
 Before finishing, verify that:
 
 - the bundle exists at `context/designs/<slug>/`: `00-index.md` plus one card per topic, no sidecars;
-- the index holds the user's words, the topic map, order and dependencies in plain sentences, open questions, and exactly one status;
+- the index holds the user's words, the topic map, and the order, dependencies, and parallel groups in plain sentences, open questions, and exactly one status;
 - every card has the sections above; walkthrough steps are state → move → state with why and why-not; moves with names are named; there is one traced example;
 - the user has said each topic back from memory; nothing the user said changed meaning unlabeled;
 - claims about current behavior cite files, modules, or interfaces; external facts are cited or marked unverified;

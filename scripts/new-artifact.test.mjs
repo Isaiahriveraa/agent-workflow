@@ -90,7 +90,7 @@ describe("new-artifact.py", () => {
 		assert.ok(designOutput.includes(path.join(designRoot, "00-index.md")));
 		const design = fs.readFileSync(path.join(designRoot, "00-index.md"), "utf8");
 		assert.match(design, /type: design/);
-		for (const heading of ["## What we're doing and why", "## Raw intent (your words)", "## Topics", "## Order and dependencies", "## Open questions", "## Status"]) {
+		for (const heading of ["## What we're doing and why", "## Raw intent (your words)", "## Topics", "## Order, dependencies, and parallel work", "## Open questions", "## Status"]) {
 			assert.ok(design.includes(heading), `design missing ${heading}`);
 		}
 
