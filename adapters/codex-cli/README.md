@@ -28,7 +28,15 @@ This directory documents the Codex CLI-specific integration boundary.
 
 ## Model Routing
 
-Codex CLI has a single `--model` flag per session — no per-subagent model selection. The model router now exposes a category-first recommendation contract with additive fields like `category`, `intent_kind`, `tier_hint`, `primary_model`, and `fallback_candidates`, while keeping legacy `tier` and `model` compatibility fields:
+Codex CLI takes one session model from `--model` or the `model` key in `~/.codex/config.toml`. Spawned subagents use a separate model: `[agents] default_subagent_model` sets their default, an explicit model in the spawn request or in a custom agent file under `~/.codex/agents/` takes precedence, and when none of these set a model the subagent inherits the parent session's model and reasoning effort.
+
+```toml
+# ~/.codex/config.toml
+[agents]
+default_subagent_model = "gpt-6-luna"
+```
+
+The model router exposes a category-first recommendation contract with additive fields like `category`, `intent_kind`, `tier_hint`, `primary_model`, and `fallback_candidates`, while keeping legacy `tier` and `model` compatibility fields:
 
 ```bash
 node ~/.agents/scripts/model-router.mjs route --input "implement auth feature"
