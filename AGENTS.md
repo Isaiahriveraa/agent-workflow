@@ -32,6 +32,7 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
     - **Names** — identifiers say what the thing is or does (see **Locality of behavior**); no invented acronyms or abbreviations that only make sense after reading the body.
     - **Comments** — plain product language, same bar as names; a comment only its author understands is a defect. Non-obvious contracts use the behavior-tag block (see **Document non-obvious contracts**); everything else uses brief plain-English prose.
     - **Docs, commits, PRs** — a reader outside the current context understands them without a glossary.
+    - **No internal language in the codebase** — the shorthand we use while talking — metaphors, task names, and terms coined mid-conversation — never reaches the code. A thing is named as the codebase already names it, plainly; no jargon or synonyms unless the term is already established in the code. The code explains itself to a reader who never saw our conversation.
     - Established domain and framework vocabulary is fine; the test is whether a competent newcomer would have to ask what a term means. If it needs defining at the call site, it is the wrong term.
 15. **Document non-obvious contracts** — A short `@behavior / @param / @returns / @exceptions` block when the signature does not already say it; never restate types.
 16. **Optimize hot paths only** — No N+1 queries, no needless re-renders, batch and paginate. Measure before micro-optimizing; cold paths favor readability.
