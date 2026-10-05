@@ -10,6 +10,11 @@
 # branches are not name-checked). Environment words (production, staging, prod)
 # are allowed in IUGA branch names; artifact words (prototype, plan) are not.
 # The destination defaults to <repo-parent>/<repo-name>-worktrees/<branch path>.
+#
+# Beyond `git worktree add`, the script provisions what the checkout needs to
+# run immediately: submodules, dependencies, the shared context/ folder, the
+# private AGENTS.md, and a copy of the source checkout's backend env files
+# (backend/env/.env*) so the API boots without manual env setup.
 
 set -euo pipefail
 
@@ -103,6 +108,30 @@ if [ "${IUGA_SKIP_INSTALL:-0}" != "1" ]; then
   npm ci --prefix "$DEST/backend"
   echo "== installing frontend dependencies"
   npm ci --prefix "$DEST/frontend"
+fi
+
+if [ "${IUGA_SKIP_ENV:-0}" != "1" ]; then
+  echo "== copying backend env"
+  SRC_ENV_DIR="$REPO_ROOT/backend/env"
+  DEST_ENV_DIR="$DEST/backend/env"
+  if [ -d "$SRC_ENV_DIR" ]; then
+    mkdir -p "$DEST_ENV_DIR"
+    copied_env=0
+    for src_env in "$SRC_ENV_DIR"/.env*; do
+      [ -e "$src_env" ] || continue
+      base="$(basename "$src_env")"
+      case "$base" in
+        *.example) continue ;;
+      esac
+      cp "$src_env" "$DEST_ENV_DIR/$base"
+      copied_env=1
+    done
+    if [ "$copied_env" -eq 0 ]; then
+      echo "   WARNING: no backend env files in $SRC_ENV_DIR — copy backend/.env.example to backend/env/.env.dev" >&2
+    fi
+  else
+    echo "   WARNING: $SRC_ENV_DIR not found — backend env was not copied" >&2
+  fi
 fi
 
 echo "== linking dev context folder"
