@@ -79,6 +79,16 @@ For each unit, write a prompt with all of these sections. Specify each unit's **
 - [ ] Pattern matches [exact reference file]
 - [ ] Tests pass (if applicable)
 
+### Prompt Hygiene — Optimize for Agent Execution
+
+The sub-agent is the only reader. Optimize every prompt for how the sub-agent parses and executes it, not for how it looks to a human:
+
+- **Text must be machine-parseable.** Whitespace and punctuation are structural: they are how the sub-agent separates words, instructions, and sections. Never emit run-together or whitespace-stripped text — a prompt whose words and list items are not delimited merges unrelated instructions into one. "Human-readable" is not the bar; correctly tokenized and unambiguous is.
+- **Every word is load-bearing.** Use the project's canonical term; spell out the meaning rather than implying it; name files, symbols, commands, and flags exactly. A sub-agent will not repair your ambiguity — it will guess, and the guess becomes code.
+- **Stand alone.** Each prompt must parse correctly with none of your context: no "as discussed," no pronouns pointing back at a prior message, no shorthand coined in this session.
+- **Verify the parse before spawning.** Read the prompt as the sub-agent will: literally, with no surrounding conversation. If any sentence depends on context outside the prompt to resolve, rewrite it until it does not — then spawn.
+- **Verbatim is the one exception.** Exact paths, identifiers, command strings, and code fragments stay character-for-character; everything around them is explicit, correctly delimited text.
+
 ### Phase 3 — Spawn
 
 All independent units → parallel sub-agents. Each gets its own full context window. Maximum parallelism. Zero contention.
