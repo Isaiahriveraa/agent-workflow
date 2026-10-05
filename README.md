@@ -66,7 +66,7 @@ Slash commands in `commands/` extend the tool's native surface:
 
 Workflow skills (`spawn`, `enforce`, `pr`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
 
-Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge.
+Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch, `cleanup-worktree.sh <branch>` tears it down after merge. New branch names must follow `<type>/<short-description>` with lowercase words joined by hyphens — `scripts/branch-name-rules.sh` rejects process words and dates (override: `WORKTREE_SKIP_NAME_CHECK=1`).
 
 `scripts/slop-lint.py` flags AI-slop words and phrases in Markdown prose; run `python3 ~/.agents/scripts/slop-lint.py <file-or-dir>` over docs you write. The `design` and `plan` skills check their output with it.
 

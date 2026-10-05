@@ -4,6 +4,10 @@
 # RULE: worktree directory name = branch name with '/' → '-' (feat/merch-page → feat-merch-page).
 # Worktrees live under the repo's parent directory by default (matching repo layout).
 #
+# New branch names must follow <type>/<short-description> with lowercase words
+# joined by hyphens (see branch-name-rules.sh); existing branches are not
+# name-checked. Override: WORKTREE_SKIP_NAME_CHECK=1.
+#
 # usage:
 #   new-worktree.sh <branch> [start-point] [dest-dir]
 #
@@ -26,6 +30,10 @@ if [ -z "$BRANCH" ]; then
   echo "usage: new-worktree.sh <branch> [start-point] [dest-dir]" >&2
   exit 2
 fi
+
+# shared branch-name convention (scripts/branch-name-rules.sh)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/branch-name-rules.sh"
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 REPO_PARENT=$(dirname "$REPO_ROOT")
@@ -50,6 +58,7 @@ else
     echo "ERROR: branch '$BRANCH' doesn't exist — pass a start-point to create it." >&2
     exit 2
   fi
+  validate_new_branch_name "$BRANCH" || exit 2
   ARGS=(git worktree add -b "$BRANCH" "$DEST" "$START")
 fi
 

@@ -5,8 +5,12 @@
 #   iuga-worktree.sh <branch> [start-point] [dest-dir]
 #
 # Existing branches use the current checkout as their source. New branches
-# require an explicit start-point. The destination defaults to a sibling
-# directory whose name is derived from the branch.
+# require an explicit start-point and must follow <type>/<short-description>
+# with lowercase words joined by hyphens (see branch-name-rules.sh; existing
+# branches are not name-checked). Environment words (production, staging, prod)
+# are allowed in IUGA branch names; artifact words (prototype, plan) are not.
+# The destination defaults to a sibling directory whose name is derived from
+# the branch.
 
 set -euo pipefail
 
@@ -25,6 +29,16 @@ usage() {
 command -v git >/dev/null 2>&1 || { echo "ERROR: git is required" >&2; exit 1; }
 command -v npm >/dev/null 2>&1 || { echo "ERROR: npm is required" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo "ERROR: python3 is required" >&2; exit 1; }
+
+# shared branch-name convention (scripts/branch-name-rules.sh)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/branch-name-rules.sh"
+
+# IUGA branches legitimately reference deployment environments (production,
+# staging, prod), so only artifact words stay banned here: a branch must not be
+# named after the process around the work (a prototype run, a plan).
+BRANCH_NAME_BANNED_WORDS='prototype|plan'
+
 [ -r "$AGENT_TEMPLATE" ] || {
   echo "ERROR: agent template is not readable: $AGENT_TEMPLATE" >&2
   echo "       set IUGA_AGENT_TEMPLATE to a readable template" >&2
@@ -69,6 +83,7 @@ else
     echo "ERROR: branch '$BRANCH' does not exist; pass a start-point" >&2
     exit 2
   }
+  validate_new_branch_name "$BRANCH" || exit 2
   WORKTREE_ARGS=(git worktree add -b "$BRANCH" "$DEST" "$START")
 fi
 
