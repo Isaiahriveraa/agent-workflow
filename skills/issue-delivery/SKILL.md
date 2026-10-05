@@ -122,7 +122,7 @@ Publish: local branch only until a later publish approval
 
 1. Before creation, inspect `rtk git worktree list` plus existing local/remote branches and `rtk gh pr list --head <approved-branch>`. If this branch or worktree already exists, stop and present the existing state for a human resume/cleanup decision.
 2. Require an approved short description matching `^[a-z0-9-]{1,40}$` (derived from the issue title, never raw content). If empty or invalid, stop for a human-chosen replacement.
-3. Create a sibling worktree with the approved base as its start point:
+3. Create a dedicated worktree with the approved base as its start point:
 
    ```sh
    ~/.agents/scripts/new-worktree.sh <type>/issue-<number>-<short-description> <base>

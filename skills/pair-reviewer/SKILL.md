@@ -24,7 +24,7 @@ Pair Reviewer never reviews from the diff alone, never edits the target, and nev
 
 `$ARGUMENTS` is `<branch-or-worktree>` optionally followed by the user's first question. With both, resolve the target and answer the question. With a target only, say briefly what the change appears to do and ask what to look at. With neither, use the current checkout and ask what to look at.
 
-A target may be a branch name such as `feat/pane-inbox`, a worktree path such as `~/feat-pane-inbox`, or a directory.
+A target may be a branch name such as `feat/pane-inbox`, a worktree path such as `~/myapp-worktrees/feat/pane-inbox`, or a directory.
 
 ## Metadata
 

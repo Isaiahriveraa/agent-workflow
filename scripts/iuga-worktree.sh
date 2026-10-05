@@ -9,8 +9,7 @@
 # with lowercase words joined by hyphens (see branch-name-rules.sh; existing
 # branches are not name-checked). Environment words (production, staging, prod)
 # are allowed in IUGA branch names; artifact words (prototype, plan) are not.
-# The destination defaults to a sibling directory whose name is derived from
-# the branch.
+# The destination defaults to <repo-parent>/<repo-name>-worktrees/<branch path>.
 
 set -euo pipefail
 
@@ -45,7 +44,9 @@ BRANCH_NAME_BANNED_WORDS='prototype|plan'
   exit 1
 }
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+# main checkout root — resolves correctly even when run from inside a linked worktree
+# (git-common-dir always points at the main checkout's .git), so every worktree lands in the same home
+REPO_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
 [ -f "$REPO_ROOT/.gitmodules" ] || {
   echo "ERROR: this is not an IUGA checkout: missing .gitmodules" >&2
   exit 1
@@ -67,8 +68,8 @@ fi
 }
 DEV_CONTEXT="$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$DEV_CONTEXT")"
 
-DIR_NAME="$(printf '%s' "$BRANCH" | sed 's#^refs/heads/##; s#/#-#g')"
-[ -n "$DEST" ] || DEST="$REPO_PARENT/$DIR_NAME"
+BRANCH_PATH="$(printf '%s' "$BRANCH" | sed 's#^refs/heads/##')"
+[ -n "$DEST" ] || DEST="$REPO_PARENT/$(basename "$REPO_ROOT")-worktrees/$BRANCH_PATH"
 DEST="$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$DEST")"
 
 [ ! -e "$DEST" ] || {

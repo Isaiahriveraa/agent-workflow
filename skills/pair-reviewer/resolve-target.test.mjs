@@ -37,6 +37,16 @@ test("branch target resolves through linked worktree", () => {
   assert.equal(result.status, 0); assert.match(result.stdout, new RegExp(`root: ${fs.realpathSync(linked)}`)); assert.match(result.stdout, /branch: issue-7-fix/);
 });
 
+test("branch target resolves through the worktrees home when not registered", () => {
+  const root = makeRepo();
+  runGit(root, ["branch", "feat/dir-target"]);
+  const linked = path.join(`${root}-worktrees`, "feat", "dir-target");
+  fs.mkdirSync(path.dirname(linked), { recursive: true });
+  runGit(root, ["clone", "--branch", "feat/dir-target", root, linked]);
+  const result = invoke(root, "feat/dir-target");
+  assert.equal(result.status, 0); assert.match(result.stdout, new RegExp(`root: ${fs.realpathSync(linked)}`)); assert.match(result.stdout, /branch: feat\/dir-target/);
+});
+
 test("base fallback uses main and reports a two-commit range", () => {
   const root = makeRepo(); runGit(root, ["switch", "-c", "feat/123-x"]);
   fs.writeFileSync(path.join(root, "one.txt"), "one\n"); runGit(root, ["add", "."]); runGit(root, ["commit", "-m", "one"]);

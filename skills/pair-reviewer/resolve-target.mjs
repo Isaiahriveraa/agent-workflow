@@ -64,7 +64,7 @@ function resolveTarget(target, cwd) {
   }
   const cwdRoot = rootFor(cwd);
   if (cwdRoot) {
-    const hubCandidate = path.resolve(path.dirname(cwdRoot), target.replace(/[\/_]/g, "-"));
+    const hubCandidate = path.resolve(path.dirname(cwdRoot), `${path.basename(cwdRoot)}-worktrees`, ...target.split("/"));
     searched.push(hubCandidate);
     if (existsDir(hubCandidate)) {
       const root = rootFor(hubCandidate);

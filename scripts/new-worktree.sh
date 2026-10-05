@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-# new-worktree.sh — create a worktree whose directory name matches its branch.
+# new-worktree.sh — create a worktree in the repo's organized worktree home.
 #
-# RULE: worktree directory name = branch name with '/' → '-' (feat/merch-page → feat-merch-page).
-# Worktrees live under the repo's parent directory by default (matching repo layout).
-#
-# New branch names must follow <type>/<short-description> with lowercase words
-# joined by hyphens (see branch-name-rules.sh); existing branches are not
-# name-checked. Override: WORKTREE_SKIP_NAME_CHECK=1.
+# RULE: worktrees live under <repo-parent>/<repo-name>-worktrees/, following the branch path:
+#   feat/merch-page      → <repo>-worktrees/feat/merch-page
+#   prototype/checkout   → <repo>-worktrees/prototype/checkout
+# The branch prefix is the organizing folder. New branch names must follow
+# <type>/<short-description> with lowercase words joined by hyphens (see
+# branch-name-rules.sh); existing branches are not name-checked.
+# Override: WORKTREE_SKIP_NAME_CHECK=1.
 #
 # usage:
 #   new-worktree.sh <branch> [start-point] [dest-dir]
 #
 #   <branch>       branch to create (new or existing). Required.
 #   [start-point]  commit/ref to branch from (default: HEAD). Required when creating a new branch.
-#   [dest-dir]     override the worktree directory (default: <repo-parent>/<branch with / → ->).
+#   [dest-dir]     override the worktree directory (default: <repo-parent>/<repo-name>-worktrees/<branch>).
 #
 # examples:
 #   new-worktree.sh feat/merch-page origin/main
@@ -35,14 +36,16 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/branch-name-rules.sh"
 
-REPO_ROOT=$(git rev-parse --show-toplevel)
+# main checkout root — resolves correctly even when run from inside a linked worktree
+# (git-common-dir always points at the main checkout's .git), so every worktree lands in the same home
+REPO_ROOT=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
 REPO_PARENT=$(dirname "$REPO_ROOT")
 
-# derive directory name: strip refs/heads/, replace / with -
-DIR_NAME=$(echo "$BRANCH" | sed 's#^refs/heads/##; s#/#-#g')
+# branch path: strip refs/heads/; slashes become subdirectories under the worktree home
+BRANCH_PATH=$(echo "$BRANCH" | sed 's#^refs/heads/##')
 
 if [ -z "$DEST" ]; then
-  DEST="$REPO_PARENT/$DIR_NAME"
+  DEST="$REPO_PARENT/$(basename "$REPO_ROOT")-worktrees/$BRANCH_PATH"
 fi
 
 if [ -e "$DEST" ]; then

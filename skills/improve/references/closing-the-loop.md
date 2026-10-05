@@ -18,7 +18,7 @@ The founding rule survives unchanged: **the advisor never edits source code.** I
 
 Spawn **one** executor subagent (`general`/`quick` category in your harness; `general-purpose` in Claude Code) with `isolation: "worktree"`. Executor model: default per your hub config (deepseek-v4-flash); use what the user named if they named one (`execute 003 <model>`).
 
-Create the worktree before dispatch with `~/.agents/scripts/new-worktree.sh <branch> <start-point>` — worktrees live under the repo's parent directory, directory name = branch name with `/` → `-`.
+Create the worktree before dispatch with `~/.agents/scripts/new-worktree.sh <branch> <start-point>` — worktrees live under `<repo>-worktrees/<branch path>` beside the repo (`feat/x` → `<repo>-worktrees/feat/x`).
 
 The subagent prompt must contain:
 
