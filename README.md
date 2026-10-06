@@ -70,6 +70,8 @@ Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `
 
 `scripts/slop-lint.py` flags AI-slop words and phrases in Markdown prose; run `python3 ~/.agents/scripts/slop-lint.py <file-or-dir>` over docs you write. The `design` and `plan` skills check their output with it.
 
+`scripts/plan-lint.py` checks plan step files declare their interface impact — a `new` or `changed` boundary needs an interface sketch and a rejected alternative (design it twice); run `python3 ~/.agents/scripts/plan-lint.py <file-or-dir>` over plan outputs. The `plan` skill checks its output with it.
+
 ### Explain UI browser workspace
 
 `Explain UI` provides the default browser workspace for disposable whiteboard, schema, logic, and visual-design experiments. Attach it directly to the current Git checkout, or use a linked worktree when stronger isolation is useful:

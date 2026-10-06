@@ -110,6 +110,8 @@ For each step, note its architecture impact using the deep-module vocabulary:
 - **Leverage** — how much downstream work one decision makes easier.
 - **Locality** — how contained a change is.
 
+Every step file declares its interface impact on one line: `- **Interface impact:** none — why the boundary does not change` for the common case, or `new` / `changed` with what changes. A `new` or `changed` declaration also carries two non-empty blocks: **Interface sketch** (the signature plus the comment a caller would read; no implementation facts) and **Rejected alternative** (the second design considered and why it lost — design it twice, see `codebase-design`).
+
 ### 11. Make durable, proportionate decisions
 
 For every material decision that affects users, data, public contracts, security, reliability, or future delivery, record:
@@ -158,6 +160,7 @@ Each step file provides clear architectural and tactical direction without writi
 - **Verification** — how to verify the step (test commands, checks, or observable results).
 - **Dependencies** — start-now / concurrent / blocked with reasons.
 - **Architecture impact** — Module/Interface/Implementation/Depth/Seam/Adapter/Leverage/Locality.
+- **Interface impact** — `none`, `new`, or `changed` for the boundary this step touches; `new` and `changed` carry the sketch and rejected alternative.
 - **Implementation sub-slices / checklist (optional)** — ordered tactical phases for executing this step (e.g., model -> endpoint -> UI -> smoke test). These provide execution clarity for the developer or agent, but remain internal checklist items within this single deliverable step.
 ## Stop and ask
 
@@ -177,4 +180,5 @@ Stop and ask the human before proceeding when a decision is **materially unresol
 - Non-goals are explicit.
 - Output is written under `context/plans/<slug>/`, with `00-index.md` for multi-step plans.
 - Prose passes the slop check (`python3 ~/.agents/scripts/slop-lint.py context/plans/<slug>/`); fix every hit except the deep-module vocabulary defined in `codebase-design`.
+- Interface-impact declarations pass the plan check (`python3 ~/.agents/scripts/plan-lint.py context/plans/<slug>/`); every `new` or `changed` step carries a non-empty sketch and rejected alternative.
 - The human has approved the plan.
