@@ -118,7 +118,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
 | `tdd/` | Red-green-refactor with seam discipline |
-| `code-review/` | Adversarial review — hardener (failing tests first), three reviewers (behavioral, contract/spec, maintainability), one adjudicator, and qa-runner prep for the human QA pass |
+| `code-review/` | Adversarial review — hardener (failing tests first), three reviewers (behavioral, contract/spec, maintainability), a security reviewer on trust-boundary diffs, one adjudicator, a complexity reviser that applies design findings by default, an optional fixer for verified defects, and qa-runner prep for your QA pass |
 | `code-judgment/` | Behavior-preserving cleanup before review — dead code, YAGNI, names, comments, module shape, cohesion/coupling |
 | `pair-reviewer/` | Interactive reading partner for a branch or worktree the user names: resolves the target, gathers its plan, commit history, and code, then talks through the answers in 2-5 sentences and stops, critiquing only on request (`/skill:pair-reviewer <branch-or-worktree>`); depth follows you — evidence, provenance, and the `REVIEW-THINKING.md` method come when asked; "probe me" withholds a finding behind a location hint so you guess it first; read-only, hands off to `code-review/` for a full adversarial pass |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
@@ -156,7 +156,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `orchestration/` | Generalized Herdr orchestration across workspaces, tabs, and panes; prompt-file dispatch and status-only supervision |
 | `skill-index/` | Skill router — ask which skill fits |
 
-Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, codebase-locator, reviewer-behavioral, reviewer-contract, reviewer-maintainability, security-reviewer, adjudicator, fixer.
+Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, codebase-locator, reviewer-behavioral, reviewer-contract, reviewer-maintainability, security-reviewer, adjudicator, fixer, complexity-reviser.
 
 ## Directory Structure
 

@@ -1,7 +1,7 @@
 ---
 name: code-review
-description: "Review code using independent adversarial reviewers that search for concrete bugs, contract mismatches, and maintainability regressions. A hardener proves failures with failing tests first, three independent reviewers audit the hardened diff, a security-reviewer covers trust-boundary diffs on demand, one adjudicator validates every claim, an optional fixer applies verified fixes, and a qa-runner prepares the human QA pass. Verifies every claim against actual repository state."
-argument-hint: "[scope] [--fix] [--deep] [--artifact]"
+description: "Review code using independent adversarial reviewers that search for concrete bugs, contract mismatches, and maintainability regressions. A hardener proves failures with failing tests first, three independent reviewers audit the hardened diff, a security-reviewer covers trust-boundary diffs on demand, one adjudicator validates every claim, a complexity-reviser applies adjudicated design findings by default, an optional fixer applies verified fixes, and a qa-runner prepares the human QA pass. Verifies every claim against actual repository state."
+argument-hint: "[scope] [--fix] [--no-revise] [--deep] [--artifact]"
 shell-timeout: 10
 ---
 
@@ -26,11 +26,13 @@ one adjudicator validates every claim
       ↓
 report verified findings
       ↓
-with --fix: one fixer applies valid feedback
+with --fix: one fixer applies valid defect feedback
+      ↓
+complexity-reviser applies design findings (default; --no-revise skips)
       ↓
 regression tests + baseline checks
       ↓
-one fresh adversarial validation of the fix
+one fresh adversarial validation of the applied changes
       ↓
 spawn qa-runner → environment, test data, click-through script
       ↓
@@ -41,10 +43,11 @@ Role separation is mandatory:
 - The author or implementer does not review its own reasoning.
 - The hardener writes tests and the smallest fixes; its tests enter the diff before reviewers see it.
 - Reviewers do not implement fixes.
+- The complexity reviser applies adjudicated design findings; it does not decide what counts as a finding.
 - Reviewers work in separate contexts and do not see each other's output.
 - Reviewers do not receive the implementer's explanation, confidence, or completion summary.
 - Reviewer findings are untrusted hypotheses until independently validated.
-- The adjudicator or fixer must reject unsupported feedback.
+- The adjudicator, fixer, or reviser must reject unsupported feedback.
 
 ## Metadata
 
@@ -74,6 +77,7 @@ Scope resolution is delegated to the bundled helper at Step 1 — it depends on 
 
 ### Flags
 - `--fix` — apply verified fixes and add regression tests
+- `--no-revise` — skip the default complexity revision pass (used by the commit gate, which must not edit code)
 - `--deep` — add triggered specialist reviews for security, concurrency, dependencies, persistence, and public compatibility
 - `--artifact` — write a persistent Markdown review document
 
@@ -89,7 +93,7 @@ Do not ask for confirmation when scope can be resolved safely. Ask only when the
 6. **No blind fixing.** Reviewer output is a hypothesis until the adjudicator verifies it.
 7. **Preserve independence.** Do not show one reviewer another reviewer's findings.
 8. **Review the authored change.** Do not report unrelated pre-existing problems unless the diff newly exposes or routes execution into them.
-9. **Use the smallest correct fix.** With `--fix`, do not perform unrelated cleanup.
+9. **Use the smallest correct fix.** With `--fix`, the fixer makes the smallest correct change; the complexity reviser is a separate pass scoped to adjudicated design findings.
 10. **Turn real bugs into tests.** Every fixed behavioral defect needs the smallest useful regression test.
 11. **No destructive Git operations.** Never run `git reset --hard`, `git clean`, `git stash`, force-push, or broad restore/checkout commands.
 12. **Suspicious workaround comments are not proof.** If code needs a paragraph-long comment to argue that an unsafe-looking workaround is correct, inspect the behavior instead of accepting the explanation.
@@ -310,7 +314,7 @@ Apply the adjudication:
 - Remove `REJECTED` findings completely.
 - Merge only true duplicates while preserving all distinct evidence.
 
-No candidate reaches the user or fixer before adjudication.
+No candidate reaches the user, reviser, or fixer before adjudication.
 
 ### Step 7: Rank Verified Findings
 
@@ -340,46 +344,13 @@ Use only for a verified low-impact defect, narrowly limited defensive gap, or in
 
 Do not include discussion-only architecture opinions in the default result.
 
-### Step 8: Present the Review
+### Step 8: Apply the Complexity Revision and Feedback
 
-When `--fix` is absent, stop after presenting the adjudicated review. Read the template at `templates/review.md`, fill the placeholders, and emit the result.
+The complexity revision runs by default. Skip it only with `--no-revise` — the commit gate passes it so review never edits code at commit time.
 
-Use this structure:
-```text
-Code review: {resolved scope}
-Verdict: APPROVED | CHANGES_REQUESTED
-Baseline: {passed checks} | {failed checks}
-Candidates: {total} · Verified: {V} · Weakened: {W} · Rejected: {R}
+Apply in order:
 
-## Critical
-
-### {ID} — {title}
-Evidence: `file:line` — `<exact code>`
-Trigger: {specific trigger}
-Trace: {short execution trace}
-Impact: {observable failure}
-Regression test: {smallest useful test}
-
-## Important
-...
-
-## Suggestions
-...
-```
-
-Omit empty severity sections.
-
-Findings are tagged by reviewer lens, so the review axes stay visible: A = behavioral correctness, B = contract/spec faithfulness (including requirements missing, scope creep, requirements implemented wrong), C = standards and maintainability (including documented repo standards and Fowler smells). This keeps the standards-vs-spec distinction from `review` without a separate skill.
-
-Verdict rules:
-- `APPROVED` — no verified Critical or Important findings and no diff-caused baseline failures.
-- `CHANGES_REQUESTED` — at least one verified Critical or Important finding or one diff-caused baseline failure.
-
-Approval means only that no qualifying verified defect was found in the reviewed scope.
-
-### Step 9: Apply Feedback (`--fix` only)
-
-Spawn the `fixer` subagent — a registered agent type whose instructions live in `~/.agents/agents/fixer.md` — via a `task` subagent. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same items:
+1. **With `--fix`, fix defects first.** Spawn the `fixer` subagent — a registered agent type whose instructions live in `~/.agents/agents/fixer.md` — via a `task` subagent. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same items:
 
 ```text
 Findings (verified and weakened):
@@ -395,18 +366,84 @@ Baseline output:
 {current baseline output}
 ```
 
-After applying fixes:
+2. **Revise the design (default).** When verified design findings exist, spawn the `complexity-reviser` subagent — a registered agent type whose instructions live in `~/.agents/agents/complexity-reviser.md` — the same way, with:
+
+```text
+Design findings (verified and weakened):
+{adjudicated design findings with adjudicator evidence}
+
+Diff scope and acceptance criteria:
+{resolved scope and acceptance criteria}
+
+Relevant repository rules:
+{repository rules}
+
+Baseline output:
+{current baseline output}
+```
+
+When no verified design findings exist, skip the spawn and report zero revisions.
+
+The reviser removes complexity from the diff with behavior-preserving moves. It may reshape internal interfaces, but only by updating every caller and test in the same change; anything that would change product-observable behavior or the acceptance criteria is reported, not applied.
+
+After applying changes:
 1. run each new or updated regression test
 2. rerun relevant compiler, type-checker, formatter, and linter commands
 3. regenerate the patch against the original review base
-4. spawn one fresh blind adversarial reviewer on only the fix delta
-5. adjudicate any new candidate from that fix review
+4. spawn one fresh blind adversarial reviewer on only the applied delta
+5. adjudicate any new candidate from that review
 
-Do not automatically enter an unbounded review/fix cycle. A second fix pass is allowed only when the fresh fix review identifies a new verified Critical or Important issue caused by the fixer. Stop after two fix passes and report anything remaining.
+Do not automatically enter an unbounded cycle. A second application pass is allowed only when the fresh validation review identifies a new verified Critical or Important issue caused by the applied changes. Stop after two passes and report anything remaining.
+
+### Step 9: Present the Review
+
+When `--no-revise` is set and `--fix` is absent, nothing was applied — present the adjudicated review as a read-only result. Otherwise present the adjudicated review together with what the revision and fixes changed. Read the template at `templates/review.md`, fill the placeholders, and emit the result.
+
+Use this structure:
+```text
+Code review: {resolved scope}
+Verdict: APPROVED | CHANGES_REQUESTED
+Baseline: {passed checks} | {failed checks}
+Candidates: {total} · Verified: {V} · Weakened: {W} · Rejected: {R}
+Revisions: {A} applied · {P} reported · {B} blocked
+
+## Critical
+
+### {ID} — {title}
+Evidence: `file:line` — `<exact code>`
+Trigger: {specific trigger}
+Trace: {short execution trace}
+Impact: {observable failure}
+Regression test: {smallest useful test}
+
+## Important
+...
+
+## Suggestions
+...
+
+## Complexity Revision
+
+### {ID} — {title}
+Move: {revision move}
+Files: {files and tests updated}
+```
+
+Omit empty severity sections. Omit the Complexity Revision section when nothing was applied.
+
+Findings are tagged by reviewer lens, so the review axes stay visible: A = behavioral correctness, B = contract/spec faithfulness (including requirements missing, scope creep, requirements implemented wrong), C = standards and maintainability (including documented repo standards and Fowler smells). This keeps the standards-vs-spec distinction from `review` without a separate skill.
+
+Verdict rules:
+- `APPROVED` — no verified Critical or Important findings and no diff-caused baseline failures.
+- `CHANGES_REQUESTED` — at least one verified Critical or Important finding or one diff-caused baseline failure.
+
+The verdict reflects what the review verified; applied revisions and fixes are shown separately.
+
+Approval means only that no qualifying verified defect was found in the reviewed scope.
 
 ### Step 10: Prepare the Human QA Pass (spawn qa-runner)
 
-After all code changes are settled (including any `--fix` pass), prepare the pass a human will run.
+After all code changes are settled (including any revision or `--fix` pass), prepare the pass a human will run.
 
 Spawn the `qa-runner` subagent — a registered agent type whose instructions live in `~/.agents/agents/qa-runner.md` — with this context. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
 
@@ -428,6 +465,7 @@ Review complete.
 No verified Critical or Important findings remain in the selected scope.
 Baseline checks pass.
 Hardener: {n} scenarios tried, {n} reproduced, {n} fixed.
+Reviser: {n} revisions applied, {n} reported.
 QA pass prepared — run the Step 10 script and record the human verdict.
 ```
 
@@ -447,7 +485,7 @@ Never hide blocked tests, unresolved verified findings, or a QA pass that could 
 
 ### Step 12: Optional Artifact (`--artifact` or `--deep`)
 
-Write a Markdown document only when `--artifact` is supplied or deep mode produced at least one verified finding. Use the template at `templates/review.md`, fill every `{placeholder}` with reconciled values from Steps 6-7 and 9, and include the hardener's scenario table (Step 3) and the QA script (Step 10) in the body.
+Write a Markdown document only when `--artifact` is supplied or deep mode produced at least one verified finding. Use the template at `templates/review.md`, fill every `{placeholder}` with reconciled values from Steps 6-9, and include the hardener's scenario table (Step 3) and the QA script (Step 10) in the body.
 
 Suggested filename:
 ```text
@@ -464,6 +502,7 @@ baseline: passed | failed | partial
 verified_findings: <count>
 weakened_findings: <count>
 rejected_candidates: <count>
+revisions_applied: <count>
 review_mode: standard | deep
 ---
 ```
@@ -485,9 +524,9 @@ Recommend `--deep` when the diff includes:
 
 ## Final Principles
 
-- One implementation result, one adversarial-test pass (hardener), three independent adversarial reviews, one validating apply step, one human QA pass.
+- One implementation result, one adversarial-test pass (hardener), three independent adversarial reviews, one complexity revision, one validating apply step, one human QA pass.
 - Search for falsifying examples rather than confirming examples.
-- Preserve context separation between author, reviewers, and fixer.
+- Preserve context separation between author, reviewers, reviser, and fixer.
 - Review both local behavior and repository-wide contracts.
 - Treat every reviewer claim as untrusted until grounded in code.
 - Prefer a small number of high-confidence findings over a long speculative list.
