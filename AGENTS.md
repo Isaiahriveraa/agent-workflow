@@ -21,7 +21,7 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
 9. **Surgical changes, clean repo** — Touch only what the task needs, match repo conventions, update docs when behavior or config changes, and remove dead code the change exposes.
 10. **Locality of behavior** — Behavior obvious at the unit that owns it: colocate helpers with their caller, keep things that change together together, and use explicit intention-revealing names.
 11. **Test behavior, not implementation** — Assert through public interfaces only; a harmless refactor must not break a test. Cover what can regress; skip tests that only re-assert code. Over-testing is waste.
-12. **Errors explicit** — Never swallow failures; preserve context with idiomatic error/result types.
+12. **Errors explicit** — Never swallow failures; preserve context with idiomatic error/result types. Design ordinary edge cases out of existence instead of exporting them: a missing lookup returns empty, deleting something already gone succeeds, an out-of-range request is clamped. Surface an error only where the caller genuinely must decide.
 13. **One source of truth** — Search for an existing concept, contract, or invariant before adding code, tests, config, schemas, queries, scripts, CI, docs, or UI; reuse, extend, or parameterize it first.
     - **Duplication beats the wrong abstraction (Sandi Metz)**. Wait for the **Rule of Three (AHA)**: extract only when three real uses reveal a stable contract with no caller flags, boolean switches, or special-case branches.
     - An abstraction needing flags or conditional options to satisfy different callers is the wrong abstraction — inline it back into callers.
