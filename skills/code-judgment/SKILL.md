@@ -43,11 +43,13 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 | 6 | Names | Vague, cryptic, misleading, invented acronym, or jargon the ordinary word already covers | Rename to the project's domain term or the plain word; no shorthand a newcomer cannot read |
 | 7 | Module shape | Fat function or file; feature logic in a general module; wrong layer | Split, move, or deepen the interface (AGENTS.md **Architecture is enforced**; use `codebase-design` vocabulary) |
 | 8 | Cohesion and coupling | Things that change together live apart; unrelated things bundled; imports crossing layers the wrong way | Move them together; dependencies point one way |
-| 9 | Bespoke helper | One shared helper already does this | Use the shared one (AGENTS.md **One source of truth**) |
-| 10 | Defensive padding | Fallback for an unreachable state; broad catch; re-validation inside a trusted boundary | Remove it (AGENTS.md **YAGNI**) |
-| 11 | Unrequested polish | Anything in the diff serving a request other than this one | Remove it from the diff; queue the idea |
-| 12 | Change locality | A plausible next addition of the same kind would scatter edits across files — or force rewriting the implementation | Reshape so the next case lands behind an existing seam: small interface, behavior behind it, dependencies one-way; still no speculative options or flags (AGENTS.md **YAGNI**) |
-| 13 | Diff prose | Strings, error messages, CLI help, or changed Markdown that says something a customer or teammate would never say | Rewrite plainly; `python3 ~/.agents/scripts/slop-lint.py` over the changed files flags the words (AGENTS.md **Code explains itself**) |
+| 9 | Information leakage | The same knowledge — a format, a rule, an ordering, a representation — encoded in two modules, or an interface exposing what should stay internal | Move the knowledge behind one interface; callers learn one thing, not the data's shape (AGENTS.md **One source of truth**) |
+| 10 | Leaked sequencing | Callers must invoke methods in a given order, or manage a lifecycle (init before use, open before close, free after use) the module could own itself | Fold the sequence into one call or let the module advance its own state (see `codebase-design` → Designing a new module) |
+| 11 | Bespoke helper | One shared helper already does this | Use the shared one (AGENTS.md **One source of truth**) |
+| 12 | Defensive padding | Fallback for an unreachable state; broad catch; re-validation inside a trusted boundary | Remove it (AGENTS.md **YAGNI**) |
+| 13 | Unrequested polish | Anything in the diff serving a request other than this one | Remove it from the diff; queue the idea |
+| 14 | Change locality | A plausible next addition of the same kind would scatter edits across files — or force rewriting the implementation | Reshape so the next case lands behind an existing seam: small interface, behavior behind it, dependencies one-way; still no speculative options or flags (AGENTS.md **YAGNI**) |
+| 15 | Diff prose | Strings, error messages, CLI help, or changed Markdown that says something a customer or teammate would never say | Rewrite plainly; `python3 ~/.agents/scripts/slop-lint.py` over the changed files flags the words (AGENTS.md **Code explains itself**) |
 
 ## Simplicity With Flexibility
 
