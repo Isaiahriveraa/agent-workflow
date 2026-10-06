@@ -64,6 +64,18 @@ When designing an interface, ask:
 - **The interface is the test surface.** Callers and tests cross the same seam. If you want to test *past* the interface, the module is probably the wrong shape.
 - **One adapter means a hypothetical seam. Two adapters means a real one.** Don't introduce a seam unless something actually varies across it.
 
+## Designing a new module
+
+Before implementing a new module, design its interface. The interface is what callers and tests live with; the implementation can change freely behind it. Five habits, in order:
+
+1. **Design it twice.** Sketch at least two materially different interfaces for the same responsibility, then compare them: how much does a caller have to learn, how many situations does each method serve, how much stays hidden? Pick one or combine the best parts. The first sketch is rarely the best one, and a second costs minutes. Apply this at any scale — one method's parameters, one module, or how two modules divide a responsibility.
+2. **Write the interface comment first.** Before any implementation, draft the comment a caller would read: what the module does, each method's behavior, parameters, returns, error modes, ordering or lifecycle rules, and limits. Hard to write, or longer than expected? That is a design signal — simplify the interface, not the comment. Keep implementation facts out of it: storage layout, protocols, private configuration, and the way the work happens.
+3. **Be somewhat general.** The interface should cover the needs that exist now without being tied to today's single caller. Generality comes from serving situations that share the same knowledge, not from guessing at hypothetical future ones (AGENTS.md **YAGNI**).
+4. **Pull complexity downward.** Prefer a simple interface over a simple implementation. Compute defaults instead of exporting knobs. Handle ordinary variation — an empty result, a missing item, a duplicate delete, an out-of-range value — inside the module; surface an error only where the caller genuinely must decide what to do. Keep the common path free of rare-feature details (overexposure): a caller doing the ordinary thing should not have to read about the exotic one.
+5. **Check for information leakage.** One piece of knowledge — a format, a rule, an ordering, a representation — belongs in one module. Two modules that must change together whenever it changes are leaking; so is a design that makes callers know a required call order the module could own itself. A factory followed by `open()` followed by `close()` is one call trying to get out.
+
+If the whole interface is hard to describe in a short paragraph, or each method needs a paragraph of caveats, the module is probably shallow or tangled — reshape it before implementing.
+
 ## Designing for testability
 
 Good interfaces make testing natural:
