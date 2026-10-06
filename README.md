@@ -32,20 +32,28 @@ The hub serves Claude Code, Codex CLI, OpenCode, and Antigravity/Gemini from the
 The project workflow is intentionally linear at the planning boundary. Each stage owns one concern and passes a durable artifact to the next stage. Local drafts are tracked by their file paths and the plan manifest; once published, work is identified by its GitHub issue number.
 
 ```
-/design → /plan → to-issues → human approval → issue-delivery
+/design → /plan → to-issues → your approval → issue-delivery
 
 or
 
 /design → /plan → /implement
 ```
-Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition. The supporting skills below remain available for focused needs, but they do not replace this delivery path. ### Pipeline stages | Stage | Skill | What it produces | Where | |-------|-------|------------------|-------| | Design | `/design` | Plain-language design bundle: a short index with the topic order, dependencies, and parallel work, plus one walkthrough card per topic (problem, idea, behavior, decisions, why/why-not, what not to build) | `context/designs/<slug>/` | | Plan | `/plan` | Repository-grounded plan for one concern at a time — the next unbuilt design topic, re-checked against the current code — with dependencies and verification | `context/plans/<slug>/` | | Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
-| Approval | Human review | Approved ticket set ready for delivery | Conversation or plan record |
+Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition. The supporting skills below remain available for focused needs, but they do not replace this delivery path.
+
+### Pipeline stages
+
+| Stage | Skill | What it produces | Where |
+|-------|-------|------------------|-------|
+| Design | `/design` | Plain-language design bundle: a short index with the topic order, dependencies, and parallel work, plus one walkthrough card per topic (problem, what I want, the idea, a state → move → state walkthrough with why and why-not, one traced example, architecture now → after, build now vs. not yet) | `context/designs/<slug>/` |
+| Plan | `/plan` | Repository-grounded plan for one concern at a time — the next unbuilt design topic, re-checked against the current code — with dependencies and verification | `context/plans/<slug>/` |
+| Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
+| Approval | — | You review the issue drafts and approve the set for delivery | Conversation or plan record |
 | Delivery | `issue-delivery` | One published issue delivered through an isolated worktree to a verified draft PR | GitHub issue number → draft PR |
 
 ### How to choose
 
-1. **New product or system work** → `/design` → `/plan` → `to-issues` → human approval → `/skill:issue-delivery`
-2. **Already have an approved plan** → `to-issues` → human approval → `/skill:issue-delivery`
+1. **New product or system work** → `/design` → `/plan` → `to-issues` → your approval → `/skill:issue-delivery`
+2. **Already have an approved plan** → `to-issues` → your approval → `/skill:issue-delivery`
 3. **Already have a published, ready issue** → `/skill:issue-delivery`
 4. **Need to clarify a domain or research question** → use the focused supporting skill, then return to `/design` or `/plan`
 5. **Standalone cited research** → `/skill:research` — use it to fill a planning gap, then return to `/plan`
@@ -115,7 +123,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `to-spec/` | Conversation → spec issue |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Background-agent research → single cited Markdown file |
-| `issue-delivery/` | Terminal follow-up to `to-issues`: takes one published issue number (or URL), reads the issue and its `## Plan reference`, and delivers it through an isolated worktree, TDD, quality code, review, atomic commits, and a human-approved draft PR; one issue = one branch = one PR; does not create issues or schedule batches |
+| `issue-delivery/` | Terminal follow-up to `to-issues`: takes one published issue number (or URL), reads the issue and its `## Plan reference`, and delivers it through an isolated worktree, TDD, quality code, review, atomic commits, and a draft PR for your review; one issue = one branch = one PR; does not create issues or schedule batches |
 | `implement/` | Orchestrator: tdd → code-judgment → code-review → commit |
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
