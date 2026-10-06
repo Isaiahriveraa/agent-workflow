@@ -138,7 +138,7 @@ Implement the single approved outcome. For large or multi-slice work, decompose 
 2. Invoke `implement` to orchestrate the vertical slices with regular focused checks after each slice. Fix failures at their cause; never hide them.
 3. Make the smallest cohesive change that satisfies the issue's `## Expected outcome` checklist, honoring `## Intended behavior` and validating the `## Plan reference` against live code.
 4. Run the project-native typecheck, lint, build, and tests. If a full suite cannot run, record exactly why and the untested boundary.
-5. Invoke `code-judgment` to clean the branch diff (behavior-preserving; tests stay green), then `code-review` on the frozen result. Resolve blocking findings. If a finding needs a product/security/dependency decision, stop and escalate instead of choosing silently.
+5. Invoke `code-judgment` to clean the branch diff (behavior-preserving; tests stay green), then `code-review` on the frozen result — its default complexity revision applies adjudicated design findings, so the branch arrives already simplified. Resolve blocking findings. If a finding needs a product/security/dependency decision, stop and escalate instead of choosing silently.
 
 ### 5. Commit atomically
 

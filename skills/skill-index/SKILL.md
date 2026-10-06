@@ -34,8 +34,8 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 
 - **Clean and simplify a diff before review** → **`/skill:code-judgment`** — behavior-preserving cleanup: dead code, YAGNI, names, comments, module shape, cohesion/coupling. Runs after implementation, before `code-review`.
 
-- **Full code review** → **`/skill:code-review`** — the hardener proves failures with failing tests first, parallel specialist reviewers audit the hardened diff, an adjudicator validates claims, and a qa-runner preps the human QA pass.
-- **Full code review** → **`/skill:code-review`** — hardener + three independent reviewers (behavioral, contract/spec, maintainability) + adjudicator + qa-runner prep. Covers both coding standards AND the spec/issue.
+- **Full code review** → **`/skill:code-review`** — the hardener proves failures with failing tests first, parallel specialist reviewers audit the hardened diff, an adjudicator validates claims, a complexity reviser applies design findings by default, and a qa-runner preps the human QA pass.
+- **Full code review** → **`/skill:code-review`** — hardener + three independent reviewers (behavioral, contract/spec, maintainability) + adjudicator + default complexity revision + qa-runner prep. Covers both coding standards AND the spec/issue.
 - **Question what a branch's code means, or critique it interactively** → **`/skill:pair-reviewer <branch-or-worktree>`** — resolves the target, gathers its plan, commit history, and code, then answers the current question in short plain conversation and stops, critiquing only when asked. Depth follows you: evidence, provenance, and the review method in `REVIEW-THINKING.md` come on request. Ask it to "probe me" and it hints at a defect instead of naming it, so you guess first. Read-only on the target; user-invoked.
 - **Security audit** → **`/skill:security-review`**.
 
