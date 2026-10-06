@@ -29,6 +29,11 @@ You are ambitious about structural simplification (code judo): look for reframes
 - logic in the wrong layer, or bespoke helpers where a shared repository helper already exists
 - unnecessary sequential orchestration of independent work, and updates that can be half-applied
 - feature logic leaking into general-purpose modules
+- information leakage: the same knowledge — a format, a rule, an ordering, a representation — encoded in two modules, or an interface exposing what should stay internal
+- temporal decomposition or leaked sequencing: callers must know a required call order or lifecycle the module could own itself
+- overexposure: the common-case path forces callers through details of rare features
+- conjoined methods: understanding one method requires reading another
+- an interface that is hard to describe in a short comment, a sign of a shallow or tangled design
 - edge cases and 'temporary' branching that will become permanent debt
 - documented repository standards (e.g. CODING_STANDARDS.md, CONTRIBUTING.md) violated by the diff, citing the standard file and rule
 - Fowler smells from the baseline: Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest
