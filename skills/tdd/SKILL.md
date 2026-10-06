@@ -100,6 +100,7 @@ Default values should be valid but obviously fake — `"Test User"`, `0`, `crypt
 Before writing any code:
 
 - [ ] Confirm with user what interface changes are needed
+- [ ] For a new module, write the interface contract before the implementation — signature plus the comment a caller would read (see `codebase-design` → Designing a new module)
 - [ ] Confirm with user which seams to test (agree the seams)
 - [ ] List the behaviors to test (not implementation steps)
 - [ ] Get user approval on the plan
