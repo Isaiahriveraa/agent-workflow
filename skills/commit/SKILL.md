@@ -113,13 +113,14 @@ git reset -- <the intent-to-added files>
 ### Run the review
 
 Invoke code-review scoped to the working-tree changes (`modified`), which
-includes the intent-to-added untracked files. Do NOT pass `--fix` and do NOT
-act on the verdict automatically.
+includes the intent-to-added untracked files. Pass `--no-revise` — the gate
+must not edit code — and do NOT pass `--fix`; do NOT act on the verdict
+automatically.
 
 ### Surface, do not decide
 
 Present the code-review verdict and findings to the user. Do not auto-apply
-fixes and do not block the commit on the verdict. The review is input to the
+fixes or revisions and do not block the commit on the verdict. The review is input to the
 user's decision; the Phase 1 approval gate below remains the sole gate.
 
 The user may:
