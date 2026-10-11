@@ -15,7 +15,7 @@ Use this skill when a request contains multiple independent workstreams and Herd
 - Every child receives a focused prompt and follows the user's requested workflow exactly.
 - Use temporary Markdown prompt and report files for substantial coordination; never treat them as durable plans or public issue bodies.
 - Monitor lifecycle state with `herdr agent list` and `herdr agent wait`; do not repeatedly read pane transcripts. Read a pane only for `blocked`, `failed`, `unknown`, or a concrete diagnostic.
-- Make panes visible and ensure they are always focused; never use `--no-focus` unless explicitly requested otherwise.
+- Keep panes visible and focused; never use `--no-focus` unless explicitly requested otherwise.
 - Do not close or repurpose panes, tabs, or workspaces the orchestrator did not create.
 - The orchestrator owns layout, dependencies, status, synthesis, and final verification. Children own their concerns and their invoked skills' policy.
 
@@ -24,13 +24,15 @@ Use this skill when a request contains multiple independent workstreams and Herd
 Before creation, write a short run manifest that answers:
 
 - **Mode:** audit-only, Draft conversion, or Publication. If both audit and conversion are requested, audit must complete first; only that requested audit-completion barrier blocks conversion.
-- **Authorization:** an explicit `/to-issues` Draft invocation authorizes local Draft conversion, including for Proposed or otherwise unapproved source plans. Preserve that source status as metadata such as `needs-review` or `blocked`; source approval is not a Draft prerequisite. Separate issue-set approval and publication authorization remain required for their respective actions.
-- **Canonical sources:** list the exact source-plan paths and the source version/commit when relevant. Do not reconcile competing plans silently.
-- **Durable output root:** record the exact expected path. On reruns, use the existing repository-local root under `context/plans/<slug>/issues/`; otherwise use the documented default, normally `context/plans/<slug>/issues/`, for the active repository/workflow. Never silently remap an existing root. `/to-issues` owns issue decomposition, drafts, and manifests.
+- **Authorization:** an explicit `/to-issues` Draft invocation authorizes local ticket drafting from a design brief. Preserve source gaps as `needs-review` or `blocked`; a technical plan is not a prerequisite. Separate ticket-set review and publication authorization remain required for their respective actions.
+- **Source paths:** list the exact design brief, selected ticket, or approved plan paths and source version/commit when relevant. Do not reconcile competing artifacts silently.
+- **Durable output root:** record the exact expected path. Design briefs live under `context/designs/`, issue drafts under `context/issues/`, and just-in-time plans under `context/plans/`. Never silently remap an existing root. `/to-issues` owns ticket drafts and publication; `/plan` owns the technical plan for one selected ticket.
 - **Expected reports:** list every child report path and the required synthesis file, normally `team-brief.md` beside prompts and reports in the run directory.
 - **Barriers:** state dependencies, the audit-completion barrier only when an audit was requested, the report/artifact barrier, and the separate issue-set approval and publication gates.
 
-Audit work is read-only review and produces evidence for the next stage. `/to-issues` owns issue decomposition, draft content, manifests, and publication policy. Orchestration may dispatch either skill, but must not duplicate or override its policy. Publication is never implied by drafting and requires its own explicit authorization and workflow.
+Audit work is read-only review and produces evidence for the next stage. `/to-issues` owns behavior-ticket drafts and publication policy; `/plan` plans one selected ticket after it exists. Orchestration may dispatch either skill, but must not duplicate or override its policy. Publication is never implied by drafting and requires its own explicit authorization and workflow.
+
+For delivery work, read `~/.agents/references/workflow.md` and select candidates from the owning ticket index after reconciling live evidence. Its status is authoritative; the run manifest records ownership, not a second backlog. A ready candidate is only provisionally parallel: recheck shared files, public contracts, migrations, and integration order before dispatch. Each independent delivery concern owns its branch/worktree/PR; consumers of unfinished contracts wait. Do not pre-plan every eligible candidate.
 
 ## Choose the layout before creating it
 
@@ -123,7 +125,7 @@ herdr agent prompt <stable-name> \
 
 Prompt acceptance can briefly report stale `idle` even while startup is occurring. Confirm with a fresh `herdr agent list`; require observed `working` before treating dispatch as active. If it remains `idle`, inspect the declared handoff or targeted pane evidence rather than assuming failure. Never use prompt acceptance alone as completion evidence.
 
-For issue-oriented work, orchestration coordinates but does not replace `/to-issues` or publish GitHub issues. Once the selected source plan is ready, `/to-issues` owns the exact durable drafts under the selected durable root recorded in preflight and the parent/child manifest. Child prompts may name a concern and expected draft path, but public issue content stays in the issue workflow. The orchestrator hands audit reports and the selected source path to `/to-issues`; it does not reinterpret them.
+For issue-oriented work, orchestration coordinates but does not replace `/to-issues` or publish GitHub issues. `/to-issues` turns a design brief into local behavior-ticket drafts; after a ticket is selected, `/plan` writes its technical plan. Child prompts may name a concern and expected draft path, but public issue content stays in the issue workflow. The orchestrator hands audit reports and the selected source path to the owning skill; it does not reinterpret them or plan the full backlog in advance.
 
 ## Status-only supervision
 
@@ -158,13 +160,13 @@ Idle/done proves only that active work stopped. Status never proves correctness,
 
 ### Fixed child completion report
 
-Every child must provide this exact concise schema when finished, blocked, or failed, in its response or at the exact declared report path. Keep lifecycle state separate from source and issue-set status so the report can be handed to `/to-issues` without changing its meaning:
+Every child must provide this exact concise schema when finished, blocked, or failed, in its response or at the exact declared report path. Keep lifecycle state separate from source and issue-set status so the report can be handed to `/to-issues` without changing its meaning. Copy the owning artifact's status as-is; never translate it into a second execution state:
 
 ```text
 Concern: <stable concern id>
 State: done | blocked | failed
 Result: <one sentence>
-Source status: approved | proposed | needs-review | blocked | none
+Source status: <the owning artifact's actual status, or none>
 Issue-set status: draft | needs-review | blocked | none
 Changed paths: <paths or none>
 Verification: <commands and observed results, or not run with reason>
@@ -176,7 +178,7 @@ If the report is too large for a reliable response, the child writes the complet
 
 ## Artifact barrier, completion, and synthesis
 
-Do not synthesize until every required child is settled and every declared report exists and has been read. Then verify the barriers required by the selected mode: canonical source and exact durable output root always; audit completion only when an audit was requested; issue-set approval and publication authorization only for those actions. A prompt sent, an idle state, or a report alone never completes a concern.
+Do not synthesize until every required child is settled and every declared report exists and has been read. Then verify the barriers required by the selected mode: source artifact and exact durable output root always; audit completion only when an audit was requested; issue-set approval and publication authorization only for those actions. A prompt sent, an idle state, or a report alone never completes a concern.
 
 For each concern, record:
 
