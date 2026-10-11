@@ -7,7 +7,7 @@ description: "Senior Developer PR workflow: auto-detects whether changes belong 
 
 The goal of this skill is to craft **Senior Developer Pull Requests**: PRs where concerns are cleanly separated, responsibilities are unambiguous, and reviewing is effortless. Reviewers should understand the human/system rationale in seconds, see exactly how behavior changes without deciphering code trivia, and have total confidence in merging.
 
-You do **not** need to decide ahead of time whether to run `/pr`, `/pr split`, or `/pr stack`. By default, this skill inspects your branch diff, **auto-detects the optimal PR strategy**, and proposes it for approval before touching any Git state.
+You do **not** need to decide ahead of time whether to run `/pr`, `/pr split`, or `/pr stack`. By default, this skill inspects your branch diff, **auto-detects the optimal PR strategy**, and consults the `commit-pr-reviewer` subagent for approval before touching any Git state.
 
 ---
 
@@ -69,9 +69,9 @@ Within each PR, **each commit addresses exactly one logical unit**. A single PR 
 
 ---
 
-## Auto-Detection & Proposal Gate
+## Auto-Detection & Approval Gate
 
-**The skill MUST inspect and propose the strategy before touching Git state, creating branches, or opening PRs.**
+**The skill MUST inspect and write the strategy, and get commit-pr-reviewer approval, before touching Git state, creating branches, or opening PRs.**
 
 ### Step 1: Discovery & Analysis
 Run read-only inspection commands:
@@ -89,8 +89,8 @@ Evaluate:
 3. **Dependencies**: Does concern B require concern A, or could B merge right now without A?
 4. **Volume**: Is any single concern > 700 lines?
 
-### Step 2: Present the Proposed PR Plan
-Present the proposal in this exact format:
+### Step 2: Write the Proposed PR Plan
+Write the proposal in this exact format:
 
 ```text
 PROPOSED PR PLAN
@@ -127,10 +127,13 @@ Draft PR Description(s):
 ## Stack Context
 - #<prev> ← this ← #<next> · <N> source lines
 --------------------------------------------------------------------------------
-Approval required before creating branches, worktrees, stacks, or PRs.
+commit-pr-reviewer approval required before creating branches, worktrees, stacks, or PRs.
 ```
 
-**STOP — wait for explicit user approval.** Never create branches or PRs before the user says `approved`, `proceed`, or `yes`.
+### Step 3: Approval Gate
+Consult the `commit-pr-reviewer` subagent for approval on this plan, in pull request mode. Create nothing until it approves.
+
+The final report gives the PR URL(s), the strategy used, and the reviewer's verdict.
 
 ---
 
@@ -183,7 +186,7 @@ approach.>
 
 ---
 
-## Execution Runbooks (Post-Approval Only)
+## Execution Runbooks (After Approval Only)
 
 ### Executing Strategy 1: Single PR
 1. Confirm commits on the branch are clean and granular (`git log --oneline <base>..HEAD`).
