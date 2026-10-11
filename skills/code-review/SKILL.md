@@ -1,7 +1,7 @@
 ---
 name: code-review
 description: "Review code using independent adversarial reviewers that search for concrete bugs, contract mismatches, and maintainability regressions. A hardener proves failures with failing tests first, three independent reviewers audit the hardened diff, a security-reviewer covers trust-boundary diffs on demand, one adjudicator validates every claim, a complexity-reviser applies adjudicated design findings by default, an optional fixer applies verified fixes, and a qa-runner prepares the human QA pass. Verifies every claim against actual repository state."
-argument-hint: "[scope] [--fix] [--no-revise] [--deep] [--artifact]"
+argument-hint: "[scope] [--fix] [--no-revise] [--deep] [--artifact] [--review-only --report <path>]"
 shell-timeout: 10
 ---
 
@@ -37,6 +37,12 @@ one fresh adversarial validation of the applied changes
 spawn qa-runner → environment, test data, click-through script
       ↓
 human runs the QA pass
+```
+
+With `--review-only --report <path>` the loop is observe-only and ends at the report:
+
+```text
+resolve scope → gather context → reviewers A/B/C → adjudicator → Step 13 report
 ```
 
 Role separation is mandatory:
@@ -80,6 +86,7 @@ Scope resolution is delegated to the bundled helper at Step 1 — it depends on 
 - `--no-revise` — skip the default complexity revision pass (used by the commit gate, which must not edit code)
 - `--deep` — add triggered specialist reviews for security, concurrency, dependencies, persistence, and public compatibility
 - `--artifact` — write a persistent Markdown review document
+- `--review-only --report <path>` — observe-only review for a delegated run (see Step 13). Runs Steps 1, 2, and 4-7; no hardener, revision, fixer, or QA. Writes `findings.md` and a `REVIEW-REPORT v1` block to `<path>`. Requires `--report`.
 
 Do not ask for confirmation when scope can be resolved safely. Ask only when the supplied scope is genuinely unresolvable or could select materially different changes.
 
@@ -172,6 +179,8 @@ Record each command, exit status, and concise failure output in `.git/code-revie
 A failing command is evidence, but not automatically a review finding. The review must establish that the selected diff caused or exposed the failure.
 
 ### Step 3: Harden First (spawn the hardener)
+
+Not run with `--review-only`: the hardener runs in the implementer's harness before the delegated review starts.
 
 Before any reviewer sees the change, spawn the hardener so the diff under review already carries tests that prove its failures.
 
@@ -346,6 +355,8 @@ Do not include discussion-only architecture opinions in the default result.
 
 ### Step 8: Apply the Complexity Revision and Feedback
 
+Not run with `--review-only`: revision and fixes are applied by the implementer's harness from the report (see OMP dispatch).
+
 The complexity revision runs by default. Skip it only with `--no-revise` — the commit gate passes it so review never edits code at commit time.
 
 Apply in order:
@@ -397,6 +408,8 @@ Do not automatically enter an unbounded cycle. A second application pass is allo
 
 ### Step 9: Present the Review
 
+With `--review-only`, the output is the Step 13 report instead of this presentation.
+
 When `--no-revise` is set and `--fix` is absent, nothing was applied — present the adjudicated review as a read-only result. Otherwise present the adjudicated review together with what the revision and fixes changed. Read the template at `templates/review.md`, fill the placeholders, and emit the result.
 
 Use this structure:
@@ -442,6 +455,8 @@ The verdict reflects what the review verified; applied revisions and fixes are s
 Approval means only that no qualifying verified defect was found in the reviewed scope.
 
 ### Step 10: Prepare the Human QA Pass (spawn qa-runner)
+
+Not run with `--review-only`: the QA pass is prepared by the implementer's harness after changes are settled.
 
 After all code changes are settled (including any revision or `--fix` pass), prepare the pass a human will run.
 
@@ -508,6 +523,32 @@ review_mode: standard | deep
 ```
 
 After writing the artifact, immediately run `pbcopy <absolute-path>` so the user's clipboard has the file path.
+
+### Step 13: Review-Only Report (`--review-only --report <path>`)
+
+Runs Steps 1, 2, and 4-7 and nothing else. The run must not edit, create, or delete any repository file. Writing `findings.md` and the report counts as the only output.
+
+1. Write the adjudicated findings, ranked, to `findings.md` beside the report, in the Step 9 structure.
+2. Write the report to `<path>` in the exact format of `templates/review-report.md`, then reply with the same block as the final message.
+
+Report rules:
+- `verdict: CHANGES_REQUESTED` if and only if `critical + important > 0`. A diff-caused baseline failure counts as one important finding.
+- `status: complete` after a full review. `blocked` if a required tool or spawn cannot run. `failed` if the review cannot complete.
+- `findings:` must always name the findings file, even when there are no findings.
+
+## OMP Dispatch (Claude side)
+
+The review can run in an OMP agent in a Herdr tab, with the models configured in `~/.omp/agent/config.yml`. Claude keeps everything that writes code.
+
+1. Run the hardener (Step 3) in this harness first, so the delegated review sees the hardened diff.
+2. `node ~/.agents/scripts/omp-review.mjs preflight` — shows each check and the OMP models that will run. If `ready` is false, stop and show the failing checks. Do not fall back silently.
+3. `node ~/.agents/scripts/omp-review.mjs run --base <ref>` — opens a background tab without focus, starts OMP, waits until it settles, and prints one JSON result. Run it in the background and wait for its exit.
+4. Act on the result:
+   - `complete`: read `report.counts` and `report.findings`. Apply refactors per the complexity revision (Step 8). Report every behavior change or defect fix to the user and wait for their decision.
+   - `blocked`: read the agent's pane with `herdr agent read <agent>` and report what it needs. Do not answer its dialogs yourself.
+   - `failed`: report `reason` and `detail`. A failed run is never an approval.
+
+The runner refuses to report success if the working tree changed during the review, and it rejects any report that does not match the contract.
 
 ## Escalation Rules
 
