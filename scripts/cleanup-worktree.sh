@@ -64,7 +64,22 @@ if [ -n "$WT_PATH" ]; then
     exit 1
   fi
   echo "== removing worktree: $WT_PATH"
-  git worktree remove "$WT_PATH" $([ "$FORCE" -eq 1 ] && echo --force)
+  if [ "$FORCE" -eq 1 ]; then
+    git worktree remove --force "$WT_PATH"
+  elif ! REMOVE_ERR=$(git worktree remove "$WT_PATH" 2>&1); then
+    # git refuses any worktree with initialized submodules unless forced; the dirty
+    # check above already ran, so forcing past that one guard doesn't skip safety.
+    case "$REMOVE_ERR" in
+      *"containing submodules"*)
+        echo "== worktree contains submodules; retrying with --force"
+        git worktree remove --force "$WT_PATH"
+        ;;
+      *)
+        echo "$REMOVE_ERR" >&2
+        exit 1
+        ;;
+    esac
+  fi
 fi
 
 # delete the merged local branch
