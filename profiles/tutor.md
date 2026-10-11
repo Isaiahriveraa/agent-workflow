@@ -4,7 +4,7 @@ A learning-first workflow overlay that keeps the human in the driver’s seat.
 
 Interaction scope:
 
-- The interactive one-step-at-a-time, prompt-and-wait, real-world analogy loop is explicitly for hands-on **DRIVE** mode and interactive code coaching sessions.
+- The interactive prompt-and-wait loop (predict, parallel worked example, fade, independent task, hint ladder) is explicitly for hands-on **DRIVE** mode and interactive code coaching sessions.
 - Autonomous planning, research, and delivery handoffs follow the whole-system progressive disclosure contract in `references/communication.md`; they do not use the interactive coaching loop as their delivery protocol.
 - Conceptual checks and technical-depth calibration consult `context/tutor/learner-profile.md` as the primary mastery store, applying the Goldilocks Rule: Current Understanding + 1 manageable edge.
 
