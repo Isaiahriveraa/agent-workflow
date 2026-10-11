@@ -1,10 +1,11 @@
 ---
 name: grill-with-docs
-description: An artifact-agnostic architecture-and-behavior interview for plans, issue drafts, design briefs, RFCs, tickets, and ideas, creating glossary and ADR records in the worktree context directory.
-disable-model-invocation: true
+description: Interview the human about meaningful behavior walkthroughs, edge cases, and decisions in ideas, numbered design cards, tickets, plans, or RFCs. Use when the user says "grill this", "walk through the edge cases", or design needs behavior clarified; keep depth proportional and update local artifacts.
 ---
 
-Run a relentless grilling session. Delegate the domain modeling (glossary, ADRs, term resolution) to the `/domain-modeling` skill.
+Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
+
+Interview the human to resolve meaningful uncertainty, not to exhaust a checklist. Use `/domain-modeling` for glossary, ADRs, and term resolution only when a real terminology or architectural decision warrants it.
 
 ## Document style: terminal first
 
@@ -36,8 +37,9 @@ for resolved decisions.
 
 First identify the artifact under discussion, its authority and editability,
 the goal, and the relevant repository context. Then hold a natural
-conversation about the artifact, not a checklist. Ask one question at a time
-and adapt the next question to the answer.
+conversation about the artifact, not a checklist. Ask questions in batches of related
+questions on one topic, so the human can answer a whole topic in one reply.
+Adapt the next batch to the answers.
 
 ### Mandatory opening orientation
 
@@ -55,7 +57,9 @@ Introduce the active artifact in plain English:
 - **Starting point:** identify what is already clear and the first unresolved
   question.
 
-Then ask only that first framing question. Once the user answers it, use the
+Then ask the first batch: 2-4 numbered questions that confirm the artifact,
+its goal, and the starting point. Keep the batch to this one topic, and do not
+ask about the decision map yet. Once the user answers the batch, use the
 recommendation format below for real design-choice questions. If the artifact
 or its goal is unclear, ask the user to identify it before discussing options.
 
@@ -67,17 +71,24 @@ Walk the decision map as far as the artifact requires:
 4. Interfaces, data contracts, schemas, migrations, and compatibility.
 5. Edge cases, failures, and recovery.
 6. Trade-offs and long-term effects.
-7. Teach-back: have the user restate the load-bearing decisions.
+7. Teach-back only for consequential decisions or a requested learning session, not every trivial card.
 
 Skip branches that repository evidence or earlier decisions already settle,
 but do not skip unresolved dependencies or failure behavior.
 
+For design cards, walk through the starting state, actor/action, visible result, and a meaningful failure or alternative with the human. Probe cases that can change acceptance: retries, missing state, conflicting actions, authorization, or recovery when relevant. Ask what the person should observe, not how to implement it. Capture scenario/failure outcomes in the card and preserve the brain spill. Clarify genuine behavior prerequisites and provisional parallel candidates; defer technical overlap checks until the selected slice is planned. A straightforward card needs only its real uncertainty resolved, not a full architecture interview.
+
 ### How to ask
 
-- Ask questions ONE at a time in plain terminal text. Never use the question /
+- Ask questions in batches of 2-5 related questions on one topic (for example,
+  all failure cases for one card, or all interface fields for one contract).
+  Do not mix unrelated topics in a batch. Number each question so the answers
+  can map back one-to-one. Use plain terminal text. Never use the question /
   multiple-choice / option-picker tool - every question and explanation is
   typed prose.
-- Wait for my reply before continuing. Never advance while a question is open.
+- Wait for my reply before moving to the next topic. Never advance past a batch
+  while any of its questions is open. Follow-up questions from my answers go in
+  the next batch.
 
 ### How to recommend (teach, don't just pick)
 
@@ -90,7 +101,7 @@ Before each real decision question, teach before you ask:
    goal.
 4. End with the decision question stated plainly.
 
-The user must be able to explain every resolved decision without reading code.
+Keep explanation proportional to the decision; do not impose a teach-back ceremony on straightforward answers.
 If repository exploration can answer a question, explore instead.
 
 ## If I ask YOU a question (clarification, not an answer)
@@ -121,9 +132,7 @@ follow-up whys -- leads with the mechanism, not the history:
   before it can be used, shrink the explanation until it does not.
 - **Cap: five short sentences** before the user can act or decide.
   Anything longer gets split: verdict now, mechanics on request.
-- **End teaching by distilling back.** After a multi-step explanation,
-  ask the user to say the rule in their own one line. Confirm or correct
-  it. Record that line in the transcript if it resolved the decision.
+- **Distill when useful.** For a consequential multi-step explanation or requested learning session, ask the user to state the rule in one line. Do not require this for routine cards or clarifications.
 
 Boundary: deep multi-step teaching stays opt-in (the `/tutor` skill path
 when the user explicitly asks to understand something). These rules
@@ -140,7 +149,9 @@ section above instead.
    terminology, assumptions, scope, priorities, interfaces, or failure
    behavior. If the artifact is read-only or external, state that and record
    the decision in the local transcript instead; never claim it was edited.
-   The artifact remains the source of truth whenever it is writable.
+    The artifact remains the source of truth whenever it is writable.
+
+   Refresh affected behavior cards and ticket/plan evidence after feedback. Once tickets exist, `context/issues/<slug>/000-index.md` alone owns execution status; do not add another queue to the design or transcript. Changes to approved scope require renewed review. Interview answers do not authorize implementation, publication, or merge.
 
 2. **If a term was resolved** or an ADR criterion was met, use
    `/domain-modeling` to capture it. It handles glossary updates and ADR
