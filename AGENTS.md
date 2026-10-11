@@ -55,6 +55,8 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
 
 `skill-index` routes every skill — read its SKILL.md before choosing one. Skills are user-invoked (frontmatter `disable-model-invocation: true`) or model-invoked. Adding, renaming, removing, or re-routing a skill means updating `skill-index`'s SKILL.md and the README skills table.
 
+For design → research → ticket → plan → delivery continuity, use `references/workflow.md`: the ticket index owns execution state, explicit targets win, otherwise select one eligible item from verified prerequisites. Plan only that current slice; selection never authorizes the next stage.
+
 ## Commit & PR Discipline
 
 One concern per branch and PR. Develop every concern in its own worktree — `~/.agents/scripts/new-worktree.sh <branch>` — and tear it down after merge with `~/.agents/scripts/cleanup-worktree.sh <branch>`. Never start a second concern in an existing worktree; queue a mid-task idea as the next concern instead of switching tracks. All commits go through the `commit` skill and all PRs through the `pr` skill — never commit or open a PR directly.
