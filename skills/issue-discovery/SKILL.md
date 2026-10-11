@@ -1,25 +1,17 @@
 ---
 name: issue-discovery
 description: >-
-  Compatibility workflow for turning ambiguous product or engineering ideas into clear, team-readable decision GitHub issues. `/plan` owns behavior clarification, repository research, and decomposition; this skill only publishes decision issues.
+  Turn an unresolved product or engineering choice into a clear decision issue. Use design for behavior briefs and planning for the technical approach to one selected ticket.
 disable-model-invocation: true
 ---
 
-# issue-discovery (compatibility)
+# Issue Discovery
 
-This skill is a **compatibility workflow** for publishing decision GitHub issues. It does **not** plan, research, or decompose work — `/plan` owns behavior clarification, repository research, and decomposition. Use this only to turn a settled ambiguity into a structured decision issue.
-
-## What `/plan` owns
-
-- **Behavior clarification** — pinning down what "done" means.
-- **Repository research** — grounding claims in concrete repository and architectural evidence.
-- **Decomposition** — breaking work into concerns, dependencies, and steps.
-
-If the idea still needs any of the above, run `/plan` first. This skill only publishes the resulting decision issues.
+Use this when the work is to make or record a decision, not to deliver a behavior change. An unresolved user-facing behavior belongs in `/design`; implementation planning happens later in `/plan`, after a ticket is selected. This skill does not research deeply, plan implementation, or create delivery tickets.
 
 ## Decision issues
 
-When a decision needs to be recorded as a GitHub issue, use this default template, shorter when context is obvious:
+When a decision needs a durable GitHub record, use this short template, shorter when context is obvious:
 
 ```markdown
 ## Question
@@ -62,12 +54,12 @@ Do not introduce a manual-task label unless there is a recurring, clearly unders
 
 ## Invocation
 
-1. **Confirm the idea is settled enough to publish** — if behavior, research, or decomposition is still open, redirect to `/plan`.
+1. **Confirm this is a decision, not a delivery ticket.** If the user needs a behavior change, redirect to `/design`; if they need technical direction for a selected ticket, redirect to `/plan`.
 2. **Propose the issue set** — present the planned decision issues to the user for approval.
 3. **Create issues** — once approved, create GitHub issues with plain public labels.
 4. **Resolve** — if working a decision, resolve at most one per session.
 
 ## Done when
 
-- The user is redirected to `/plan` for any open behavior/research/decomposition work.
+- Behavior changes are routed to `/design`, and selected tickets are routed to `/plan` for technical planning.
 - Approved decision issues are published to GitHub with plain public labels.
