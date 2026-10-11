@@ -46,7 +46,7 @@ describe("new-artifact.py", () => {
 		const root = makeRepo();
 		const expected = {
 			handoffs: ["## Active Goal", "## Open Questions or Blockers", "## Resume Here", "## Success Criteria"],
-			research: ["## Question", "## Key Evidence", "## Options & Tradeoffs", "## Remaining Uncertainty"],
+			research: ["## Workflow links", "## Question", "## Key Evidence", "## Options & Tradeoffs", "## Remaining Uncertainty"],
 			reviews: ["## Rationale Table", "## Remaining Issues", "## Per-module Details"],
 		};
 		for (const [type, headings] of Object.entries(expected)) {
@@ -93,21 +93,42 @@ describe("new-artifact.py", () => {
 		for (const heading of ["## What we're doing and why", "## Raw intent (your words)", "## Topics", "## Order, dependencies, and parallel work", "## Open questions", "## Status"]) {
 			assert.ok(design.includes(heading), `design missing ${heading}`);
 		}
+		assert.match(design, /Recheck technical overlap against live code before parallel delivery/);
+		assert.match(design, /ready-for-issues \| blocked/);
 
 		const planOutput = run(root, "--type", "plans", "checkout flow");
 		const planRoot = path.join(root, "context", "plans", "checkout-flow");
 		assert.deepEqual(fs.readdirSync(planRoot).sort(), ["00-index.md"]);
 		assert.ok(planOutput.includes(path.join(planRoot, "00-index.md")));
-		assert.match(fs.readFileSync(path.join(planRoot, "00-index.md"), "utf8"), /type: plan/);
+		const plan = fs.readFileSync(path.join(planRoot, "00-index.md"), "utf8");
+		assert.match(plan, /type: plan/);
+		for (const heading of ["## Ticket", "## Goal", "## Relevant code and tests", "## Technical approach", "## Acceptance and verification", "## Interface impact", "## Status"]) {
+			assert.ok(plan.includes(heading), `plan missing ${heading}`);
+		}
+		assert.ok(plan.includes("**Plan status:** draft"));
+		for (const field of ["Ticket", "Planned at", "In-scope files"]) {
+			assert.ok(plan.includes(`**${field}:**`), `plan missing ${field}`);
+		}
+		assert.equal(plan.includes("## Concern map"), false);
 
 		const issueOutput = run(root, "--type", "issues", "checkout flow");
 		const issueRoot = path.join(root, "context", "issues", "checkout-flow");
-		assert.deepEqual(fs.readdirSync(issueRoot).sort(), ["000-index.md"]);
+		assert.deepEqual(fs.readdirSync(issueRoot).sort(), ["000-index.md", "001-checkout-flow.md"]);
 		assert.ok(issueOutput.includes(path.join(issueRoot, "000-index.md")));
-		const issue = fs.readFileSync(path.join(issueRoot, "000-index.md"), "utf8");
-		for (const heading of ["## Summary", "## Current behavior", "## Intended behavior", "## Context & Sub-issues", "## Expected outcome", "## Plan reference"]) {
+		assert.ok(issueOutput.includes(path.join(issueRoot, "001-checkout-flow.md")));
+		const index = fs.readFileSync(path.join(issueRoot, "000-index.md"), "utf8");
+		assert.ok(index.includes("## Queue"));
+		assert.ok(index.includes("| ID | Ticket | Issue | Status | Depends on | Plan | Research | PR | Evidence |"));
+		assert.ok(index.includes("| 001 | context/issues/checkout-flow/001-checkout-flow.md | - | draft | - | - | - | - | - |"));
+		assert.equal(index.includes("## Problem"), false);
+		const issue = fs.readFileSync(path.join(issueRoot, "001-checkout-flow.md"), "utf8");
+		for (const heading of ["## Problem", "## Current behavior", "## Desired behavior", "## Context", "## Acceptance criteria"]) {
 			assert.ok(issue.includes(heading), `issue missing ${heading}`);
 		}
+		assert.match(issue, /<!-- Local issue draft metadata; remove this block when publishing\.\nSource design: [^<>\n]+\nLocal draft path: [^<>\n]+\n-->\n\n## Problem/);
+		assert.equal(/^Status:/m.test(issue), false, "the queue alone owns delivery status");
+		assert.equal(issue.includes("## Design reference"), false);
+		assert.equal(issue.includes("## Plan reference"), false);
 	});
 
 	it("does not overwrite an existing bundle on rerun", () => {
@@ -139,6 +160,14 @@ describe("new-artifact.py", () => {
 		}
 		assert.ok(glossaryText.includes("**Order**:"));
 		assert.ok(glossaryText.includes("**Invoice**:"));
+	});
+
+	it("scaffolds research with an architecture decision block that starts undecided", () => {
+		const root = makeRepo();
+		const [file] = createdPaths(run(root, "--type", "research", "--topic", "queue storage"));
+		const content = fs.readFileSync(file, "utf8");
+		assert.ok(content.includes("## Decision needed from you"));
+		assert.match(content, /\*\*Status:\*\* UNDECIDED/);
 	});
 
 	it("accepts --topic and positional topics", () => {

@@ -42,10 +42,10 @@ def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str
     profiles = {
         "handoffs": ("handoff", "Agent Handoff", ["Active Goal", "Current State", "Latest User Intent", "Locked Decisions", "Do Not Repeat", "Work Completed", "Relevant Files", "Remaining Work", "Open Questions or Blockers", "Resume Here", "Verification", "Success Criteria", "Completion"]),
         "designs": ("design", "Design", ["What we're doing and why", "Raw intent (your words)"]),
-        "research": ("research", "Research", ["Question", "Conclusion", "Key Evidence", "Options & Tradeoffs", "Recommendation & System Impact", "Remaining Uncertainty", "Sources"]),
+        "research": ("research", "Research", ["Workflow links", "Question", "Conclusion", "Key Evidence", "Options & Tradeoffs", "Recommendation & System Impact", "Decision needed from you", "Remaining Uncertainty", "Sources"]),
         "review": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
         "reviews": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
-        "plans": ("plan", "Plan", ["Overview", "Problem", "Desired Behavior", "System Shape & Seams", "Decisions and Trade-offs", "Concerns and Dependencies", "Acceptance", "Verification", "Non-goals", "Status"]),
+        "plans": ("plan", "Plan", ["Ticket", "Code baseline", "Goal", "Current behavior", "Desired behavior", "Relevant code and tests", "Technical approach", "Scope and non-goals", "Acceptance and verification", "Risks and open questions", "Interface impact", "Status"]),
         "discover": ("discover", "Discovery", ["Question", "Context", "Findings", "Decisions", "Next Steps"]),
         "frd": ("frd", "Functional Requirements", ["Functional Requirements", "Problem Statement", "Requirements", "Acceptance Criteria"]),
         "tickets": ("tickets", "Tickets", ["Summary", "Scope", "Acceptance Criteria"]),
@@ -58,7 +58,19 @@ def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str
         result = frontmatter(title, date_str, kind_name)
     result += f"# {heading}: {title}\n*{date_str} - {time_str}*\n\n"
     for section in sections:
-        result += f"## {section}\n\n<!-- Record only verified information, decisions, or clearly labeled placeholders. -->\n\n"
+        if kind == "plans" and section == "Status":
+            placeholder = "**Plan status:** draft"
+        elif kind == "plans" and section == "Ticket":
+            placeholder = "**Ticket:** <!-- Queue Ticket path or recorded Issue value. -->"
+        elif kind == "plans" and section == "Code baseline":
+            placeholder = "**Planned at:** <!-- Full commit SHA inspected for this slice. -->\n\n**In-scope files:** <!-- Comma-separated repository-relative literal paths; no globs. -->"
+        elif kind == "research" and section == "Workflow links":
+            placeholder = "<!-- Link the selected design card, queue ID/ticket, and existing evidence; use 'standalone' when no delivery item applies. -->"
+        elif kind == "research" and section == "Decision needed from you":
+            placeholder = "<!-- One block per architecture decision: the question, its options, a suggestion labeled as a suggestion, then `**Status:** UNDECIDED` until the user records `**Chosen:** <option>`. Leave none when no architecture decision is open. -->"
+        else:
+            placeholder = "<!-- Record only verified information, decisions, or clearly labeled placeholders. -->"
+        result += f"## {section}\n\n{placeholder}\n\n"
     return result
 
 
@@ -111,38 +123,45 @@ def parse_args() -> argparse.Namespace:
 def bundle_files(kind: str, title: str, date_str: str, time_str: str) -> dict[str, str]:
     if kind == "plans":
         index = profile_template("plans", title, date_str, time_str)
-        index += "## Concern map\n\n<!-- List stable concern IDs and their step files. -->\n\n## Dependency graph\n\n<!-- Record start-now, concurrent, and blocked relationships. -->\n\n## Step index\n\n<!-- No concerns have been invented by this scaffold. -->\n"
         return {
             "00-index.md": index,
         }
     if kind == "designs":
         index = profile_template("designs", title, date_str, time_str)
-        index += "## Topics\n\n<!-- One card per topic: NN-<topic>.md. Add each card as it is written. -->\n\n## Order, dependencies, and parallel work\n\n<!-- Plain sentences: the order, what depends on what and why, and what can move in parallel. Name any shared file or contract that forces sequencing. -->\n\n## Open questions\n\n<!-- Unresolved decisions, with impact and what would resolve them. -->\n\n## Status\n\n- <!-- Choose exactly one: ready-for-plan | blocked -->\n"
+        index += "## Topics\n\n<!-- One card per independent user-visible or caller-visible outcome: NN-<topic>.md. -->\n\n## Order, dependencies, and parallel work\n\n<!-- Record default priority, real behavior prerequisites with reasons, and provisional independent groups. Recheck technical overlap against live code before parallel delivery. Do not plan later implementations here. The linked ticket index owns execution state. -->\n\n## Open questions\n\n<!-- Unresolved decisions, with impact and what would resolve them. -->\n\n## Status\n\n- <!-- Choose exactly one: ready-for-issues | blocked -->\n"
         return {
             "00-index.md": index,
         }
+    ticket_name = f"001-{slug(title)}.md"
     return {
         "000-index.md": (
+            f"# Ticket set: {title}\n\n"
+            "<!-- Local backlog map only; do not publish this file as a delivery ticket. -->\n\n"
+            "**Source design:** <!-- Design bundle path. -->\n\n"
+            "## Queue\n\n"
+            "<!-- See ~/.agents/references/workflow.md. Plain repository-relative paths; '-' means unset. Reconcile evidence before selection; draft rows are not ready. -->\n\n"
+            "| ID | Ticket | Issue | Status | Depends on | Plan | Research | PR | Evidence |\n"
+            "|---|---|---|---|---|---|---|---|---|\n"
+            f"| 001 | context/issues/{slug(title)}/{ticket_name} | - | draft | - | - | - | - | - |\n\n"
+            "## Open decisions\n\n"
+            "- <!-- Record decisions that block truthful ticket drafts. -->\n"
+        ),
+        ticket_name: (
             f"# {title}\n\n"
-            "<!-- Local issue draft scaffold; no child concerns have been invented. -->\n\n"
-            "**Plan-step identity:** <!-- Local plan concern or step identity. -->\n"
-            "**Local draft path:** <!-- Path under context/issues/<concern>/. -->\n\n"
-            "## Summary\n\n"
-            "<!-- Plain-English overview of the goal, who it helps, and what will be accomplished. -->\n\n"
+            "<!-- Local issue draft metadata; remove this block when publishing.\n"
+            "Source design: design bundle or card path\n"
+            f"Local draft path: context/issues/{slug(title)}/{ticket_name}\n"
+            "-->\n\n"
+            "## Problem\n\n"
+            "<!-- Who is affected, what is difficult or missing, and why it matters. -->\n\n"
             "## Current behavior\n\n"
-            "<!-- Ground this in observed impact: what is missing, broken, or unhandled today? -->\n\n"
-            "## Intended behavior\n\n"
-            "<!-- Describe the target behavior, flow, or experience in plain English. -->\n\n"
-            "## Context & Sub-issues\n\n"
-            "- **Part of initiative:** <!-- Index issue or initiative name. -->\n"
-            "- **Depends on:** <!-- Prerequisite issue or none. -->\n"
-            "- **Blocks / Unblocks:** <!-- Subsequent issue or none. -->\n"
-            "- **Position:** <!-- Start now | Concurrent | Blocked. -->\n\n"
-            "## Expected outcome\n\n"
-            "- [ ] <!-- Observable outcome: what success looks like upon completion. -->\n\n"
-            "## Plan reference\n\n"
-            "- **Source Plan:** <!-- Durable source plan path or URL. -->\n"
-            "> **Note for implementers:** This plan is a **rough draft and guidance document**, not an unalterable specification. Use it for architectural context, guidance, and inspiration. Validate assumptions, inspect live code, and think through edge cases yourself during implementation.\n"
+            "<!-- What happens today and its observable effect. Mark unverified claims as user-reported. -->\n\n"
+            "## Desired behavior\n\n"
+            "<!-- Describe the observable user or system behavior this ticket should achieve. -->\n\n"
+            "## Context\n\n"
+            "<!-- Record scope boundaries and genuine behavior dependencies; do not prescribe implementation. -->\n\n"
+            "## Acceptance criteria\n\n"
+            "- [ ] <!-- Observable result a user or caller can verify. -->\n\n"
         ),
     }
 
