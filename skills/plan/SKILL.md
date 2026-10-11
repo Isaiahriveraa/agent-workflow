@@ -1,184 +1,104 @@
 ---
 name: plan
-description: Turn messy intent into a repository-grounded, dependency-aware, production-minded local plan — one concern at a time, re-checked against the current code. Clarify the goal, research the repo with concrete architectural evidence, choose durable but proportionate foundations, and write vertical-slice steps with observable acceptance. Use when the user wants a plan before implementation.
-argument-hint: "[I need you to plan]"
+description: Plan the next available behavior slice or an explicit ticket against current code. Use when the user says "plan this" or "plan the next slice"; stop for human plan review, never start implementation automatically.
+argument-hint: "[issue number, local ticket path, or ticket to plan]"
 shell-timeout: 20
 ---
 
-# Plan
+# Plan One Ticket
 
-Turn messy intent into a repository-grounded, dependency-aware, testable local plan. The plan is the product: an implementation agent with zero session context must be able to execute, test, and review it.
+Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
+
+Plan one selected ticket against the current repository. This is just-in-time technical planning, not another product-design or backlog-decomposition stage. The ticket owns the problem, current behavior, desired behavior, and acceptance criteria; the plan explains a safe, proportionate way to implement and verify that outcome.
 
 ## When to use
 
-- The user wants a plan before implementation, or hands you a fuzzy idea.
-- You need to decompose work into ordered, independently reviewable steps.
-- You want a local plan file an agent can follow.
+- A published GitHub issue or local ticket draft has been selected for implementation.
+- The user asks for a technical plan before starting a specific behavior change.
 
-## Workflow
+Do not plan an entire design bundle, initiative, or backlog. For unclear product behavior, return to `/design`; for a decision-record issue, use `/issue-discovery`. Keep a small fix's plan correspondingly short, not exempt from the selected ticket's approval gate.
 
-### 0. Preflight inputs: existing design artifact
+## Input and preflight
 
-Before clarifying or researching, check whether the user supplied or the repository contains a relevant design bundle under `context/designs/<slug>/` — a `00-index.md` plus one card per topic; older single-file `context/designs/*.md` designs are still valid inputs. If one exists, read its index first — it is the map — then the card this run will plan, and any card that one depends on; treat them as the design source of truth. Verify current-state evidence, desired behavior, citations, scope, and unresolved questions against the repository and the user's request; never silently trust an incomplete design, and never invent scope beyond it without stopping to ask. Carry verified decisions and open questions into the plan, and stop to ask when a material question remains unresolved.
-
-**One concern per run.** A design bundle with several topics is planned one topic at a time. This run plans exactly one: the first topic not yet built in the repository, unless the user names a different one. Find it by walking the index order and checking each card against the current code — never trust status labels or memory of earlier sessions. Re-check the chosen card where it meets the code; if reality has moved in a way the card does not cover, stop and ask before planning around a material difference. Later topics are planned in later runs, against the state their turn finds; do not write steps for them now. If every topic is already built, or the next one is unclear, stop and ask.
-
-This creates two valid paths:
-
-- **Design present** — reuse the artifact's relevant, current, cited, sufficient external evidence for the plan's decisions and do not invoke a redundant full `/research` pass. Run targeted supplemental research only for material gaps, stale or conflicting evidence, or missing decisions, and record what was supplemented and why.
-- **No design** — follow the mandatory repository and full external-evidence workflow below, including the `/research` protocol.
-
-The design artifact is an input, not a separate handoff deliverable: write the resulting plan under `context/plans/<slug>/` and make its repository and external evidence traceable there.
-### Design and issue handoff boundary
-
-`/plan` owns the execution plan between `/design` and `/to-issues`. It validates the design artifact against the repository and request, verifies and reuses sufficient evidence, and performs only targeted supplemental research for identified gaps. It then owns decomposition of the current concern into steps, dependency and parallelism reasoning, implementation-ready steps, and recording whether the plan is approved. Do not re-author the design's intent or design prose; preserve it as input while translating it into an executable plan. Do not leave decomposition or execution reasoning to `/to-issues`.
-
-
-### 1. Clarify intent
-
-Before planning, make sure you understand the goal. Ask the human to resolve anything materially ambiguous about the desired outcome, scope, or constraints. Do not turn vague wording directly into steps.
-
-### 2. Research the repository
-
-Ground every claim in the repo. Locate the files, modules, symbols, callers, configs, and tests involved; read representative implementation and test files. Identify relevant files and entry points without brittle line-number assumptions. Distinguish verified facts from assumptions; flag stale or conflicting architecture. Never invent files, symbols, or commands.
-
-### 3. Research proven external implementations and documentation
-
-Use the repository's `/research` protocol for a full pass when no relevant design artifact is available. When a relevant artifact is present, reuse its external evidence only after verifying that it is relevant, current, cited, and sufficient for the plan's decisions; otherwise perform targeted supplemental research for the identified gaps, stale or conflicting evidence, or missing decisions. In either path, produce and cite the evidence needed by the plan, and do not treat the design artifact as a substitute for verification.
-
-Search for existing, demonstrably working implementations of the requested behavior and authoritative API documentation, prioritizing official documentation, maintained reference implementations, standards, and release notes. Also investigate relevant libraries, frameworks, protocols, providers, constraints, and known failure modes.
-
-Treat external research as evidence, not a design substitute:
-
-- Prefer primary sources and currently maintained material; verify that an implementation is real, relevant, and demonstrably working rather than copying an unverified snippet.
-- Record URLs, source titles, access dates when useful, and the specific claim each source supports in a dedicated **External evidence** section or linked cited Markdown artifact.
-- Reconcile external findings with repository evidence. Note version mismatches, conflicting guidance, unproven assumptions, and why the selected approach fits this repository.
-- If a source is irrelevant, stale, inaccessible, or unsupported by evidence, exclude it and explain the exclusion when it affects a decision.
-- If web search finds no credible implementation or documentation, say so explicitly, mark the affected decision as uncertain, and stop to ask when the uncertainty is material; do not silently proceed as though evidence exists.
-
-The plan's repository evidence and external evidence sections must make it possible for an implementer to trace each material design choice to a source, whether that evidence was newly researched or verified and reused from the design artifact.
-
-### 4. Define current vs desired behavior
-
-- **Current behavior** — what exists today, referencing the relevant files, modules, or entry points without embedding code diffs.
-- **Desired behavior** — what must exist after, observably.
-- **Recommended approach & architecture** — explain the best way to approach the problem in clear, simple language (e.g. recommended algorithm, design patterns, data flow, how to optimize for the project's use case and goals). Think long term: why is this the optimal strategy? Never write code diffs or inline code implementations inside the plan; provide architectural clarity and let the implementer write the code against the live codebase.
-- **Reuse / conventions / architecture constraints** — existing concepts, contracts, invariants, or decisions to reuse; repo conventions (style, naming, layout, error handling, state); architecture constraints that bound the design.
-### 5. Decompose into deliverable capabilities (vertical slices)
-
-Break the work into independent, demonstrable deliverable capabilities. Balance separation of concerns with developer usability: avoid hyper-fragmenting a single feature into shallow, disjointed micro-tickets. Never slice by technical layer (e.g. separate tickets for database schema, API route, and UI component); horizontal layers cannot be verified end-to-end and force reviewers to evaluate incomplete systems without observable behavior.
-
-- **Concern scale:** This run plans a single concern — normally one design topic, or one self-contained piece of work agreed with the user when no design exists. A concern with several demonstrable capabilities can hold several step files (`01-*.md`, `02-*.md` in `00-index.md`); a single concern that needs 15+ steps is hyper-fragmented or should be split, so take that back to the user.
-- **Deliverable concern boundary:** Each step file must represent one cohesive, independently demonstrable capability that a developer can understand in 30 seconds, implement, test, and ship.
-- **Internal implementation phases vs. deliverable concerns:** Inside a step file, breaking down the tactical execution into sequential phases or sub-slices (e.g. `### Slice 1: Models`, `### Slice 2: Route`, `### Slice 3: UI`, `### Slice 4: Verification`) provides execution guidance. These sub-slices are **tactical checklist items for implementing that single step**, NOT separate deliverable steps or separate GitHub issues.
-
-### 6. Declare dependencies
-
-For each step, state its dependencies explicitly with a reason:
-
-- **Start now** — no blockers; can begin immediately.
-- **Concurrent** — independent of other steps; may run in parallel.
-- **Blocked** — cannot start or be verified until another step closes; name the blocker and why.
-
-Dependencies must be acyclic. Protect shared files: if two steps touch the same file or shared contract, they are sequential, not concurrent.
-
-### 7. Order as vertical slices
-
-Prefer behavior-complete vertical slices: "persist device registration end-to-end (API + UI)", not horizontal slices like "add table", "add repo", "add endpoint". When a developer completes a step, the capability should be demonstrable and verifiable. Do not force a vertical slice when the result is oversized or unreviewable.
-### 8. Stack only when criteria hold
-
-Stacking (running steps in sequence where each builds on the previous) is allowed only when **both** the dependency criterion (the later step genuinely depends on the earlier one) **and** the review criterion (each step is still independently reviewable) hold. Otherwise keep steps concurrent or split them.
-
-### 9. Specify tests, edge cases, acceptance
-
-Every step must state:
-
-- **Tests** — the behavior to verify and how.
-- **Edge cases** — real failure/empty/error/race states, not generic advice.
-- **Observable acceptance criteria** — binary, observable outcomes reachable through public interfaces.
-
-### 10. Assess architecture impact
-
-For each step, note its architecture impact using the deep-module vocabulary:
-
-- **Module** — the cohesive unit of behavior.
-- **Interface** — the public boundary.
-- **Implementation** — what lives behind the interface.
-- **Depth** — how much complexity the interface hides.
-- **Seam** — where the module can be tested or varied.
-- **Adapter** — a boundary translating between contracts.
-- **Leverage** — how much downstream work one decision makes easier.
-- **Locality** — how contained a change is.
-
-Every step file declares its interface impact on one line: `- **Interface impact:** none — why the boundary does not change` for the common case, or `new` / `changed` with what changes. A `new` or `changed` declaration also carries two non-empty blocks: **Interface sketch** (the signature plus the comment a caller would read; no implementation facts) and **Rejected alternative** (the second design considered and why it lost — design it twice, see `codebase-design`).
-
-### 11. Make durable, proportionate decisions
-
-For every material decision that affects users, data, public contracts, security, reliability, or future delivery, record:
-
-- **Foundation** — the smallest production-sound choice to make now.
-- **Why now** — the concrete user, operational, or correctness risk it prevents.
-- **Alternatives** — the realistic simpler and more elaborate options considered, and why neither is the better fit today.
-- **Guardrail** — the test, contract, boundary, migration path, or operational control that keeps the choice safe.
-- **Escalation signal** — a measurable trigger (usage, latency, failure rate, data volume, team need, or product requirement) that justifies extra complexity later.
-
-Do not confuse long-term thinking with premature abstraction or infrastructure. Prefer a clear interface, strong invariant, reversible migration, and observable verification over speculative scale systems. If the plan intentionally defers a material concern, name the owner/signal that will reopen it; never hide it as a non-goal.
-
-### 12. State non-goals
-
-List what is explicitly out of scope, so nobody expands the plan.
-
-## Local output
-
-Write the completed plan under the current worktree's `context/plans/<slug>/` directory, where `<slug>` names the concern this run planned. Create `context/` and `context/plans/` when absent. Any multi-step plan has a `00-index.md` at the root of the plan directory.
-
-Initialize the bundle from the repository generator before filling it:
+An explicit GitHub issue number/URL, local ticket path, or ID takes priority. Otherwise resolve the unique contextual initiative; ask only for material ambiguity. Reconcile its queue against current code, tests, and GitHub before running from the target git repository:
 
 ```sh
-python3 ~/.agents/scripts/new-artifact.py --type plans <slug>
+python3 ~/.agents/scripts/workflow.py select context/issues/<slug>/000-index.md
+# For an explicit ticket:
+python3 ~/.agents/scripts/workflow.py select context/issues/<slug>/000-index.md --target <id>
 ```
 
-Treat the generated `00-index.md` as the starting scaffold; do not replace it with an ad hoc template or write plan artifacts outside `context/plans/<slug>/`. Simple single-concern work may be one file.
+Resolve an explicit issue or ticket path to its queue ID; never fall back to another item if that target is blocked. Read the complete selected ticket and relevant published comments. Confirm a concrete problem, current behavior, desired behavior, and observable acceptance criteria. Selection requires `ready`, all dependencies `done`, and no active PR; the CLI cannot prove completion or safe parallel work. If tickets do not exist, choose the next not-implemented design outcome by dependencies and default priority and use `/skill:to-issues` to draft the necessary local ticket as preparation authorized by this plan request, not permission to publish. Review it against agreed intent before marking it ready; do not bypass unresolved behavior decisions. If no item is eligible, report the blocker instead of planning another scope.
 
-### 00-index.md fields
+Treat the ticket as the product contract. Verify its current-behavior claims against the repository where practical. If code contradicts the ticket, acceptance is ambiguous, or a material product/security decision is unresolved, stop and return the exact discrepancy instead of silently rewriting the ticket or choosing an outcome.
 
-- **Concern map** — the design card this plan covers, with its path and its place in the design's order, and the step(s) derived from it. When no design exists, the agreed concern and its step(s).
-- **Dependency graph** — start-now / concurrent / blocked between this concern's steps; order across topics stays in the design index.
-- **Step index** — ordered list of step files with one-line summaries.
+## Planning work
 
-### Implementation-ready step fields
+1. **Inspect the relevant code.** Trace the current behavior through the owning modules, callers, configuration, and tests. Cite real repository paths and symbols; distinguish verified facts from assumptions.
+2. **Find the smallest complete change.** Identify the behavior boundary, existing conventions to reuse, and the public seam through which the result can be tested. Keep the outcome end-to-end; do not split by database/API/UI layers. If it is too large for one cohesive review, return a narrow behavior split to `/to-issues` instead of planning a huge one-ticket PR.
+3. **Choose proportionate technical direction.** State the recommended approach and important tradeoff. For a consequential choice, record why it fits, a meaningful alternative, and any risk, guardrail, or signal that should trigger a revisit. Keep routine reversible choices brief. Reuse linked research; use `/skill:research` only for missing facts about this slice, skipping an external pass when evidence suffices. Re-evaluate technical overlap against active work now; a design's parallel candidates do not prove safety.
+4. **Define proof.** Map each ticket acceptance criterion to a test or observable verification. Include only real edge cases and relevant project-native checks.
+5. **Check interface impact.** Use the exact declaration format checked by `plan-lint.py`:
 
-Each step file provides clear architectural and tactical direction without writing code inside the plan:
+   ```markdown
+   - **Interface impact:** none — <why the boundary does not change>
+   ```
 
-- **Goal** — one clear sentence defining the objective.
-- **Relevant files & context** — files, modules, and symbols to touch, with location references (e.g. `src/server/auth.ts`) so implementers know where to look.
-- **Approach & technical strategy** — explain the best way to go about it in clear language (e.g., recommended algorithm, design pattern, data flow, how to optimize for the project's use case).
-- **Scope & Non-goals** — explicit **In-scope** boundaries vs. **Out-of-scope** non-goals.
-- **Architectural decisions & trade-offs** — long-term considerations: why this approach is chosen, what alternatives were rejected, and how it aligns with future project goals.
-- **Tests & edge cases** — behavior to verify and critical edge cases (failure, boundary, race conditions) for the implementer to handle.
-- **Acceptance criteria** — binary, observable outcomes reachable through public interfaces.
-- **Verification** — how to verify the step (test commands, checks, or observable results).
-- **Dependencies** — start-now / concurrent / blocked with reasons.
-- **Architecture impact** — Module/Interface/Implementation/Depth/Seam/Adapter/Leverage/Locality.
-- **Interface impact** — `none`, `new`, or `changed` for the boundary this step touches; `new` and `changed` carry the sketch and rejected alternative.
-- **Implementation sub-slices / checklist (optional)** — ordered tactical phases for executing this step (e.g., model -> endpoint -> UI -> smoke test). These provide execution clarity for the developer or agent, but remain internal checklist items within this single deliverable step.
-## Stop and ask
+   If the impact is `new` or `changed`, replace `none` with that value and add non-empty `**Interface sketch**` and `**Rejected alternative**` blocks. Follow `codebase-design`; avoid speculative architecture and unrelated cleanup.
+6. **Ask only for material decisions.** Small reversible implementation choices belong in the plan; user-visible, security-sensitive, irreversible, or architecture choices (as defined in `/skill:research`) need the user's decision. Read the linked research's **Decision needed from you** blocks first. An UNDECIDED architecture choice inside this ticket's scope stops planning until the user records a `**Chosen:**` answer, and the Technical approach follows that answer. An UNDECIDED choice outside the scope goes under Risks and open questions and stays undecided.
 
-Stop and ask the human before proceeding when a decision is **materially unresolved** — behavior, architecture, or security — and the plan would commit to one side without their input. Do not ask for trivial or reversible choices.
+## Local plan
+
+Initialize the plan bundle with the repository generator:
+
+```sh
+python3 ~/.agents/scripts/new-artifact.py --type plans "issue-<number>-<short-title>"
+```
+
+For a local ticket, use a stable slug based on its title. Write one plan at `context/plans/<slug>/00-index.md`. The plan must include:
+
+Write these gate fields exactly once as standalone lines, not list items or backticked values:
+
+```markdown
+**Ticket:** context/issues/<slug>/001-<topic>.md
+**Planned at:** <full commit SHA inspected>
+**In-scope files:** <comma-separated repo-relative file paths>
+**Plan status:** draft
+```
+
+Ticket must match the queue's Ticket path or recorded Issue exactly. Scope paths are literal files, not globs; include existing and new files whose behavior or contracts the plan relies on. Do not create an executable plan from uncommitted production changes that are absent from its intended base. Keep these additional sections proportional:
+
+- **Goal:** one sentence tied to the ticket's desired behavior;
+- **Current behavior:** verified code behavior and relevant locations;
+- **Desired behavior:** the ticket's observable outcome, without scope expansion;
+- **Relevant code and tests:** the existing modules, callers, and test seams involved;
+- **Technical approach:** the smallest complete change and material tradeoffs;
+- **Scope and non-goals:** boundaries for this implementation;
+- **Acceptance and verification:** how each ticket criterion will be proved;
+- **Risks and open questions:** only concrete risks or unresolved decisions;
+- **Interface impact:** `none`, `new`, or `changed` using the exact `plan-lint.py` declaration, with a non-empty sketch and rejected alternative when applicable;
+
+Plan status is `draft`, `approved`, or `blocked`; write `**Plan status:** approved` only after human approval.
+
+Do not create step files or split one ticket into separate deliverables. If execution needs several reviewable steps, use a short ordered checklist of end-to-end slices with the proof for each; do not split by technical layer or pre-plan other tickets. Keep plans under `context/plans/`; do not publish GitHub changes from this skill.
+
+## Review and handoff
+
+Run the repository's plan checks:
+
+```sh
+python3 ~/.agents/scripts/slop-lint.py context/plans/<slug>/
+python3 ~/.agents/scripts/plan-lint.py context/plans/<slug>/
+```
+
+Link the plan in the selected queue row's Plan cell using a plain repo-relative path. Present the ticket, plan path, repository evidence, technical choice, verification, and open risks, then stop awaiting human review. Set `**Plan status:** approved` only after the user approves it. Plan approval is not an implementation request and does not authorize a branch, worktree, commit, push, or PR.
+
+After feedback, refresh the plan, affected ticket/card, queue links, and evidence; material scope or code changes require renewed plan review. Implementation starts only on request through `/skill:implement` or `/skill:issue-delivery`. They find the matching approved linked plan and validate it against the actual execution base; never autostart them.
 
 ## Done when
 
-- Intent is clarified and recorded.
-- The plan covers a single concern — the first unbuilt design topic, or one self-contained piece of work agreed with the user — re-checked against the current code.
-- Every claim is grounded in repository and architectural evidence without brittle line numbers.
-- Concerns decompose by independent understand/implement/test/review/deliver.
-- Dependencies are explicit, acyclic, with start-now/concurrent/blocked reasons.
-- Steps are vertical slices, stacked only when dependency and review criteria hold.
-- Tests, edge cases, and observable acceptance are specified.
-- Architecture impact uses the full deep-module vocabulary.
-- Every material user-facing decision has a proportionate foundation, explicit tradeoff, guardrail, and escalation signal.
-- Non-goals are explicit.
-- Output is written under `context/plans/<slug>/`, with `00-index.md` for multi-step plans.
-- Prose passes the slop check (`python3 ~/.agents/scripts/slop-lint.py context/plans/<slug>/`); fix every hit except the deep-module vocabulary defined in `codebase-design`.
-- Interface-impact declarations pass the plan check (`python3 ~/.agents/scripts/plan-lint.py context/plans/<slug>/`); every `new` or `changed` step carries a non-empty sketch and rejected alternative.
-- The human has approved the plan.
+- Exactly one selected ticket has a concise plan grounded in the current repository.
+- The technical direction stays within the ticket's desired behavior and acceptance criteria.
+- Every acceptance criterion has observable proof, and interface impact is declared.
+- `slop-lint.py` and `plan-lint.py` pass, or any unavoidable exception is explicit.
+- The plan is marked approved only after explicit human approval.
