@@ -5,8 +5,8 @@ description: >-
   Invoke before every git commit, whether requested by the user or initiated
   by an agent. Run an informational pre-commit review gate, inspect the full
   working tree, separate unrelated concerns, split files by hunk when
-  necessary, present the exact commit plan, and require explicit user
-  approval before staging or committing anything.
+  necessary, consult the commit-pr-reviewer subagent for approval, and commit
+  only after it approves.
 ---
 
 # Atomic Commit Workflow
@@ -26,7 +26,7 @@ case the gate is skipped as already reviewed.
 Use `commit --no` to explicitly skip only the Phase 0 code-review gate.
 `commit --no-review` is an accepted descriptive alias. This opt-out must be
 intentional and must be reported in both the proposal and the final result.
-It does not bypass user approval, atomic grouping, staged-diff verification,
+It does not bypass the approval gate, atomic grouping, staged-diff verification,
 or any relevant checks.
 
 ## Core Rule
@@ -121,7 +121,7 @@ automatically.
 
 Present the code-review verdict and findings to the user. Do not auto-apply
 fixes or revisions and do not block the commit on the verdict. The review is input to the
-user's decision; the Phase 1 approval gate below remains the sole gate.
+user's decision; the Phase 1 approval gate below remains the sole gate for the commit plan.
 
 The user may:
 
@@ -151,8 +151,8 @@ Before staging, unstaging, committing, or modifying Git state:
    a mixed hunk and must be patch-split.
 8. Propose the most-split valid plan: one commit per inventory line, then merge
    only pairs that pass the Dependency test with a named, observed failure.
-9. Present the complete proposed commit structure to the user.
-10. Stop and wait for explicit approval.
+9. Write the complete proposed commit structure.
+10. Consult the commit-pr-reviewer subagent for approval (see Approval Gate).
 
 During Phase 1, NEVER run:
 
@@ -165,19 +165,19 @@ During Phase 1, NEVER run:
 
 Read-only Git commands are allowed.
 
-### Phase 2: Execute the Approved Plan
+### Phase 2: Execute the Reviewed Plan
 
-Only after the user explicitly approves the proposed structure:
+Only after the commit-pr-reviewer approves the exact proposed structure:
 
 1. Stage only the files or hunks assigned to the first commit.
 2. Verify the staged diff.
-3. Confirm the staged diff matches the approved story.
-4. Create the commit using the approved message.
-5. Repeat for each approved commit.
+3. Confirm the staged diff matches the reviewed story.
+4. Create the commit using the reviewed message.
+5. Repeat for each reviewed commit.
 6. Inspect the final repository state.
-7. Report the commits created and any remaining changes.
+7. Report the commits created, the reviewer's verdict, and any remaining changes.
 
-Approval applies only to the exact plan shown.
+Approval applies only to the exact plan reviewed.
 
 Return to Phase 1 when:
 
@@ -186,23 +186,13 @@ Return to Phase 1 when:
 * a commit message changes materially
 * new modifications appear
 * staging reveals hidden mixed concerns
-* the approved plan cannot be executed safely
+* the reviewed plan cannot be executed safely
 
 ## Approval Gate
 
-Do not interpret vague responses as approval.
-
-Valid approval includes clear language such as:
-
-* `approved`
-* `proceed`
-* `commit this`
-* `execute the plan`
-* `yes, create these commits`
-
-Discussion, questions, corrections, or partial agreement are not approval.
-
-Never bypass the approval gate because the changes appear safe or obvious.
+Before any staging or committing, consult the `commit-pr-reviewer` subagent on
+the Proposed Commit Plan. Stage and commit only after it approves that exact
+plan. Never skip this because the changes look safe or obvious.
 
 ## Repository Inspection
 
@@ -321,11 +311,11 @@ the broken check, split.
 
 ## Mixed Files and Hunk-Level Staging
 
-A file whose changes all belong to one approved concern may be staged as a
+A file whose changes all belong to one reviewed concern may be staged as a
 whole, even when it contains multiple Git hunks. Do not split such hunks
 merely because there is more than one hunk.
 
-When a file contains multiple independent concerns, or when the approved plan
+When a file contains multiple independent concerns, or when the reviewed plan
 deliberately selects only part of a file, hunk-level staging is required:
 
 1. Inspect each relevant hunk.
@@ -566,12 +556,12 @@ Message:
 - Total added: +<total added>
 - Total removed: -<total removed>
 
-Approval required before staging or committing.
+commit-pr-reviewer approval required before staging or committing.
 ```
 
 For a single commit, still show the full proposal.
 
-Do not output only commit messages. The user must be able to review exactly
+Do not output only commit messages. The reviewer must be able to check exactly
 which files and hunks belong to each commit.
 
 Every inventory line must appear in exactly one commit, and every commit must
@@ -594,8 +584,8 @@ git diff --cached
 
 Verify:
 
-* every staged line belongs to the approved commit
-* no approved line is missing
+* every staged line belongs to the reviewed commit
+* no reviewed line is missing
 * no unrelated file is staged
 * no secret or generated artifact is included accidentally
 * the message accurately describes the staged diff
@@ -654,7 +644,7 @@ Before amending:
 1. inspect the existing commit
 2. inspect the new staged changes
 3. show the proposed amended result
-4. obtain explicit approval
+4. consult the commit-pr-reviewer subagent for approval of the amended plan
 
 Never amend a commit that may already be shared or pushed without warning the
 user about history rewriting.
@@ -663,13 +653,13 @@ user about history rewriting.
 
 Never:
 
-* commit without explicit approval
-* stage files before presenting the plan
+* commit without the commit-pr-reviewer's approval of the exact plan
+* stage files before the plan has been reviewed
 * stage the entire repository with `git add .` or `git add -A` unless every
-  change was inspected and the approved plan explicitly includes all of them
+  change was inspected and the reviewed plan explicitly includes all of them
 * use `--no-verify` unless explicitly authorized
 * include secrets, credentials, `.env` files, or private keys
-* modify source code merely to make commit grouping easier without approval
+* modify source code merely to make commit grouping easier without the user's approval
 * discard working-tree changes
 * reset, rebase, squash, force-push, or rewrite history unless explicitly
   requested
@@ -680,7 +670,7 @@ Never:
 
 ## Handling Existing Staged Changes
 
-Existing staged changes are not automatically approved.
+Existing staged changes are not automatically accepted into a plan.
 
 Inspect them separately.
 
@@ -688,7 +678,7 @@ If the staged index mixes concerns:
 
 1. explain the violation
 2. show the corrected grouping
-3. request approval
+3. consult the commit-pr-reviewer subagent for approval of the corrected plan
 4. only then unstage or restage the necessary files or hunks
 
 Do not destroy the user’s staging intent without showing what will change.
@@ -741,7 +731,7 @@ this workflow once per branch.
 
 Stop without committing when:
 
-* the user has not approved the plan
+* the commit-pr-reviewer has not approved the exact plan
 * a subject or Purpose contains a conjunction and no Indivisible exception is
   claimed
 * two responsibilities are grouped with no named, observed dependency
@@ -749,7 +739,7 @@ Stop without committing when:
 * the diff cannot be understood confidently
 * files contain secrets
 * changes cannot be separated safely
-* the index differs from the approved plan
+* the index differs from the reviewed plan
 * required verification fails
 * new changes appear during execution
 * committing would require destructive or history-rewriting operations
@@ -772,7 +762,7 @@ The workflow is complete only when:
 * each message accurately describes its exact staged diff
 * one-concern files were staged as whole files when appropriate
 * mixed-concern and deliberately partial files were separated by hunk
-* the user approved the structure before Git state changed
+* the commit-pr-reviewer approved the exact structure before Git state changed
 * relevant verification was performed
 * no unrelated changes were committed
 * remaining working-tree changes were reported
