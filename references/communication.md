@@ -20,7 +20,7 @@ Keep it proportional: no walls of text, no narrating routine syntax or line-by-l
 
 **Implementation** — What Changed → Before → After Behavior → up to 3 Decisions → Failure Boundaries → Verification Evidence → (code on request). Routine changes: Outcome, Verification, landmark file.
 
-**Research** — Question → Conclusion → Key Evidence → Options & Tradeoffs → Recommendation → Remaining Uncertainty.
+**Research** — Question → Conclusion → Key Evidence → Options & Tradeoffs → Suggestion (labeled as not a decision) → Decisions Needed From You (one question per UNDECIDED architecture choice) → Remaining Uncertainty.
 
 ## Tests
 
