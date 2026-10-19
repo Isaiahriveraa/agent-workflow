@@ -112,7 +112,7 @@ PR Breakdown:
    - Concern: <one-sentence description of the concern>
    ...
 
-Draft PR Description(s):
+Draft PR Description(s) (include `## Stack Context` only for Strategy 2 PRs):
 --------------------------------------------------------------------------------
 ## Rationale
 <One sentence: what this is for, or the failure it prevents.> <One more sentence: why this approach.>
@@ -157,11 +157,14 @@ paragraphs written under them.
   Mechanism is already in the diff — depth is what review is for, not what the description is for.
 - **Respect the reader's attention.** If a detail only matters to someone editing those lines, it
   belongs in the code or the review thread. Overload costs more than a missing sentence.
-- **`## Files` is never needed** (the Files Changed tab has it), and `## Stack Context` is one line.
+- **`## Files` is never needed** (the Files Changed tab has it).
+- **`## Stack Context` is only for stacked PRs** (Strategy 2). Omit it for a single PR or an independent worktree PR; when it applies, it is one line.
 - **Length is the split detector.** If it will not fit in ~150 words, or needs "Also included…", the
   PR holds a second concern — split it instead of documenting it.
 
 ### PR Description Template (Default)
+
+Use this for every PR. Add `## Stack Context` (below) only when the PR is part of a stack.
 
 ```markdown
 ## Rationale
@@ -177,7 +180,13 @@ approach.>
 ## Verification
 
 - `<test name>` — the behavior it locks in
+```
 
+### Stack Context (Strategy 2 only)
+
+Append this section only to a PR created by `gh stack`. Omit it for a single PR or an independent worktree PR.
+
+```markdown
 ## Stack Context
 
 - #<prev> ← this ← #<next> · <N> source lines
