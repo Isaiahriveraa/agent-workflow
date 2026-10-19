@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # new-worktree.sh — create a worktree in the repo's organized worktree home.
 #
-# RULE: worktrees live under <repo-parent>/<repo-name>-worktrees/, following the branch path:
+# RULE: reuse the main checkout's parent when named <project>-worktrees;
+# otherwise use <repo-parent>/<repo-name>-worktrees/, following the branch path:
 #   feat/merch-page      → <repo>-worktrees/feat/merch-page
 #   prototype/checkout   → <repo>-worktrees/prototype/checkout
 # The branch prefix is the organizing folder. New branch names must follow
@@ -14,7 +15,7 @@
 #
 #   <branch>       branch to create (new or existing). Required.
 #   [start-point]  commit/ref to branch from (default: HEAD). Required when creating a new branch.
-#   [dest-dir]     override the worktree directory (default: <repo-parent>/<repo-name>-worktrees/<branch>).
+#   [dest-dir]     override the worktree directory (default: the project worktree home + <branch>).
 #
 # examples:
 #   new-worktree.sh feat/merch-page origin/main
@@ -45,7 +46,10 @@ REPO_PARENT=$(dirname "$REPO_ROOT")
 BRANCH_PATH=$(echo "$BRANCH" | sed 's#^refs/heads/##')
 
 if [ -z "$DEST" ]; then
-  DEST="$REPO_PARENT/$(basename "$REPO_ROOT")-worktrees/$BRANCH_PATH"
+  case "$(basename "$REPO_PARENT")" in
+    *-worktrees) DEST="$REPO_PARENT/$BRANCH_PATH" ;;
+    *) DEST="$REPO_PARENT/$(basename "$REPO_ROOT")-worktrees/$BRANCH_PATH" ;;
+  esac
 fi
 
 if [ -e "$DEST" ]; then

@@ -9,7 +9,8 @@
 # with lowercase words joined by hyphens (see branch-name-rules.sh; existing
 # branches are not name-checked). Environment words (production, staging, prod)
 # are allowed in IUGA branch names; artifact words (prototype, plan) are not.
-# The destination defaults to <repo-parent>/<repo-name>-worktrees/<branch path>.
+# Reuse the main checkout's parent when named <project>-worktrees; otherwise
+# the destination defaults to <repo-parent>/<repo-name>-worktrees/<branch path>.
 #
 # Beyond `git worktree add`, the script provisions what the checkout needs to
 # run immediately: submodules, dependencies, the shared context/ folder, the
@@ -74,7 +75,12 @@ fi
 DEV_CONTEXT="$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$DEV_CONTEXT")"
 
 BRANCH_PATH="$(printf '%s' "$BRANCH" | sed 's#^refs/heads/##')"
-[ -n "$DEST" ] || DEST="$REPO_PARENT/$(basename "$REPO_ROOT")-worktrees/$BRANCH_PATH"
+if [ -z "$DEST" ]; then
+  case "$(basename "$REPO_PARENT")" in
+    *-worktrees) DEST="$REPO_PARENT/$BRANCH_PATH" ;;
+    *) DEST="$REPO_PARENT/$(basename "$REPO_ROOT")-worktrees/$BRANCH_PATH" ;;
+  esac
+fi
 DEST="$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$DEST")"
 
 [ ! -e "$DEST" ] || {
