@@ -56,3 +56,8 @@ Verify before claiming completion:
 - Keep using tools until answer is grounded.
 - Before concluding: confirm no pending work, features work, tests pass (or gaps stated), known errors handled.
 - Final report: changed files, verification results, remaining risks.
+
+<!-- claude-reflect: learned rules (saved from the band; edit freely) -->
+## Learned rules
+- Give instructions one step at a time instead of long walkthroughs with many commands and bullet points.
+<!-- end claude-reflect -->
