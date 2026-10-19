@@ -57,6 +57,20 @@
       "type": "file"
     },
     {
+      "source": "~/.cursor/AGENTS.md",
+      "target": "~/.agents/AGENTS.md",
+      "tier": 1,
+      "tool": "cursor-cli",
+      "type": "file"
+    },
+    {
+      "source": "~/.cursor/rules/hub-contract.mdc",
+      "target": "~/.agents/adapters/cursor-cli/rules/hub-contract.mdc",
+      "tier": 1,
+      "tool": "cursor-cli",
+      "type": "file"
+    },
+    {
       "source": "~/.config/opencode/commands",
       "target": "~/.agents/commands",
       "tier": 1,
@@ -104,7 +118,9 @@
     "~/.claude/settings.json",
     "~/.claude/hooks.json",
     "~/.codex/config.toml",
-    "~/.codex/skills/.system/"
+    "~/.codex/skills/.system/",
+    "~/.cursor/cli-config.json",
+    "~/.cursor/skills-cursor/"
   ],
   "validated_local_contracts": [
     {
@@ -124,7 +140,8 @@
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
     "antigravity_skills": "Symlinked to ~/.gemini/skills/ and ~/.gemini/antigravity-cli/plugins/hub/skills/ — both point to ~/.agents/skills/.",
-    "pi_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed. Prompt templates wired via settings prompts array (~/.agents/commands)."
+    "pi_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed. Prompt templates wired via settings prompts array (~/.agents/commands).",
+    "cursor_skills": "Per-skill symlinks bridged into ~/.cursor/skills/ via sync.sh gen-cursor-skills. Cursor's own built-in skills stay untouched in ~/.cursor/skills-cursor/."
   },
   "capabilities": {
     "claude-code": {
@@ -181,6 +198,40 @@
       "approvals": {
         "status": "native",
         "contract": "Tool-native sandbox and approval controls"
+      },
+      "session_continuity": {
+        "status": "bridged",
+        "contract": "Shared continuity helpers write worktree-local runtime state and context handoffs"
+      }
+    },
+    "cursor-cli": {
+      "agents_entrypoint": {
+        "status": "bridged",
+        "contract": "~/.cursor/AGENTS.md -> ~/.agents/AGENTS.md"
+      },
+      "skills": {
+        "status": "bridged",
+        "contract": "Per-skill symlinks in ~/.cursor/skills/ generated from ~/.agents/skills via sync.sh gen-cursor-skills"
+      },
+      "commands": {
+        "status": "unsupported",
+        "contract": "No Cursor-native command bridge; skills reference hub scripts by path"
+      },
+      "agents": {
+        "status": "unsupported",
+        "contract": "Hub agent definitions are not mapped to Cursor-native subagents"
+      },
+      "hooks": {
+        "status": "unsupported",
+        "contract": "Cursor CLI supports hooks.json, but this repo does not manage a Cursor hook bridge yet"
+      },
+      "mcp": {
+        "status": "native",
+        "contract": "Tool-native MCP support when configured by the operator"
+      },
+      "approvals": {
+        "status": "native",
+        "contract": "Tool-native permission and approval controls in ~/.cursor/cli-config.json"
       },
       "session_continuity": {
         "status": "bridged",
@@ -261,6 +312,15 @@
     }
   },
   "generated": [
+  {
+    "tool": "cursor-cli",
+    "target": "~/.cursor/skills",
+    "source": "~/.agents/skills",
+    "type": "adapter-output",
+    "generator": "sync.sh gen-cursor-skills",
+    "surface": "skills",
+    "note": "Cursor CLI bridges hub skills as per-skill symlinks into ~/.cursor/skills/. Cursor's built-in skills live in ~/.cursor/skills-cursor/ and are untouched. Run 'sync.sh gen-cursor-skills' or 'sync.sh migrate' after adding new hub skills."
+  },
   {
     "tool": "opencode",
     "target": "~/.config/opencode/agents",

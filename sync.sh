@@ -13,11 +13,13 @@ summary_claude_code_status="OK"
 summary_codex_cli_status="OK"
 summary_opencode_status="OK"
 summary_antigravity_status="OK"
+summary_cursor_cli_status="OK"
 
 summary_claude_code_surfaces=""
 summary_codex_cli_surfaces=""
 summary_opencode_surfaces=""
 summary_antigravity_surfaces=""
+summary_cursor_cli_surfaces=""
 
 ok()   { echo -e "  ${GREEN}OK${NC}    $1"; }
 fail() { echo -e "  ${RED}FAIL${NC}  $1"; }
@@ -53,11 +55,13 @@ reset_summary() {
     summary_codex_cli_status="OK"
     summary_opencode_status="OK"
     summary_antigravity_status="OK"
+    summary_cursor_cli_status="OK"
 
     summary_claude_code_surfaces=""
     summary_codex_cli_surfaces=""
     summary_opencode_surfaces=""
     summary_antigravity_surfaces=""
+    summary_cursor_cli_surfaces=""
 }
 
 record_surface_status() {
@@ -90,6 +94,12 @@ record_surface_status() {
                 summary_antigravity_status="FAIL"
             fi
             ;;
+        cursor-cli)
+            summary_cursor_cli_surfaces=$(append_unique_surface "$summary_cursor_cli_surfaces" "$surface")
+            if [ "$status" = "FAIL" ]; then
+                summary_cursor_cli_status="FAIL"
+            fi
+            ;;
     esac
 }
 
@@ -99,6 +109,7 @@ tool_label() {
         codex-cli) echo "Codex CLI" ;;
         opencode) echo "OpenCode" ;;
         antigravity) echo "Antigravity" ;;
+        cursor-cli) echo "Cursor CLI" ;;
         *) echo "$1" ;;
     esac
 }
@@ -109,6 +120,7 @@ tool_status_value() {
         codex-cli) echo "$summary_codex_cli_status" ;;
         opencode) echo "$summary_opencode_status" ;;
         antigravity) echo "$summary_antigravity_status" ;;
+        cursor-cli) echo "$summary_cursor_cli_status" ;;
         *) echo "FAIL" ;;
     esac
 }
@@ -119,6 +131,7 @@ tool_surfaces_value() {
         codex-cli) echo "$summary_codex_cli_surfaces" ;;
         opencode) echo "$summary_opencode_surfaces" ;;
         antigravity) echo "$summary_antigravity_surfaces" ;;
+        cursor-cli) echo "$summary_cursor_cli_surfaces" ;;
         *) echo "" ;;
     esac
 }
@@ -144,6 +157,7 @@ print_summary() {
     print_summary_line "codex-cli"
     print_summary_line "opencode"
     print_summary_line "antigravity"
+    print_summary_line "cursor-cli"
 }
 
 usage() {
@@ -155,6 +169,7 @@ Commands:
   repair                    Repair all manifest-declared symlinks
   migrate                   Repair symlinks, regenerate adapter outputs, then verify
   gen-agents                Backward-compatible alias for gen-opencode-agents
+  gen-cursor-skills         Generate Cursor CLI skills from hub skills
   gen-opencode-agents       Generate OpenCode agents from hub agents
   gen-antigravity-commands  Generate Antigravity command TOML from hub commands
   gen-antigravity-agents    Generate Gemini-compatible agents from hub agents
@@ -290,7 +305,28 @@ def fail(message):
 if not os.path.exists(target):
     fail(f"{surface} target missing: {target}")
 
-if tool == "opencode" and surface == "agents":
+if tool == "cursor-cli" and surface == "skills":
+    if not os.path.isdir(target):
+        fail(f"cursor skills directory missing: {target}")
+    missing = []
+    wrong = []
+    bridged = 0
+    for entry in sorted(os.listdir(source)):
+        skill_dir = os.path.join(source, entry)
+        if not os.path.isdir(skill_dir) or not os.path.isfile(os.path.join(skill_dir, "SKILL.md")):
+            continue
+        bridged += 1
+        link = os.path.join(target, entry)
+        if not os.path.islink(link):
+            missing.append(entry)
+        elif os.readlink(link) != skill_dir:
+            wrong.append(entry)
+    if missing:
+        fail(f"missing skill bridges: {', '.join(missing[:5])}")
+    if wrong:
+        fail(f"bridges pointing elsewhere: {', '.join(wrong[:5])}")
+    print(f"{bridged} hub skills bridged into {target}")
+elif tool == "opencode" and surface == "agents":
     expected = [os.path.basename(path) for path in sorted(glob.glob(os.path.join(source, "*.md")))]
     missing = [name for name in expected if not os.path.exists(os.path.join(target, name))]
     if missing:
@@ -338,6 +374,7 @@ run_generator_command() {
         "sync.sh gen-antigravity-commands") cmd_gen_antigravity_commands ;;
         "sync.sh gen-antigravity-agents") cmd_gen_antigravity_agents ;;
         "sync.sh gen-opencode-skills") cmd_gen_opencode_skills ;;
+        "sync.sh gen-cursor-skills") cmd_gen_cursor_skills ;;
         *)
             echo "Unknown generator command in manifest: $1" >&2
             return 1
@@ -680,6 +717,54 @@ print(f"\nDone. {added} skills registered in {lock_path}")
 PYEOF
 }
 
+cmd_gen_cursor_skills() {
+    echo "Bridging hub skills into Cursor CLI skill directory..."
+    echo ""
+
+    HUB="$HUB" HOME="$HOME" python3 <<'PYEOF'
+import os
+
+hub = os.environ["HUB"]
+home = os.environ["HOME"]
+cursor_skills = os.path.join(home, ".cursor", "skills")
+hub_skills = os.path.join(hub, "skills")
+
+os.makedirs(cursor_skills, exist_ok=True)
+
+created = 0
+repaired = 0
+skipped = []
+
+for entry in sorted(os.listdir(hub_skills)):
+    skill_dir = os.path.join(hub_skills, entry)
+    if not os.path.isdir(skill_dir):
+        continue
+    if not os.path.isfile(os.path.join(skill_dir, "SKILL.md")):
+        continue
+
+    link = os.path.join(cursor_skills, entry)
+    if os.path.islink(link):
+        if os.readlink(link) == skill_dir:
+            continue
+        os.remove(link)
+        os.symlink(skill_dir, link)
+        print(f"  Repaired: {entry} -> {skill_dir}")
+        repaired += 1
+    elif os.path.exists(link):
+        skipped.append(entry)
+        continue
+    else:
+        os.symlink(skill_dir, link)
+        print(f"  Linked: {entry} -> {skill_dir}")
+        created += 1
+
+for entry in skipped:
+    print(f"  Skipped (non-symlink already exists): {entry}")
+
+print(f"\nDone. {created} linked, {repaired} repaired, {len(skipped)} skipped in {cursor_skills}")
+PYEOF
+}
+
 cmd_gen_opencode_agents() {
     local target_dir="$HOME/.config/opencode/agents"
     local free_flag="${OPENCODE_FREE_MODELS:-0}"
@@ -916,5 +1001,6 @@ case "${1:-}" in
     gen-opencode-skills)       cmd_gen_opencode_skills ;;
     gen-antigravity-commands)  cmd_gen_antigravity_commands ;;
     gen-antigravity-agents)    cmd_gen_antigravity_agents ;;
+    gen-cursor-skills)         cmd_gen_cursor_skills ;;
     *)                         usage ;;
 esac

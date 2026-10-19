@@ -1,0 +1,6 @@
+---
+description: Follow the shared agent hub's operating contract.
+alwaysApply: true
+---
+
+Before acting in a session, read `~/.agents/AGENTS.md` and follow its operating contract. For work inside a repository, also read applicable `AGENTS.md` instructions from that repository.
