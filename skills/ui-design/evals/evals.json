@@ -1,0 +1,47 @@
+{
+  "skill_name": "ui-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review a proposed browser audio player for everyday podcast listeners. The designer wants realistic metal volume knobs that only rotate by dragging, no visible value, and glowing unlabeled playback icons. Give a concise interaction design recommendation, not code. Keep a distinctive visual style if possible, and explain what would need testing.",
+      "expected_output": "Recommend recognizable labeled playback controls and an accessible volume control with an understandable value and keyboard access. Distinguish useful visual depth from mandatory realism; retain styling only where behavior and contrast stay clear. Identify real-user and device/assistive-technology checks rather than claiming intuition is proven.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Review a settings screen for a general-audience document app. Notification switches change visually but only persist after a tiny Save link at the bottom. The document library uses a photorealistic filing cabinet with drawer dragging as the only way to reach files. Make the experience feel familiar without making it bland. Give behavior, feedback, recovery, and verification recommendations; do not write code.",
+      "expected_output": "Resolve the mismatch between immediate-looking switches and deferred saving, preserve accurate pending/success/failure state, and make saving clear if retained. Reuse file/folder familiarity without requiring drawer physics or drag-only navigation. Include keyboard/touch alternatives, suitable recovery, explicit audience assumptions, and human validation limits.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "This is a copy-only review for first-year college students writing their first persuasive paragraph. The assignment page says 'Unlock your limitless potential on your educational journey' and the button says 'Continue', but it submits the final answer. Feedback currently says 'Oops! Try harder.' Recommend wording and explain what you would verify. Do not change the layout or add animation. Do not assume a deadline or grade policy.",
+      "expected_output": "Use the reference index to select audience-and-wording and relevant critique guidance, without loading unrelated motion guidance. Replace promotional filler with the task and meaningful explanation; label final submission honestly. Offer feedback conditional on observable work rather than inventing performance. Preserve unknown policy facts and propose student comprehension checks without claiming validation.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "For a student study dashboard, propose a drawer transition inspired by Rauno or Emil. No specific demo has been inspected and I have not approved either style. Rapidly closing and reopening the drawer currently leaves it stuck. Give a design recommendation, not code, and identify which references you need.",
+      "expected_output": "Route to motion-and-transitions and the existing Impeccable playbook, familiar-interactions for behavior, and approved-examples for the candidate inspiration. Prioritize correct interruption, immediate feedback, focus, and reduced-motion behavior over decorative travel. Keep candidate styles proposed, identify inspection gaps, and do not claim a live demo or human approval was observed.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Critique a desktop comparison dashboard for warehouse managers. Three peer facilities use equal-weight cards, each with throughput, missed orders, and a deadline. The design system uses a centered heading, two accent colors with distinct roles, and compact tables beside comfortable forms. No usability failure has been observed. Should I pick one winning card, hide two figures, and enforce one density? Give guidance, not code, and distinguish hypotheses from defects.",
+      "expected_output": "Do not manufacture a winner or enforce one figure, accent, or density across unrelated surfaces. Rank facts by the manager's task; a deadline or exception may be primary. Preserve meaningful comparisons and established tokens. Treat centering and equal cards as contextual choices, and propose evidence-based checks without inventing observed failures.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Review a subscription form design, not an implementation. Validation clears all fields, the total price appears only in a tooltip, the annual plan is preselected without explaining the commitment, cancellation is hidden behind three unrelated screens, and every field change opens a confirmation dialog. A failed payment still displays Saved. Explain the smallest behavior changes and the checks you would perform; do not invent a refund policy or claim to have tested the flow.",
+      "expected_output": "Preserve input, reveal constraints and full costs before commitment, disclose the selected plan clearly, make cancellation reachable, and use safeguards proportional to the risk rather than confirming every edit. Distinguish pending, successful, and failed payment states truthfully. Propose failure and recovery checks while keeping unknown policies and unperformed tests explicit.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Our summary header clips German labels and Arabic names at enlarged text sizes because each summary is limited to two lines. The designer proposes smaller text, deleting essential deadlines, and mirroring every icon for Arabic. Give a design-only critique that keeps all supported languages and essential actions usable. No app or screenshots are available.",
+      "expected_output": "Remove arbitrary line limits, allow wrapping or regrouping, and retain essential deadlines and actions. Check zoom, enlarged text, realistic translations, and coherent visual/keyboard/assistive-technology reading order. Support right-to-left direction without indiscriminately mirroring logos or nondirectional media. Report all rendered behavior as unverified because no app or screenshots were supplied.",
+      "files": []
+    }
+  ]
+}

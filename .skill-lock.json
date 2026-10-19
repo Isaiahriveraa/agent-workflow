@@ -1,6 +1,13 @@
 {
   "version": 3,
   "skills": {
+    "ui-design": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/ui-design/SKILL.md",
+      "skillPath": "skills/ui-design/SKILL.md",
+      "skillFolderHash": "e6396fbe998abac09c6a307bf0a3966d46d4abd7"
+    },
     "cancel": {
       "source": ".agents",
       "sourceType": "hub",
