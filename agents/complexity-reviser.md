@@ -25,14 +25,14 @@ For each finding:
 
 ## Revision Moves
 
-- **Pass-through method or shallow wrapper** → merge it into the real call, or give it behavior worth its interface; an identity wrapper is deleted.
+- **Pass-through method or shallow wrapper** → remove indirection only when no useful policy, isolation, translation, or contract is lost. Do not invent new behavior to justify keeping a wrapper.
 - **Information leakage** → keep one piece of knowledge in one module: merge the classes, or move the shared knowledge behind a single interface.
-- **Leaked sequencing** → callers must not need to know the order of calls or manage a lifecycle: fold the sequence into one call or into module-owned state.
+- **Leaked sequencing** → move accidental ordering into the owner when safe; preserve required transaction, streaming, and resource lifecycles.
 - **Overexposure** → keep the common case free of rare-feature details: compute defaults instead of exporting knobs; put rare variants behind separate methods.
 - **Repetition** → execute the snippet once; extract only when the contract is stable (duplication beats the wrong abstraction).
 - **Special-general mixture** → separate the special-purpose code and pull it up to the layer that owns the special case.
 - **Conjoined methods** → merge them into one method that completes the job.
-- **Pull complexity downward** → prefer a simple interface over a simple implementation: handle ordinary edge cases inside (a missing lookup returns empty, deleting something already gone succeeds, an out-of-range request is clamped) instead of exporting errors callers must handle.
+- **Pull complexity downward** → simplify ordinary cases only where the existing domain contract allows it. Never turn invalid business values, unauthorized access, or conflicting writes into silent success; cleanup must preserve observable errors.
 - **Hard to describe** → simplify the interface until a short caller-facing comment carries it.
 - **Comment repeats the code or leaks implementation facts** → rewrite it to say what is not obvious, only for code this change touches.
 

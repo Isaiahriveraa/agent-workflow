@@ -36,15 +36,15 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 | # | Finding | Signal | Action |
 |---|---|---|---|
 | 1 | Dead code | Unused export, parameter, flag, or config key; unreachable branch; orphaned helper | Delete it |
-| 2 | Speculative generality | One caller behind an abstraction; unused options; an interface with one implementation | Inline or delete; extraction waits for the Rule of Three (AGENTS.md **One source of truth**) |
+| 2 | Speculative generality | Unused options or abstractions with no present ownership, isolation, translation, or testability purpose | Inline or remove only when no useful contract is lost; one caller or production adapter is not by itself a defect (AGENTS.md **One source of truth**) |
 | 3 | Shallow wrapper | The deletion test: removing it loses no behavior, only indirection | Delete it; call the real thing |
-| 4 | Duplicated logic | The same behavior in two places | Point both at one shared helper only when the contract is stable; callers needing flags keep their duplication (duplication beats the wrong abstraction) |
+| 4 | Duplicated logic | The same behavior in two places | Share only when meaning and ownership match and the contract is stable; caller-specific special cases can signal the wrong abstraction, but meaningful domain options are valid |
 | 5 | Comments | Restates the code, stale, or carries jargon/slop — an AI-slop word (see `scripts/slop-lint.py`), a term only this session uses, an unexplained abbreviation | Delete the restating ones; keep or sharpen only comments explaining non-obvious *why* — and rewrite them in plain words (AGENTS.md **Code explains itself**) |
 | 6 | Names | Vague, cryptic, misleading, invented acronym, or jargon the ordinary word already covers | Rename to the project's domain term or the plain word; no shorthand a newcomer cannot read |
 | 7 | Module shape | Fat function or file; feature logic in a general module; wrong layer | Split, move, or deepen the interface (AGENTS.md **Architecture is enforced**; use `codebase-design` vocabulary) |
 | 8 | Cohesion and coupling | Things that change together live apart; unrelated things bundled; imports crossing layers the wrong way | Move them together; dependencies point one way |
 | 9 | Information leakage | The same knowledge — a format, a rule, an ordering, a representation — encoded in two modules, or an interface exposing what should stay internal | Move the knowledge behind one interface; callers learn one thing, not the data's shape (AGENTS.md **One source of truth**) |
-| 10 | Leaked sequencing | Callers must invoke methods in a given order, or manage a lifecycle (init before use, open before close, free after use) the module could own itself | Fold the sequence into one call or let the module advance its own state (see `codebase-design` → Designing a new module) |
+| 10 | Leaked sequencing | Callers must manage ordering or a lifecycle the module could safely own | Fold accidental sequencing into the owner; preserve required transaction, streaming, and resource lifecycles (see `codebase-design` → Designing a new module) |
 | 11 | Bespoke helper | One shared helper already does this | Use the shared one (AGENTS.md **One source of truth**) |
 | 12 | Defensive padding | Fallback for an unreachable state; broad catch; re-validation inside a trusted boundary | Remove it (AGENTS.md **YAGNI**) |
 | 13 | Unrequested polish | Anything in the diff serving a request other than this one | Remove it from the diff; queue the idea |
@@ -53,9 +53,9 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 
 ## Simplicity With Flexibility
 
-Shape the code so adding the next thing extends it instead of forcing a rewrite — without building that next thing now. Concretely: new behavior sits behind a small interface, so a sibling case becomes a new implementation beside it rather than conditionals threaded through existing code; the feature's changes land in one module, not five; dependencies point one way.
+Keep related decisions with their owner so a likely change does not require callers to reconstruct the rule. Extending the existing module can be simpler than adding another implementation. Compare caller knowledge and change locality, not file count or whether a pattern permits extensions.
 
-This is not license for speculative layers. Options, flags, hooks, and abstractions for cases nobody asked for are the speculative-generality row (AGENTS.md **YAGNI**). The test is the *next change*: name the most plausible next requirement and ask where it lands. "A new module beside this one" means the shape is right; "scattered edits across the codebase" or "throw it away and start over" means fix the shape now, while the change is still in this diff.
+Use one plausible next change as a design probe, not permission to build it or refactor outside the reviewed concern. Scattered edits can expose leaked knowledge; a new module is not automatically the answer. Apply only a behavior-preserving simplification justified by the current diff (AGENTS.md **YAGNI**).
 
 ## Method
 

@@ -23,8 +23,8 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
 11. **Test contracts, not implementation** — Before writing a test, name the guarantee it protects and the realistic failure it must catch. Exercise the interface its caller uses; assert meaningful outputs, errors, state, or external effects—not private structure or incidental call sequences. Choose the smallest test boundary that can prove the guarantee; use real collaborators where practical and integration tests where connections matter. Keep decisive inputs and expected outcomes explicit; helpers hide irrelevant setup. Assert exact wording only when wording itself matters. Judge every test twice: **would a behavior-preserving refactor keep it green, and would a plausible behavioral defect make it fail?**
 12. **Errors explicit** — Never swallow failures; preserve context with idiomatic error/result types. Make ordinary cases normal outcomes where the domain permits: an empty lookup or an already-completed delete need not be errors. Clamp only where the contract allows it; never conceal invalid business values, unauthorized access, or conflicting writes. Surface an error where the caller genuinely must decide.
 13. **One source of truth** — Search for an existing concept, contract, or invariant before adding code, tests, config, schemas, queries, scripts, CI, docs, or UI; reuse, extend, or parameterize it first.
-    - **Duplication beats the wrong abstraction (Sandi Metz)**. Wait for the **Rule of Three (AHA)**: extract only when three real uses reveal a stable contract with no caller flags, boolean switches, or special-case branches.
-    - An abstraction needing flags or conditional options to satisfy different callers is the wrong abstraction — inline it back into callers.
+    - **Duplication beats the wrong abstraction (Sandi Metz)**. Use the **Rule of Three (AHA)** as a heuristic for extracting repeated behavior once real uses reveal a stable contract, not a prerequisite for a module with a present ownership, isolation, or testability purpose.
+    - Caller-specific flags and growing special cases can signal the wrong abstraction; separate unrelated responsibilities rather than forcing reuse. Meaningful domain options are not automatically defects.
     - Fix duplication at the source, not every caller; consolidate only when the change is local, safe, and in scope.
     - Don't unify values that merely look equal today but differ in meaning, ownership, or lifecycle — preserve meaningful semantic differences, and note intentional duplication in one short comment.
     - Before finishing, ask: "If this changes tomorrow, how many places must be edited?" Reduce that number where correctness and clarity improve.
@@ -46,12 +46,14 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
 24. **YAGNI — build only what the task requires** — Write the code the requested outcome needs, and nothing for imagined futures. Before adding anything, name the concrete requirement it serves in this task — a caller, a failing case, an acceptance criterion. If you cannot name one, omit it.
     - **Over-validating** — re-checking what the type system, a constructor, or an earlier boundary already guarantees, or guarding states that cannot occur. Validate once and completely where untrusted data crosses into trusted code (user input, external APIs, deserialized payloads, cross-service calls); do not re-check it inside that boundary.
     - **Overcommitting** — building for a feature, flag, config, or migration that is not planned or asked for. Ship the current concern; queue the idea for later instead of half-implementing it now.
-    - **Speculative generality** — options, parameters, interfaces, or wrapper layers with one caller and no second case in sight (see **Architecture is enforced**; extraction waits for **One source of truth**'s Rule of Three).
+    - **Speculative generality** — options, parameters, interfaces, or wrapper layers without a present requirement. One caller or production adapter can justify a boundary for ownership, isolation, or testability; hypothetical future implementations cannot (see **One source of truth**).
     - **Defensive padding** — fallbacks, retries, or broad catches for failures with no reachable cause; dead config and unused knobs.
     - **Unrequested polish** — extra endpoints, fields, screens, or "while I'm here" refactors that widen the diff past the task.
     YAGNI is not license to skip required work: a missing boundary check, an unhandled real error, or absent coverage for a promised behavior is a defect, not restraint (see **Errors explicit**, **Never bypass correctness**). The line is "the code we can defend today", not "the most we could imagine".
 
 ## Skills & Routing
+
+Use `codebase-design` for meaningful backend, schema, ownership, invariant, interface, or dependency-direction changes. It owns the design loop and risk-triggered checks; routine changes using established contracts need only its quick existing-owner check.
 
 `skill-index` routes every skill — read its SKILL.md before choosing one. Skills are user-invoked (frontmatter `disable-model-invocation: true`) or model-invoked. Adding, renaming, removing, or re-routing a skill means updating `skill-index`'s SKILL.md and the README skills table.
 

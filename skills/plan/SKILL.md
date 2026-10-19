@@ -34,9 +34,20 @@ Treat the ticket as the product contract. Verify its current-behavior claims aga
 
 ## Planning work
 
+Begin with the user's outcome and one action-to-result walkthrough before naming
+modules. Work backward to required data, server-enforced rules, returned results,
+and consequential failures; omit irrelevant categories for non-UI work. Link any
+chosen prototype and observations, distinguishing simulated behavior from verified
+capability. Do not require a prototype when the behavior is already clear.
+
+If experience uncertainty changes acceptance, return to `/design` or discovery
+prototyping rather than guessing. If feasibility or a costly-to-reverse decision
+is uncertain, investigate it before committing to the approach. Scale planning to
+that risk, not the size of the feature list; do not wait for an entire frontend.
+
 1. **Inspect the relevant code.** Trace the current behavior through the owning modules, callers, configuration, and tests. Cite real repository paths and symbols; distinguish verified facts from assumptions.
 2. **Find the smallest complete change.** Identify the behavior boundary, existing conventions to reuse, and the public seam through which the result can be tested. Keep the outcome end-to-end; do not split by database/API/UI layers. If it is too large for one cohesive review, return a narrow behavior split to `/to-issues` instead of planning a huge one-ticket PR.
-3. **Choose proportionate technical direction.** State the recommended approach and important tradeoff. For a consequential choice, record why it fits, a meaningful alternative, and any risk, guardrail, or signal that should trigger a revisit. Keep routine reversible choices brief. Reuse linked research; use `/skill:research` only for missing facts about this slice, skipping an external pass when evidence suffices. Re-evaluate technical overlap against active work now; a design's parallel candidates do not prove safety.
+3. **Choose proportionate technical direction.** Use `codebase-design` for meaningful backend, schema, ownership, invariant, interface, or dependency changes, including its relevant data/compatibility checks; routine work needs only the quick existing-owner check. State the recommended approach and important tradeoff in this plan, not a separate design artifact. For a consequential choice, record why it fits, a meaningful alternative, and any risk, guardrail, or signal that should trigger a revisit. Keep routine reversible choices brief. Reuse linked research; use `/skill:research` only for missing facts about this slice, skipping an external pass when evidence suffices. Re-evaluate technical overlap against active work now; a design's parallel candidates do not prove safety.
 4. **Define proof.** Map each ticket acceptance criterion to a test or observable verification. Include only real edge cases and relevant project-native checks.
 5. **Check interface impact.** Use the exact declaration format checked by `plan-lint.py`:
 

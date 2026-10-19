@@ -1,0 +1,38 @@
+{
+  "skill_name": "codebase-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Design only, no implementation. A small monolith has reserveLastItem(orderId, sku) in checkout. HTTP handlers and a nightly import both call it. Inventory is in one relational database; payments go through one external provider. Two requests can race for the last item, and a payment timeout does not tell us whether a charge happened. Existing checkout owns orders, inventory owns stock counts. Recommend the smallest sound responsibility split and test approach. We have only one payment adapter today. Keep it under 500 words.",
+      "expected_output": "A proportionate design comparing real ownership alternatives, protecting stock under concurrency and treating ambiguous payment outcomes explicitly without speculative services.",
+      "files": [],
+      "expectations": [
+        "Compares two materially different responsibility allocations, not just renamed methods.",
+        "Names an enforceable concurrent-stock guarantee and a test involving competing reservations.",
+        "Allows a justified payment isolation/test seam with one provider and explicitly handles ambiguous payment outcomes without claiming a database transaction makes the external charge atomic."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Design only, no implementation. We need tenant-scoped unique customer emails in an existing relational database. Today customers has nullable email and no tenant_id; 3 million historical rows include duplicate emails and tenant ownership is not always known. Web and import processes both write customers. Old and new app versions overlap for 20 minutes during deploy; writes cannot stop. Outline a safe design and migration verification approach in under 500 words. Do not invent the product policy for unresolved historical owners.",
+      "expected_output": "Facts, writers, constraints, unresolved ownership/duplicate policy, staged compatible deployment and backfill, recovery and realistic migration tests.",
+      "files": [],
+      "expectations": [
+        "Surfaces unresolved ownership and duplicate/null policy rather than assigning tenants or deleting historical rows without approval.",
+        "Addresses both web/import writers, mixed-version compatibility, and concurrent enforcement of tenant-scoped uniqueness.",
+        "Includes representative historical-data migration tests and partial-backfill recovery without assuming a down migration restores lost data."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Design advice only. This monolith already has CustomerQueries.listActive(tenantId), with authorization and tenant isolation tested at its callers. Add an optional page size, using the existing pagination helper's limits and defaults. There are no schema changes, new writers, or new dependencies. Should I introduce a generic query service, repository interface, and architecture decision record first? Give a proportionate recommendation in under 150 words.",
+      "expected_output": "A quick existing-owner check, no architectural ceremony, and focused behavior verification.",
+      "files": [],
+      "expectations": [
+        "Extends the existing query/helper without introducing the proposed generic service or repository interface.",
+        "Does not require a separate architecture decision record or a full schema/distributed-systems checklist.",
+        "Recommends focused pagination behavior tests while preserving tenant isolation and authorization."
+      ]
+    }
+  ]
+}
