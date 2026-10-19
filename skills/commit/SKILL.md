@@ -114,7 +114,8 @@ git reset -- <the intent-to-added files>
 
 Invoke code-review scoped to the working-tree changes (`modified`), which
 includes the intent-to-added untracked files. Pass `--no-revise` — the gate
-must not edit code — and do NOT pass `--fix`; do NOT act on the verdict
+must not edit code — and `--runner subagents`, so the gate stays in this
+harness without asking; do NOT pass `--fix`; do NOT act on the verdict
 automatically.
 
 ### Surface, do not decide

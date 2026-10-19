@@ -13,7 +13,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/code-review/SKILL.md",
       "skillPath": "skills/code-review/SKILL.md",
-      "skillFolderHash": "d04c48dd490b6a97d50745f04e703cf5f60788f3"
+      "skillFolderHash": "cc4209a154fc85d443e68b69d8f2352fda8500c0"
     },
     "codebase-design": {
       "source": ".agents",
@@ -34,7 +34,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/commit/SKILL.md",
       "skillPath": "skills/commit/SKILL.md",
-      "skillFolderHash": "9177a7cf8a47dc4e8096d20d1d62cecfe54987fe"
+      "skillFolderHash": "c8fcc91b60aa9b4ecc5be3a6cdb8969dc5080d6e"
     },
     "diagnose": {
       "source": "mattpocock/skills",
@@ -171,7 +171,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/implement/SKILL.md",
       "skillPath": "skills/implement/SKILL.md",
-      "skillFolderHash": "eb419639a285a6939b2c631a32999233b7389028"
+      "skillFolderHash": "738ad0a01094b66726908341112e14a0eaf7e745"
     },
     "next-best-practices": {
       "source": "vercel-labs/next-skills",

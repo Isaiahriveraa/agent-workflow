@@ -33,13 +33,21 @@ Row artifact paths resolve against the index owner's Git root; scope files resol
 
 ## Implement and review
 
+Start with the selected user's or caller's outcome and the approved walkthrough.
+Implement the smallest working path across the necessary UI, application, and
+data boundaries; do not finish every frontend screen before connecting one real
+flow. A chosen prototype guides the experience; it does not prove backend behavior.
+Replace simulated effects with verified production behavior within the slice's
+scope. If the experience reveals a material product gap, return it to design and
+plan review instead of silently expanding the feature.
+
 Use `/skill:tdd` for every production-code change; test-first is not optional. Work one behavior at a time: identify its public seam, write one focused test, run it, and confirm it fails for the missing behavior before making the smallest change. Repeat red to green before moving to the next behavior.
 Tests describe caller-visible behavior. For data-handling code, use representative inputs and assert the expected returned, persisted, emitted, or displayed data and relevant errors or boundary behavior through public interfaces; derive expected values independently from the contract or a known example. Keep coverage proportionate to meaningful behavior and plausible regressions, not exhaustive permutations, tautologies, or internal implementation details.
 For frontend changes, test the human interaction: operate accessible controls with realistic user actions and assert the visible result or data effect. Keep behavior tests; do not pin markup shape, classes, styles, snapshots, or internal state.
 
 Implementation owns TDD → checks → cleanup → review. Run focused tests and typechecking regularly, then project-native tests, lint, typecheck, and build at the end. Record checks not run and why. When called by delivery, return this evidence so it can verify results without blindly repeating the pipeline.
 
-After implementation and initial verification, run `/skill:code-judgment`, then `/skill:code-review` on the completed diff; do not skip it. Address verified findings, rerun affected tests and checks, and let the review apply its default complexity revision. The review can run in OMP through `--review-only --report`; the hardener still runs here first.
+After implementation and initial verification, run `/skill:code-judgment`, then `/skill:code-review` on the completed diff; do not skip it. Address verified findings, rerun affected tests and checks, and let the review apply its default complexity revision. The review runner follows code-review's Runner setting (asks by default; OpenCode runs `--review-only --report`); the hardener still runs here first.
 
 Refresh affected cards, ticket, plan, research links, and originating queue after feedback and delivery. Record verified results and blockers: use `in-progress` while implementing, then `in-review` after local review while awaiting the human or integration. An active draft PR is never `done`. Only verified integrated behavior may mark `done`; do not equate local checks or a draft PR with completion.
 

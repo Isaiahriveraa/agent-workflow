@@ -1,5 +1,5 @@
-// OMP review runner: dispatches a code review to an OMP agent in a Herdr tab
-// and reads back a REVIEW-REPORT v1 block. Deterministic steps live here so no
+// OpenCode review runner: dispatches a code review to an OpenCode agent in a Herdr
+// tab and reads back a REVIEW-REPORT v1 block. Deterministic steps live here so no
 // model context is spent on preflight or dispatch.
 
 import { execFileSync } from 'node:child_process';
@@ -24,7 +24,8 @@ export const parseReviewReport = (text) => {
   const fields = {};
   for (const line of lines.slice(start + 1)) {
     const match = line.match(/^(run|status|findings|counts|verdict):\s*(.*)$/);
-    if (match && !(match[1] in fields)) fields[match[1]] = match[2];
+    if (match && match[1] in fields) return { ok: false, error: `${match[1]} repeat` };
+    if (match) fields[match[1]] = match[2];
   }
   for (const key of ['run', 'status', 'findings', 'counts', 'verdict']) {
     if (!fields[key]) return { ok: false, error: `missing field: ${key}` };
@@ -34,9 +35,10 @@ export const parseReviewReport = (text) => {
 
   const counts = {};
   for (const key of COUNT_KEYS) {
-    const match = fields.counts.match(new RegExp(`\\b${key}=(\\d+)\\b`));
-    if (!match) return { ok: false, error: `counts missing ${key}` };
-    counts[key] = Number(match[1]);
+    const matches = [...fields.counts.matchAll(new RegExp(`\\b${key}=(\\d+)\\b`, 'g'))];
+    if (matches.length === 0) return { ok: false, error: `counts missing ${key}` };
+    if (matches.length > 1) return { ok: false, error: `counts repeat ${key}` };
+    counts[key] = Number(matches[0][1]);
   }
   const blocking = counts.critical + counts.important > 0;
   if (blocking !== (fields.verdict === 'CHANGES_REQUESTED')) {
@@ -49,18 +51,13 @@ export const parseReviewReport = (text) => {
   };
 };
 
-// Returns the modelRoles block of the OMP config verbatim, so the preflight can
-// show exactly which models will run.
-const readModelRoles = (configPath) => {
-  const lines = fs.readFileSync(configPath, 'utf8').split('\n');
-  const start = lines.findIndex((line) => /^modelRoles:/.test(line));
-  if (start === -1) return [];
-  const block = [];
-  for (const line of lines.slice(start + 1)) {
-    if (line.trim() !== '' && !/^\s/.test(line)) break;
-    if (line.trim()) block.push(line.trim());
-  }
-  return block;
+// Returns the model keys of the OpenCode config, so the preflight can show
+// exactly which models will run.
+const readModels = (configPath) => {
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  return ['model', 'small_model']
+    .filter((key) => typeof config[key] === 'string')
+    .map((key) => `${key}: ${config[key]}`);
 };
 
 const commandExists = (name, env) =>
@@ -111,30 +108,30 @@ export const preflight = ({
   cwd,
   agentName,
   env = process.env,
-  configPath = path.join(os.homedir(), '.omp', 'agent', 'config.yml')
+  configPath = path.join(os.homedir(), '.config', 'opencode', 'opencode.json')
 } = {}) => {
   const checks = [];
   const check = (name, ok, detail) => checks.push({ name, ok, detail });
 
   check('herdr-env', env.HERDR_ENV === '1', 'HERDR_ENV must be 1 (run inside a Herdr pane)');
   check('herdr-binary', commandExists('herdr', env), 'herdr on PATH');
-  check('omp-binary', commandExists('omp', env), 'omp on PATH');
+  check('opencode-binary', commandExists('opencode', env), 'opencode on PATH');
 
   try {
     const help = herdr(['agent', 'start', '--help'], { env });
     const values = help.match(/possible values:\s*([^\]]+)\]/);
     const kinds = values ? values[1].split(',').map((v) => v.trim()) : [];
-    check('herdr-agent-kinds', kinds.includes('omp'), 'herdr agent start accepts --kind omp');
+    check('herdr-agent-kinds', kinds.includes('opencode'), 'herdr agent start accepts --kind opencode');
   } catch (error) {
     check('herdr-agent-kinds', false, `herdr agent start --help failed: ${error.message}`);
   }
 
-  let roles = [];
+  let models = [];
   try {
-    roles = readModelRoles(configPath);
-    check('omp-config', roles.length > 0, `${configPath} has a modelRoles block`);
+    models = readModels(configPath);
+    check('opencode-config', models.length > 0, `${configPath} sets a model`);
   } catch (error) {
-    check('omp-config', false, `cannot read ${configPath}: ${error.message}`);
+    check('opencode-config', false, `cannot read ${configPath}: ${error.message}`);
   }
 
   try {
@@ -157,20 +154,22 @@ export const preflight = ({
     }
   }
 
-  return { ready: checks.every((c) => c.ok), checks, models: roles };
+  return { ready: checks.every((c) => c.ok), checks, models };
 };
 
-// Fingerprint of the working tree without touching the index: tracked diff plus
-// the bytes of every untracked file. Ignored files and .git are excluded by Git.
+// Fingerprint of the working tree without touching the index, including ignored files.
 export const workingTreeFingerprint = (cwd) => {
   const hash = createHash('sha256');
   hash.update(execFileSync('git', ['diff', 'HEAD'], { cwd, maxBuffer: 256 * 1024 * 1024 }));
-  const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '-z'], { cwd })
+  const listFiles = (args) => execFileSync('git', ['ls-files', ...args, '-z'], { cwd })
     .toString('utf8')
     .split('\0')
-    .filter(Boolean)
-    .sort();
-  for (const file of untracked) {
+    .filter(Boolean);
+  const files = new Set([
+    ...listFiles(['--others', '--exclude-standard']),
+    ...listFiles(['--others', '--ignored', '--exclude-standard']),
+  ]);
+  for (const file of [...files].sort()) {
     const full = path.join(cwd, file);
     const stat = fs.lstatSync(full);
     hash.update(`\0${file}\0`);
@@ -181,22 +180,22 @@ export const workingTreeFingerprint = (cwd) => {
   return hash.digest('hex');
 };
 
-// The prompt is a file so the OMP agent reads the full contract and the Herdr
+// The prompt is a file so the OpenCode agent reads the full contract and the Herdr
 // message stays one short line.
-export const buildPrompt = ({ branch, base, reportPath, findingsPath }) => `# OMP code review
+export const buildPrompt = ({ branch, base, reportPath, findingsPath }) => `# OpenCode code review
 
 branch: ${branch}
 base: ${base}
 report: ${reportPath}
 findings: ${findingsPath}
 
-Run the code review on the working tree in review-only mode:
+Run the code-review skill on the working tree in review-only mode. The skill is
+at ~/.agents/skills/code-review/SKILL.md; its arguments are:
 
-  /skill:code-review modified --review-only --report ${reportPath}
+  modified --review-only --report ${reportPath}
 
-If the skill cannot load, read ~/.agents/skills/code-review/SKILL.md and follow
-only Steps 1, 2, and 4-7. Do not run the hardener, complexity revision, fixer,
-or QA steps. Do not edit, create, or delete any file in the repository.
+Follow only Steps 1, 2, and 4-7 of that skill. Do not run the hardener, complexity
+revision, fixer, or QA steps. Do not edit, create, or delete any file in the repository.
 
 When finished, write the findings to ${findingsPath}, then write this exact
 block to ${reportPath}, and reply with the same block:
@@ -219,7 +218,7 @@ const currentBranch = (cwd) =>
 
 // Runs one review end to end. Every failure returns a result with status
 // "failed" or "blocked"; nothing counts as a finding unless the report parses.
-export const runOmpReview = ({
+export const runOpencodeReview = ({
   cwd,
   base = 'HEAD',
   waitTimeoutMs = 1_800_000,
@@ -235,7 +234,7 @@ export const runOmpReview = ({
     return { status: 'failed', reason: 'preflight', checks: pre.checks };
   }
 
-  const runDir = path.join(gitDirOf(cwd), 'omp-review', runId);
+  const runDir = path.join(gitDirOf(cwd), 'opencode-review', runId);
   fs.mkdirSync(runDir, { recursive: true });
   const reportPath = path.join(runDir, 'report.md');
   const findingsPath = path.join(runDir, 'findings.md');
@@ -249,7 +248,7 @@ export const runOmpReview = ({
     const tab = JSON.parse(herdr(['tab', 'create', '--cwd', cwd, '--label', agentName, '--no-focus'], { env }));
     pane = findRootPane(tab);
     if (!pane) return { status: 'failed', reason: 'tab-create', detail: 'no root pane in response' };
-    herdr(['agent', 'start', agentName, '--kind', 'omp', '--pane', pane, '--timeout', String(startTimeoutMs)], {
+    herdr(['agent', 'start', agentName, '--kind', 'opencode', '--pane', pane, '--timeout', String(startTimeoutMs)], {
       env,
       timeout: startTimeoutMs + 30_000
     });
@@ -276,7 +275,7 @@ export const runOmpReview = ({
     return { status: 'failed', reason: 'tree-modified', detail: 'working tree changed during an observe-only review', agent: agentName, runDir };
   }
   if (finalState === 'blocked') {
-    return { status: 'blocked', reason: 'agent-blocked', detail: 'OMP is waiting on a dialog; read the pane and answer it yourself', pane, agent: agentName, runDir };
+    return { status: 'blocked', reason: 'agent-blocked', detail: 'OpenCode is waiting on a dialog; read the pane and answer it yourself', pane, agent: agentName, runDir };
   }
   if (!fs.existsSync(reportPath)) {
     return { status: 'failed', reason: 'no-report', detail: `${reportPath} was not written`, agent: agentName, runDir };
@@ -289,6 +288,40 @@ export const runOmpReview = ({
   const { report } = parsed;
   if (report.status !== 'complete') {
     return { status: report.status, reason: 'agent-reported', report, agent: agentName, runDir };
+  }
+  const reportedFindingsPath = path.resolve(path.dirname(reportPath), report.findings);
+  if (reportedFindingsPath !== findingsPath) {
+    return {
+      status: 'failed',
+      reason: 'bad-findings',
+      detail: `report names ${reportedFindingsPath}, expected ${findingsPath}`,
+      findings: findingsPath,
+      agent: agentName,
+      runDir
+    };
+  }
+  let findingsIsFile;
+  try {
+    findingsIsFile = fs.lstatSync(findingsPath).isFile();
+  } catch (error) {
+    return {
+      status: 'failed',
+      reason: 'bad-findings',
+      detail: `${findingsPath} is unavailable: ${error.message}`,
+      findings: findingsPath,
+      agent: agentName,
+      runDir
+    };
+  }
+  if (!findingsIsFile) {
+    return {
+      status: 'failed',
+      reason: 'bad-findings',
+      detail: `${findingsPath} is not a file`,
+      findings: findingsPath,
+      agent: agentName,
+      runDir
+    };
   }
   return { status: 'complete', report, pane, agent: agentName, runDir };
 };
@@ -307,11 +340,11 @@ if (isMain) {
       console.log(JSON.stringify(result, null, 2));
       process.exitCode = result.ready ? 0 : 1;
     } else if (command === 'run') {
-      const result = runOmpReview({ cwd, base: flag('base', 'HEAD') });
+      const result = runOpencodeReview({ cwd, base: flag('base', 'HEAD') });
       console.log(JSON.stringify(result, null, 2));
       process.exitCode = result.status === 'complete' ? 0 : 1;
     } else {
-      console.error('Usage: node scripts/omp-review.mjs <preflight|run> [--base <ref>]');
+      console.error('Usage: node scripts/opencode-review.mjs <preflight|run> [--base <ref>]');
       process.exitCode = 2;
     }
   } catch (error) {
