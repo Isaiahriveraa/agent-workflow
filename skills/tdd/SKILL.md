@@ -13,7 +13,7 @@ When exploring the codebase, read the project's domain docs (`context/`, `CONTEX
 
 Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification — "user can checkout with valid cart" tells you exactly what capability exists — and survives refactors because it doesn't care about internal structure.
 
-See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
+Before choosing assertions, consult [tests.md](tests.md) for contract selection, frontend/backend examples, and the two quality checks: a behavior-preserving refactor stays green; a plausible defect turns red. See [mocking.md](mocking.md) for mocking guidelines.
 ### What tests are permanent
 
 - **Tests that prove behavior are permanent, frontend included**: Durable regression coverage for business logic, API contracts, data boundaries, error states, edge cases, and user-visible UI behavior.
@@ -30,8 +30,8 @@ Ask: "What's the public interface, and which seams should we test?"
 
 ## Anti-patterns
 
-- **Implementation-coupled** — mocks internal collaborators, tests private methods, or verifies through a side channel (querying the database instead of using the interface). The tell: the test breaks when you refactor but behavior hasn't changed.
-- **Tautological** — the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`, a snapshot derived by hand the same way, a constant asserted equal to itself), so it passes by construction and can never disagree with the code. Expected values must come from an independent source of truth — a known-good literal, a worked example, the spec.
+- **Implementation-coupled** — pins private methods, collaborator arrangements, or storage layout rather than a required outcome. Database assertions and interaction checks are valid when persistence or an external interaction is the contract under test; see [tests.md](tests.md). The tell: the test breaks when you refactor but behavior hasn't changed.
+- **Tautological** — the expected result comes from the implementation under test, so it cannot independently establish correctness. Repeating the implementation's algorithm risks repeating its defect. Use independently justified expectations: known literals, worked examples, the specification, or properties; see [tests.md](tests.md).
 - **Horizontal slicing** — writing all tests first, then all implementation. Bulk tests verify _imagined_ behavior: you test the _shape_ of things rather than user-facing behavior, the tests go insensitive to real changes, and you commit to test structure before understanding the implementation. Work in **vertical slices** instead — one test → one implementation → repeat, each test a **tracer bullet** that responds to what the last cycle taught you.
 
 ## Testing APIs
@@ -143,7 +143,8 @@ After all tests are green, look for refactoring opportunities:
 - [ ] Test describes behavior, not implementation
 - [ ] Test uses public interface only
 - [ ] Test would survive internal refactor
-- [ ] Expected values are independent literals, not recomputed from the code
+- [ ] A named plausible behavioral defect would make the test fail
+- [ ] Expectations are independently justified, not derived from the implementation under test
 - [ ] Code is minimal for this test
 - [ ] No speculative features added
 - [ ] Setup duplication extracted into a testing API when 3+ tests share it

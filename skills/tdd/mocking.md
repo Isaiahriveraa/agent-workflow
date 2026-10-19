@@ -1,17 +1,19 @@
 # When to Mock
 
-Mock at **system boundaries** only:
+Prefer real deterministic collaborators. Use focused doubles at the tested unit's external boundaries when real behavior is unsafe, expensive, or difficult to control:
 
 - External APIs (payment, email, etc.)
 - Databases (sometimes — prefer test DB)
 - Time/randomness
 - File system (sometimes)
 
-Don't mock:
+Avoid mocking internal mechanics:
 
-- Your own classes/modules
-- Internal collaborators
-- Anything you control
+- Private helpers or implementation state
+- Internal collaborators merely to assert their current call sequence
+- Real deterministic code that is practical to exercise directly
+
+Ownership alone does not decide whether a double is appropriate: your own adapter may be the boundary to an external service. Assert calls when the interaction itself is required, such as a public component callback or preventing duplicate external charges, not just because a mock records them. A double cannot prove the real integration it replaces; cover that connection separately when it matters. See [tests.md](tests.md) for examples and quality checks.
 
 ## Designing for Mockability
 
