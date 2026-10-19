@@ -31,6 +31,17 @@ git commit
 
 Git refuses the switch when a file carries both already-committed hunks from branch 1 and pending hunks for branch 2 (`local changes would be overwritten`). That refusal is the signal to use section B, not permission to discard work.
 
+For a stack, do not branch every layer from the base. Each layer starts from the layer below it, so later layers include earlier ones:
+
+```bash
+git switch -c <b1> <trunk>
+git add -- <files of layer 1>
+git commit
+git switch -c <b2> <b1>
+git add -- <files of layer 2>
+git commit
+```
+
 ## B. Patch transport
 
 Use for shared files or changes destined for another worktree. Stage one concern's hunks, export the staged patch, then clear the index without changing files:
@@ -54,18 +65,25 @@ Verify the target with `git diff --name-only <base>...<branch>` and `git status 
 
 ## C. Create the destinations
 
-Create independent worktrees with the repository helper. For a stack, enable rerere and create the stack only after approval:
+Create independent worktrees with the repository helper:
 
 ```bash
 ~/.agents/scripts/new-worktree.sh <branch> <base>
-git config rerere.enabled true
-gh stack init --base <trunk> <b1> <b2>
-gh stack submit --auto
-gh stack view --short
 git rev-list --left-right --count <base>...<branch>
 ```
 
-Use one branch per independent concern. Create stack layers in dependency order and submit bottom-up. Follow `skills/pr/SKILL.md` for PR strategy and descriptions; this file only transports the dirty tree.
+A stack is always created with the `gh stack` CLI, never with hand-made `gh pr create --base` calls. Build the layers in place first (section A, stack variant), with each layer branched from the one below. Then adopt them and check the chain:
+
+```bash
+git config rerere.enabled true
+gh stack init --base <trunk> <b1> <b2> <b3>   # adopts bottom to top; checks out the top layer
+gh stack view --short                         # must show no ⚠ marks
+gh stack submit --auto                        # creates draft PRs; never pass --open
+```
+
+`gh stack init` accepts layers that are not chained, but marks any layer that does not sit on the one below with `⚠` in `gh stack view`. A `⚠` means the chain is wrong: fix the branches, then re-run `gh stack view`. Do not submit a stack with a `⚠` mark.
+
+Use one branch per independent concern. Stack layers are created in dependency order and submitted together by `gh stack submit`. Follow `skills/pr/SKILL.md` for PR strategy and descriptions; this file only transports the dirty tree.
 
 ## D. Verify the split
 
@@ -74,9 +92,12 @@ For every branch, the final file set must equal the planned concern:
 ```bash
 git diff --name-only <base>...<branch>
 git diff --stat <base>...<branch>
+git diff --numstat <base>...<branch>
 git status --short
 git diff --cached
 ```
+
+Compare `--numstat` totals per branch with the preview row from the plan. GitHub reports the same `+/-` for a branch as `git diff <base>...<branch>`, so a mismatch means the transport was wrong.
 
 In the original worktree, status must show only unassigned leftovers. The union of all branch diffs plus those leftovers must equal the original inventory; compare totals and file paths, not just commit counts. Run the smallest relevant test per branch, then verify:
 

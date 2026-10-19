@@ -173,22 +173,33 @@ function countStatus(files, which) {
   return { files: selected.length, additions: 0, deletions: 0 };
 }
 
+// Hunks come from -U0 diffs, so a header's counts are exactly the lines it removes and adds.
+// An omitted count means one line: "@@ -2 +2 @@" removes one line and adds one.
+function hunkCounts(line) {
+  const match = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/.exec(line);
+  return {
+    header: line.slice(3).trim().slice(0, 100),
+    additions: match ? Number(match[2] ?? 1) : null,
+    deletions: match ? Number(match[1] ?? 1) : null,
+  };
+}
+
 function hunksFor(file, diffCommands) {
-  const headers = [];
+  const hunks = [];
   for (const command of diffCommands) {
     try {
       const text = git([...command, "--", file]);
-      headers.push(
+      hunks.push(
         ...text
           .split("\n")
           .filter((line) => /^@@ /.test(line))
-          .map((line) => line.slice(3).trim().slice(0, 100)),
+          .map(hunkCounts),
       );
     } catch {
       // A file can be unreadable to one of the diff commands; the other still reports its hunks.
     }
   }
-  return headers;
+  return hunks;
 }
 
 function main() {
@@ -270,7 +281,11 @@ function main() {
       deletions: stat.deletions ?? null,
       hunks: hunks.length,
       flags: flagsFor(file, submodules),
-      headers: hunks,
+      headers: hunks.map((hunk) => hunk.header),
+      hunkCounts: hunks.map(({ additions, deletions }) => ({
+        additions,
+        deletions,
+      })),
     };
   });
   const staged = countStatus(statuses, "staged");
@@ -339,7 +354,12 @@ function main() {
   const hunkRows = [];
   for (const file of fileObjects)
     for (const [index, header] of file.headers.entries())
-      hunkRows.push({ path: file.path, index: index + 1, header });
+      hunkRows.push({
+        path: file.path,
+        index: index + 1,
+        header,
+        ...file.hunkCounts[index],
+      });
   const totals = {
     files: fileObjects.length,
     additions: fileObjects.reduce((n, f) => n + (f.additions ?? 0), 0),
@@ -391,7 +411,9 @@ function main() {
     );
   console.log(`hunks: ${hunkRows.length}`);
   for (const hunk of hunkRows)
-    console.log(`  ${hunk.path}#${hunk.index} ${hunk.header}`);
+    console.log(
+      `  ${hunk.path}#${hunk.index} +${hunk.additions ?? "-"} -${hunk.deletions ?? "-"} ${hunk.header}`,
+    );
   console.log(`untracked-files: ${untrackedFiles.length}`);
   for (const file of untrackedFiles)
     console.log(
