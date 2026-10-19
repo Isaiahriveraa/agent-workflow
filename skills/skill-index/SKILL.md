@@ -10,20 +10,29 @@ You don't remember every skill, so ask.
 
 ## The main flow: idea → ship
 
-Most work travels this route:
+Start with the user problem and one intended outcome. Follow the experience-first,
+risk-aware loop in [the workflow contract](../../references/workflow.md): system,
+behavior, features, architecture, and implementation are views to move between,
+not whole-product phases. No mandatory PRD or complete frontend before backend.
+Investigate costly technical uncertainty early; skip discovery for settled fixes.
 
-1. **`/design`** — user-invoked intent shaping: talk the behavior through with the user, then write a plain-language design bundle under `context/designs/<slug>/` (a short index with the topic order, dependencies, and parallel work, plus one walkthrough card per topic) that the user reads, explains back, and approves for `/plan`.
-2. **`/plan`** — the planning entry point. Plan one design topic at a time — the first not yet built, re-checked against the current code. Validate the design artifact and repository state, investigate only missing or stale evidence (including targeted external research), and produce a small execution plan for human approval; later topics are planned when their turn comes.
-3. **Plan approved?** → **`/skill:to-issues`** — mechanically compile only the approved plan into local parent/child issue drafts. Track drafts by file path and the plan manifest; preserve dependencies, work position, and acceptance criteria. After human approval of the issue set, publish a ready child issue (or explicitly single-concern issue) to GitHub, where published work is identified by its issue number; incomplete issues return to **`/skill:to-issues`** for enrichment before entering **`/skill:issue-delivery`**.
-4. **Published issue ready?** → **`/skill:issue-delivery`** — receives one published, ready child issue (or explicitly single-concern issue), identified by its GitHub issue number, verifies dependencies and readiness, and delivers it through an isolated worktree to a verified draft PR; incomplete issues return to **`/skill:to-issues`** for enrichment. It does not create issues or schedule batches.
-5. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
-6. **Need to explain a question?** → **`/skill:explain`** — visual browser workspace with an Excalidraw whiteboard and live previews for schema, data-model, design, and logic questions. Route findings to the plan.
-7. **Need to pick a visual direction?** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own front-end stack; expose the real forks as complete, finished-product-quality versions, one per URL, and let the user choose, then implement the chosen one.
-8. **Need a spec issue?** → **`/skill:to-spec`** — synthesize the conversation into a GitHub spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning.
-9. **Standalone cited research?** → **`/skill:research`** — background-agent research using web search and primary sources, producing one cited Markdown evidence artifact; use it to fill a gap or independently when no upstream artifact exists.
-10. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit`).
+Use the parts of this route that answer the current question:
 
-Downstream stages validate and reuse upstream artifacts; they investigate only gaps and do not duplicate upstream design or research.
+1. **`/design`** — frame the user, problem, and current workaround; walk one experience before deriving essential features. Use `grill-with-docs` for unresolved decisions and `/prototype` discovery mode when the flow needs to be seen or tried. Record evidence and assumptions in numbered behavior cards under `context/designs/<slug>/`, not future implementation plans.
+2. **`/skill:to-issues`** — turn the selected design topics into behavior-focused local tickets under `context/issues/<slug>/`. Review the drafts, then separately approve publication. New work does not require an implementation plan before a ticket exists.
+3. **`/research` or `/plan [ticket]`** — resolve the next eligible item unless one is named. Research only missing facts; plan only one small end-to-end slice against current code, then obtain approval. Do not plan the backlog up front.
+4. **`/implement [ticket]`** or **`/skill:issue-delivery <issue-number> [--plan <path>]`** — implement one ready item with its matching approved, fresh plan in an isolated worktree. Published delivery retains its delivery and publication gates; local implementation retains commit and PR approval. Never treat selection as permission to start a later stage.
+5. **Small, obvious fix?** → implement directly with `/skill:tdd` and `/skill:implement`; the full design/ticket/plan path is for work that benefits from those handoffs.
+6. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
+7. **Need to explain a question?** → **`/skill:explain`** — visual browser workspace with an Excalidraw whiteboard and live previews for schema, data-model, design, and logic questions. Route findings to the plan.
+8. **Need to see or try the experience?** → **`/skill:prototype`** — discovery mode explores one flow cheaply; visual-comparison mode presents finished-quality alternatives when appearance or motion is the question. Record observations and return to design or the selected plan; selection does not authorize production work.
+9. **Need a spec issue?** → **`/skill:to-spec`** — synthesize the conversation into a GitHub spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning.
+10. **Standalone cited research?** → **`/skill:research`** — answer a concrete question using local evidence and primary sources; a standalone question needs no delivery queue.
+11. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit`).
+
+Each stage owns a different question: design says what problem to solve, a ticket records the agreed behavior, a plan chooses how to change this repository, and delivery implements one approved ticket. Downstream stages reuse upstream intent and investigate only what their stage needs.
+
+For next-item selection and reconciliation, read [the shared workflow contract](../../references/workflow.md). The ticket index is the sole execution queue. Verify prerequisites against live code before using the read-only CLI; ready candidates are not automatically parallel-safe. After feedback and integration, refresh the evidence and hand off the next item without starting it.
 
 ## Creative output
 
@@ -45,25 +54,28 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 ## Architecture & design
 
 - **Codebase survey → implementation plans** → **`/skill:improve`** — read-only audit, prioritized findings, executor-ready plans in `plans/`. Audit only — planning lives in `/plan`.
-- **Deep module design vocabulary** → **`/skill:codebase-design`** — reference for designing good interfaces.
+- **Module, backend, schema, or architecture design** → **`/skill:codebase-design`** — ownership, invariants, information hiding, two real design alternatives, failure/change probes, and verification. Use for meaningful interface or dependency changes; routine CRUD/local fixes need only a quick existing-owner check. Technical guidance within the active workflow, not permission to implement or bypass approval.
 - **Domain language** → **`/skill:domain-modeling`** — pin down fuzzy terms, sharpen the domain model.
 
 ## Frontend implementation
 
+- **Familiar UI behavior and visual craft** → **`/skill:ui-design`** — recognizable controls, mental models, useful skeuomorphism, hierarchy, layout, and rendered behavior critique; supplements existing frontend skills and approval gates.
 - **Build frontend with the main agent implementing** → **`/skill:frontend-implement`** — the main agent is the sole writer of UI code; sub-agents only research, gather context, and propose plans (never write code). User-invoked.
-- **Pick a visual direction before building** → **`/skill:prototype`** — throwaway, true-scale UI in the project's own stack that presents two or more complete directions as finished-product-quality versions, one per URL; the gate ahead of implementation.
+- **Explore an experience or compare visual directions** → **`/skill:prototype`** — choose a lightweight discovery walkthrough for an unsettled flow, or two or more finished-quality visual directions, one per URL, when visual comparison is needed. Visual comparisons load `ui-design`; production still requires selection and its own approval gates.
 - **Anti-slop landing page, portfolio, or redesign** → **`/skill:design-taste-frontend`** — reads the brief, infers the aesthetic direction, then ships with strict anti-pattern bans and a mandatory pre-flight check; not for dashboards or data-heavy product UI.
 - **Explain a design/logic/schema question** → **`/skill:explain`** — the hub's Explain UI browser workspace (Excalidraw whiteboard + live previews).
 
 ## Planning & execution
 
-- **Plan work** → **`/plan`** — one concern at a time against the current code: proportionate, durable production decisions; records tradeoffs, guardrails, escalation signals, dependencies, and reviewable delivery steps.
+- **Plan work** → **`/plan [ticket]`** — explicit target or next eligible ticket, inspected against current code: one reviewable outcome, test seams, baseline, and verification.
 - **Understand or present an existing plan** → **`/skill:plan-standup-notes <plan-path>`** — turns the plan into compact iPad handwriting notes, a 30-second standup, and senior-level tradeoffs; explanation only, not implementation.
-- **Approved plan → issues** → **`/skill:to-issues`** — converts the approved plan into local parent/child issue drafts; after human approval, optionally publishes a ready child issue (or explicitly single-concern issue) to GitHub.
+- **Design brief → tickets** → **`/skill:to-issues`** — drafts behavior-focused tickets without waiting for an implementation plan; after review and separate approval, optionally publishes them to GitHub.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues for discovery, not implementation tickets; planning now lives in `/plan`.
-- **External cited research** → **`/skill:research`** — background agent, primary sources, one cited Markdown output.
+- **Research next work or a named question** → **`/skill:research`** — reuse local evidence, investigate only the missing facts, and link the findings to the selected item.
 - **Agent too verbose** → say **`wait-what`** — forces a short, direct answer (3 lines).
 ## Session management
+
+- **Default chat style** → **`caveman`** — load at session start for concise, answer-first replies. Keep learning and decision explanations useful; persisted writing stays normal. Say `normal mode` to disable it for the session or `/caveman` to re-enable it.
 
 - **Handoff to new session** → **`/skill:handoff`** — compact conversation into handoff doc. Shorthand: **`/skill:ch`** — same flow, optional description.
 - **Resume from handoff** → **`/skill:recall`** — pick up where a handoff left off.
@@ -82,7 +94,7 @@ Downstream stages validate and reuse upstream artifacts; they investigate only g
 ## Quick utilities
 
 - **Resolve merge conflicts** → **`/skill:resolving-merge-conflicts`** — structured conflict resolution.
-- **Dirty tree too big to commit** → **`/skill:split-dirty-worktree`** — inventory the uncommitted changes, group them into concerns, decide one branch vs `gh stack` vs separate worktrees, and plan the commits for each branch. Read-only until approved; hands the plan to `commit` and `pr`.
+- **Dirty tree too big to commit** → **`/skill:split-dirty-worktree`** — inventory uncommitted changes and group them into concerns; dependent concerns require `gh stack` and a named branch-stack proposal, while independent concerns may use separate worktrees. Plan the commits for each branch. Read-only until approved; hands the plan to `commit` and `pr`.
 - **Commit** → **`/skill:commit`** — normal `commit` invocation runs the pre-commit code-review gate; `commit --no` explicitly skips that gate only. Stage whole files when all changes belong to one concern and use hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition.
 - **PR** → **`/skill:pr`** — auto-detects strategy (single PR, gh stack, or parallel worktrees) and generates review-ready PR descriptions focused on rationale and behavior.
 - **Herdr terminal multiplexer** → **`/skill:herdr`** — inspect and control workspaces, tabs, panes, and coding agents inside Herdr.

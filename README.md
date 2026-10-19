@@ -6,7 +6,7 @@ Shared operating contract for AI-assisted coding across multiple tools. Commands
 
 This is an opinionated delivery workflow — adapters bridge tool ergonomics, `AGENTS.md` governs agent behavior, and skill pipelines route work from fuzzy idea to clean commit.
 
-The hub serves Claude Code, Codex CLI, OpenCode, and Antigravity/Gemini from the same commands, agents, and skills.
+The hub serves Claude Code, Codex CLI, OpenCode, Antigravity/Gemini, and Cursor CLI from the same commands, agents, and skills.
 
 ```
 ┌──────────────────────────────┐
@@ -29,38 +29,49 @@ The hub serves Claude Code, Codex CLI, OpenCode, and Antigravity/Gemini from the
 
 ## Workflow
 
-The project workflow is intentionally linear at the planning boundary. Each stage owns one concern and passes a durable artifact to the next stage. Local drafts are tracked by their file paths and the plan manifest; once published, work is identified by its GitHub issue number.
+The workflow is experience-first and risk-aware: understand the user problem, make uncertain interactions visible, agree on behavior, then derive essential features and plan one end-to-end slice. System, behavior, feature, architecture, and implementation are views to move between, not whole-product phases. A PRD is optional; building the whole frontend before backend is not the goal. Local drafts are tracked by file path; published work is identified by GitHub issue number.
 
 ```
-/design → /plan → to-issues → your approval → issue-delivery
+/design: user problem + experience walkthrough
+↔ /prototype discovery when needed → agreed behavior + essential features
+→ local tickets + dependency queue
+→ /research [item] when needed → /plan [item] → human plan approval
+→ /implement [item] → TDD → cleanup → code review → human feedback
+→ approved commit / draft PR → verified integration → refresh queue
 
 or
 
-/design → /plan → /implement
+/implement (for a small, obvious fix that does not need the full workflow)
 ```
-Downstream stages validate and reuse upstream artifacts. They do not repeat upstream design, planning, or ticket decomposition. The supporting skills below remain available for focused needs, but they do not replace this delivery path.
+Design captures intent, task observations, assumptions, behavior examples, prerequisites, and provisional parallel groups. Discovery can return to earlier questions at any time; it does not authorize production work. The ticket index owns execution state. Research, planning, and implementation honor a named item or resolve the next eligible one from current evidence. Only that small slice is planned; implementation requires its matching approved, fresh plan. Each invocation stops at the requested stage. Publication, commits, PRs, and merge keep their separate human gates.
+
+Choose the next activity by uncertainty: investigate users for an unclear need, sketch or prototype an unclear interaction, and research a concrete feasibility gap before promising it. Examine costly decisions such as permissions, sensitive data, payments, and migrations early. Once behavior and feasibility are understood, stop exploring and build one tested flow across the necessary layers. Borrow rapid prototyping from RAD, feedback cycles from Agile, and upfront analysis for expensive commitments; do not impose every stage on a small fix.
+
+Humans own product priorities, experience judgment, and consequential decisions. AI challenges assumptions, compares flows, explains architecture from the user action backward, and implements agreed behavior. Prototype approval is not evidence of demand or production correctness; record what users actually tried and what remains untested.
+
+The shared [workflow contract](references/workflow.md) defines the Markdown queue, reconciliation, and the read-only `scripts/workflow.py` selection/approval/drift gate. A draft PR is `in-review`, not `done`; parallel candidates require a fresh overlap check. After feedback or integration, refresh the owning artifacts and identify the next item without automatically starting it.
 
 ### Pipeline stages
 
 | Stage | Skill | What it produces | Where |
 |-------|-------|------------------|-------|
-| Design | `/design` | Plain-language design bundle: a short index with the topic order, dependencies, and parallel work, plus one walkthrough card per topic (problem, what I want, the idea, a state → move → state walkthrough with why and why-not, one traced example, architecture now → after, build now vs. not yet) | `context/designs/<slug>/` |
-| Plan | `/plan` | Repository-grounded plan for one concern at a time — the next unbuilt design topic, re-checked against the current code — with dependencies and verification | `context/plans/<slug>/` |
-| Issues | `to-issues` | Approved-plan parent/child issue drafts tracked by file path and manifest, with dependency positions | `context/issues/<slug>/` |
-| Approval | — | You review the issue drafts and approve the set for delivery | Conversation or plan record |
-| Delivery | `issue-delivery` | One published issue delivered through an isolated worktree to a verified draft PR | GitHub issue number → draft PR |
+| Design | `/design` + `grill-with-docs` | Numbered behavior cards, meaningful scenarios, dependencies, and provisional parallel groups | `context/designs/<slug>/` |
+| Discovery, when needed | `prototype` discovery mode | Sketch or focused interactive flow, task observations, and unresolved assumptions | Linked from the owning design card |
+| Tickets | `to-issues` | Behavior-focused local tickets; review drafts, then separately approve publication | `context/issues/<slug>/` → GitHub issue numbers |
+| Research | `/research [item or question]` | Only the missing facts for an explicit or next eligible item; standalone questions supported | `context/research/` linked from queue |
+| Plan | `/plan [ticket]` | One current-code-based slice, test seams, Git baseline, and verification; awaiting approval | `context/plans/<slug>/` |
+| Delivery | `/implement [ticket]` or `issue-delivery <issue> [--plan <path>]` | One approved concern through an isolated worktree, TDD, cleanup, review, and human gates | Queue → branch/worktree → draft PR |
 
 ### How to choose
 
-1. **New product or system work** → `/design` → `/plan` → `to-issues` → your approval → `/skill:issue-delivery`
-2. **Already have an approved plan** → `to-issues` → your approval → `/skill:issue-delivery`
-3. **Already have a published, ready issue** → `/skill:issue-delivery`
-4. **Need to clarify a domain or research question** → use the focused supporting skill, then return to `/design` or `/plan`
-5. **Standalone cited research** → `/skill:research` — use it to fill a planning gap, then return to `/plan`
-6. **Audit an existing codebase** → `/skill:improve` — read-only survey, then use findings in `/design` or `/plan`
-7. **Resolve an ambiguous product decision** → `/skill:issue-discovery` — create a decision issue, then return to `/design` or `/plan`
-8. **Sharpen an idea** → `/skill:grill-with-docs`
-9. **Ask which skill fits** → `/skill:skill-index`
+1. **New behavior or feature** → `/design`: user problem and walkthrough → discovery prototype if needed → agreed behavior and essential features → local ticket queue → risk-driven research → `/plan` → approve plan → `/implement`; publish tickets separately when GitHub delivery is wanted
+2. **Already have a published issue** → `/plan <issue>` → approve the plan → `/skill:issue-delivery <issue> --plan <path>`
+3. **Small, obvious fix** → `/skill:tdd` and `/skill:implement`; skip design and planning when they add no value
+4. **Need to clarify behavior** → `/design`; **need to record a decision** → `/skill:issue-discovery`
+5. **Standalone cited research** → `/skill:research` — use only when a concrete evidence gap needs it
+6. **Audit an existing codebase** → `/skill:improve` — read-only survey, then use findings in design or a selected ticket's plan
+7. **Sharpen an idea** → `/skill:grill-with-docs`
+8. **Ask which skill fits** → `/skill:skill-index`
 
 ## Commands
 
@@ -79,6 +90,8 @@ Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `
 `scripts/slop-lint.py` flags AI-slop words and phrases in Markdown prose; run `python3 ~/.agents/scripts/slop-lint.py <file-or-dir>` over docs you write. The `design` and `plan` skills check their output with it.
 
 `scripts/plan-lint.py` checks plan step files declare their interface impact — a `new` or `changed` boundary needs an interface sketch and a rejected alternative (design it twice); run `python3 ~/.agents/scripts/plan-lint.py <file-or-dir>` over plan outputs. The `plan` skill checks its output with it.
+
+`scripts/workflow.py select <queue-index> [--target <id>]` reports the next eligible item and blockers as JSON. `check <queue-index> --target <id> --plan <path> [--base <ref>]` validates approval, identity, and scoped Git drift before execution. Both are read-only; neither grants consent or proves behavior from status labels.
 
 ### Explain UI browser workspace
 
@@ -102,6 +115,7 @@ Each AI tool connects through an adapter directory:
 | `adapters/codex-cli/` | Codex CLI | Config under `~/.codex/` |
 | `adapters/opencode/` | OpenCode | Native config discovery |
 | `adapters/antigravity/` | Antigravity / Gemini | `GEMINI.md` bridge |
+| `adapters/cursor-cli/` | Cursor CLI | `~/.cursor/rules/hub-contract.mdc` → `AGENTS.md` |
 
 Adapters change ergonomics, not behavior. Source of truth stays in this repo.
 
@@ -113,19 +127,20 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 
 | Skill | Role |
 |-------|------|
+| `caveman/` | Default session chat style: concise, answer-first replies; normal prose for persisted writing, full detail when requested. `normal mode` disables it for the session; `/caveman` re-enables it. Skill only, no proxy or telemetry |
 | `explain/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants (Explain UI lives at `skills/explain/explain-ui/`) |
-| `prototype/` | Throwaway, true-scale UI built in the project's own front-end stack that presents two or more complete, finished-product-quality directions, each at its own URL, to decide an unproven visual direction before implementing |
-| `design/` | Shape intent into a plain-language design bundle (index with order, dependencies, and parallel work + one walkthrough card per topic) the user reads, explains back, and approves for `/plan` |
-| `plan/` | Plan one concern at a time — the next unbuilt design topic, re-checked against the current code — and turn it into an execution plan → local plan files in `context/plans/<slug>/` |
+| `prototype/` | Lightweight discovery of one user flow, or finished-quality visual comparisons in the project's stack. Match fidelity to uncertainty; record observations and keep production approval separate |
+| `design/` | Frame user problems, visualize uncertain experiences, and derive essential features and numbered behavior cards; preserve evidence, assumptions, dependencies, and deferred ideas |
+| `to-issues/` | Turn design topics into behavior-focused local tickets under `context/issues/<slug>/`; after review and separate approval, optionally publish them to GitHub |
+| `plan/` | Explicit or next eligible ticket → one current-code-based, reviewable slice with test seams and Git baseline, then human approval |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
-| `to-issues/` | Mechanically compile an approved plan into local parent/child drafts under `context/issues/<slug>/`, tracked by path and manifest while preserving dependencies; after approval, optionally publish ready child issues (or explicitly single-concern issues) to GitHub, where they are identified by issue number |
-| `issue-discovery/` | Ambiguous ideas → decision GitHub issues for discovery (compat — planning lives in `/plan`) |
+| `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → spec issue |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
-| `research/` | Background-agent research → single cited Markdown file |
+| `research/` | Explicit question or next eligible item → missing facts only, local code first, linked cited evidence |
 | `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |
-| `issue-delivery/` | Terminal follow-up to `to-issues`: takes one published issue number (or URL), reads the issue and its `## Plan reference`, and delivers it through an isolated worktree, TDD, quality code, review, atomic commits, and a draft PR for your review; one issue = one branch = one PR; does not create issues or schedule batches |
-| `implement/` | Orchestrator: tdd → code-judgment → code-review → commit |
+| `issue-delivery/` | One published ready issue with an explicit or uniquely linked approved, fresh plan → isolated worktree, TDD, cleanup, review, and human-approved draft PR |
+| `implement/` | Explicit or next eligible approved slice → worktree → TDD → code-judgment → code-review → human gates; refresh queue |
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
 | `tdd/` | Red-green-refactor with seam discipline |
@@ -136,13 +151,13 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `domain-modeling/` | Sharpen terminology, ADR management |
 | `commit/` | Normal `commit` invocation runs the pre-commit code-review gate; `commit --no` or `commit --no-review` explicitly skips that gate only. Stage whole files when all changes belong to one concern and use hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition. |
 | `pr/` | Senior developer PR workflow: auto-detects single PR, stacked PRs (gh stack), or parallel worktrees; generates review-ready descriptions focused on rationale and behavior |
-| `split-dirty-worktree/` | Oversized dirty tree → branch topology (one branch, `gh stack` of dependent layers, or separate worktrees of independent concerns) plus the commits for each branch; read-only until approved, then hands off to `commit/` and `pr/` |
+| `split-dirty-worktree/` | Oversized dirty tree → mandatory `gh stack` for dependent concerns with a named branch-stack proposal; independent concerns may use separate worktrees. Includes commits per branch; read-only until approved, then hands off to `commit/` and `pr/` |
 | `handoff/` | Session handoff documents |
 | `ch/` | Handoff shorthand — /ch as a skill |
 | `recall/` | Resume from handoff |
 | `later/` | Future improvement notes in `future/` |
 | `wf/` | Commit + PR in one flow (commit → pr); supports `wf --no` and `wf --no-review` as passthroughs to skip only the nested commit review gate. |
-| `codebase-design/` | Deep module design |
+| `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning protocol |
 | `tutor/` | Technical mentor workflow |
@@ -154,6 +169,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `prompt-master/` | Prompt engineering |
 | `resolving-merge-conflicts/` | Merge conflict resolution |
 | `frontend-design/` | Visual design guidance |
+| `ui-design/` | Familiar interactions, useful skeuomorphism, and visual UI craft |
 | `frontend-implement/` | Frontend implementation mode — main agent writes, sub-agents research only |
 | `design-taste-frontend/` | Anti-slop landing pages, portfolios, and redesigns — brief-first aesthetic inference, strict pre-flight check (leonxlnx/taste-skill) |
 | `ui-ux-pro-max/` | UI/UX design intelligence |
@@ -216,7 +232,7 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 │   ├── wait-what/
 │   └── ...                # Additional domain skills
 ├── scripts/               # Tooling (init/reset, context paths, worktree helpers, model router)
-├── adapters/              # 4 CLI adapter configs
+├── adapters/              # 5 CLI adapter configs
 └── .omc/                  # OpenCode project memory (regenerated)
 ```
 
@@ -230,7 +246,7 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 
 - Secrets: `.env`, `.env.local`
 - Dependencies: `node_modules/`
-- Worktree context: `context/` at the Git worktree root (plans, handoffs, ADRs, and research)
+- Worktree context: `context/` at the Git worktree root (designs, issue drafts, plans, handoffs, ADRs, and research)
 
 The public repo is inspectable. Credentials, handoffs, live plans, and active project runtime state are intentionally excluded.
 
