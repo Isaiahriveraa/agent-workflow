@@ -27,6 +27,8 @@ Pull scenarios from the design card's "Edge cases that matter" first, then ask t
 
 Add one boundary case (empty, zero, max, unicode) and one failure path (the dependency fails: network, payment, auth). Do not invent scenarios outside what this change is responsible for.
 
+Read the [attack testing catalog](../references/hardener-attack-catalog.md), resolving it relative to this agent definition. Use it to expand the scenario list, then rank candidates by likely failure and impact for this change. It is a menu, not a requirement to test every category: keep the highest-value, reachable cases within the existing scope and scenario budget. Do not install tools or add dependencies just to use the catalog.
+
 ## Method
 
 1. Read the scope and the design card; list the scenarios a customer could actually hit — keep it to roughly six.
