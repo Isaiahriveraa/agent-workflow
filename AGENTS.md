@@ -55,6 +55,8 @@ Top-level contract for this `.agents` hub. Commands, skills, adapters, and deepe
 
 Use `codebase-design` for meaningful backend, schema, ownership, invariant, interface, or dependency-direction changes. It owns the design loop and risk-triggered checks; routine changes using established contracts need only its quick existing-owner check.
 
+At the start of every new session, load `~/.agents/skills/caveman/SKILL.md` and use regular Caveman for chat by default. This changes response style only, never reasoning depth, verification, or required evidence. Preserve useful explanations for learning and consequential decisions; use full sentences for questions, safety warnings, and approvals. Code, comments, docs, commits, issues, and PRs keep normal prose. Explicit requests for detail take precedence. `stop caveman` or `normal mode` disables it for the rest of the session; `/caveman` re-enables it. Do not load ultra or wenyan modes by default.
+
 `skill-index` routes every skill — read its SKILL.md before choosing one. Skills are user-invoked (frontmatter `disable-model-invocation: true`) or model-invoked. Adding, renaming, removing, or re-routing a skill means updating `skill-index`'s SKILL.md and the README skills table.
 
 For design → research → ticket → plan → delivery continuity, use `references/workflow.md`: the ticket index owns execution state, explicit targets win, otherwise select one eligible item from verified prerequisites. Plan only that current slice; selection never authorizes the next stage.

@@ -444,6 +444,15 @@
       "skillFolderHash": "618f578f5f9b59a587a2bf8ed3e7ddc5db5884e2",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "caveman": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/caveman",
+      "skillPath": "skills/caveman/SKILL.md",
+      "skillFolderHash": "c35cc2f2946f7c7ad0c74f1198160490551a1587",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
   "dismissed": {
