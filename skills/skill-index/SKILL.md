@@ -25,6 +25,10 @@ Most work travels this route:
 
 Downstream stages validate and reuse upstream artifacts; they investigate only gaps and do not duplicate upstream design or research.
 
+## Creative output
+
+- **Make a project launch video** → **`/skill:brag`** — reads the project, plans a short project-specific storyboard, and uses Hyperframes to create and render a shareable video. Native skill dispatch may also expose it as `/brag`.
+
 ## Debugging & diagnosis
 
 - **Bug or regression?** → **`/skill:diagnose`** — disciplined diagnosis loop: reproduce → hypothesise → fix → regression test.

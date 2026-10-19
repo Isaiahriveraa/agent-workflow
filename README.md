@@ -123,6 +123,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `to-spec/` | Conversation → spec issue |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Background-agent research → single cited Markdown file |
+| `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |
 | `issue-delivery/` | Terminal follow-up to `to-issues`: takes one published issue number (or URL), reads the issue and its `## Plan reference`, and delivers it through an isolated worktree, TDD, quality code, review, atomic commits, and a draft PR for your review; one issue = one branch = one PR; does not create issues or schedule batches |
 | `implement/` | Orchestrator: tdd → code-judgment → code-review → commit |
 | `wait-what/` | 3-line verbosity corrective |
@@ -183,6 +184,7 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 │   ├── _shared/           # Shared utility modules
 │   ├── explain/            # Explain UI browser explanation workspace
 │   ├── prototype/          # Throwaway UI prototyping
+│   ├── brag/               # Project launch video workflow
 │   ├── plan/
 │   ├── to-issues/
 │   ├── issue-discovery/

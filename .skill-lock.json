@@ -428,6 +428,15 @@
       "skillFolderHash": "6cdf4dfe372d9b66e95b8345337401f46b7fa1ca",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
+    },
+    "brag": {
+      "source": ".agents",
+      "sourceType": "hub",
+      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/brag",
+      "skillPath": "skills/brag/SKILL.md",
+      "skillFolderHash": "618f578f5f9b59a587a2bf8ed3e7ddc5db5884e2",
+      "installedAt": "2026-05-25T14:00:00.000Z",
+      "updatedAt": "2026-05-25T14:00:00.000Z"
     }
   },
   "dismissed": {
