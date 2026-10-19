@@ -131,6 +131,19 @@ describe("new-artifact.py", () => {
 		assert.equal(issue.includes("## Plan reference"), false);
 	});
 
+	it("scaffolds experience discovery before tickets without inventing validation", () => {
+		const root = makeRepo();
+		const [file] = createdPaths(run(root, "--type", "designs", "find a study partner"));
+		const content = fs.readFileSync(file, "utf8");
+		for (const heading of ["## User and problem", "## Experience walkthrough", "## Evidence and assumptions", "## Smallest useful outcome"]) {
+			assert.ok(content.includes(heading), `design missing ${heading}`);
+		}
+		assert.match(content, /starting state, action, visible result/i);
+		assert.match(content, /not tested/i);
+		assert.match(content, /prototype.*question/i);
+		assert.equal(fs.existsSync(path.join(root, "context", "issues")), false);
+	});
+
 	it("does not overwrite an existing bundle on rerun", () => {
 		const root = makeRepo();
 		const bundle = path.join(root, "context", "plans", "safe-rerun");

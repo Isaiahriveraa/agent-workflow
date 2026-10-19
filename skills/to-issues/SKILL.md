@@ -94,6 +94,13 @@ Acceptance criteria must be specific enough to guide later tests and human revie
 
 The ticket is the durable statement of the problem and desired behavior. Keep it useful without the design conversation. Technical implementation choices belong in the later plan, not in the public ticket.
 
+Derive acceptance from the selected experience: starting state, action, observable
+result, and consequential failure or recovery. Link existing prototype decisions
+and task observations in Context when relevant, marking simulated or untested
+claims. Neither a PRD nor a polished prototype is required. If the flow is
+still materially unclear, return that question to `/design` rather than turning
+speculative screens or feature lists into commitments.
+
 ## Draft review
 
 Before presenting drafts, verify:

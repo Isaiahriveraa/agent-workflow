@@ -41,7 +41,7 @@ def frontmatter(title: str, date_str: str, kind: str, extra: str = "") -> str:
 def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str:
     profiles = {
         "handoffs": ("handoff", "Agent Handoff", ["Active Goal", "Current State", "Latest User Intent", "Locked Decisions", "Do Not Repeat", "Work Completed", "Relevant Files", "Remaining Work", "Open Questions or Blockers", "Resume Here", "Verification", "Success Criteria", "Completion"]),
-        "designs": ("design", "Design", ["What we're doing and why", "Raw intent (your words)"]),
+        "designs": ("design", "Design", ["What we're doing and why", "Raw intent (your words)", "User and problem", "Experience walkthrough", "Evidence and assumptions", "Smallest useful outcome"]),
         "research": ("research", "Research", ["Workflow links", "Question", "Conclusion", "Key Evidence", "Options & Tradeoffs", "Recommendation & System Impact", "Decision needed from you", "Remaining Uncertainty", "Sources"]),
         "review": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
         "reviews": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
@@ -68,6 +68,14 @@ def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str
             placeholder = "<!-- Link the selected design card, queue ID/ticket, and existing evidence; use 'standalone' when no delivery item applies. -->"
         elif kind == "research" and section == "Decision needed from you":
             placeholder = "<!-- One block per architecture decision: the question, its options, a suggestion labeled as a suggestion, then `**Status:** UNDECIDED` until the user records `**Chosen:** <option>`. Leave none when no architecture decision is open. -->"
+        elif kind == "designs" and section == "User and problem":
+            placeholder = "<!-- Name the user or caller, their situation, current workaround, and intended outcome. -->"
+        elif kind == "designs" and section == "Experience walkthrough":
+            placeholder = "<!-- One journey: starting state, action, visible result, and a consequential failure or recovery. Link any sketch or prototype and the question it explores; use only the fidelity needed. -->"
+        elif kind == "designs" and section == "Evidence and assumptions":
+            placeholder = "<!-- Separate observations, user reports, and assumptions. Record task feedback when available; otherwise say not tested. Prototype approval alone does not establish demand or feasibility. -->"
+        elif kind == "designs" and section == "Smallest useful outcome":
+            placeholder = "<!-- Name one useful end-to-end outcome, the essential capabilities supporting it, and deferred extras. No full frontend-first build or implementation plan. -->"
         else:
             placeholder = "<!-- Record only verified information, decisions, or clearly labeled placeholders. -->"
         result += f"## {section}\n\n{placeholder}\n\n"

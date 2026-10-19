@@ -3,6 +3,72 @@
 Read this contract when design, research, tickets, planning, or delivery need to
 choose or refresh the next item. It does not authorize a later stage.
 
+## Experience-first, risk-aware development
+
+Start with one person's problem and intended outcome, not a PRD or a feature
+list. For backend-only work, use the caller and its observable outcome instead
+of inventing screens. Treat system, behavior, features, architecture, and
+implementation as lenses on that outcome, not phases to finish for the whole
+product. Explain the big picture before local technical choices.
+
+Use this short loop, returning to an earlier question whenever evidence changes:
+
+1. **Frame:** name the user, situation, current workaround, and useful outcome.
+   Separate observed evidence, user reports, and assumptions.
+2. **Visualize:** walk the experience from starting state through action to
+   visible result. Use a sketch, storyboard, or `/prototype` discovery mode when
+   words leave important interactions unclear. Do not require polished screens
+   or multiple alternatives just to understand one flow.
+3. **Agree on behavior:** capture the chosen flow and consequential failure
+   or recovery examples. Derive only the features that support it; defer extras.
+   BDD means shared understanding through examples, not mandatory Gherkin.
+4. **Check risk and plan:** work backward from the action to required data,
+   server-enforced rules, results, and failure handling. Plan only the selected
+   end-to-end slice against live code, keeping existing approval gates.
+5. **Deliver and learn:** implement and test that slice across the necessary
+   layers, demonstrate the user outcome, and use feedback to revise the owning
+   design, ticket, and plan before selecting more work.
+
+Experience-first does not mean building the entire frontend before the backend.
+A prototype demonstrates an experience hypothesis, not demand, technical
+feasibility, or production correctness. When practical, observe a representative
+user attempting the task without coaching; record what happened and what remains
+untested. Human preference is useful evidence, not a substitute for user research.
+
+### Choose the next activity by uncertainty
+
+- **Unclear need:** investigate users and their current workarounds before adding
+  features. AI-generated personas are assumptions, not research.
+- **Unclear interaction:** use a cheap discovery prototype and task walkthrough.
+  Use polished visual comparisons only when visual or motion choices matter.
+- **Uncertain feasibility:** investigate the specific technical constraint early,
+  before promising the behavior. Standalone research needs no ticket queue;
+  executable experiments need explicit scope and remain separate from production.
+- **Expensive or unsafe reversal:** examine permissions, sensitive data, money,
+  migrations, and external-system limits upfront. Frontend discovery never
+  postpones a known security or data-integrity risk.
+- **Settled behavior and feasible approach:** stop exploring and deliver a small
+  working slice. Small, obvious fixes retain the direct path below.
+
+Borrow rapid prototyping from RAD, short feedback cycles from Agile, and upfront
+analysis for costly commitments. Do not select a heavyweight process for its own
+sake. Scale planning to uncertainty and reversal cost. A PRD is optional synthesis
+of current understanding, not an entry requirement or proof that discovery is done.
+
+### Human and AI responsibilities
+
+The human owns product priorities, experience judgment, and consequential choices.
+AI helps expose assumptions, compare flows, explain architecture, implement agreed
+behavior, and challenge results. Present one user action through the system before
+technical detail: data needed, rule owner, result, and important failure. Offer
+alternatives and tradeoffs rather than silently choosing unresolved product policy.
+For learning or interview practice, ask for a prediction or explain-back on a
+consequential decision; do not turn routine delivery into a mandatory quiz.
+
+Discovery can precede tickets and revisit them. It does not authorize publication,
+production implementation, commits, or PRs. Once execution is queued, the ticket
+index and approval/drift checks below remain authoritative.
+
 ## Intent and execution have different owners
 
 - `context/designs/<initiative>/00-index.md` organizes the user's words,

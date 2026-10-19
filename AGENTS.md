@@ -59,7 +59,7 @@ At the start of every new session, load `~/.agents/skills/caveman/SKILL.md` and 
 
 `skill-index` routes every skill — read its SKILL.md before choosing one. Skills are user-invoked (frontmatter `disable-model-invocation: true`) or model-invoked. Adding, renaming, removing, or re-routing a skill means updating `skill-index`'s SKILL.md and the README skills table.
 
-For design → research → ticket → plan → delivery continuity, use `references/workflow.md`: the ticket index owns execution state, explicit targets win, otherwise select one eligible item from verified prerequisites. Plan only that current slice; selection never authorizes the next stage.
+Use the experience-first, risk-aware loop in `references/workflow.md`: frame the user problem, visualize uncertain interactions, agree on behavior, then derive features and plan one end-to-end slice. Move between system, behavior, feature, architecture, and implementation views as evidence changes; do not require a PRD or a complete frontend first. Investigate costly technical risks early. The ticket index owns execution state, explicit targets win, and selection never authorizes the next stage.
 
 ## Commit & PR Discipline
 

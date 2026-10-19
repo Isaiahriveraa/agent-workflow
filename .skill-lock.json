@@ -34,7 +34,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/design",
       "skillPath": "skills/design/SKILL.md",
-      "skillFolderHash": "3a965f9b8d81f51804ca9211dc1ca1bb489d88b0"
+      "skillFolderHash": "9fc95ab7c56828ebd45e68a9ef9008fda21712eb"
     },
     "commit": {
       "source": ".agents",
@@ -317,7 +317,7 @@
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/to-issues",
       "skillPath": "skills/to-issues/SKILL.md",
-      "skillFolderHash": "a64b8f796229b8c64217772eba9a6e6b57b70ec8",
+      "skillFolderHash": "2d50255f4dede5e721caccd6ab3f13fa3b528740",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-09-05T00:00:00.000Z"
     },

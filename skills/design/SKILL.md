@@ -1,13 +1,13 @@
 ---
 name: design
-description: Organize a brain spill into numbered behavior cards and a dependency map. Use when the user says "design this", "organize this idea", or wants to clarify an initiative before tickets; interview meaningful scenarios with grill-with-docs, not implementation planning.
+description: Clarify a user problem and visualize the experience before deriving features or tickets. Use when the user says "design this", "organize this idea", or needs to understand a product flow; use lightweight walkthroughs, discovery prototypes when needed, and numbered behavior cards, not upfront implementation planning.
 ---
 
 # Design
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract. Resolve its path independently of the target repository's working directory.
 
-Shape the user's idea into a short brief that can become a useful backlog. Design clarifies **what problem to solve**; it does not decide the implementation. The next stage is `/to-issues`, not `/plan`.
+Shape the user's idea into a short, experience-first brief. Understand **who needs what outcome** before committing to features. Design clarifies the experience, not the implementation. Use `/prototype` discovery mode when seeing or trying the flow would resolve uncertainty; `/to-issues` follows once the selected behavior is clear enough, not merely because a brief exists.
 
 Use this for product changes, bugs that need behavior clarified, backend work, integrations, and other changes where the intended outcome is not already clear. Small, obvious fixes can skip this stage.
 
@@ -17,6 +17,11 @@ Write one bundle under `context/designs/<slug>/`:
 
 - `00-index.md` — the initiative, preserved brain spill, numbered outcome map, genuine behavior dependencies, provisional parallel candidates, open questions, and design status;
 - `NN-<topic>.md` — one numbered behavior card per distinct user-visible or caller-visible outcome.
+
+In the index, capture the user and current workaround, one experience walkthrough,
+evidence versus assumptions, and the smallest useful outcome with deferred extras.
+Link sketches, prototype decisions, and task feedback where available; say
+`not tested` when no task observation exists. Keep this brief, not a mandatory PRD.
 
 Keep the original brain spill or a faithful linked record alongside the organized cards; do not erase ideas merely because they are deferred. The design map describes outcomes, not execution status. Once tickets exist, `context/issues/<slug>/000-index.md` is the sole execution queue. Behavior dependencies are stable intent; technical overlap and readiness must be re-evaluated just before work. Parallel candidates are provisional, never permission to launch agents or worktrees.
 
@@ -49,11 +54,12 @@ Do not put a proposed architecture, file list, implementation sequence, technica
 
 ## Workflow
 
-1. **Understand the request.** Preserve what the user wants and organize the brain spill without losing deferred ideas. Invoke `/skill:grill-with-docs` explicitly for the human interview. Ask unanswered questions about meaningful behavior, walkthroughs, and failure outcomes in batches of related questions on one topic (for example, one card's failure cases together), so the user can answer each topic in one reply; scale the batches to uncertainty, not a fixed checklist or mandatory teach-back for every card. Ask follow-ups in the next batch.
+1. **Frame the user problem.** Preserve the brain spill, including deferred ideas. Name the user or caller, situation, current workaround, and intended outcome before discussing features. Invoke `/skill:grill-with-docs` for unresolved behavior decisions; reuse answers already given instead of repeating an interview. Ask related questions on one topic at a time, proportional to uncertainty.
 2. **Check current behavior.** Inspect the relevant code or product evidence when available. Mark claims as user-reported when they cannot be verified; do not turn assumptions into facts.
-3. **Group by outcome.** Number the cards and map genuine behavior prerequisites with the outcome each allows. Mark independent outcomes as provisional parallel candidates, noting known shared boundaries without pre-planning files or implementation order. Split only when outcomes can be understood and accepted independently.
-4. **Write the brief.** Create the bundle, fill the index and cards, and keep unresolved behavior decisions visible. Do not create issue drafts here; `/to-issues` owns those.
-5. **Hand off.** Set `ready-for-issues` when the topics can be drafted, otherwise set `blocked`. Report the bundle path and specific decisions needing attention. After feedback or delivery, refresh affected cards, dependencies, and open questions from evidence; do not keep a second ticket-status table here. Do not publish, plan the whole initiative, or start implementation.
+3. **Walk and visualize one experience.** Start with a realistic situation, then follow the person's actions, visible feedback, result, and a consequential failure or recovery. Use a sketch or storyboard first; invoke `/skill:prototype` in discovery mode when interaction needs to be tried. Stay within the requested design scope; running executable prototypes needs explicit authorization. Do not demand polished alternatives for an unsettled flow. Capture what was learned, what changed, and what remains untested. For non-UI work, walk the caller's interaction instead. Investigate a concrete feasibility risk early through scoped research, not a speculative architecture plan.
+4. **Derive and group outcomes.** Keep only capabilities needed for the chosen flow; preserve extras as deferred ideas. Number the cards and map genuine behavior prerequisites. Mark independent outcomes as provisional parallel candidates, noting known shared boundaries without pre-planning files or implementation order. Split only when outcomes can be understood and accepted independently.
+5. **Write the brief.** Create the bundle, fill the index and cards, and keep unresolved behavior decisions visible. Do not create issue drafts here; `/to-issues` owns those. Do not wait to settle every future flow before documenting the selected outcome.
+6. **Hand off or revisit.** Set `ready-for-issues` when the included topics can be drafted, otherwise set `blocked`. Name the bundle path, evidence, and next unresolved question or ticket-ready outcome. After prototype feedback or delivery, refresh affected cards, dependencies, and open questions; do not keep a second ticket-status table. Do not publish, plan the whole initiative, or start production implementation.
 
 ## Principles
 
