@@ -125,7 +125,7 @@ Draft PR Description(s) (include `## Stack Context` only for Strategy 2 PRs):
 - `<test name>` — the behavior it locks in
 
 ## Stack Context
-- #<prev> ← this ← #<next> · <N> source lines
+- #<prev> ← this ← #<next>
 --------------------------------------------------------------------------------
 commit-pr-reviewer approval required before creating branches, worktrees, stacks, or PRs.
 ```
@@ -162,6 +162,40 @@ paragraphs written under them.
 - **Length is the split detector.** If it will not fit in ~150 words, or needs "Also included…", the
   PR holds a second concern — split it instead of documenting it.
 
+### Reviewer-Facing Only (no internal leakage)
+
+The description is for a reviewer who has only the repo and the PR. Anything they cannot open or
+rerun from there does not belong in it.
+
+- **Author's voice.** Write as the PR author, in first person. Never "the user", "Yonie", or
+  narration about the assistant, agent, skill, or prompt. One closing attribution line is fine.
+- **Only reviewer-visible references.** No prototype or version labels, local URLs or ports, box
+  or home paths, worktree names, or scratch screenshots.
+- **Reproducible verification.** List commands and checks a reviewer can run from the repo. A
+  manual check is described as the behavior observed, not as a tool that only ran locally.
+- **No planning metadata.** No line budgets, source-line counts, plan numbers, or internal stack
+  ids. GitHub already shows the diff size.
+- **Stack Context is one line**: `#<prev> ← this ← #<next>`, nothing else.
+
+| Leaks | Reviewer-facing |
+|---|---|
+| The top of the stack matches `?v=13`. | With the whole stack applied, the home page shows the new hero, project showcases, and contact section. |
+| Playwright screenshots match `?v=13` to within font antialiasing (under 0.06% of pixels). | `npm run build` passes. Checked the home page at desktop and mobile widths; nothing overflows. |
+| `#12 ← this ← #14 · 822 source lines` | `#12 ← this ← #14` |
+| This PR moves the user's portfolio to a light theme. | I'm moving my portfolio to a light theme. |
+
+### Pre-Submit Self-Check
+
+Run this on the body before every `gh pr create`, `gh pr edit --body`, or `gh stack submit`. Fix
+any hit and re-check; never submit a body that fails.
+
+- [ ] Every sentence is in the author's first person, with no third-person narration of the user
+      or the agent.
+- [ ] Every link, path, command, and name exists in the repo or on the PR.
+- [ ] Every Verification bullet is a repo command, a repo test, or an observed behavior.
+- [ ] No line counts, budgets, plan numbers, or internal ids anywhere in the body.
+- [ ] `## Stack Context`, if present, is exactly one `#<prev> ← this ← #<next>` line.
+
 ### PR Description Template (Default)
 
 Use this for every PR. Add `## Stack Context` (below) only when the PR is part of a stack.
@@ -189,13 +223,15 @@ Append this section only to a PR created by `gh stack`. Omit it for a single PR 
 ```markdown
 ## Stack Context
 
-- #<prev> ← this ← #<next> · <N> source lines
+- #<prev> ← this ← #<next>
 ```
 
 
 ---
 
 ## Execution Runbooks (After Approval Only)
+
+Every body passes the Pre-Submit Self-Check before it is submitted.
 
 ### Executing Strategy 1: Single PR
 1. Confirm commits on the branch are clean and granular (`git log --oneline <base>..HEAD`).
