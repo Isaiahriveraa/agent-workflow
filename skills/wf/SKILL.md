@@ -38,7 +38,7 @@ Invoke the `pr` skill at `~/.agents/skills/pr/SKILL.md`, `/pr` submode:
 2. Inspect the branch diff against base: `git log --oneline <base>..HEAD`, `git diff --stat <base>...HEAD`.
 3. Check commit granularity — each commit must be one logical unit; flag violations.
 4. Size the PR (`small` / `medium` / `large`).
-5. Write the PR body with the `pr` skill's PR Description Template and run its Pre-Submit Self-Check: `## Rationale` (one sentence), `## Observable Behavior` (1–3 bullets a user would notice), `## Verification` (checks actually run and their results, plus anything unverified), and `## Builds On` only when the reviewer needs a dependency to understand the PR. No other sections.
+5. Write the PR body with the `pr` skill's PR Description Template and run its Pre-Submit Self-Check: `## Rationale` (one sentence), `## Observable Behavior` (1–3 bullets a user would notice), `## Verification` (deploy preview for UI first, then commands actually run with results, then anything not checked), and optional `## Review Notes` (the hardest part, a non-obvious risk, or a prior change it builds on). Use an imperative, specific title. No other sections.
 6. Write the body and the push/create plan (`git push -u origin <branch>`, `gh pr create --draft`).
 7. Consult the `commit-pr-reviewer` subagent for approval, in pull request mode. Push and create nothing until it approves.
 8. Execute the approved plan: push, then `gh pr create --draft --title <type>(<scope>): <summary> --body <body>`. Create as draft so the user reviews before marking ready.

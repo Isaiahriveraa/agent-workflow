@@ -91,8 +91,8 @@ Rules:
 
 For each PR, write:
 
-- **Title**: a Conventional Commit title for one concern, with no "and" (`pr` skill).
-- **Description**: the `pr` skill's PR Description Template, verbatim, with its Reviewer-Facing Only rules and Pre-Submit Self-Check: Rationale, Observable Behavior, Verification, and Builds On only when a lower layer changes how this one reads (never PR numbers or neighbor links). No other sections. Plan numbers and line counts belong in this preview, never in a description.
+- **Title**: a Conventional Commit title for one concern with an imperative, specific subject and no "and" (`pr` skill).
+- **Description**: the `pr` skill's PR Description Template, verbatim, with its Reviewer-Facing Only rules and Pre-Submit Self-Check: Rationale, Observable Behavior, Verification (preview first for UI), and Review Notes only when there is a hard part to flag or a lower layer changes how this one reads (never PR numbers or neighbor links). No other sections. Plan numbers and line counts belong in this preview, never in a description.
 - **Commits**: ordered, one responsibility each. Each commit carries the `commit` skill's proposal fields: Message, Purpose (one sentence), Dependency, Indivisible, Files (whole or by hunk), Diff (`+a -d`, file count), and Verification. Every hunk maps to exactly one commit.
 - **PR totals**: the sum of its commits. The preview row is computed from the same numbers, never estimated by hand.
 
@@ -131,7 +131,7 @@ PR 1 — feat(search): add artifact filtering
     ## Observable Behavior
     - <line>
     ## Verification
-    - <check actually run>: <result>
+    - Ran: `<command>` → <result>
   Commits:
     1. feat(search): add artifact filter query
        Purpose: <one sentence>

@@ -112,7 +112,7 @@ PR Breakdown:
    - Concern: <one-sentence description of the concern>
    ...
 
-Draft PR Description(s) (the PR Description Template below; `## Builds On` only when needed):
+Draft PR Description(s) (the PR Description Template below; `## Review Notes` only when needed):
 --------------------------------------------------------------------------------
 <one body per PR, in the PR Description Template>
 --------------------------------------------------------------------------------
@@ -129,22 +129,32 @@ The final report gives the PR URL(s), the strategy used, and the reviewer's verd
 ## Senior Developer PR Description Standard
 
 Write for someone reviewing the change without the conversation history. Every PR uses the one
-template below: these four sections, nothing else (no Summary, Changes, Files, Screenshots, or
-Notes lists).
+template below; no Summary, Changes, Files, or Notes lists.
 
+- **Title.** Imperative and specific: what the PR does, e.g. "Replace footer with contact section".
+  Never "Fix bug", "Updates", or "Phase 1". A Conventional Commit prefix is fine; the subject after it
+  stays imperative, e.g. `feat(contact): replace footer with contact section`.
 - **Rationale.** One sentence explaining the problem or purpose. Skip personal backstory and obvious
   justifications.
-- **Observable Behavior.** The meaningful differences a user would notice, in 1–3 short bullets.
-  Summarize copy changes instead of quoting all the text. Include internal changes only when they
-  affect correctness, compatibility, or risk.
-- **Verification.** Report checks actually performed and their results. Mention anything important
-  that remains unverified. Never claim a check passed without running it.
-- **Builds On.** Include only dependencies or prior changes the reviewer needs to understand this
-  PR. Omit it when there is nothing relevant, including for most stacked layers whose base does not
-  change how they read.
+- **Observable Behavior.** The meaningful differences a user (or an agent, for tooling repos) would
+  notice, in 1–3 short bullets. Summarize copy changes instead of quoting all the text. Include
+  internal changes only when they affect correctness, compatibility, or risk.
+- **Verification.** Preview first, then repeatable steps: a deploy preview and what to look at (UI
+  changes), each command actually run with its result, then anything important not checked. Never
+  claim a check passed without running it. For UI, an optional Before/After table of images a
+  reviewer can open (uploaded to the PR, never local paths).
+- **Review Notes (optional).** Point to the hardest part: the file or decision to look at closely,
+  a non-obvious risk and how to undo it, and a prior change that alters how this PR reads (no PR
+  numbers). Omit the section when empty.
 
 Keep the description proportional to the change. Don't repeat information across sections, narrate
 implementation steps, list unchanged features, or explain future work unless it affects this review.
+
+Sources: [Google](https://google.github.io/eng-practices/review/developer/cl-descriptions.html),
+[GitLab](https://docs.gitlab.com/development/code_review/),
+[Phabricator test plans](https://secure.phabricator.com/book/phabricator/article/differential_test_plans/),
+[Simon Willison](https://simonwillison.net/2025/Dec/18/code-proven-to-work/),
+[Graphite on stacks](https://graphite.com/docs/best-practices-for-reviewing-stacks).
 
 ### Reviewer-Facing Only (no internal leakage)
 
@@ -156,58 +166,68 @@ rerun from there does not belong in it.
 - **Attribution.** End with one closing attribution line naming the assistant (for example
   "Co-authored with <assistant name>."), and nothing else about it.
 - **Only reviewer-visible references.** No prototype or version labels, local URLs or ports, box
-  or home paths, worktree names, or scratch screenshots. Describe a manual check as the behavior
-  observed, not as a tool that only ran locally.
+  or home paths, worktree names, or local screenshots. Deploy preview URLs are fine, even with a PR
+  number in them, because they don't go stale.
 - **No planning metadata.** No line budgets, source-line counts, plan numbers, or internal stack
   ids. GitHub already shows the diff size.
-- **No stack order in Builds On.** No PR numbers, arrows, or neighbor links: `gh stack` and GitHub's
-  stack view show the order, and hard-coded numbers go stale. Naming the base branch is fine.
+- **No stack order.** No PR numbers, arrows, or neighbor links in Review Notes: `gh stack` and
+  GitHub's stack view show the order. Naming the base branch is fine.
 
 | Leaks | Reviewer-facing |
 |---|---|
-| The top of the stack matches `?v=13`. | With the whole stack applied, the home page shows the new hero, project showcases, and contact section. |
-| Playwright screenshots match `?v=13` to within font antialiasing. | `npm run build` passes. Not yet checked on the deploy preview. |
-| `#12 ← this ← #14 · 822 source lines` | *(omit Builds On unless the base changes how this PR reads)* |
+| The top of the stack matches `?v=13`. | Preview: <deploy preview URL> — the hero, project showcases, and contact section. |
+| Playwright screenshots match `?v=13` locally. | Ran: `npm run build` → passes. Not checked: mobile layout. |
+| `#12 ← this ← #14 · 822 source lines` | Builds on: the header's shared site config. |
 | This PR moves the user's portfolio to a light theme. | I'm moving my portfolio to a light theme. |
 
 ### PR Description Template
 
 ```markdown
-## Rationale
+<!-- Title: imperative and specific, e.g. "Replace footer with contact section" -->
 
-<One sentence: the problem or purpose.>
+## Rationale
+<one sentence: the problem or purpose>
 
 ## Observable Behavior
-
-- <1–3 short bullets: what a user would notice>
+- <1–3 bullets a user (or agent, for tooling repos) would notice; summarize copy changes>
 
 ## Verification
+- Preview: <deploy preview URL> — <what to look at>   <!-- UI changes -->
+- Ran: `<command>` → <result>
+- Not checked: <anything important>
 
-- <check actually run>: <result>
-- <anything important still unverified>
+| Before | After |   <!-- optional, UI only -->
+|---|---|
+| <img> | <img> |
 
-## Builds On
-
-<Only if the reviewer needs it: the dependency or prior change this PR relies on.>
+## Review Notes  <!-- optional; omit if empty -->
+- Look closely at: <file/area> — <decision, tradeoff, or uncertainty>
+- Risk: <what could break / how to undo>, only if not obvious
+- Builds on: <prior change that changes how this reads>, no PR numbers
 
 Co-authored with <assistant name>.
 ```
 
+Drop the HTML comments and any unused optional line before submitting.
+
 ### Pre-Submit Self-Check
 
-Run this on the body before every `gh pr create`, `gh pr edit --body`, or `gh stack submit`. Fix
-any hit and re-check; never submit a body that fails.
+Run this on the title and body before every `gh pr create`, `gh pr edit`, or `gh stack submit`.
+Fix any hit and re-check; never submit a body that fails.
 
-- [ ] Exactly the template's sections, in order; Builds On only if the reviewer needs it.
+- [ ] Title is imperative and specific.
+- [ ] Only the template's sections, in order; Review Notes omitted if empty.
 - [ ] Rationale is one sentence; Observable Behavior has 1–3 short bullets.
 - [ ] Nothing is repeated across sections, and there is no implementation narration, list of
       unchanged features, or future work that does not affect this review.
-- [ ] Every Verification item was actually run, with its result; anything important left
-      unverified is named.
+- [ ] Every Verification item was actually run, with its result; anything important not checked
+      is named.
+- [ ] A UI change has a preview link or a Before/After with reviewer-viewable images.
+- [ ] Review Notes points to the hardest part, or is omitted.
 - [ ] Every sentence is in the author's first person, with no third-person narration of the user
       or the agent.
-- [ ] Every link, path, command, and name exists in the repo or on the PR; no line counts, budgets,
-      plan numbers, internal ids, or PR numbers/arrows/links in Builds On.
+- [ ] Every link, path, command, and name exists in the repo, on the PR, or on its preview; no
+      line counts, budgets, plan numbers, internal ids, or PR numbers/arrows in Review Notes.
 - [ ] Finally, for each detail ask: "Would removing this detail make the change harder to review?"
       If not, remove it.
 
