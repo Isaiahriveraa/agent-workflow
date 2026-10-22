@@ -91,8 +91,8 @@ Rules:
 
 For each PR, write:
 
-- **Title**: a Conventional Commit title for one concern, with no "and" (`pr` skill).
-- **Description**: the `pr` skill's Senior Developer PR Description Standard and template, verbatim: Rationale, Observable Behavior, Verification, about 150 words. Add `## Stack Context` only to stacked layers, as one line. Never add `## Files`.
+- **Title**: a Conventional Commit title for one concern with an imperative, specific subject and no "and" (`pr` skill).
+- **Description**: the `pr` skill's PR Description Template, verbatim, with its Reviewer-Facing Only rules and Pre-Submit Self-Check: Rationale, Observable Behavior, Verification (preview first for UI), and Review Notes only when there is a hard part to flag or a lower layer changes how this one reads (never PR numbers or neighbor links). No other sections. Plan numbers and line counts belong in this preview, never in a description.
 - **Commits**: ordered, one responsibility each. Each commit carries the `commit` skill's proposal fields: Message, Purpose (one sentence), Dependency, Indivisible, Files (whole or by hunk), Diff (`+a -d`, file count), and Verification. Every hunk maps to exactly one commit.
 - **PR totals**: the sum of its commits. The preview row is computed from the same numbers, never estimated by hand.
 
@@ -131,7 +131,7 @@ PR 1 — feat(search): add artifact filtering
     ## Observable Behavior
     - <line>
     ## Verification
-    - `<test name>` — <behavior it locks in>
+    - Ran: `<command>` → <result>
   Commits:
     1. feat(search): add artifact filter query
        Purpose: <one sentence>
@@ -166,7 +166,7 @@ Read `MECHANICS.md` before transporting anything.
 4. Transport each concern (`MECHANICS.md` section A or B). Verify `git diff --cached --numstat` equals the planned per-commit numbers.
 5. Commit each commit with the approved message through `skills/commit/SKILL.md` Phase 2. If the staged diff does not match the approved plan, stop and return to planning.
    Before pushing, check that each branch builds on its own: run the repo's build, typecheck, or focused tests with that branch checked out. If a branch fails, stop and report it; do not push a branch that does not build.
-6. Push and open the drafts:
+6. Run the `pr` skill's Pre-Submit Self-Check on every body, then push and open the drafts:
    - Parallel PRs: `git push -u origin <branch>`, then `gh pr create --draft --base <base> --head <branch> --title "<title>" --body-file <file>`. Write the body file outside the repo.
    - Stack: `gh stack init --base <trunk> <b1> <b2> ...` adopts the layers bottom to top and checks out the top one. Then `gh stack view` must show no `⚠` marks, which means every layer sits on the one below it. If it shows one, stop and fix the chain before continuing. Then `gh stack submit --auto`. With `--auto`, new PRs are drafts. Never pass `--open`.
 7. Verify against the preview: `gh pr list --state open --json number,title,isDraft,baseRefName,headRefName,additions,deletions,changedFiles`. Every PR must match its preview row: draft state, base, `+Add`, `-Del`, and file count. For a stack, the bottom base is the trunk and each higher base is the branch below. Report any mismatch; do not patch it silently.
