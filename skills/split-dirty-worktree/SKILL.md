@@ -1,11 +1,11 @@
 ---
 name: split-dirty-worktree
-description: "Audit a dirty working tree and plan how to split it into reviewable draft PRs: group uncommitted changes into concerns, require gh stack for dependent concerns, and propose the named branch stack, GitHub-style preview, commit messages, and line counts before anything is created. Independent concerns may use parallel PRs. Read-only until the exact plan is approved."
+description: "Audit a dirty working tree and split it into reviewable draft PRs: group uncommitted changes into concerns, require gh stack for dependent concerns, and give independent concerns their own draft PRs off trunk. By default, propose the named branch stack, GitHub-style preview, commit messages, and line counts and stay read-only until the exact plan is approved. Autonomous mode (the user says to just split it, or already approved the work) runs end to end without the approval stop and reports the executed plan with PR URLs. Every PR opens as a draft in both modes; never merge, push to trunk, or force-push."
 ---
 
 # Split a Dirty Worktree
 
-Turn a large mixed working tree into a set of reviewable **draft** PRs. The plan you approve is the thing you would see on GitHub: the PR list, base branches, stack order, what can be reviewed in parallel, file and line counts, commit messages, and PR descriptions. Nothing is created until that exact plan is approved.
+Turn a large mixed working tree into a set of reviewable **draft** PRs. The plan you approve is the thing you would see on GitHub: the PR list, base branches, stack order, what can be reviewed in parallel, file and line counts, commit messages, and PR descriptions. Nothing is created until that exact plan is approved, unless the user chose autonomous mode.
 
 The plan reuses the existing formats so there is one vocabulary:
 
@@ -14,6 +14,13 @@ The plan reuses the existing formats so there is one vocabulary:
 - Branch, worktree, stack, and transport commands: `MECHANICS.md`
 
 Read-only until approval. Analysis never touches the index, refs, stash, files, branches, worktrees, or PR state.
+
+## Modes
+
+- **Approval mode** (default): run Steps 0–6, present the plan, and stop. Execute Step 7 only after the user approves that exact plan.
+- **Autonomous mode**: use it when the user invokes this skill and tells you to just do it ("split it", "do it autonomously", "no need to approve"), or has already approved the split in the conversation. Run Steps 0–7 end to end without stopping for plan approval: inventory, concerns, dependency verdicts, topology, transport, a build check on each branch, push, draft PRs, and verification against the plan. Then report the plan as executed in the Step 6 shape, with each PR's URL in place of `PR <n>`. Autonomous mode skips only the approval stop; every other step, check, and stop condition still applies.
+- **Both modes**: every PR is created as a draft (`gh stack submit --auto` without `--open`; `gh pr create --draft`). Never mark a PR ready for review, never merge, never push to the trunk, and never force-push.
+- **Reviewer fallback**: if the environment cannot launch the `commit-pr-reviewer` subagent (or any other independent reviewer this skill or `commit`/`pr` calls for), review the plan yourself against the same checklist, and state in the report that no independent review happened. Do not report a reviewer verdict that did not happen.
 
 ## Step 0 — Read the repo's policy
 
@@ -91,7 +98,7 @@ For each PR, write:
 
 ## Step 6 — Present the plan
 
-Show the plan in this exact shape, then stop. Do not mutate Git before approval. Angle brackets are placeholders, and the sample numbers only show the columns. In `Base`, a stacked layer names the PR below it as `PR <n>` from this plan; before creation, never invent real GitHub numbers. The branch stack section is required whenever distinct concerns depend on each other; a topology label alone is not a proposal.
+Show the plan in this exact shape, then stop. Do not mutate Git before approval. In autonomous mode, do not stop: go to Step 7, then report the executed plan in this same shape (Step 7, item 9). Angle brackets are placeholders, and the sample numbers only show the columns. In `Base`, a stacked layer names the PR below it as `PR <n>` from this plan; before creation, never invent real GitHub numbers. The branch stack section is required whenever distinct concerns depend on each other; a topology label alone is not a proposal.
 
 ```text
 SPLIT PLAN — <repo>
@@ -146,7 +153,7 @@ commit-pr-reviewer (PR mode) must approve this exact plan before any Git state c
 For a solo-repo plan, replace the preview table with the ordered commit list and drop the branch, workspace, and PR lines.
 For a PR-flow plan with no dependent concerns, replace the branch stack section with `Proposed branch stack: none — concerns are independent`.
 
-## Step 7 — Execute after approval
+## Step 7 — Execute after approval (or at once in autonomous mode)
 
 Read `MECHANICS.md` before transporting anything.
 
@@ -158,16 +165,19 @@ Read `MECHANICS.md` before transporting anything.
    - Worktrees only when the plan says `worktree` and the branches are independent. A stack is built in place. Verify with `git worktree list`.
 4. Transport each concern (`MECHANICS.md` section A or B). Verify `git diff --cached --numstat` equals the planned per-commit numbers.
 5. Commit each commit with the approved message through `skills/commit/SKILL.md` Phase 2. If the staged diff does not match the approved plan, stop and return to planning.
+   Before pushing, check that each branch builds on its own: run the repo's build, typecheck, or focused tests with that branch checked out. If a branch fails, stop and report it; do not push a branch that does not build.
 6. Push and open the drafts:
    - Parallel PRs: `git push -u origin <branch>`, then `gh pr create --draft --base <base> --head <branch> --title "<title>" --body-file <file>`. Write the body file outside the repo.
    - Stack: `gh stack init --base <trunk> <b1> <b2> ...` adopts the layers bottom to top and checks out the top one. Then `gh stack view` must show no `⚠` marks, which means every layer sits on the one below it. If it shows one, stop and fix the chain before continuing. Then `gh stack submit --auto`. With `--auto`, new PRs are drafts. Never pass `--open`.
 7. Verify against the preview: `gh pr list --state open --json number,title,isDraft,baseRefName,headRefName,additions,deletions,changedFiles`. Every PR must match its preview row: draft state, base, `+Add`, `-Del`, and file count. For a stack, the bottom base is the trunk and each higher base is the branch below. Report any mismatch; do not patch it silently.
 8. Confirm every planned change is committed exactly once, and `git status --short` shows only the `Not committed` paths.
+9. Report: the plan as executed in the Step 6 shape, each PR's URL and draft state, the build check result for each branch, any mismatch from step 7, and the reviewer verdict, or the line `No independent review: <reason>` when the reviewer fallback applied.
 
 ## Rules
 
-- Never mutate before approval. The `commit-pr-reviewer` approval and the user's approval both come first.
-- Open drafts only. Never pass `--open`, and never mark a PR ready for review.
+- Never mutate before approval. The `commit-pr-reviewer` approval and the user's approval both come first. In autonomous mode the user's instruction is the approval; the reviewer approval (or the reviewer fallback) still comes first.
+- Open drafts only, in both modes. Never pass `--open`, and never mark a PR ready for review.
+- Never merge a PR, never push to the trunk, and never force-push.
 - The preview numbers come from the same numstat used for execution. A plan with estimated numbers is invalid.
 - Never lose work: take the snapshot before transport.
 - Use exact raw git output; never use `rtk` for git or inventory.
