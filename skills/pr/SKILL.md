@@ -112,7 +112,7 @@ PR Breakdown:
    - Concern: <one-sentence description of the concern>
    ...
 
-Draft PR Description(s) (include `## Stack Context` only for Strategy 2 PRs):
+Draft PR Description(s) (include `## Builds On` only for Strategy 2 PRs):
 --------------------------------------------------------------------------------
 ## Rationale
 <One sentence: what this is for, or the failure it prevents.> <One more sentence: why this approach.>
@@ -124,8 +124,8 @@ Draft PR Description(s) (include `## Stack Context` only for Strategy 2 PRs):
 ## Verification
 - `<test name>` — the behavior it locks in
 
-## Stack Context
-- #<prev> ← this ← #<next>
+## Builds On
+<1-2 sentences: what this adds on top of the work beneath it.> <Optional: what stays incomplete until later work lands.>
 --------------------------------------------------------------------------------
 commit-pr-reviewer approval required before creating branches, worktrees, stacks, or PRs.
 ```
@@ -158,7 +158,8 @@ paragraphs written under them.
 - **Respect the reader's attention.** If a detail only matters to someone editing those lines, it
   belongs in the code or the review thread. Overload costs more than a missing sentence.
 - **`## Files` is never needed** (the Files Changed tab has it).
-- **`## Stack Context` is only for stacked PRs** (Strategy 2). Omit it for a single PR or an independent worktree PR; when it applies, it is one line.
+- **`## Builds On` is only for stacked PRs** (Strategy 2). Omit it for a single PR or an independent
+  worktree PR off trunk; when it applies, it is one or two sentences.
 - **Length is the split detector.** If it will not fit in ~150 words, or needs "Also included…", the
   PR holds a second concern — split it instead of documenting it.
 
@@ -167,7 +168,7 @@ paragraphs written under them.
 The description is for a reviewer who has only the repo and the PR. Anything they cannot open or
 rerun from there does not belong in it.
 
-- **Author's voice.** Write as the PR author, in first person. Never "the user", "Yonie", or
+- **Author's voice.** Write as the PR author, in first person. Never "the user", the author's name, or
   narration about the assistant, agent, skill, or prompt. One closing attribution line is fine.
 - **Only reviewer-visible references.** No prototype or version labels, local URLs or ports, box
   or home paths, worktree names, or scratch screenshots.
@@ -175,13 +176,15 @@ rerun from there does not belong in it.
   manual check is described as the behavior observed, not as a tool that only ran locally.
 - **No planning metadata.** No line budgets, source-line counts, plan numbers, or internal stack
   ids. GitHub already shows the diff size.
-- **Stack Context is one line**: `#<prev> ← this ← #<next>`, nothing else.
+- **Builds On describes the work, not the stack order.** No PR numbers, arrows, or neighbor links:
+  `gh stack` and GitHub's stack view already show the order, and hard-coded numbers go stale when
+  the stack is reordered or a layer merges. Naming the base branch is fine.
 
 | Leaks | Reviewer-facing |
 |---|---|
 | The top of the stack matches `?v=13`. | With the whole stack applied, the home page shows the new hero, project showcases, and contact section. |
 | Playwright screenshots match `?v=13` to within font antialiasing (under 0.06% of pixels). | `npm run build` passes. Checked the home page at desktop and mobile widths; nothing overflows. |
-| `#12 ← this ← #14 · 822 source lines` | `#12 ← this ← #14` |
+| `#12 ← this ← #14 · 822 source lines` | With the light design system and header in place, this adds the hero intro so the page has a first impression. |
 | This PR moves the user's portfolio to a light theme. | I'm moving my portfolio to a light theme. |
 
 ### Pre-Submit Self-Check
@@ -194,11 +197,12 @@ any hit and re-check; never submit a body that fails.
 - [ ] Every link, path, command, and name exists in the repo or on the PR.
 - [ ] Every Verification bullet is a repo command, a repo test, or an observed behavior.
 - [ ] No line counts, budgets, plan numbers, or internal ids anywhere in the body.
-- [ ] `## Stack Context`, if present, is exactly one `#<prev> ← this ← #<next>` line.
+- [ ] `## Builds On`, if present, contains no PR numbers, arrows, or links and says what this PR
+      adds on top of the work beneath it.
 
 ### PR Description Template (Default)
 
-Use this for every PR. Add `## Stack Context` (below) only when the PR is part of a stack.
+Use this for every PR. Add `## Builds On` (below) only when the PR is part of a stack.
 
 ```markdown
 ## Rationale
@@ -216,15 +220,22 @@ approach.>
 - `<test name>` — the behavior it locks in
 ```
 
-### Stack Context (Strategy 2 only)
+### Builds On (Strategy 2 only)
 
-Append this section only to a PR created by `gh stack`. Omit it for a single PR or an independent worktree PR.
+Append this section only to a PR created by `gh stack`. Omit it for a single PR or an independent
+worktree PR off trunk. In one or two first-person sentences, say what this PR adds now that the work
+beneath it exists. Optionally add what is intentionally incomplete until later work lands. The bottom
+layer can say it starts the stack on the base branch.
 
 ```markdown
-## Stack Context
+## Builds On
 
-- #<prev> ← this ← #<next>
+<With <what the lower layers already provide> in place, this adds <what this PR adds>.> <Optional:
+<what still looks unfinished> until <later work> lands.>
 ```
+
+Example: "With the light design system and header in place, this adds the hero intro so the page has
+a first impression. The project section still looks unstyled until the scroll palette lands."
 
 
 ---
