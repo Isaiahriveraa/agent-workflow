@@ -112,20 +112,9 @@ PR Breakdown:
    - Concern: <one-sentence description of the concern>
    ...
 
-Draft PR Description(s) (include `## Builds On` only for Strategy 2 PRs):
+Draft PR Description(s) (the PR Description Template below; `## Builds On` only when needed):
 --------------------------------------------------------------------------------
-## Rationale
-<One sentence: what this is for, or the failure it prevents.> <One more sentence: why this approach.>
-
-## Observable Behavior
-- <one line: what a caller or buyer sees change>
-- <one line, only if there is a second>
-
-## Verification
-- `<test name>` — the behavior it locks in
-
-## Builds On
-<1-2 sentences: what this adds on top of the work beneath it.> <Optional: what stays incomplete until later work lands.>
+<one body per PR, in the PR Description Template>
 --------------------------------------------------------------------------------
 commit-pr-reviewer approval required before creating branches, worktrees, stacks, or PRs.
 ```
@@ -139,29 +128,23 @@ The final report gives the PR URL(s), the strategy used, and the reviewer's verd
 
 ## Senior Developer PR Description Standard
 
-Keep the standard headers — they are what a reviewer scans — and keep what sits under them small.
-**Target ~150 words / 10 lines in total.** The overload never comes from the headers; it comes from
-paragraphs written under them.
+Write for someone reviewing the change without the conversation history. Every PR uses the one
+template below: these four sections, nothing else (no Summary, Changes, Files, Screenshots, or
+Notes lists).
 
-- **Rationale — two sentences.** Line 1 is the purpose or the failure; line 2 is why this approach.
-  No alternatives essay and no tradeoff catalogue.
-- **Observable Behavior — one line per bullet.** What a caller or buyer sees change. Three bullets
-  is a lot; a fifth means the PR is doing too much.
-- **Verification — one bullet per test**: `<test name>` — the behavior it locks in. One line for the
-  whole suite at most, never a pass count.
-- **Nothing repeated.** The three headers already partition the story; telling one fact under two of
-  them is what makes a description feel long.
-- **Plain words.** The project's domain term or the ordinary English word. Never an operator, class,
-  or field name where a verb will do.
-- **Say what only the author knows**: what broke, why it matters, the constraint being honoured.
-  Mechanism is already in the diff — depth is what review is for, not what the description is for.
-- **Respect the reader's attention.** If a detail only matters to someone editing those lines, it
-  belongs in the code or the review thread. Overload costs more than a missing sentence.
-- **`## Files` is never needed** (the Files Changed tab has it).
-- **`## Builds On` is only for stacked PRs** (Strategy 2). Omit it for a single PR or an independent
-  worktree PR off trunk; when it applies, it is one or two sentences.
-- **Length is the split detector.** If it will not fit in ~150 words, or needs "Also included…", the
-  PR holds a second concern — split it instead of documenting it.
+- **Rationale.** One sentence explaining the problem or purpose. Skip personal backstory and obvious
+  justifications.
+- **Observable Behavior.** The meaningful differences a user would notice, in 1–3 short bullets.
+  Summarize copy changes instead of quoting all the text. Include internal changes only when they
+  affect correctness, compatibility, or risk.
+- **Verification.** Report checks actually performed and their results. Mention anything important
+  that remains unverified. Never claim a check passed without running it.
+- **Builds On.** Include only dependencies or prior changes the reviewer needs to understand this
+  PR. Omit it when there is nothing relevant, including for most stacked layers whose base does not
+  change how they read.
+
+Keep the description proportional to the change. Don't repeat information across sections, narrate
+implementation steps, list unchanged features, or explain future work unless it affects this review.
 
 ### Reviewer-Facing Only (no internal leakage)
 
@@ -169,74 +152,64 @@ The description is for a reviewer who has only the repo and the PR. Anything the
 rerun from there does not belong in it.
 
 - **Author's voice.** Write as the PR author, in first person. Never "the user", the author's name, or
-  narration about the assistant, agent, skill, or prompt. One closing attribution line is fine.
+  narration about the assistant, agent, skill, or prompt.
+- **Attribution.** End with one closing attribution line naming the assistant (for example
+  "Co-authored with <assistant name>."), and nothing else about it.
 - **Only reviewer-visible references.** No prototype or version labels, local URLs or ports, box
-  or home paths, worktree names, or scratch screenshots.
-- **Reproducible verification.** List commands and checks a reviewer can run from the repo. A
-  manual check is described as the behavior observed, not as a tool that only ran locally.
+  or home paths, worktree names, or scratch screenshots. Describe a manual check as the behavior
+  observed, not as a tool that only ran locally.
 - **No planning metadata.** No line budgets, source-line counts, plan numbers, or internal stack
   ids. GitHub already shows the diff size.
-- **Builds On describes the work, not the stack order.** No PR numbers, arrows, or neighbor links:
-  `gh stack` and GitHub's stack view already show the order, and hard-coded numbers go stale when
-  the stack is reordered or a layer merges. Naming the base branch is fine.
+- **No stack order in Builds On.** No PR numbers, arrows, or neighbor links: `gh stack` and GitHub's
+  stack view show the order, and hard-coded numbers go stale. Naming the base branch is fine.
 
 | Leaks | Reviewer-facing |
 |---|---|
 | The top of the stack matches `?v=13`. | With the whole stack applied, the home page shows the new hero, project showcases, and contact section. |
-| Playwright screenshots match `?v=13` to within font antialiasing (under 0.06% of pixels). | `npm run build` passes. Checked the home page at desktop and mobile widths; nothing overflows. |
-| `#12 ← this ← #14 · 822 source lines` | With the light design system and header in place, this adds the hero intro so the page has a first impression. |
+| Playwright screenshots match `?v=13` to within font antialiasing. | `npm run build` passes. Not yet checked on the deploy preview. |
+| `#12 ← this ← #14 · 822 source lines` | *(omit Builds On unless the base changes how this PR reads)* |
 | This PR moves the user's portfolio to a light theme. | I'm moving my portfolio to a light theme. |
+
+### PR Description Template
+
+```markdown
+## Rationale
+
+<One sentence: the problem or purpose.>
+
+## Observable Behavior
+
+- <1–3 short bullets: what a user would notice>
+
+## Verification
+
+- <check actually run>: <result>
+- <anything important still unverified>
+
+## Builds On
+
+<Only if the reviewer needs it: the dependency or prior change this PR relies on.>
+
+Co-authored with <assistant name>.
+```
 
 ### Pre-Submit Self-Check
 
 Run this on the body before every `gh pr create`, `gh pr edit --body`, or `gh stack submit`. Fix
 any hit and re-check; never submit a body that fails.
 
+- [ ] Exactly the template's sections, in order; Builds On only if the reviewer needs it.
+- [ ] Rationale is one sentence; Observable Behavior has 1–3 short bullets.
+- [ ] Nothing is repeated across sections, and there is no implementation narration, list of
+      unchanged features, or future work that does not affect this review.
+- [ ] Every Verification item was actually run, with its result; anything important left
+      unverified is named.
 - [ ] Every sentence is in the author's first person, with no third-person narration of the user
       or the agent.
-- [ ] Every link, path, command, and name exists in the repo or on the PR.
-- [ ] Every Verification bullet is a repo command, a repo test, or an observed behavior.
-- [ ] No line counts, budgets, plan numbers, or internal ids anywhere in the body.
-- [ ] `## Builds On`, if present, contains no PR numbers, arrows, or links and says what this PR
-      adds on top of the work beneath it.
-
-### PR Description Template (Default)
-
-Use this for every PR. Add `## Builds On` (below) only when the PR is part of a stack.
-
-```markdown
-## Rationale
-
-<One sentence: what this is for, or the failure it prevents.> <One more sentence: why this
-approach.>
-
-## Observable Behavior
-
-- <one line: what a caller or buyer sees change>
-- <one line, only if there is a second>
-
-## Verification
-
-- `<test name>` — the behavior it locks in
-```
-
-### Builds On (Strategy 2 only)
-
-Append this section only to a PR created by `gh stack`. Omit it for a single PR or an independent
-worktree PR off trunk. In one or two first-person sentences, say what this PR adds now that the work
-beneath it exists. Optionally add what is intentionally incomplete until later work lands. The bottom
-layer can say it starts the stack on the base branch.
-
-```markdown
-## Builds On
-
-<With <what the lower layers already provide> in place, this adds <what this PR adds>.> <Optional:
-<what still looks unfinished> until <later work> lands.>
-```
-
-Example: "With the light design system and header in place, this adds the hero intro so the page has
-a first impression. The project section still looks unstyled until the scroll palette lands."
-
+- [ ] Every link, path, command, and name exists in the repo or on the PR; no line counts, budgets,
+      plan numbers, internal ids, or PR numbers/arrows/links in Builds On.
+- [ ] Finally, for each detail ask: "Would removing this detail make the change harder to review?"
+      If not, remove it.
 
 ---
 

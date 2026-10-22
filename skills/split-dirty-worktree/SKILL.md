@@ -92,7 +92,7 @@ Rules:
 For each PR, write:
 
 - **Title**: a Conventional Commit title for one concern, with no "and" (`pr` skill).
-- **Description**: the `pr` skill's Senior Developer PR Description Standard and template, verbatim, including its Reviewer-Facing Only rules: Rationale, Observable Behavior, Verification, about 150 words. Add `## Builds On` only to stacked layers, per the `pr` skill: what this layer adds on top of the ones beneath it, never PR numbers or neighbor links. Never add `## Files`. Plan numbers and line counts belong in this preview, never in a description.
+- **Description**: the `pr` skill's PR Description Template, verbatim, with its Reviewer-Facing Only rules and Pre-Submit Self-Check: Rationale, Observable Behavior, Verification, and Builds On only when a lower layer changes how this one reads (never PR numbers or neighbor links). No other sections. Plan numbers and line counts belong in this preview, never in a description.
 - **Commits**: ordered, one responsibility each. Each commit carries the `commit` skill's proposal fields: Message, Purpose (one sentence), Dependency, Indivisible, Files (whole or by hunk), Diff (`+a -d`, file count), and Verification. Every hunk maps to exactly one commit.
 - **PR totals**: the sum of its commits. The preview row is computed from the same numbers, never estimated by hand.
 
@@ -131,7 +131,7 @@ PR 1 — feat(search): add artifact filtering
     ## Observable Behavior
     - <line>
     ## Verification
-    - `<test name>` — <behavior it locks in>
+    - <check actually run>: <result>
   Commits:
     1. feat(search): add artifact filter query
        Purpose: <one sentence>
