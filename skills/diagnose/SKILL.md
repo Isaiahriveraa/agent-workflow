@@ -89,6 +89,14 @@ If you cannot state the prediction, the hypothesis is a vibe — discard or shar
 
 **Show the ranked list to the user before testing.** They often have domain knowledge that re-ranks instantly ("we just deployed a change to #3"), or know hypotheses they've already ruled out. Cheap checkpoint, big time saver. Don't block on it — proceed with your ranking if the user is AFK.
 
+### Attack the premise after repeated failed fixes
+
+When two or more attempted fixes assume the same cause and fail the same feedback loop, stop before another fix. Write the shared assumption as one sentence. Design and run a probe whose result would differ if that assumption were false; use the existing repro where practical. Record the observation and whether the assumption survived. If it did not, return to Phase 3 with hypotheses that explain the new evidence. If it did, investigate the next causal step rather than treating confirmation as proof of the whole diagnosis.
+
+For example, repeated UI-state fixes may assume duplicate records come from duplicate browser requests. Count requests and resulting writes for one concrete action before changing UI state again. Keep the distinguishing probe rerunnable; do not replace it with a persuasive explanation.
+
+Adapted from pstack's [Attack the Premise](https://github.com/cursor/plugins/blob/main/pstack/skills/principle-attack-the-premise/SKILL.md).
+
 ## Phase 4 — Instrument
 
 Each probe must map to a specific prediction from Phase 3. **Change one variable at a time.**
