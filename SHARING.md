@@ -33,5 +33,5 @@ The local runtime layer is intentionally untracked so a clone starts clean and p
 ## Verification Before Publishing
 Run the hub's validation:
 ```bash
-npm run validate:ssot
+npm test
 ```
