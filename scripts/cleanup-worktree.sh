@@ -31,7 +31,14 @@ fi
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
 # locate the worktree for this branch, if any
-WT_PATH=$(git worktree list | awk -v b="[$BRANCH]" '$3 == b { print $1; exit }')
+WT_PATH=""
+CURRENT_WT_PATH=""
+while IFS= read -r -d '' field; do
+  case "$field" in
+    "worktree "*) CURRENT_WT_PATH=${field#worktree } ;;
+    "branch refs/heads/$BRANCH") WT_PATH=$CURRENT_WT_PATH; break ;;
+  esac
+done < <(git worktree list --porcelain -z)
 
 # Decide how the local branch may be deleted BEFORE removing anything: squash merges are
 # invisible to `git branch -d`, so confirm merged-ness through the branch's PR instead of
@@ -59,16 +66,27 @@ if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
 fi
 
 if [ -n "$WT_PATH" ]; then
-  if [ "$FORCE" -eq 0 ] && [ -n "$(git -C "$WT_PATH" status --porcelain)" ]; then
-    echo "ERROR: worktree $WT_PATH has uncommitted changes — commit/stash them, or rerun with --force to discard." >&2
-    exit 1
+  if [ "$FORCE" -eq 0 ]; then
+    LOCAL_CHANGES=$(git -C "$WT_PATH" status --porcelain --ignored --untracked-files=all --ignore-submodules=none)
+    SUBMODULE_CHANGES=$(git -C "$WT_PATH" submodule foreach --quiet --recursive '
+      changes=$(git status --porcelain --ignored --untracked-files=all --ignore-submodules=none) || exit
+      if [ -n "$changes" ]; then
+        printf "Submodule %s:\n%s\n" "$displaypath" "$changes"
+      fi
+    ')
+    if [ -n "$LOCAL_CHANGES$SUBMODULE_CHANGES" ]; then
+      echo "ERROR: worktree $WT_PATH has uncommitted changes or ignored local files — preserve them, or rerun with --force to discard." >&2
+      printf '%s\n%s\n' "$LOCAL_CHANGES" "$SUBMODULE_CHANGES" >&2
+      exit 1
+    fi
   fi
   echo "== removing worktree: $WT_PATH"
   if [ "$FORCE" -eq 1 ]; then
     git worktree remove --force "$WT_PATH"
   elif ! REMOVE_ERR=$(git worktree remove "$WT_PATH" 2>&1); then
     # git refuses any worktree with initialized submodules unless forced; the dirty
-    # check above already ran, so forcing past that one guard doesn't skip safety.
+    # checks above include ignored files and recursive submodule contents, so forcing
+    # past that one guard doesn't skip safety.
     case "$REMOVE_ERR" in
       *"containing submodules"*)
         echo "== worktree contains submodules; retrying with --force"
