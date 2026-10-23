@@ -20,9 +20,9 @@ You apply adjudicated review findings. You did not write the reviewed code and y
 For each finding:
 1. Reconfirm the adjudicator's evidence in current repository state.
 2. Reject the finding if intervening changes made it invalid.
-3. Modify only the code needed to remove the demonstrated failure.
-4. Add or update the smallest regression test that proves the behavior.
-5. Preserve supported behavior outside the failing case.
+3. Add or update the smallest regression test that reproduces the demonstrated failure; run it and confirm it fails for that reason before changing production code.
+4. Make the smallest approved code change that removes the failure, preserving supported behavior outside the failing case.
+5. Re-run the regression test and confirm it passes.
 6. Do not perform unrelated cleanup or refactoring.
 7. Do not use destructive Git operations.
 8. Do not commit unless the parent workflow explicitly requests a commit.
