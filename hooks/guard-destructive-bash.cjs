@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Claude Code PreToolUse hook: stops Bash commands that rewrite history or
-// delete files without a clear approval. Blocked commands return a deny
+// Claude Code PreToolUse hook: blocks detected force pushes, hard resets,
+// forced git cleans, and recursive forced rm commands. Blocked commands return a deny
 // decision with a reason, so Claude asks the user instead of running them.
 // Any input this hook cannot read is allowed through, so a hook bug never
 // freezes the session.
