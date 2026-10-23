@@ -11,6 +11,14 @@ Use the questions that match the change. Start with business facts and ownership
 - Which reads and writes must succeed together? Name the transaction scope. Choose isolation, locking, atomic updates, or conflict handling based on the actual invariant and database guarantees. Test competing operations when concurrency can violate it.
 - For a remote effect, what does timeout mean? Do not assume failure means nothing happened. When duplicate delivery or retry is reachable, specify identity, deduplication/idempotency, and how an uncertain outcome is reconciled. A local transaction cannot make a remote charge atomic.
 
+## Separate independent writes before coordinating them
+
+When concurrent requests, jobs, or agents can modify the same file, branch, key, or state object, first ask whether they need one shared authoritative object. Independent facts can have separately owned write targets and be combined when read or reported. Different fields in the same rewritten JSON file are still a shared write target.
+
+When sharing represents a real business invariant, preserve it and enforce coordination structurally with the appropriate database constraint, transaction, atomic conditional update, lock, or single writer. Do not split a canonical fact into independent copies to avoid enforcing consistency. Instructions to workers are not concurrency control. Test the competing operations at the boundary that actually enforces the guarantee.
+
+Adapted from pstack's [Separate Before Serializing Shared State](https://github.com/cursor/plugins/blob/main/pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md).
+
 ## Persisted-data changes
 
 Before editing a schema, inspect real constraints, representative historical rows, query patterns, and the deployment process. A new field is a compatibility decision as well as a type change.
