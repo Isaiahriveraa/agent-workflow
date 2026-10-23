@@ -98,6 +98,7 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 
 ## Productivity
 
+- **Understand current code or practice reasoning** → **`/skill:tutor`** — diagnose the specific gap, trace real code, and choose a hint, focused explanation, or closely matched worked example. Hands-on practice does not complete the learner's task; ordinary delivery stays agent-written.
 - **Learning sessions** → **`/skill:learn-plan`** — planning protocol for learning sessions.
 - **Capture a future idea** → **`/skill:later`** — record a future improvement note in `future/` without implementing.
 - **Commit + PR in one flow** → **`/skill:wf`** — commit skill then pr skill, two approval gates.

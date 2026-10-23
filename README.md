@@ -167,7 +167,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning protocol |
-| `tutor/` | Technical mentor workflow |
+| `tutor/` | Adaptive coaching: diagnose the specific gap, trace real code, and use focused explanations or closely matched worked examples |
 | `diagnose/` | Bug and performance diagnosis |
 | `security-review/` | Team-mode vulnerability research |
 | `e2e-testing-patterns/` | Playwright/Cypress testing standards |

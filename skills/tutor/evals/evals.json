@@ -1,0 +1,23 @@
+{
+  "skill_name": "tutor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I understand that await pauses this function, not the whole app. In this existing code, async function save() { const result = await write(); show(result); }, I'm only confused about whether show runs before write finishes. Please stay with this code; changing to a bank example confused me last time.",
+      "expected_output": "Recognize the already-correct understanding. Explain the local ordering directly using the given code, without an unrelated example or a fresh prerequisite quiz. Ask at most one focused follow-up about the missing connection.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Help me trace this existing code for an interview. submit(input) calls save(input), then returns { id: saved.id }; save(input) throws Error('empty') if input.name is empty, otherwise it calls repository.insert(input). For this exercise repository.insert({name:'A'}) returns {id:7,name:'A'}. I want to understand both the successful return and the empty-name failure, not rewrite anything.",
+      "expected_output": "Trace the concrete input across submit, save, and repository and back to the caller, including the returned id and the thrown-error path. Mark the trace as reasoning from the supplied code, not executed evidence. Avoid inventing files or starting a different-domain example.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I'm practicing implementing a retry-safe handler myself. I think the duplicate check must happen before the side effect, but I don't understand how two requests can both pass it. Two hints haven't helped. Explain the missing idea directly without writing my handler for me.",
+      "expected_output": "Preserve the correct ordering insight, explain the concurrent check-then-act interleaving directly, and avoid another hint-only response. Do not provide the completed handler. Use one focused application question after the explanation.",
+      "files": []
+    }
+  ]
+}
