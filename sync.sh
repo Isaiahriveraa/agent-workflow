@@ -310,12 +310,14 @@ if tool == "cursor-cli" and surface == "skills":
         fail(f"cursor skills directory missing: {target}")
     missing = []
     wrong = []
+    expected = set()
     bridged = 0
     for entry in sorted(os.listdir(source)):
         skill_dir = os.path.join(source, entry)
         if not os.path.isdir(skill_dir) or not os.path.isfile(os.path.join(skill_dir, "SKILL.md")):
             continue
         bridged += 1
+        expected.add(entry)
         link = os.path.join(target, entry)
         if not os.path.islink(link):
             missing.append(entry)
@@ -325,6 +327,15 @@ if tool == "cursor-cli" and surface == "skills":
         fail(f"missing skill bridges: {', '.join(missing[:5])}")
     if wrong:
         fail(f"bridges pointing elsewhere: {', '.join(wrong[:5])}")
+    stale = []
+    for entry in sorted(os.listdir(target)):
+        link = os.path.join(target, entry)
+        if entry not in expected and os.path.islink(link):
+            destination = os.path.abspath(os.path.join(target, os.readlink(link)))
+            if os.path.dirname(destination) == os.path.abspath(source) and os.path.basename(destination) == entry:
+                stale.append(entry)
+    if stale:
+        fail(f"stale skill bridges: {', '.join(stale[:5])}")
     print(f"{bridged} hub skills bridged into {target}")
 elif tool == "opencode" and surface == "agents":
     expected = [os.path.basename(path) for path in sorted(glob.glob(os.path.join(source, "*.md")))]
@@ -734,6 +745,21 @@ os.makedirs(cursor_skills, exist_ok=True)
 created = 0
 repaired = 0
 skipped = []
+pruned = 0
+expected = {
+    entry for entry in os.listdir(hub_skills)
+    if os.path.isdir(os.path.join(hub_skills, entry))
+    and os.path.isfile(os.path.join(hub_skills, entry, "SKILL.md"))
+}
+
+for entry in sorted(os.listdir(cursor_skills)):
+    link = os.path.join(cursor_skills, entry)
+    if entry not in expected and os.path.islink(link):
+        destination = os.path.abspath(os.path.join(cursor_skills, os.readlink(link)))
+        if os.path.dirname(destination) == os.path.abspath(hub_skills) and os.path.basename(destination) == entry:
+            os.remove(link)
+            print(f"  Pruned stale bridge: {entry}")
+            pruned += 1
 
 for entry in sorted(os.listdir(hub_skills)):
     skill_dir = os.path.join(hub_skills, entry)
@@ -761,7 +787,7 @@ for entry in sorted(os.listdir(hub_skills)):
 for entry in skipped:
     print(f"  Skipped (non-symlink already exists): {entry}")
 
-print(f"\nDone. {created} linked, {repaired} repaired, {len(skipped)} skipped in {cursor_skills}")
+print(f"\nDone. {created} linked, {repaired} repaired, {pruned} pruned, {len(skipped)} skipped in {cursor_skills}")
 PYEOF
 }
 
