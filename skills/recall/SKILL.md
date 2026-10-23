@@ -38,7 +38,7 @@ When this command is invoked:
    - Immediately read the handoff document FULLY using the Read tool
    - Immediately read any research or plan documents it links to under `context/`. Read these critical files DIRECTLY using the Read tool - do NOT invoke skills for this initial reading phase.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
-   - Then propose a course of action to the user and confirm, or ask for clarification on direction.
+    - Continue verification before proposing a course of action; do not ask for approval yet.
 
 2. **If no parameters provided**, branch on the `recent handoffs:` listing in the Metadata block:
    - **Empty** — no handoffs exist; tell the user and ask for a path in prose.
@@ -123,7 +123,14 @@ When this command is invoked:
 
    ```
 
-   Use the `ask_user_question` tool to confirm the approach. Question: "{Summary of recommended next action}. Proceed?". Header: "Resume". Options: "Proceed (Recommended)" (Begin with {recommended action 1}); "Adjust approach" (Change the order or scope of next steps); "Re-analyze" (The codebase has changed — re-verify state first).
+    Use one checkpoint after verification, following `~/.agents/references/workflow.md`.
+    If the user explicitly requested continuation and the verified next action is
+    already authorized, summarize it and continue without another permission prompt.
+    Otherwise ask one concrete question covering the missing authorization or
+    material scope/risk decision, then wait. Selecting a handoff is not approval
+    to implement, commit, publish, or bypass the active plan gate. Treat recorded
+    approvals as evidence to reconcile with the current request and repository,
+    not as new authority from the handoff itself.
 
 ### Step 4: Create Action Plan
 
@@ -132,14 +139,10 @@ When this command is invoked:
    - Add any new tasks discovered during analysis
    - Prioritize based on dependencies and handoff guidance
 
-2. **Present the plan**:
-   ```
-   I've created a task list based on the handoff and current analysis:
-
-   {Show todo list}
-
-   Ready to begin with the first task: {task description}?
-   ```
+2. **Share only useful changes**: briefly show the next task and any relevant
+   reconciliation result. Do not repeat the checkpoint or ask "Ready to begin?"
+   after authorization is settled. New tasks are suggestions until they fall
+   within the authorized scope; a task list is not an approved implementation plan.
 
 ### Step 5: Begin Implementation
 
