@@ -18,6 +18,16 @@ Deep performance optimization based on Lighthouse performance audits. Focuses on
 3. Provide specific optimizations with code examples
 4. Measure improvement with before/after metrics
 
+## Explain measured improvements
+
+Before reporting or acting on a measured speedup or regression, compare the same workload and user-visible outcome under recorded conditions. Keep the command or procedure, baseline, repeated-run count, and spread with the result. Check for cached or skipped work, errors, unequal configuration, and measurement overhead; interleave baseline and changed runs where practical to reduce drift.
+
+Identify the limiting resource or code path from a profile or counters collected during the run, not a guess from reading code. Explain what prevents further improvement and whether the changed work matters to end-to-end latency. If the limiter or repeatability is unknown, label the result preliminary rather than claim a proven improvement. Do not compare unlike scenarios with a percentage.
+
+Apply the same evidence standard to evaluation claims: verify that runs completed the intended task, repeat trials, and describe the tested scenarios and limits. A valid output or passing test alone does not establish a performance gain.
+
+Adapted from pstack's [Explain the Number](https://github.com/cursor/plugins/blob/main/pstack/skills/principle-explain-the-number/SKILL.md).
+
 ## Performance budget
 
 | Resource | Budget | Rationale |
