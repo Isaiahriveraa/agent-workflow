@@ -118,7 +118,7 @@ Each AI tool connects through an adapter directory:
 
 | Adapter | Tool | Entry Point |
 |---------|------|-------------|
-| `adapters/claude-code/` | Claude Code | `CLAUDE.md` → `AGENTS.md` |
+| `adapters/claude-code/` | Claude Code | `~/.claude/CLAUDE.md` → adapter bridge → `~/.agents/AGENTS.md` |
 | `adapters/codex-cli/` | Codex CLI | Config under `~/.codex/` |
 | `adapters/opencode/` | OpenCode | Native config discovery |
 | `adapters/antigravity/` | Antigravity / Gemini | `GEMINI.md` bridge |
