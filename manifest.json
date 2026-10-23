@@ -100,13 +100,6 @@
       "type": "directory"
     },
     {
-      "source": "~/.gemini/skills",
-      "target": "~/.agents/skills",
-      "tier": 1,
-      "tool": "antigravity",
-      "type": "directory"
-    },
-    {
       "source": "~/.gemini/antigravity-cli/plugins/hub/skills",
       "target": "~/.agents/skills",
       "tier": 1,
@@ -139,7 +132,7 @@
   "auto_discovery": {
     "opencode_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
     "codex_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed.",
-    "antigravity_skills": "Symlinked to ~/.gemini/skills/ and ~/.gemini/antigravity-cli/plugins/hub/skills/ — both point to ~/.agents/skills/.",
+    "antigravity_skills": "Symlinked to ~/.gemini/antigravity-cli/plugins/hub/skills/ — points to ~/.agents/skills/ without a duplicate Gemini skills mirror.",
     "pi_skills": "Auto-discovers from ~/.agents/skills/ — no symlink needed. Prompt templates wired via settings prompts array (~/.agents/commands).",
     "cursor_skills": "Per-skill symlinks bridged into ~/.cursor/skills/ via sync.sh gen-cursor-skills. Cursor's own built-in skills stay untouched in ~/.cursor/skills-cursor/."
   },
@@ -279,7 +272,7 @@
       },
       "skills": {
         "status": "bridged",
-        "contract": "Symlinked via ~/.gemini/skills/ -> ~/.agents/skills/ (shared) and ~/.gemini/antigravity-cli/plugins/hub/skills/ -> ~/.agents/skills/ (agy plugin discovery)"
+        "contract": "Symlinked via ~/.gemini/antigravity-cli/plugins/hub/skills/ -> ~/.agents/skills/ (agy plugin discovery)"
       },
       "commands": {
         "status": "bridged",
