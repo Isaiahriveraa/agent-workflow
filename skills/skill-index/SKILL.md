@@ -33,7 +33,7 @@ Use the parts of this route that answer the current question:
 6. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
 7. **Need to explain a question?** → **`/skill:explain`** — visual browser workspace with an Excalidraw whiteboard and live previews for schema, data-model, design, and logic questions. Route findings to the plan.
 8. **Need to see or try the experience?** → **`/skill:prototype`** — discovery mode explores one flow cheaply; visual-comparison mode presents finished-quality alternatives when appearance or motion is the question. Record observations and return to design or the selected plan; selection does not authorize production work.
-9. **Need a spec issue?** → **`/skill:to-spec`** — synthesize the conversation into a GitHub spec issue (Problem/Stories/Decisions/OutOfScope) — no code/file-path planning.
+9. **Need a spec draft or issue?** → **`/skill:to-spec`** — synthesize the conversation locally (Problem/Stories/Decisions/OutOfScope); review before separate exact-content publication approval. No code/file-path planning.
 10. **Standalone cited research?** → **`/skill:research`** — answer a concrete question using local evidence and primary sources; a standalone question needs no delivery queue.
 11. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit`).
 

@@ -142,7 +142,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `plan/` | Discuss meaningful backend choices from the frontend experience, then plan one current-code-based slice with test seams and Git baseline for approval |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
-| `to-spec/` | Conversation → spec issue |
+| `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Explicit question or next eligible item → missing facts only, local code first, linked cited evidence |
 | `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |

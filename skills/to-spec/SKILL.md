@@ -1,14 +1,17 @@
 ---
 name: to-spec
-description: Turn the current conversation into a spec and publish it as a GitHub Issue — no interview, just synthesis of what you've already discussed.
+description: Synthesize the current conversation into a local spec draft; publish it as a GitHub Issue only after review and separate approval.
 disable-model-invocation: true
 ---
 
-This skill takes the current conversation context and codebase understanding and produces a spec (PRD equivalent). Do NOT interview the user — just synthesize what you already know.
+This skill synthesizes the current conversation and codebase understanding into
+a spec. Follow `~/.agents/references/workflow.md`; do not restart discovery or
+interview the user again about settled decisions. Record unresolved choices as
+open questions rather than inventing policy or treating suggestions as decisions.
 
 ## Determining the repo
 
-The repo must be known to publish the issue. In priority order:
+Identify the repository to ground the draft and before any publication. In priority order:
 
 1. If the first argument is in `owner/repo` format, use it.
 2. Otherwise detect from `git remote get-url origin` in the current working directory.
@@ -24,11 +27,27 @@ Explore the repo to understand the current state of the codebase, if you haven't
 
 Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. The fewer seams across the codebase, the better — the ideal number is one.
 
-Check with the user that these seams match their expectations.
+Include the proposed seams in the draft review. Ask separately only when a
+meaningful unresolved choice needs the user's decision; reuse settled agreement.
 
-### 3. Write and publish the spec
+### 3. Draft the spec locally
 
-Write the spec using the template below, then publish it as a GitHub Issue:
+Use the template below and the repository's existing `context/` convention;
+otherwise use `context/designs/<feature>/00-index.md`. Reuse an existing brief
+instead of creating a competing source of truth. Include only behavior and
+decisions supported by the conversation; keep undecided choices explicit. Present
+the draft for review. Drafting does not authorize publication or implementation.
+
+### 4. Publish only after separate approval
+
+Only when the user asks to publish the reviewed draft, show the exact repository,
+title, label, and issue body and obtain explicit approval of that packet before
+calling GitHub. Check for an existing matching issue to avoid duplicates; an
+update requires the same exact-content approval. Material changes require renewed
+approval. Check repository visibility and do not publish secrets or sensitive
+details; resolve any disclosure concern with the user first.
+
+After approval, create the issue:
 
 ```bash
 gh issue create \
@@ -72,7 +91,7 @@ A list of implementation decisions that were made. This can include:
 
 Do NOT include specific file paths or code snippets. They may end up being outdated quickly.
 
-Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
+Exception: if a prototype produced a snippet that encodes an agreed decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits. A prototype alone does not approve a schema or API contract.
 
 ## Testing Decisions
 
