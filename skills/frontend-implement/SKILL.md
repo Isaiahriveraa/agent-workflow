@@ -44,6 +44,8 @@ Sub-agent types to use (all read-only by design):
 7. **Verify and share useful progress** — Run the repo's linter, typecheck, test suite, and build. Passing checks are not proof of visual quality. When visual feedback would help, provide the real feature's URL and a short task to try, or explain why it cannot run. A demonstration is not required for every change. Keep browser automation opt-in; do not claim a human walkthrough occurred unless it did.
 
 End of flow: implementation verified, report back to the user. Do not auto-run `/code-judgment`, `/code-review`, or `/commit` — the user decides whether to clean, review, or commit next. Note that per AGENTS.md **TDD**, tests that prove behavior are permanent, frontend included; tests that only pin how the UI is built — markup, classes, styles, snapshots, internal state — are scaffolding to clean up before committing unless the user explicitly requested to retain them.
+Preserve this mode during cleanup and review: specialists return evidence and
+proposed fixes; the main agent applies implementation edits and verifies them.
 
 ## Research-only delegation template
 

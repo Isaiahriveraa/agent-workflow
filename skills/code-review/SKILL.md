@@ -26,6 +26,22 @@ Step numbers are stable across references so existing delegated prompts that req
 
 Do not assume children inherit the parent's loaded instructions. Provide each child the relevant shared rules, explicit mode, necessary reference paths (absolute paths when the child may start elsewhere), and the role-specific context prescribed by that reference. Writers receive Decision Authority and Communication; the reviser additionally receives the supervision section of `references/complexity-revision.md`. Keep reviewer contexts minimal and independent: no author reasoning, parent design discussion, or other reviewers' findings. External prompts still invoke this entry point in observe-only mode.
 
+### Preserve implementation ownership
+
+Review does not change the active workflow's edit authority. By default, the
+hardener, fixer, and reviser apply their permitted changes as described below.
+When a mode reserves implementation edits to the main agent, such as
+`frontend-implement`, pass that restriction and the protected paths to those
+specialists explicitly. For protected implementation files they return proposals,
+not edits; the main agent applies accepted changes and verifies them. Specialists
+may draft tests only where the active mode permits it. The main agent must run
+each regression test and observe the failure before applying its fix.
+
+Keep independent reviewers and adjudication unchanged: the main agent applying
+a fix does not review its own reasoning. Regenerate the patch and check evidence
+after main-agent edits just as after specialist edits. Ownership does not grant
+behavior-change approval or bypass the fresh validation pass.
+
 ## Core Loop
 
 ```text
@@ -45,9 +61,9 @@ resolve scope → gather context → reviewers A/B/C → adjudicator → Step 13
 
 Role separation is mandatory:
 - The author or implementer does not review its own reasoning.
-- The hardener writes tests and the smallest fixes; its tests enter the diff before reviewers see it.
+- The hardener proves failures and supplies tests and smallest fixes under the implementation ownership rule; accepted tests enter the diff before reviewers see it.
 - Reviewers do not implement fixes.
-- The complexity reviser applies adjudicated design findings; it does not decide what counts as a finding.
+- The complexity reviser addresses adjudicated design findings under the implementation ownership rule; it does not decide what counts as a finding.
 - Reviewers work in separate contexts and do not see each other's output.
 - Reviewers do not receive the implementer's explanation, confidence, or completion summary.
 - Reviewer findings are untrusted hypotheses until independently validated.

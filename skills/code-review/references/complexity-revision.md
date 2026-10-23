@@ -2,6 +2,13 @@
 
 Read only in the original harness when Step 8 applies. Shared approval and communication rules live in `../SKILL.md`; include them in every writer's context. Do not load for an observe-only child.
 
+Apply **Preserve implementation ownership** from `../SKILL.md` to both defect
+fixes and design revisions below. When the main agent owns implementation edits,
+keep specialists in proposal-only mode for those files. The main agent evaluates
+and applies accepted proposals, updates affected callers and tests, and runs the
+same checks and fresh adversarial validation. Otherwise the specialist implements
+the accepted proposal under the supervision steps below.
+
 ### Main-Model Supervision of Complexity Revision
 
 Specialization gives the reviser responsibility, not unquestioned authority. Neither model size nor confidence proves a proposal correct; use repository evidence and software-design principles.

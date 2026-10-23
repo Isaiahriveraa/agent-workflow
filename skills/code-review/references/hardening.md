@@ -2,6 +2,13 @@
 
 Read only for a full review, in the original harness. The shared approval boundaries in `../SKILL.md` apply to the hardener's prompt and every fix.
 
+Apply **Preserve implementation ownership** from `../SKILL.md` before dispatch.
+Where implementation files are main-agent-only, ask for reproduction evidence,
+test drafts where permitted, and proposed fixes without editing those files.
+The main agent runs the regression test to confirm failure, applies an approved
+fix, and reruns the checks before reviewers receive the updated patch. This
+replaces only who applies the fix, not proof, approval, or independent review.
+
 ### Step 3: Harden First (spawn the hardener)
 
 Not run with `--review-only`: the hardener runs in the implementer's harness before the delegated review starts.
