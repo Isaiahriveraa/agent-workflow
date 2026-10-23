@@ -93,7 +93,7 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 
 ## Testing
 
-- **TDD cycle** → **`/skill:tdd`** — red-green-refactor, one test at a time. Reference [tests.md](tdd/tests.md) and [mocking.md](tdd/mocking.md).
+- **TDD cycle** → **`/skill:tdd`** — red-green-refactor, one test at a time. Reference [tests.md](../tdd/tests.md) and [mocking.md](../tdd/mocking.md).
 - **E2E testing** → **`/skill:e2e-testing-patterns`** — Playwright/Cypress patterns.
 
 ## Productivity
