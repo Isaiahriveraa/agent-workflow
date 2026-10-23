@@ -187,7 +187,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `performance/` | Web performance optimization |
 | `supabase-postgres-best-practices/` | Postgres optimization from Supabase |
 | `herdr/` | Control Herdr terminal multiplexer for coding agents |
-| `orchestration/` | Generalized Herdr orchestration across workspaces, tabs, and panes; prompt-file dispatch and status-only supervision |
+| `orchestration/` | Approval-gated background subagents or isolated CLI workers in Herdr panes/worktrees, with a conversational coordinator, progress logs, and verified handoffs |
 | `skill-index/` | Skill router — ask which skill fits |
 
 Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, codebase-locator, reviewer-behavioral, reviewer-contract, reviewer-maintainability, security-reviewer, adjudicator, fixer, complexity-reviser.
