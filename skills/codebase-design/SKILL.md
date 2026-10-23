@@ -27,6 +27,14 @@ This is technical design guidance, not permission to implement, bypass plan appr
 
 Keep the result proportional: a few sentences for a small responsibility choice; a short decision note in the existing plan for a consequential one. Report the outcome/invariant, owner/hidden decision, choice/tradeoff, and proof. Do not repeat the entire checklist in the answer.
 
+## Choose the data shape before the logic
+
+For meaningful design changes, start from one caller action and sketch the facts, valid states, and operations it needs before implementing branching logic. Trace the dominant reads, lookups, updates, and lifecycle transitions; choose types and collections that support those paths and prevent contradictory states. Reuse authoritative models rather than introducing another representation of the same facts.
+
+Show the caller usage, proposed shape, rule owner, and one failure example in the existing plan or discussion. Explain why the shape fits those operations so the user can connect requirements to implementation. This is a small design sketch, not a requirement to design the entire database or build scaffolding before a working slice. Routine changes can retain the existing shape.
+
+Adapted from pstack's [Foundational Thinking](https://github.com/cursor/plugins/blob/main/pstack/skills/principle-foundational-thinking/SKILL.md).
+
 ## Complexity and information hiding
 
 Look for Ousterhout's three symptoms: **change amplification** (one change touches many places), **cognitive load** (too much must be learned), and **unknown unknowns** (it is unclear what must be known or changed). Use them to compare concrete designs, not as numeric scores.
