@@ -166,7 +166,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `wf/` | Commit + PR in one flow (commit → pr); supports `wf --no` and `wf --no-review` as passthroughs to skip only the nested commit review gate. |
 | `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
 | `codebase-drill/` | OA-style codebase navigation training |
-| `learn-plan/` | Learning-session planning protocol |
+| `learn-plan/` | Learning-session planning and explanation; human coding practice only when explicitly requested |
 | `tutor/` | Adaptive coaching: diagnose the specific gap, trace real code, and use focused explanations or closely matched worked examples |
 | `diagnose/` | Bug and performance diagnosis |
 | `security-review/` | Team-mode vulnerability research |

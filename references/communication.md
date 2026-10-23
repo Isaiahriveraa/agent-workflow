@@ -35,6 +35,16 @@ only affected agreements rather than restarting discovery or repeating approvals
 
 **Research** — Question → Conclusion → Key Evidence → Options & Tradeoffs → Suggestion (labeled as not a decision) → Decisions Needed From You (one question per UNDECIDED architecture choice) → Remaining Uncertainty.
 
+## Learning while delivering
+
+When the user wants to understand while building, keep agent-written delivery as the default. Neither `learn-plan` nor full hands-on tutor mode is required. Reuse the existing plan and approval gates rather than adding another workflow or document.
+
+Before an unfamiliar slice, explain one concrete action through the system: entry point, data passed, rule owner, state change, result, and important failure. Show caller usage and the proposed data/interface shape for consequential design choices. Compare alternatives only where the existing design workflow calls for them.
+
+After a meaningful slice, give a short catch-up: what now works, how and why it works, what was verified or remains unverified, and any decision waiting on the user. Explain behavior rather than narrating agent activity. Do not invent an approval request when none is needed.
+
+For learning or interview practice, trace the important path through actual code with one concrete input. Follow values, calls, branches, state changes, and the return path. Cite the relevant files or symbols, not a full source listing. Use a prediction or a small variation to check one unfamiliar concept when helpful; do not quiz every function or block routine progress. Offer a bounded independent coding task rather than silently making the user implement the feature.
+
 ## Tests
 
 - Tests that prove behavior are permanent, frontend included: durable regression coverage for business logic, API contracts, data boundaries, error states, and user-visible UI behavior.
@@ -43,4 +53,4 @@ only affected agreements rather than restarting discovery or repeating approvals
 
 ## Review
 
-Autonomous implementation, zero code clutter: do not volunteer diffs or line-by-line walkthroughs. Code quality is evaluated at review gates (commit and PR review).
+Autonomous implementation, zero code clutter: do not volunteer diffs or line-by-line walkthroughs during ordinary delivery. Requested learning and code-tracing sessions use the focused trace above. Code quality is evaluated at review gates (commit and PR review).
