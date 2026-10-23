@@ -20,26 +20,25 @@ This file should be read in this order:
 ## Hub-Sourced Surfaces
 
 ### Commands (`~/.gemini/commands/`)
-All 18 command TOML files are **generated from the hub** at `~/.agents/commands/` via:
+Command TOML files are **generated from the hub** at `~/.agents/commands/` via:
 ```bash
 ~/.agents/sync.sh gen-antigravity-commands
 ```
 Run this after adding or editing commands in the hub to regenerate.
-Available commands:
-- capture-decision, commit, elite-mode, fix, handoff, ping-pong, plan, plan-feature
-- pr, pr-split, prime, read-code, recall, review, review-diff, rpi, rpi-brainstorm, tutor
+For the current inventory, inspect the source `~/.agents/commands/*.md` and regenerated `~/.gemini/commands/*.toml` files rather than a fixed command list.
 
 ### Agents (`~/.gemini/agents/`)
-All 43 agent markdown files are **generated from the hub** at `~/.agents/agents/` via:
+Agent markdown files are **generated from the hub** at `~/.agents/agents/` via:
 ```bash
 ~/.agents/sync.sh gen-antigravity-agents
 ```
 Run this after adding or editing agents in the hub to regenerate.
+For the current inventory, inspect `~/.agents/agents/*.md` and the regenerated files in `~/.gemini/agents/`.
 
 ### Skills (`~/.agents/skills/`)
 Skills are **auto-discovered** by Gemini/agy from the hub's `~/.agents/skills/` directory.
 No symlink or generation needed — the CLI finds them via the user-scope alias.
-53 skill packs covering Flutter, testing, UI/UX, security, performance, and more.
+Inspect `~/.agents/skills/*/SKILL.md` for the current skill inventory.
 
 ---
 
