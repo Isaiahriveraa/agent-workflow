@@ -9,6 +9,12 @@ Read `~/.agents/references/workflow.md` from the skill hub and follow it as the 
 
 Shape the user's idea into a short, experience-first brief. Understand **who needs what outcome** before committing to features. Design clarifies the experience, not the implementation. Use `/prototype` discovery mode when seeing or trying the flow would resolve uncertainty; `/to-issues` follows once the selected behavior is clear enough, not merely because a brief exists.
 
+Follow the shared workflow's context-dependent choice: one agreed direction needs
+no disposable prototype. Use discovery only far enough to understand an unclear
+flow, and visual comparison only for competing UI directions. When implementation
+is requested and its gates are satisfied, build the agreed direction as production
+code. This design stage itself does not authorize production edits.
+
 Use this for product changes, bugs that need behavior clarified, backend work, integrations, and other changes where the intended outcome is not already clear. Small, obvious fixes can skip this stage.
 
 ## Output

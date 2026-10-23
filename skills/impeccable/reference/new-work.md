@@ -76,7 +76,12 @@ If the work establishes durable strategy for a route or artifact, read its exist
 
 Keep the brief small: scope and visitor mode; audience, job, action/task, proof/content, and constraints; chosen direction and memorable moment; unresolved decisions. Do not copy global product truth or DESIGN.md tokens into it.
 
-Whenever any image generation is available, a harness-native tool or the API fallback context.mjs reports, the locked direction is visualized before it is built, never skipped: load [visualize.md](visualize.md) and follow it, three compositional options rendered and put before the user for approval. This step is proven to produce the most compositional and ambitious work.
+Follow `~/.agents/references/workflow.md` when deciding whether to visualize before
+building. Load [visualize.md](visualize.md) only when a specific unresolved
+composition or visual choice would benefit from comparison and image generation
+is available. Tool availability alone is not a reason to generate options. An
+agreed direction can proceed to authorized production implementation; use the
+actual feature for feedback when useful.
 
 For `shape`, return the selected direction to [shape.md](shape.md) and stop before persistence or implementation.
 

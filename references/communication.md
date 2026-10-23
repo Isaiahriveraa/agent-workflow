@@ -4,6 +4,19 @@ Human-agent communication centers on observable behavior, architecture, interfac
 
 Keep it proportional: no walls of text, no narrating routine syntax or line-by-line edits, no premature code listings. Explain the idea before the terminology, and put the big ideas first.
 
+Keep the user involved where understanding or a decision is needed, not only at
+final review. Follow `workflow.md`: start from the frontend experience for UI
+product work, then discuss new or materially changed backend needs and tradeoffs
+before implementing them. Reuse settled decisions. Show the actual production
+feature when useful; a separate demo, browser session, or repeated walkthrough is
+not mandatory. Use disposable prototypes only when uncertainty calls for them.
+
+Use the shared workflow's **Interaction follows the decision** rule: act on
+settled, authorized work; pause for meaningful unresolved choices; show an example
+only when it helps understanding. Trace backend choices through one user action.
+When feedback changes part of the flow, explain the downstream effects and update
+only affected agreements rather than restarting discovery or repeating approvals.
+
 ## Behavior-First Sequence
 
 1. **Problem** — what we're solving, why it matters, who it affects.

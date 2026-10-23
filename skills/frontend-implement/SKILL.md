@@ -10,17 +10,15 @@ The main agent owns the frontend. It is the only agent that writes, edits, or de
 
 This is an implementation mode, not a delegation shortcut. If a step can be done by reading files and thinking, the main agent does it. Sub-agents are dispatched only when they add real signal: mapping an unfamiliar codebase, deep-diving a component, or pulling external library docs.
 
-## Prototype before implementing (gate)
+## Choose production or exploration by context
 
-If the visual direction is unproven — anything the user has not seen yet — build it and show it before writing it into the app. Don't guess, and don't wait to be asked.
-
-1. Build it for real, at true scale: a small, disposable front-end artifact in the target project's own front-end language. Not a scaled-down mock.
-2. Announce it first, in one line, in product terms — say what the versions are, not that they are a prototype or preview.
-3. Expose the real forks as finished-product-quality versions, one per URL, with no toggle or picker in the product. A verbal decision is slow and lossy; a visual one takes five seconds.
-4. Fold the user's choice back into the plan before implementing.
-5. Implement only after explicit approval.
-
-Skip when the direction is already fixed by an existing design system, or the change is non-visual.
+Read `~/.agents/references/workflow.md` for the shared decision rule and approval
+gates. If one direction is agreed and implementation is authorized, build actual
+production code, even when the screen is new. Use `/prototype` discovery mode only
+to resolve an unclear flow, or visual-comparison mode for competing UI directions.
+Show only enough to support the decision; no mandatory demo or prototype rewrite.
+Progress can be shown in the real feature when useful. Discuss meaningful backend
+needs with the user before implementing them; reuse decisions already agreed.
 
 ## Roles
 
@@ -43,7 +41,7 @@ Sub-agent types to use (all read-only by design):
 4. **Write the failing behavioral test first (red)** — Before any implementation code, write a test that asserts only the behavior you described, through the public interface: user-visible output, accessible roles/names/labels, returned values, error results. Never assert internals (class names, DOM nesting, private helpers, internal state). Run it and watch it fail. A sub-agent may draft this test; the main agent verifies it asserts exactly the intended behavior and corrects it if it doesn't.
 5. **Main agent implements (green)** — Write the minimal frontend code to make the test pass. Match existing patterns and conventions found in Step 2.
 6. **Re-dispatch only for gaps** — If you hit something unknown mid-implementation (unfamiliar API, hidden coupling, missing context), dispatch a targeted read-only sub-agent to investigate that one thing, then continue. Never let a sub-agent implement in your place.
-7. **Verify without a browser** — Run the repo's linter, typecheck, test suite, and build. The passing tests are the proof that the behavior you described works. **Do NOT run Playwright, browser automation, or visual QA unless the user explicitly instructed it.** If the user wants visual verification, they will invoke `/visual-qa` or `/playwright` themselves.
+7. **Verify and share useful progress** — Run the repo's linter, typecheck, test suite, and build. Passing checks are not proof of visual quality. When visual feedback would help, provide the real feature's URL and a short task to try, or explain why it cannot run. A demonstration is not required for every change. Keep browser automation opt-in; do not claim a human walkthrough occurred unless it did.
 
 End of flow: implementation verified, report back to the user. Do not auto-run `/code-judgment`, `/code-review`, or `/commit` — the user decides whether to clean, review, or commit next. Note that per AGENTS.md **TDD**, tests that prove behavior are permanent, frontend included; tests that only pin how the UI is built — markup, classes, styles, snapshots, internal state — are scaffolding to clean up before committing unless the user explicitly requested to retain them.
 

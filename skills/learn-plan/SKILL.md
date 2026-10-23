@@ -8,12 +8,12 @@ description: >-
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory. This learning overlay does not replace the ticket queue or approval gates. Use `/plan` for ordinary planning: one selected current-code slice, then stop for review. A learning request is not blanket permission to implement, publish, or merge.
 
-A planning protocol that treats **learning** and **proving** as first-class parts of producing a plan. Born from the IUGA feedback→discount→email session: the user learns the backend by coding it themselves, and the plan is built on evidence, not assumptions.
+A planning protocol that treats **learning** and **proving** as first-class parts of producing a plan. The original IUGA feedback→discount→email session used hands-on backend practice; do not assume that division of labor for other learning requests. Build plans on evidence, not assumptions.
 
 ## The core loop
 
 ```
-check what exists → prove the behavior → explain the big picture → plan the layers → user codes backend / AI delegates frontend → verify
+understand the experience → check what exists → resolve the risky unknown → discuss the approach → plan one slice → implement under the agreed learning mode → verify
 ```
 
 ## 1. Prove the behavior FIRST (spike before plan)
@@ -47,8 +47,14 @@ Rules: no jargon without a definition; mirror the user's own words back; every a
 
 ## 3. Tutor-mode division of labor (AI-assisted development)
 
+Use this division only when the user explicitly requests hands-on coding practice.
+Wanting to understand and discuss the backend does not mean wanting to write it.
+For collaborative product work, follow `workflow.md`: frontend experience first,
+backend decisions together, agent-written production code after agreement and
+implementation authorization. Reuse an agreed direction without a mandatory demo.
+
 - **User codes the backend incrementally** — the AI explains the *why* (session auth, conditional status updates, token generation) and the user writes it, one concept at a time.
-- **AI delegates frontend** to visual-engineering agents; user reviews the result.
+- **AI implements frontend** under the active implementation mode; `frontend-implement` and `prototype` keep UI edits with the main agent. Read-only specialists may research; user feedback follows the learning need.
 - Use the DRIVE/DELEGATE vocabulary: **DRIVE** (user does the work) vs **DELEGATE** (AI may write, user explains it back before keeping).
 - Guidance fading: patterns the user masters move from DELEGATE to DRIVE.
 

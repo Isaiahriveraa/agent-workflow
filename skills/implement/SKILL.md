@@ -34,6 +34,13 @@ Row artifact paths resolve against the index owner's Git root; scope files resol
 ## Implement and review
 
 Start with the selected user's or caller's outcome and the approved walkthrough.
+When the direction is agreed, write production code directly; do not create a
+disposable demo merely because the screen is new. Before implementing new or
+materially changed backend capabilities, confirm the user's agreement on the
+frontend data/actions, server rules, and meaningful technical choices. Reuse the
+approved plan's discussion; if a material choice remains open, discuss it and
+refresh plan approval rather than deciding silently. Show the actual feature
+when feedback or understanding would benefit, not as a mandatory demo per change.
 Implement the smallest working path across the necessary UI, application, and
 data boundaries; do not finish every frontend screen before connecting one real
 flow. A chosen prototype guides the experience; it does not prove backend behavior.

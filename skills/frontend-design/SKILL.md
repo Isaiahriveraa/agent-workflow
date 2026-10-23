@@ -10,17 +10,14 @@ Frontend code without aesthetic intent reads as AI slop — Inter, SaaS blue, th
 
 The brief is the product. Boldness is the standard. Half-commitments produce the slop the skill exists to prevent.
 
-## Prototype before implementing (gate)
+## Choose production or exploration by context
 
-If the visual direction is unproven — anything the user has not seen yet — build it and show it before writing it into the app. Don't guess, and don't wait to be asked.
-
-1. Build it for real, at true scale: a small, disposable front-end artifact in the target project's own front-end language. Not a scaled-down mock.
-2. Announce it first, in one line, in product terms — say what the versions are, not that they are a prototype or preview.
-3. Expose the real forks as finished-product-quality versions, one per URL, with no toggle or picker in the product. A verbal decision is slow and lossy; a visual one takes five seconds.
-4. Fold the user's choice back into the plan before implementing.
-5. Implement only after explicit approval.
-
-Skip when the direction is already fixed by an existing design system, or the change is non-visual.
+Follow `~/.agents/references/workflow.md`: an agreed direction can go directly to
+production code once implementation is requested and its gates are satisfied.
+An unseen screen alone does not require a prototype. Use `/prototype` discovery
+mode to understand an unclear flow, or visual-comparison mode when the user needs
+to compare UI directions. Show only enough to settle the question; progress can
+use the actual feature, and not every change needs a demonstration.
 
 Two invocation modes:
 - **Full checkpoint** (default): scan → 7-dimension interview → inject guidelines

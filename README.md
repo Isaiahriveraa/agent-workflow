@@ -49,6 +49,13 @@ Choose the next activity by uncertainty: investigate users for an unclear need, 
 
 Humans own product priorities, experience judgment, and consequential decisions. AI challenges assumptions, compares flows, explains architecture from the user action backward, and implements agreed behavior. Prototype approval is not evidence of demand or production correctness; record what users actually tried and what remains untested.
 
+For UI product work, start from the frontend experience and discuss meaningful
+backend needs together before coding them. One agreed direction goes directly to
+production code once implementation is requested and approved. Use disposable
+prototypes only to understand an unclear flow or compare UI designs. Show the
+actual feature when useful; not every change needs a demo or a throwaway version.
+The agent writes code unless the user explicitly requests hands-on tutor mode.
+
 The shared [workflow contract](references/workflow.md) defines the Markdown queue, reconciliation, and the read-only `scripts/workflow.py` selection/approval/drift gate. A draft PR is `in-review`, not `done`; parallel candidates require a fresh overlap check. After feedback or integration, refresh the owning artifacts and identify the next item without automatically starting it.
 
 ### Pipeline stages
@@ -129,10 +136,10 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 |-------|------|
 | `caveman/` | Default session chat style: concise, answer-first replies; normal prose for persisted writing, full detail when requested. `normal mode` disables it for the session; `/caveman` re-enables it. Skill only, no proxy or telemetry |
 | `explain/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants (Explain UI lives at `skills/explain/explain-ui/`) |
-| `prototype/` | Lightweight discovery of one user flow, or finished-quality visual comparisons in the project's stack. Match fidelity to uncertainty; record observations and keep production approval separate |
+| `prototype/` | Optional discovery for an unclear flow or finished-quality comparisons of competing UI designs; not required for an agreed production direction. Keep production approval separate |
 | `design/` | Frame user problems, visualize uncertain experiences, and derive essential features and numbered behavior cards; preserve evidence, assumptions, dependencies, and deferred ideas |
 | `to-issues/` | Turn design topics into behavior-focused local tickets under `context/issues/<slug>/`; after review and separate approval, optionally publish them to GitHub |
-| `plan/` | Explicit or next eligible ticket → one current-code-based, reviewable slice with test seams and Git baseline, then human approval |
+| `plan/` | Discuss meaningful backend choices from the frontend experience, then plan one current-code-based slice with test seams and Git baseline for approval |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → spec issue |
@@ -168,12 +175,12 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `cancel/` | Cancel active modes |
 | `prompt-master/` | Prompt engineering |
 | `resolving-merge-conflicts/` | Merge conflict resolution |
-| `frontend-design/` | Visual design guidance |
+| `frontend-design/` | Page and application visual direction; prototypes only for unresolved choices |
 | `ui-design/` | Familiar interactions, useful skeuomorphism, and visual UI craft |
-| `frontend-implement/` | Frontend implementation mode — main agent writes, sub-agents research only |
+| `frontend-implement/` | Main agent builds agreed production UI directly; research specialists, checks, cleanup, review, and useful human feedback; prototypes only for uncertainty |
 | `design-taste-frontend/` | Anti-slop landing pages, portfolios, and redesigns — brief-first aesthetic inference, strict pre-flight check (leonxlnx/taste-skill) |
-| `ui-ux-pro-max/` | UI/UX design intelligence |
-| `impeccable/` | AI agent design guidance (pbakaus/impeccable) |
+| `ui-ux-pro-max/` | Searchable cross-stack UI patterns and accessibility guidance; agreed directions go to authorized production |
+| `impeccable/` | Product-interface design, audit, and polish playbooks; comparisons only when useful (pbakaus/impeccable) |
 | `framer-motion-animator/` | Framer Motion animations |
 | `shadcn/` | shadcn/ui component management |
 | `next-best-practices/` | Next.js best practices |

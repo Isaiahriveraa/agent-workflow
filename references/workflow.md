@@ -26,10 +26,37 @@ Use this short loop, returning to an earlier question whenever evidence changes:
    server-enforced rules, results, and failure handling. Plan only the selected
    end-to-end slice against live code, keeping existing approval gates.
 5. **Deliver and learn:** implement and test that slice across the necessary
-   layers, demonstrate the user outcome, and use feedback to revise the owning
+   layers, show the actual feature when useful, and use feedback to revise the owning
    design, ticket, and plan before selecting more work.
 
 Experience-first does not mean building the entire frontend before the backend.
+For product work with a user interface, start from the frontend experience and
+work backward to backend needs. Choose the next step by what remains unsettled:
+
+- **One agreed direction:** build actual production code once implementation is
+  requested and its normal approval gates are satisfied. A new or unseen screen
+  does not by itself require a prototype. Show progress in the actual feature
+  when that helps the user understand or decide; no separate demo or rewrite is
+  required, and not every change needs a demonstration.
+- **An unclear flow:** use discussion, a sketch, or a focused disposable prototype
+  only far enough to understand the experience. Do not demand production polish.
+- **Several UI directions to compare:** use visual-comparison prototypes so the
+  user can choose before committing to a direction.
+
+Record the data each view needs, user actions, and relevant loading, empty, error,
+and recovery states. Label mock data and simulated actions when used; do not ship
+them as completed behavior. Before implementing new or materially changed backend
+capabilities, discuss those frontend needs with the user: what is read or saved,
+what the server must enforce, the recommended approach, and meaningful tradeoffs.
+Resolve material choices together before coding; reuse agreement already reached
+instead of repeating a ceremony. The agent implements unless the user requests
+hands-on tutor mode. Reuse existing contracts where they fit; a mock response is
+not an approved API or data model.
+Investigate feasibility, security, and data-integrity risks early when they could
+invalidate the experience. This is a discovery starting point, not a requirement
+to build screens for backend-only work or finish every screen before connecting
+one flow. Collaboration follows the user's uncertainty, not a mandatory demo stage.
+
 A prototype demonstrates an experience hypothesis, not demand, technical
 feasibility, or production correctness. When practical, observe a representative
 user attempting the task without coaching; record what happened and what remains
@@ -64,6 +91,26 @@ technical detail: data needed, rule owner, result, and important failure. Offer
 alternatives and tradeoffs rather than silently choosing unresolved product policy.
 For learning or interview practice, ask for a prediction or explain-back on a
 consequential decision; do not turn routine delivery into a mandatory quiz.
+
+### Interaction follows the decision
+
+- **Settled and authorized:** act, verify, and report the outcome. Do not ask for
+  routine permission or repeat an approval already given for the same scope.
+- **Meaningful unresolved choice:** explain the current behavior, recommendation,
+  alternative, and tradeoff, then wait for the user's decision. Separate product
+  decisions from implementation details the agent can safely own.
+- **Hard to imagine:** show the smallest useful sketch, comparison, or working
+  feature that can settle the question. Do not manufacture alternatives or demos.
+
+For a backend discussion, trace one concrete user action: what is read or saved,
+which rule the server enforces, the result and important failure, then the
+recommendation and tradeoff. Ask whether that behavior matches the user's intent;
+do not turn the discussion into a code review or tutoring exercise.
+
+Treat feedback as a scoped change, not a restart. Explain its downstream effects,
+update the affected design, ticket, or plan, and retain unrelated settled choices.
+Ask again only when scope, risk, or required authorization changes. Publication,
+destructive actions, and other explicit safety gates still apply.
 
 Discovery can precede tickets and revisit them. It does not authorize publication,
 production implementation, commits, or PRs. Once execution is queued, the ticket

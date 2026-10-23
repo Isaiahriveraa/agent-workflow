@@ -40,6 +40,14 @@ and consequential failures; omit irrelevant categories for non-UI work. Link any
 chosen prototype and observations, distinguishing simulated behavior from verified
 capability. Do not require a prototype when the behavior is already clear.
 
+For new or materially changed backend capabilities, work through the frontend's
+data and actions with the user before settling the approach: what must be read or
+saved, what the server must enforce, the recommendation, and meaningful tradeoffs.
+Resolve material choices together; do not defer that conversation to a finished
+plan. Reuse prior agreement and keep routine implementation details out of it.
+An agreed UI direction can proceed directly to production implementation once
+requested and approved; a prototype or separate demo is not a prerequisite.
+
 If experience uncertainty changes acceptance, return to `/design` or discovery
 prototyping rather than guessing. If feasibility or a costly-to-reverse decision
 is uncertain, investigate it before committing to the approach. Scale planning to

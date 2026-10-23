@@ -16,6 +16,13 @@ behavior, features, architecture, and implementation are views to move between,
 not whole-product phases. No mandatory PRD or complete frontend before backend.
 Investigate costly technical uncertainty early; skip discovery for settled fixes.
 
+For UI product work, start from the frontend experience and discuss meaningful
+backend needs together before implementation. One agreed direction goes directly
+to production code once requested and approved; use disposable prototypes only
+for unclear flows or competing UI designs. Showing the real feature is useful
+feedback, not a mandatory separate demo. The agent codes unless hands-on practice
+is requested.
+
 Use the parts of this route that answer the current question:
 
 1. **`/design`** — frame the user, problem, and current workaround; walk one experience before deriving essential features. Use `grill-with-docs` for unresolved decisions and `/prototype` discovery mode when the flow needs to be seen or tried. Record evidence and assumptions in numbered behavior cards under `context/designs/<slug>/`, not future implementation plans.
@@ -59,6 +66,10 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 
 ## Frontend implementation
 
+- **Page or application design guidance** → **`/skill:frontend-design`** — visual direction and design-system guidance for full layouts; use the shared uncertainty-driven prototype rule, not a mandatory demo.
+- **Design, audit, or polish a product interface** → **`/skill:impeccable`** — broad UI craft and focused playbooks; compare alternatives only for an unresolved choice.
+- **UI patterns across styles and stacks** → **`/skill:ui-ux-pro-max`** — searchable guidance for accessibility, layout, typography, and interaction; an agreed direction goes directly to authorized implementation.
+- For overlapping visual guidance, choose one primary design skill for the task; supporting skills supply focused checks, not a second direction or approval loop. User choices and the project's design system take precedence over generic defaults. These design skills do not change the active implementation ownership mode.
 - **Familiar UI behavior and visual craft** → **`/skill:ui-design`** — recognizable controls, mental models, useful skeuomorphism, hierarchy, layout, and rendered behavior critique; supplements existing frontend skills and approval gates.
 - **Build frontend with the main agent implementing** → **`/skill:frontend-implement`** — the main agent is the sole writer of UI code; sub-agents only research, gather context, and propose plans (never write code). User-invoked.
 - **Explore an experience or compare visual directions** → **`/skill:prototype`** — choose a lightweight discovery walkthrough for an unsettled flow, or two or more finished-quality visual directions, one per URL, when visual comparison is needed. Visual comparisons load `ui-design`; production still requires selection and its own approval gates.

@@ -1,14 +1,23 @@
 # Visualize: Direction Comps & Asset Production
 
-Load this from [new-work.md](new-work.md) whenever any image generation is available, a harness-native tool or the API fallback context.mjs reports. PRODUCT.md and DESIGN.md are preconditions. New-work has already resolved the visual world; this file must not reopen it.
+Load this from [new-work.md](new-work.md) only when image generation is available
+and comparison will resolve a named visual uncertainty. Follow the shared
+workflow: skip this comparison for an agreed direction without such uncertainty.
+PRODUCT.md and DESIGN.md are preconditions for this comparison.
+New-work has already resolved the visual world;
+this file must not reopen it.
 
 The purpose of a probe is to test composition, narrative, hierarchy, density, focal moment, signature use, and image requirements. It is not a second identity workshop. Keep DESIGN.md's palette, typography direction, material language, component character, imagery stance, and motion grammar fixed.
 
-## Generate three compositional options
+## Compare the unresolved composition
 
-Render three distinct high-fidelity north-star comps of the requested surface, with whatever generation capability exists, saved under `.impeccable/mocks/` so they survive the session; record the approved comp's path in the surface brief. Base them on the real content and the surface concepts already developed with the user. Three is the number: one comp invites rubber-stamping, and the spread between three is what surfaces the composition worth building.
+Name the choice the comparison will settle. Render two or more distinct
+high-fidelity comps, only as many as needed to show the real alternatives, saved
+under `.impeccable/mocks/` so they survive the session. Record the approved comp's
+path in the surface brief. Base them on real content and the surface concepts
+already developed with the user. Do not invent forks merely to fill a quota.
 
-- When the user shortlisted multiple concepts, spread the three across them.
+- When the user shortlisted multiple concepts, compare the relevant concepts.
 - When one direction is committed, vary the structural uncertainty an image can resolve: topology, sequence, density, hierarchy, focal composition, or interaction framing.
 - Show enough beyond the opening moment to prove the concept can govern the whole requested surface.
 - Do not generate a palette artifact, ask new atmosphere questions, introduce a different type voice, or invent a new motif. If the committed world cannot support the concept, return to the concept shortlist rather than changing the world.
@@ -17,7 +26,11 @@ Treat each comp as a direction test, not a screenshot specification. Core UI tex
 
 ## One approval point
 
-Show the three together: in the harness when it can display images, otherwise on the decision page (`serve-question.mjs`, one option per comp with the comp as its hero). Ask what should carry forward, what feels false to the world, and whether the selected surface concept should be approved, combined, revised, or rejected. Then stop and wait. A structured simulated user counts as attended and receives the same question.
+Show the alternatives together: in chat when images can be displayed,
+otherwise on the decision page (`serve-question.mjs`, one option per comp with the
+comp as its hero). Ask the user which resolves the named choice and what should
+carry forward, then stop and wait. Simulated feedback may inform a proposal but
+does not count as the user's approval or a human walkthrough.
 
 Do not begin code until the user approves a direction or explicitly delegates the choice. If they delegate, choose using the task brief, PRODUCT.md, and DESIGN.md, and state the evidence. Approval refines the task concept; it does not modify DESIGN.md.
 

@@ -1,11 +1,17 @@
 ---
 name: prototype
-description: "Make an uncertain product experience visible before production work. Use discovery mode for a lightweight user-flow experiment, or visual-comparison mode for several finished-quality UI directions in the project's stack. Use when a flow needs to be tried, a visual or motion choice is unresolved, or another frontend skill's prototype gate fires."
+description: "Resolve an unclear product flow with a lightweight discovery experiment, or compare competing UI directions with finished-quality versions in the project's stack. Use when seeing or trying alternatives will settle uncertainty, not merely because a screen is new. An agreed direction can go directly to authorized production implementation."
 ---
 
 # Prototype
 
 Read `~/.agents/references/workflow.md` as the authoritative workflow contract.
+
+This skill resolves uncertainty; it is not a mandatory stop before production.
+If one direction is agreed and implementation is requested with its gates
+satisfied, build production code directly. Showing the actual feature for feedback
+does not turn it into a disposable prototype or require a later rewrite. Do not
+require a demo for every change.
 
 ## Choose fidelity by the question
 
@@ -70,7 +76,7 @@ Not to be confused with `/skill:explain`, which is the hub's reusable browser wo
 
 ### When to run visual comparison
 
-Run before implementing when a meaningful visual direction remains unproven. Skip when the direction is already fixed by an existing design system, or the change is non-visual. If the task or flow itself is unclear, use discovery mode first.
+Run when competing UI directions need to be compared before choosing one. Skip when one direction is already agreed, even if it is new or outside an existing design system. If the task or flow itself is unclear, use discovery mode only far enough to understand it.
 
 ### Visual-comparison flow
 

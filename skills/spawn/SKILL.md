@@ -46,6 +46,13 @@ Decompose into atomic, isolated work units. Each unit:
 
 Sweet spot: 2-4 sub-agents. Over-decomposition adds coordination cost without correctness benefit.
 
+Settle the frontend direction and meaningful backend choices with the user before
+dispatching dependent production work. An agreed direction needs no disposable
+demo. Do not launch UI and backend implementations in parallel while their
+contract is still undecided. Do not combine this delegation-only implementation
+mode with `prototype` or `frontend-implement` for UI edits. Return UI work to that
+mode's main agent; any delegated help there remains research-only.
+
 ### Phase 2 — Prompt-Writing (7 sections per sub-agent)
 
 For each unit, write a prompt with all of these sections. Specify each unit's **algorithm and behavior** — what the code must do, its inputs and outputs, edge cases, invariants, and constraints — in prose, never as finished implementation. EXPECTED OUTPUT pins the contract (paths, signatures, shapes); the sub-agent writes the body and owns its correctness against your spec. If you could paste the finished code into the prompt, you are implementing — stop and specify behavior instead.

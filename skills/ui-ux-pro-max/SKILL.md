@@ -7,17 +7,13 @@ description: "UI/UX design intelligence. 50 styles, 21 palettes, 50 font pairing
 
 Comprehensive design guide for web and mobile applications. Contains 50+ styles, 97 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 9 technology stacks. Searchable database with priority-based recommendations.
 
-## Prototype before implementing (gate)
+## Choose production or exploration by context
 
-If the visual direction is unproven — anything the user has not seen yet — build it and show it before writing it into the app. Don't guess, and don't wait to be asked.
-
-1. Build it for real, at true scale: a small, disposable front-end artifact in the target project's own front-end language. Not a scaled-down mock.
-2. Announce it first, in one line, in product terms — say what the versions are, not that they are a prototype or preview.
-3. Expose the real forks as finished-product-quality versions, one per URL, with no toggle or picker in the product. A verbal decision is slow and lossy; a visual one takes five seconds.
-4. Fold the user's choice back into the plan before implementing.
-5. Implement only after explicit approval.
-
-Skip when the direction is already fixed by an existing design system, or the change is non-visual.
+Follow `~/.agents/references/workflow.md`: build an agreed direction directly as
+production code when implementation is authorized and its normal gates are met.
+An unseen screen alone does not require a prototype. Use `/prototype` discovery
+mode for an unclear flow or visual-comparison mode for competing directions.
+Show only what helps settle the question; feedback can use the actual feature.
 
 ## When to Apply
 

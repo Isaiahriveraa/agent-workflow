@@ -61,6 +61,8 @@ At the start of every new session, load `~/.agents/skills/caveman/SKILL.md` and 
 
 Use the experience-first, risk-aware loop in `references/workflow.md`: frame the user problem, visualize uncertain interactions, agree on behavior, then derive features and plan one end-to-end slice. Move between system, behavior, feature, architecture, and implementation views as evidence changes; do not require a PRD or a complete frontend first. Investigate costly technical risks early. The ticket index owns execution state, explicit targets win, and selection never authorizes the next stage.
 
+For UI product work, start from the frontend experience and discuss meaningful backend choices with the user before implementing them. When one direction is agreed and implementation is authorized, build production code directly. Use disposable prototypes only to resolve an unclear flow or compare designs; showing progress can use the actual feature, and not every change needs a demo. The agent writes code unless hands-on tutor mode is requested.
+
 ## Commit & PR Discipline
 
 One concern per branch and PR. Develop every concern in its own worktree — `~/.agents/scripts/new-worktree.sh <branch>` — and tear it down after merge with `~/.agents/scripts/cleanup-worktree.sh <branch>`. Never start a second concern in an existing worktree; queue a mid-task idea as the next concern instead of switching tracks. All commits go through the `commit` skill and all PRs through the `pr` skill — never commit or open a PR directly.
