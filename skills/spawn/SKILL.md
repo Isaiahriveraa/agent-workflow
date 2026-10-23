@@ -55,6 +55,8 @@ mode's main agent; any delegated help there remains research-only.
 
 ### Phase 2 — Prompt-Writing (7 sections per sub-agent)
 
+Read `~/.agents/references/agent-handoff.md` and use its shared brief. The seven sections below specialize that brief for implementation; they do not replace a specialist's restricted inputs or output format. Name the stage, why this assignment is needed now, and the decision or user outcome it supports in TASK. An identity-only introduction is not enough. For uncertain product work, follow `~/.agents/references/workflow.md` before decomposing production implementation; frontend discovery can reveal dependencies that are not yet safe to parallelize.
+
 For each unit, write a prompt with all of these sections. Specify each unit's **algorithm and behavior** — what the code must do, its inputs and outputs, edge cases, invariants, and constraints — in prose, never as finished implementation. EXPECTED OUTPUT pins the contract (paths, signatures, shapes); the sub-agent writes the body and owns its correctness against your spec. If you could paste the finished code into the prompt, you are implementing — stop and specify behavior instead.
 
 **1. TASK** — Atomic goal, one action, one bounded deliverable.

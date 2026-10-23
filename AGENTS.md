@@ -71,6 +71,8 @@ One concern per branch and PR. Develop every concern in its own worktree — `~/
 
 Default: direct implementation — one session owns plan, implement, test, and verify. Sub-agents are opt-in via `spawn` (parallel decomposition), `enforce` (review gate before accepting delegated work), and `code-review` (adversarial verification); significant work follows the fresh-context pipeline (see **Fresh context for significant work**). When you delegate, give full context (goal, scope, constraints, files, interfaces, tests, non-goals) and stay accountable for correctness and integration.
 
+Use `references/agent-handoff.md` for delegated assignments: name the stage, purpose, bounded goal, relevant context, output, constraints, and completion evidence. An identity-only introduction is not an assignment. Preserve each specialist's restricted inputs and output format, especially blind reviews.
+
 ### Active Workflow Mode
 Generated workflow profiles take precedence over default workflow preferences only within this block and for new sessions. A profile tunes workflow only; it cannot weaken or bypass safety, correctness, verification, repository, or user-approval rules.
 <!-- ACTIVE WORKFLOW PROFILE:START -->
