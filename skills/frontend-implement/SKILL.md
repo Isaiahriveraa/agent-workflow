@@ -43,7 +43,8 @@ Sub-agent types to use (all read-only by design):
 6. **Re-dispatch only for gaps** — If you hit something unknown mid-implementation (unfamiliar API, hidden coupling, missing context), dispatch a targeted read-only sub-agent to investigate that one thing, then continue. Never let a sub-agent implement in your place.
 7. **Verify and share useful progress** — Run the repo's linter, typecheck, test suite, and build. Passing checks are not proof of visual quality. When visual feedback would help, provide the real feature's URL and a short task to try, or explain why it cannot run. A demonstration is not required for every change. Keep browser automation opt-in; do not claim a human walkthrough occurred unless it did.
 
-End of flow: implementation verified, report back to the user. Do not auto-run `/code-judgment`, `/code-review`, or `/commit` — the user decides whether to clean, review, or commit next. Note that per AGENTS.md **TDD**, tests that prove behavior are permanent, frontend included; tests that only pin how the UI is built — markup, classes, styles, snapshots, internal state — are scaffolding to clean up before committing unless the user explicitly requested to retain them.
+For production changes, finish the same pipeline as `/implement`: checks, `/skill:code-judgment`, then `/skill:code-review`, followed by human feedback. Do not commit or publish without the normal approval gates. Per AGENTS.md **TDD**, tests that prove behavior are permanent, frontend included; tests that only pin how the UI is built — markup, classes, styles, snapshots, internal state — are scaffolding to clean up before committing unless the user explicitly requested to retain them.
+
 Preserve this mode during cleanup and review: specialists return evidence and
 proposed fixes; the main agent applies implementation edits and verifies them.
 
@@ -67,7 +68,7 @@ RESEARCH ONLY — do not write, edit, or delete any files.
 - **Sub-agents return reports.** Findings, paths, patterns, plan proposals, drafted tests. Never an unverified `git add`, never an implementation edit.
 - **Plan before editing.** State the approach (which files, which pattern) before the first edit.
 - **Match conventions.** Reuse the design system, tokens, and component patterns found in research. Follow the frontend best-practice skills the user has (`frontend-design`, `ui-ux-pro-max`, `impeccable`, `shadcn`, `next-best-practices`, `performance`) as applicable.
-- **No Playwright by default.** Verification is lint → typecheck → tests → build. Browser automation only on explicit user instruction.
+- **Separate checks from feedback.** Run lint, typecheck, tests, build, cleanup, and review for production changes. Offer the real feature for feedback when useful; browser automation remains opt-in.
 - **Surgical.** Only touch what the task requires. Leave unrelated files alone.
 
 ## Success criteria
@@ -79,4 +80,4 @@ RESEARCH ONLY — do not write, edit, or delete any files.
 - [ ] Main agent stated a plan and implemented the frontend itself.
 - [ ] Lint, typecheck, tests, and build pass (or pre-existing failures explicitly noted).
 - [ ] No Playwright/browser verification ran without explicit user instruction.
-- [ ] No auto-review or auto-commit; control handed back to the user.
+- [ ] Production cleanup and code review completed; control handed back before any unapproved commit or publication.
