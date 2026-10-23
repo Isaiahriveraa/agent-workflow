@@ -68,7 +68,7 @@ For each unit, write a prompt with all of these sections. Specify each unit's **
 **4. CODEBASE CONVENTIONS** — Naming conventions, error handling patterns, import style, testing patterns, any style guide the project follows.
 
 **5. MUST DO** — Exhaustive numbered list:
-- MUST document contract-bearing functions with the rule-10 block template (AGENTS.md); no boilerplate on ordinary helpers
+- MUST document contract-bearing functions with the "Document non-obvious contracts" block template (AGENTS.md); no boilerplate on ordinary helpers
 - MUST match existing convention from [exact reference file:line]
 - MUST handle these edge cases: [list]
 - MUST validate using [specific approach]
