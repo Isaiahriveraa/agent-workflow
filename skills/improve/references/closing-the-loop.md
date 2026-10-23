@@ -20,6 +20,8 @@ Spawn **one** executor subagent (`general`/`quick` category in your harness; `ge
 
 Create the worktree before dispatch with `~/.agents/scripts/new-worktree.sh <branch> <start-point>` — worktrees live under `<repo>-worktrees/<branch path>` beside the repo (`feat/x` → `<repo>-worktrees/feat/x`).
 
+Before dispatch, record `git -C <worktree> rev-parse HEAD` as the immutable execution base SHA in the dispatch record. Keep that exact SHA through every revision; never replace it with the executor's latest HEAD.
+
 The subagent prompt must contain:
 
 1. **The full plan file text, inlined.** The worktree contains only committed files — if `context/plans/` is uncommitted, the executor can't read it. Never assume; always inline.
@@ -54,8 +56,8 @@ Note on fresh worktrees: they share git history but not `node_modules` or build 
 Review like a tech lead reviewing a PR against the spec — never fix anything yourself:
 
 1. **Re-run every done criterion** in the worktree. Don't trust the executor's report — verify.
-2. **Scope compliance**: `git -C <worktree> diff --stat` against the plan's in-scope list. Any file outside scope fails review, full stop.
-3. **Read the full diff.** Judge it against "Why this matters" (does it solve the actual problem?) and the repo conventions named in the plan (does it look like the rest of the codebase?).
+2. **Scope compliance**: compare `git -C <worktree> diff --stat <execution-base-sha>..HEAD` against the plan's in-scope list. Separately inspect `git -C <worktree> diff --cached --stat HEAD` for staged changes, `git -C <worktree> diff --stat` for unstaged changes, and `git -C <worktree> ls-files --others --exclude-standard` for untracked files. Check the union of all four path sets; staged and unstaged changes can cancel in `git diff HEAD`. Any file outside scope fails review, full stop.
+3. **Read the full diff.** Read `git -C <worktree> diff <execution-base-sha>..HEAD`, `git -C <worktree> diff --cached HEAD`, `git -C <worktree> diff`, and the contents of each untracked file separately. Judge all changes against "Why this matters" (does it solve the actual problem?) and the repo conventions named in the plan (does it look like the rest of the codebase?).
 4. **Audit the new tests.** Executors game criteria — a test that asserts nothing meaningful passes `pnpm test` and proves nothing. Read what the tests assert.
 
 ### Verdict
