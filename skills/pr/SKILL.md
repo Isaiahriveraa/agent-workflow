@@ -112,20 +112,9 @@ PR Breakdown:
    - Concern: <one-sentence description of the concern>
    ...
 
-Draft PR Description(s) (include `## Stack Context` only for Strategy 2 PRs):
+Draft PR Description(s) (the PR Description Template below; `## Review Notes` only when needed):
 --------------------------------------------------------------------------------
-## Rationale
-<One sentence: what this is for, or the failure it prevents.> <One more sentence: why this approach.>
-
-## Observable Behavior
-- <one line: what a caller or buyer sees change>
-- <one line, only if there is a second>
-
-## Verification
-- `<test name>` — the behavior it locks in
-
-## Stack Context
-- #<prev> ← this ← #<next> · <N> source lines
+<one body per PR, in the PR Description Template>
 --------------------------------------------------------------------------------
 commit-pr-reviewer approval required before creating branches, worktrees, stacks, or PRs.
 ```
@@ -139,63 +128,114 @@ The final report gives the PR URL(s), the strategy used, and the reviewer's verd
 
 ## Senior Developer PR Description Standard
 
-Keep the standard headers — they are what a reviewer scans — and keep what sits under them small.
-**Target ~150 words / 10 lines in total.** The overload never comes from the headers; it comes from
-paragraphs written under them.
+Write for someone reviewing the change without the conversation history. Every PR uses the one
+template below; no Summary, Changes, Files, or Notes lists.
 
-- **Rationale — two sentences.** Line 1 is the purpose or the failure; line 2 is why this approach.
-  No alternatives essay and no tradeoff catalogue.
-- **Observable Behavior — one line per bullet.** What a caller or buyer sees change. Three bullets
-  is a lot; a fifth means the PR is doing too much.
-- **Verification — one bullet per test**: `<test name>` — the behavior it locks in. One line for the
-  whole suite at most, never a pass count.
-- **Nothing repeated.** The three headers already partition the story; telling one fact under two of
-  them is what makes a description feel long.
-- **Plain words.** The project's domain term or the ordinary English word. Never an operator, class,
-  or field name where a verb will do.
-- **Say what only the author knows**: what broke, why it matters, the constraint being honoured.
-  Mechanism is already in the diff — depth is what review is for, not what the description is for.
-- **Respect the reader's attention.** If a detail only matters to someone editing those lines, it
-  belongs in the code or the review thread. Overload costs more than a missing sentence.
-- **`## Files` is never needed** (the Files Changed tab has it).
-- **`## Stack Context` is only for stacked PRs** (Strategy 2). Omit it for a single PR or an independent worktree PR; when it applies, it is one line.
-- **Length is the split detector.** If it will not fit in ~150 words, or needs "Also included…", the
-  PR holds a second concern — split it instead of documenting it.
+- **Title.** Imperative and specific: what the PR does, e.g. "Replace footer with contact section".
+  Never "Fix bug", "Updates", or "Phase 1". A Conventional Commit prefix is fine; the subject after it
+  stays imperative, e.g. `feat(contact): replace footer with contact section`.
+- **Rationale.** One sentence explaining the problem or purpose. Skip personal backstory and obvious
+  justifications.
+- **Observable Behavior.** The meaningful differences a user (or an agent, for tooling repos) would
+  notice, in 1–3 short bullets. Summarize copy changes instead of quoting all the text. Include
+  internal changes only when they affect correctness, compatibility, or risk.
+- **Verification.** Preview first, then repeatable steps: a deploy preview and what to look at (UI
+  changes), each command actually run with its result, then anything important not checked. Never
+  claim a check passed without running it. For UI, an optional Before/After table of images a
+  reviewer can open (uploaded to the PR, never local paths).
+- **Review Notes (optional).** Point to the hardest part: the file or decision to look at closely,
+  a non-obvious risk and how to undo it, and a prior change that alters how this PR reads (no PR
+  numbers). Omit the section when empty.
 
-### PR Description Template (Default)
+Keep the description proportional to the change. Don't repeat information across sections, narrate
+implementation steps, list unchanged features, or explain future work unless it affects this review.
 
-Use this for every PR. Add `## Stack Context` (below) only when the PR is part of a stack.
+Sources: [Google](https://google.github.io/eng-practices/review/developer/cl-descriptions.html),
+[GitLab](https://docs.gitlab.com/development/code_review/),
+[Phabricator test plans](https://secure.phabricator.com/book/phabricator/article/differential_test_plans/),
+[Simon Willison](https://simonwillison.net/2025/Dec/18/code-proven-to-work/),
+[Graphite on stacks](https://graphite.com/docs/best-practices-for-reviewing-stacks).
+
+### Reviewer-Facing Only (no internal leakage)
+
+The description is for a reviewer who has only the repo and the PR. Anything they cannot open or
+rerun from there does not belong in it.
+
+- **Author's voice.** Write as the PR author, in first person. Never "the user", the author's name, or
+  narration about the assistant, agent, skill, or prompt.
+- **Attribution.** End with one closing attribution line naming the assistant (for example
+  "Co-authored with <assistant name>."), and nothing else about it.
+- **Only reviewer-visible references.** No prototype or version labels, local URLs or ports, box
+  or home paths, worktree names, or local screenshots. Deploy preview URLs are fine, even with a PR
+  number in them, because they don't go stale.
+- **No planning metadata.** No line budgets, source-line counts, plan numbers, or internal stack
+  ids. GitHub already shows the diff size.
+- **No stack order.** No PR numbers, arrows, or neighbor links in Review Notes: `gh stack` and
+  GitHub's stack view show the order. Naming the base branch is fine.
+
+| Leaks | Reviewer-facing |
+|---|---|
+| The top of the stack matches `?v=13`. | Preview: <deploy preview URL> — the hero, project showcases, and contact section. |
+| Playwright screenshots match `?v=13` locally. | Ran: `npm run build` → passes. Not checked: mobile layout. |
+| `#12 ← this ← #14 · 822 source lines` | Builds on: the header's shared site config. |
+| This PR moves the user's portfolio to a light theme. | I'm moving my portfolio to a light theme. |
+
+### PR Description Template
 
 ```markdown
-## Rationale
+<!-- Title: imperative and specific, e.g. "Replace footer with contact section" -->
 
-<One sentence: what this is for, or the failure it prevents.> <One more sentence: why this
-approach.>
+## Rationale
+<one sentence: the problem or purpose>
 
 ## Observable Behavior
-
-- <one line: what a caller or buyer sees change>
-- <one line, only if there is a second>
+- <1–3 bullets a user (or agent, for tooling repos) would notice; summarize copy changes>
 
 ## Verification
+- Preview: <deploy preview URL> — <what to look at>   <!-- UI changes -->
+- Ran: `<command>` → <result>
+- Not checked: <anything important>
 
-- `<test name>` — the behavior it locks in
+| Before | After |   <!-- optional, UI only -->
+|---|---|
+| <img> | <img> |
+
+## Review Notes  <!-- optional; omit if empty -->
+- Look closely at: <file/area> — <decision, tradeoff, or uncertainty>
+- Risk: <what could break / how to undo>, only if not obvious
+- Builds on: <prior change that changes how this reads>, no PR numbers
+
+Co-authored with <assistant name>.
 ```
 
-### Stack Context (Strategy 2 only)
+Drop the HTML comments and any unused optional line before submitting.
 
-Append this section only to a PR created by `gh stack`. Omit it for a single PR or an independent worktree PR.
+### Pre-Submit Self-Check
 
-```markdown
-## Stack Context
+Run this on the title and body before every `gh pr create`, `gh pr edit`, or `gh stack submit`.
+Fix any hit and re-check; never submit a body that fails.
 
-- #<prev> ← this ← #<next> · <N> source lines
-```
-
+- [ ] Title is imperative and specific.
+- [ ] Only the template's sections, in order; Review Notes omitted if empty.
+- [ ] Rationale is one sentence; Observable Behavior has 1–3 short bullets.
+- [ ] Nothing is repeated across sections, and there is no implementation narration, list of
+      unchanged features, or future work that does not affect this review.
+- [ ] Every Verification item was actually run, with its result; anything important not checked
+      is named.
+- [ ] A UI change has a preview link or a Before/After with reviewer-viewable images.
+- [ ] Review Notes points to the hardest part, or is omitted.
+- [ ] Every sentence is in the author's first person, with no third-person narration of the user
+      or the agent.
+- [ ] Every link, path, command, and name exists in the repo, on the PR, or on its preview; no
+      line counts, budgets, plan numbers, internal ids, or PR numbers/arrows in Review Notes.
+- [ ] Finally, for each detail ask: "Would removing this detail make the change harder to review?"
+      If not, remove it.
 
 ---
 
 ## Execution Runbooks (After Approval Only)
+
+Every body passes the Pre-Submit Self-Check before it is submitted.
 
 ### Executing Strategy 1: Single PR
 1. Confirm commits on the branch are clean and granular (`git log --oneline <base>..HEAD`).
