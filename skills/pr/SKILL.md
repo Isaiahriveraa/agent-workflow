@@ -125,7 +125,7 @@ Draft PR Description(s) (include `## Stack Context` only for Strategy 2 PRs):
 - `<test name>` — the behavior it locks in
 
 ## Stack Context
-- #<prev> ← this ← #<next> · <N> source lines
+- <How this PR contributes to the stack's overall goal and what it builds on or enables.>
 --------------------------------------------------------------------------------
 commit-pr-reviewer approval required before creating branches, worktrees, stacks, or PRs.
 ```
@@ -158,7 +158,7 @@ paragraphs written under them.
 - **Respect the reader's attention.** If a detail only matters to someone editing those lines, it
   belongs in the code or the review thread. Overload costs more than a missing sentence.
 - **`## Files` is never needed** (the Files Changed tab has it).
-- **`## Stack Context` is only for stacked PRs** (Strategy 2). Omit it for a single PR or an independent worktree PR; when it applies, it is one line.
+- **`## Stack Context` is only for stacked PRs** (Strategy 2). Omit it for a single PR or an independent worktree PR; when it applies, use one sentence explaining this PR's contribution to the stack's overall goal and what it builds on or enables, not a PR-number chain or line count.
 - **Length is the split detector.** If it will not fit in ~150 words, or needs "Also included…", the
   PR holds a second concern — split it instead of documenting it.
 
@@ -186,10 +186,12 @@ approach.>
 
 Append this section only to a PR created by `gh stack`. Omit it for a single PR or an independent worktree PR.
 
+Explain the purpose of this layer within the larger change: how it contributes to the stack's overall goal and what earlier work it builds on or later work it enables. Keep it to one sentence; do not substitute stack position, PR numbers, or source-line counts for that explanation.
+
 ```markdown
 ## Stack Context
 
-- #<prev> ← this ← #<next> · <N> source lines
+- Provides the order validation that the checkout layer builds on so the stack can support reliable merchandise ordering.
 ```
 
 

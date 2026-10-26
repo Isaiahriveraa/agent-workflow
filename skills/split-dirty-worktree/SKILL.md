@@ -92,7 +92,7 @@ Rules:
 For each PR, write:
 
 - **Title**: a Conventional Commit title for one concern, with no "and" (`pr` skill).
-- **Description**: the `pr` skill's Senior Developer PR Description Standard and template, verbatim: Rationale, Observable Behavior, Verification, about 150 words. Add `## Stack Context` only to stacked layers, as one line. Never add `## Files`.
+- **Description**: the `pr` skill's Senior Developer PR Description Standard and template, verbatim: Rationale, Observable Behavior, Verification, about 150 words. Add `## Stack Context` only to stacked layers: one sentence explaining how this PR contributes to the stack's overall goal and what it builds on or enables, following the `pr` skill's template rather than a PR-number chain or line count. Never add `## Files`.
 - **Commits**: ordered, one responsibility each. Each commit carries the `commit` skill's proposal fields: Message, Purpose (one sentence), Dependency, Indivisible, Files (whole or by hunk), Diff (`+a -d`, file count), and Verification. Every hunk maps to exactly one commit.
 - **PR totals**: the sum of its commits. The preview row is computed from the same numbers, never estimated by hand.
 
