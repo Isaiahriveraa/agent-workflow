@@ -1,13 +1,13 @@
 ---
 name: code-review
-description: "Review code using independent adversarial reviewers that search for concrete bugs, contract mismatches, and maintainability regressions. A hardener proves failures with failing tests first, three independent reviewers audit the hardened diff, a security-reviewer covers trust-boundary diffs on demand, one adjudicator validates every claim, a complexity-reviser applies adjudicated design findings by default, an optional fixer applies verified fixes, and a qa-runner prepares the human QA pass. Verifies every claim against actual repository state."
+description: "Review code for concrete bugs, contract mismatches, and evidenced readability/design problems using independent adversarial reviewers and adjudication. The existing complexity-reviser proposes cleanup first; the parent evaluates and authorizes behavior-preserving implementation, tests, and fresh independent validation. Preserves review-only, --no-revise, implementation ownership, and behavior-change approval boundaries."
 argument-hint: "[scope] [--fix] [--no-revise] [--deep] [--artifact] [--runner ask|subagents|opencode|omp] [--review-only --report <path>]"
 shell-timeout: 10
 ---
 
 # Code Review
 
-Review changes using independent adversarial contexts. The goal is not to summarize the implementation or confirm it looks reasonable. The goal is to find a concrete input, state, ordering, caller, or system interaction that proves the changed code is wrong.
+Review changes using independent adversarial contexts. The goal is not to summarize the implementation or confirm it looks reasonable. Find concrete behavioral failures and evidenced comprehension/design problems in the diff. The existing complexity reviser owns supervised readability cleanup; do not add a parallel cleaner agent.
 
 ## Start Here: Select Mode and Load References
 
@@ -133,8 +133,8 @@ Pass these approval boundaries to every code-writing subagent, including the har
 
 1. **Assume the code is wrong.** Search for the case that breaks it.
 2. **Review code, not its story.** Never pass the implementer's reasoning into reviewer contexts.
-3. **Concrete failures only.** Every finding requires exact evidence, a trigger, an execution trace, and observable impact.
-4. **No style noise.** Omit naming, formatting, subjective architecture preferences, and optional refactors unless they cause a demonstrated defect.
+3. **Concrete evidence by kind.** Behavioral findings require exact evidence, a trigger, an execution trace, and observable impact. Design findings require exact code/call-site evidence, a before/after showing a concrete comprehension or change-locality improvement, and a behavior-preserving remedy; do not invent a behavioral failure.
+4. **No style noise.** Admit evidenced intent/effect naming, call-site comprehension, control-flow, and module-design problems. Reject formatting, taste, banned-word lists, speculative wrappers, and forced replacements for precise domain/framework vocabulary. Keep findings scoped to the diff and required caller/test updates.
 5. **No vague risk language.** Do not report "might," "could," or "possibly" without showing the path that makes it happen.
 6. **No blind fixing.** Reviewer output is a hypothesis until the adjudicator verifies it.
 7. **Preserve independence.** Do not show one reviewer another reviewer's findings.

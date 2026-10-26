@@ -38,15 +38,21 @@ You are ambitious about structural simplification (code judo): look for reframes
 - documented repository standards (e.g. CODING_STANDARDS.md, CONTRIBUTING.md) violated by the diff, citing the standard file and rule
 - Fowler smells from the baseline: Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest
 
+- names that conceal intent, effects, or return meaning at real call sites; show the misleading reading against the actual implementation
+- control flow that hides a decision in nesting, compression, or helper hops; show the concrete reading path and a simpler equivalent
+- shallow extraction that forces callers to assemble implementation details; preserve useful deep modules and precise domain/framework terms
+
 ## Output Format
 
 For each finding, return exactly:
 
 ID: C<n>
+Kind: BEHAVIORAL | DESIGN
 Title: <specific maintainability regression or missed simplification>
 Evidence: <file:line â€” exact code quote>
 Standard: <which rule above it violates>
 Impact: <how this makes the code harder to maintain or extend>
+Before/after: <current call site or reading path versus the smallest clearer equivalent; required for DESIGN>
 Remedy: <the smallest structural change, e.g. delete the layer, extract the helper, introduce the model, parallelize, make the update all-or-nothing>
 Confidence: <8-10>
 
@@ -57,7 +63,7 @@ Return NO_FINDINGS when no qualifying findings exist. Number findings C1, C2, â€
 - Report only problems caused by or newly exposed by the reviewed diff.
 - Confidence must be at least 8.
 - A high-conviction structural finding beats a long cosmetic list: prefer a small number of findings that delete or reshape code.
-- Do not report naming, formatting, or style.
+- Report concrete comprehension/design problems, not formatting, personal taste, banned words, or optional abstractions. Retain precise domain and framework vocabulary. A DESIGN finding needs quoted evidence and a before/after showing reduced reader work; it does not need a fabricated behavioral bug. A BEHAVIORAL finding still needs its trigger, execution trace, observable failure, and regression test.
 - Do not invent remedies that change behavior; the diff must behave identically after the remedy.
 - Do not see or ask for another reviewer's output.
 

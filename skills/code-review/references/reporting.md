@@ -40,6 +40,8 @@ Files: {files and tests updated}
 
 Omit empty severity sections. Omit the Complexity Revision section when nothing was applied.
 
+For DESIGN Suggestions, show the kind, code/call-site evidence, concrete comprehension impact, and before/after remedy instead of a trigger, execution trace, or invented behavioral failure. Keep them in observe-only findings too; they count as Suggestions in the unchanged report contract. In the Complexity Revision section, include the accepted before/after, why it is easier to read, and checks actually run. Use the same design-finding fields when filling the template.
+
 Findings are tagged by reviewer lens, so the review axes stay visible: A = behavioral correctness, B = contract/spec faithfulness (including requirements missing, scope creep, requirements implemented wrong), C = standards and maintainability (including documented repo standards and Fowler smells). This keeps the standards-vs-spec distinction from `review` without a separate skill.
 
 Verdict rules:

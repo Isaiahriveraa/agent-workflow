@@ -19,9 +19,9 @@ For each candidate:
 1. Locate every quoted line in the actual file.
 2. Read enough surrounding code to establish the real semantics.
 3. Inspect all cited callers, consumers, schemas, tests, registrations, locks, transactions, and guards.
-4. Reconstruct the claimed trigger and execution trace.
-5. Confirm that the reviewed diff caused or newly exposed the behavior.
-6. Check whether a type invariant, validation, authorization guard, transaction, lock, idempotency key, ownership rule, or existing test prevents the failure.
+4. For behavioral findings, reconstruct the claimed trigger and execution trace. For DESIGN findings, reproduce the comprehension problem at cited call sites or reading paths, compare the before/after, and verify the remedy reduces reader work without hiding complexity or changing behavior.
+5. Confirm that the reviewed diff caused or newly exposed the claimed problem.
+6. Check whether existing contracts or context contradict the claim. For behavioral findings, inspect type invariants, validation, authorization guards, transactions, locks, idempotency keys, ownership rules, and tests that may prevent the failure. For design findings, reject personal taste, banned-word rules, speculative wrappers, or renaming precise domain/framework terms without a demonstrated comprehension problem.
 7. Identify true duplicates only when trigger, failure, and correction are the same.
 
 ## Output Format
@@ -35,12 +35,12 @@ Return exactly one row per candidate:
 
 ## Rules
 
-- VERIFIED means the concrete failure is reproducible from repository code.
-- WEAKENED means a real defect exists, but its trigger, reach, or impact was overstated.
+- VERIFIED means the behavioral failure or concrete comprehension/design problem is reproducible from repository code. Preserve the finding kind; do not relabel design evidence as a behavioral bug.
+- WEAKENED means a real problem exists, but its trigger, reach, or impact was overstated.
 - REJECTED means code contradicts the claim or evidence is insufficient.
 - Related defects with different triggers or observable failures remain separate.
 - Do not create new findings.
 - Do not propose fixes.
 - Do not rank severity; the review ranks verified findings afterward.
 
-A candidate that cannot be reproduced from repository code is REJECTED.
+A candidate whose behavioral failure or comprehension/design problem cannot be established from repository code is REJECTED.

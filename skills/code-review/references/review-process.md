@@ -85,6 +85,8 @@ Use for:
 - diff-caused compiler, type, or test failure
 
 #### Suggestion
-Use only for a verified low-impact defect, narrowly limited defensive gap, or inconsistency that has a concrete but small observable effect.
 
-Do not include discussion-only architecture opinions in the default result.
+Design-only findings are ranked Suggestion: retain their kind, concrete comprehension/change-locality impact, and before/after evidence without inventing a trigger or behavioral failure. Only separately demonstrated behavioral impact can justify Important or Critical. These findings remain eligible for supervised revision even without `--fix`; `--no-revise` and observe-only mode still prohibit revision.
+Use for a verified design-only finding as defined above, or a low-impact defect, narrowly limited defensive gap, or inconsistency with a concrete but small observable effect.
+
+Do not include discussion-only architecture opinions in the default result. Include adjudicated readability/design problems, not personal taste.
