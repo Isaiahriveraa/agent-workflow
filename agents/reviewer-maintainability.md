@@ -39,6 +39,9 @@ You are ambitious about structural simplification (code judo): look for reframes
 - Fowler smells from the baseline: Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest
 
 - names that conceal intent, effects, or return meaning at real call sites; show the misleading reading against the actual implementation
+- names that fail the plain-reading test: cover the diff's comments and read its public names — props, call sites, variables — as an English sentence; a name whose meaning lives only in a nearby comment or another file is the finding, and the remedy is a rename plus deleting that comment (see `references/code-clarity.md`)
+- product state named by its appearance (`compact`), storage shape (`data`, `type: 2`), or mechanism (`handleClick`) rather than the fact it records (`isMonthOfToday`, `unpaidInvoices`, `submitInvoice`); boolean props passed as bare shorthand
+- class names used in tests as a stand-in for state: the token is stylesheet language, not a product fact
 - control flow that hides a decision in nesting, compression, or helper hops; show the concrete reading path and a simpler equivalent
 - shallow extraction that forces callers to assemble implementation details; preserve useful deep modules and precise domain/framework terms
 
