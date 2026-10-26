@@ -90,6 +90,7 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 
 - **Handoff to new session** → **`/skill:handoff`** — compact conversation into handoff doc. Shorthand: **`/skill:ch`** — same flow, optional description.
 - **Resume from handoff** → **`/skill:recall`** — pick up where a handoff left off.
+- **Recall dirty work without a handoff** → **`/rw [worktree-path]`** / **`/skill:recall-worktree`** — a lightweight read-only subagent returns the detailed story, changed-file evidence, and context freshness assessment to the main agent. Does not resume implementation.
 
 ## Testing
 

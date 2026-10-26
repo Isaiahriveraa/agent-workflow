@@ -87,6 +87,7 @@ Slash commands in `commands/` extend the tool's native surface:
 | Command | Description |
 |---------|-------------|
 | `/ch` | Create a handoff document to resume work in a future session |
+| `/rw [worktree-path]` | Recall dirty work through a detailed read-only subagent report; flag outdated context without resuming implementation |
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
 | `/wf` | Commit the current work, then push and open a PR; `/wf --no` or `/wf --no-review` skips only the nested commit pre-commit code-review gate (all approvals, staging/atomicity, verification, and PR gates remain required) |
 
@@ -162,6 +163,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `handoff/` | Session handoff documents |
 | `ch/` | Handoff shorthand — /ch as a skill |
 | `recall/` | Resume from handoff |
+| `recall-worktree/` | Reconstruct dirty work, history, and context freshness for the main agent through a lightweight subagent |
 | `later/` | Future improvement notes in `future/` |
 | `wf/` | Commit + PR in one flow (commit → pr); supports `wf --no` and `wf --no-review` as passthroughs to skip only the nested commit review gate. |
 | `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
