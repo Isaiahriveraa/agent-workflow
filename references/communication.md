@@ -17,6 +17,24 @@ only when it helps understanding. Trace backend choices through one user action.
 When feedback changes part of the flow, explain the downstream effects and update
 only affected agreements rather than restarting discovery or repeating approvals.
 
+## Reply Format
+
+Chat replies are read in a terminal, often skimmed. Shape every reply so the reader can tell what matters from the first line and the headings alone. This governs layout; Caveman still governs wording.
+
+1. **Bottom line first** — open with the answer, result, or what changed in one or two sentences. No preamble, no restating the question.
+2. **Callouts for attention** — right after the bottom line, at most one per kind:
+   - `> [!ACTION]` — something the user must do or decide. Use it whenever they have a next step.
+   - `> [!WARNING]` — a risk, failure, or anything that broke.
+   - `> [!DONE]` — verified outcomes, when worth separating.
+   - `> [!NOTE]` — context they might otherwise miss.
+3. **`##` headings** — only for replies longer than about 10 lines, 2-5 words each. `###` rarely; never `#`.
+4. **Bullets** — unordered facts. Start parallel items with a `**Label:**` naming the subject. One idea per bullet; nest at most two levels.
+5. **Numbers** — only for sequence (steps in order) or ranking (most important first). Never for plain sets.
+6. **Bold** — the one or two phrases per section the reader must not miss.
+7. **Inline code** — paths, commands, identifiers, values. Fences for anything multi-line.
+
+Important first, details after, at every level. Short conversational answers stay plain prose; never force structure onto a two-sentence reply.
+
 ## Behavior-First Sequence
 
 1. **Problem** — what we're solving, why it matters, who it affects.
