@@ -25,9 +25,10 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 ## Hard Constraints
 
 - **Behavior never changes.** Same inputs, same outputs, same side effects, same errors. A caller cannot tell the cleanup happened.
-- **Tests are the net.** Never delete or weaken a test to make cleanup pass. Tests that only pin how the UI is built are scaffolding per AGENTS.md **TDD** — flag them under "Left alone"; deleting them is a separate decision.
+- **Clean tests automatically within authorized scope.** Inspect scoped tests, including hardener additions, using [test cleanup](../../references/test-cleanup.md). Directly delete proven redundant or obsolete implementation-only assertions and rewrite useful guarantees through the behavior interface, without per-test proposals or approval when automatic cleanup is authorized. Keep tests loosely coupled to implementation: user interactions, observable outcomes, public contracts, and accessible semantics, not CSS, internal state, helper order, or production copy without an explicit contract. Report **Keep / Rewrite / Delete** retrospectively with lost-guarantee or surviving/replacement coverage evidence. Preserve unique guarantees; keep and report blocked if equivalent protection is uncertain. Never hide failures or extend authorization outside the selected scope. Explicit read-only and ownership restrictions still apply.
 - **Bugs are reported, not fixed.** A behavior defect goes under "Left alone" for `code-review` and the author; judgment never quietly changes behavior.
-- **Green before, green after.** Run the repo's checks (the floor in AGENTS.md **Enforce in tools, not prose**) before the first edit and after every batch. Red means revert the batch — never leave the tree broken.
+- **Without automatic-cleanup authorization:** leave proposed test deletions intact and request the user's task-scoped deletion approval. Parent acceptance cannot replace that approval. A normal caller that supplies no automatic-cleanup authorization uses this fallback, not automatic mode.
+- **Green before, green after.** Run the repo's checks (the floor in AGENTS.md **Enforce in tools, not prose**) before the first edit and after every batch. If baseline is red, report it before cleanup; do not hide it. Undo only your own failing batch, never unrelated user work.
 - **No feature work.** No new dependencies, no config changes, no refactors outside the checklist.
 - **No style noise.** The formatter and linter own style.
 
@@ -62,7 +63,7 @@ Use one plausible next change as a design probe, not permission to build it or r
 1. Fix the target: read the diff plus the code, callers, tests, and config around it (AGENTS.md **Read before writing**).
 2. Run the baseline checks; they must be green before the first edit.
 3. Apply the checklist smallest-blast-radius first: deletions, comments, names, then structure. Splits and moves come last — they touch the most.
-4. Re-run the checks after each batch. Red → revert that batch and re-examine.
+4. Re-run the checks after each batch. Red → undo only your batch and re-examine. Apply both the refactor-survival and plausible-defect tests to changed coverage; green alone is insufficient.
 5. Report.
 
 ## Output
@@ -83,6 +84,12 @@ Short — the cleaned diff is the artifact; the report says why.
 | Finding | Where | Why |
 |---|---|---|
 | Suspected off-by-one in pagination | src/list.ts:88 | Behavior — routed to code-review |
+
+### Test cleanup performed (retrospective)
+
+| Test/assertion | Keep / Rewrite / Delete | Guarantee lost or surviving/replacement coverage | Scope and verification |
+|---|---|---|---|
+| <file:test> | <applied disposition, blocked Keep, or proposed deletion awaiting user approval when unauthorized> | <specific evidence, not just "implementation detail"> | <authorized scope or pending approval; checks actually run> |
 
 ### Verification
 

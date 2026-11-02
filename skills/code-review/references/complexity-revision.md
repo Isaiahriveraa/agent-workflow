@@ -13,11 +13,33 @@ the accepted proposal under the supervision steps below.
 
 Specialization gives the reviser responsibility, not unquestioned authority. Neither model size nor confidence proves a proposal correct; use repository evidence and software-design principles.
 
-1. **Propose before editing.** Dispatch the reviser in proposal-only mode first: no file edits. Ask for the finding addressed, proposed structural move, affected callers and tests, why complexity decreases, evidence that observable behavior stays the same, and checks that will verify it. For an internal interface change, include two candidate designs and why the alternative lost, as required by the reviser's instructions.
+1. **Propose architecture revisions before editing.** For unrelated readability or structural revisions, dispatch the reviser in proposal-only mode first: no file edits. Ask for the finding addressed, proposed structural move, affected callers and tests, why complexity decreases, evidence that observable behavior stays the same, and checks that will verify it. For an internal interface change, include two candidate designs and why the alternative lost. Authorized scoped test cleanup instead runs directly under the automatic-cleanup rules below, without a per-test proposal stage.
 2. **Evaluate independently.** The original main model checks the proposal against the actual code, adjudicated finding, acceptance criteria, and `codebase-design` principles. Look for mistaken assumptions, missed callers, shifted complexity, speculative abstractions, and unsupported behavior-preservation claims. Acknowledge a sound proposal and authorize that specific refactor; do not approve merely because the specialist recommended it.
 3. **Push back with evidence.** If the proposal is flawed or unclear, name the concrete issue and request a corrected proposal or supporting evidence before edits. Keep ordinary technical corrections between the main model and reviser. If a meaningful disagreement remains after a focused clarification, stop that revision and present the alternatives, evidence, tradeoff, and recommendation to the user. Behavior changes and uncertainty about behavior preservation follow the user-approval boundary immediately.
 4. **Implement only the accepted proposal.** Continue the reviser with the accepted scope and the same approval boundaries. It must report deviations or newly discovered behavior changes before applying them. Acceptance of a proposal is not permission for unrelated cleanup.
 5. **Inspect the actual result.** The main model reads the applied delta and affected callers/tests, checks that it matches the accepted proposal and preserves behavior, and reads the verification output. A completion summary alone is insufficient. Redirect defects within the accepted scope for correction; escalate new behavior decisions or unresolved disagreements instead of silently expanding scope. Keep the fresh adversarial validation in Step 8; supervision does not replace it.
+
+For authorized automatic test cleanup, load [test cleanup](../../../references/test-cleanup.md)
+and pass it to the writer. Include hardener-added tests in the scoped inspection.
+Dispatch directly in automatic-test-cleanup mode, not proposal-only: remove proven
+redundant/obsolete implementation-only assertions and rewrite useful guarantees
+through behavior interfaces. User authorization for this selected scope covers
+test/assertion deletion without per-test proposals or approval. Report **Keep /
+Rewrite / Delete** retrospectively with lost-guarantee or named equivalent
+surviving/replacement coverage evidence, refactor-survival and plausible-defect
+checks. Keep/report blocked on unique-coverage uncertainty. Unrelated architecture
+revisions retain the proposal gate; product behavior changes retain user approval.
+Fresh validation inspects removed assertions and replacement strength, not just
+the green suite. Reviewers stay independent and read-only. Ownership, read-only,
+explicit proposal-only, `--review-only`, and `--no-revise` restrictions remain unchanged.
+
+For test cleanup without automatic-cleanup authorization, dispatch proposal-only
+and leave deletions intact pending the user's task-scoped deletion approval and
+parent implementation authorization. Parent acceptance cannot replace the user's
+deletion approval. A normal caller that passes no automatic-cleanup authorization
+uses this fallback. Keep unauthorized proposals in the report rather than applying
+them or silently dropping the finding. This third case is separate from authorized
+automatic cleanup and unrelated architecture revisions.
 
 Briefly summarize accepted improvements and verification to the user. Do not require the user to referee minor implementation corrections or narrate the entire model-to-model exchange.
 
@@ -47,7 +69,7 @@ Baseline output:
 {current baseline output}
 ```
 
-2. **Revise readability and design (default).** When verified design findings exist, follow Main-Model Supervision of Complexity Revision: first spawn the `complexity-reviser` in proposal-only mode, evaluate its proposal, then continue it to implement only the accepted revision. The registered agent's instructions live in `~/.agents/agents/complexity-reviser.md`. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt. If no subagent dispatch is available, report revision blocked rather than silently replacing independent specialist work with the parent's self-review. Pass an explicit mode with the same context:
+2. **Revise readability and design (default).** For authorized test-cleanup findings, dispatch the `complexity-reviser` directly in automatic-test-cleanup mode and inspect its actual delta and retrospective report. Unauthorized test-cleanup findings use the proposal-only fallback above. For unrelated design findings, first spawn it in proposal-only mode, evaluate its proposal, then continue it to implement only the accepted revision. Separate those assignments so proposal-only restrictions do not accidentally block authorized test cleanup. The registered agent's instructions live in `~/.agents/agents/complexity-reviser.md`. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt. If no subagent dispatch is available, report revision blocked rather than silently replacing independent specialist work with the parent's self-review. Pass an explicit mode with the same context:
 
 ```text
 Design findings (verified and weakened):
@@ -56,7 +78,9 @@ Design findings (verified and weakened):
 Readability scope:
 {evidenced intent/effect naming, call-site comprehension, control flow, or module-design problems and their before/after; preserve precise domain/framework vocabulary and useful deep modules, without banned-word rules or speculative wrappers}
 
-Mode: proposal-only (no file edits); await the original main model's acceptance before implementation.
+Mode: <one resolved mode, not both>
+{For an authorized test-cleanup assignment, write only: automatic-test-cleanup.
+For an unrelated design assignment, write only: proposal-only (no file edits).}
 Proposal requirements and approval boundaries:
 {Main-Model Supervision of Complexity Revision and Decision Authority and Communication}
 
@@ -74,7 +98,7 @@ When no verified design findings exist, skip the spawn and report zero revisions
 
 The reviser removes complexity from the diff with behavior-preserving moves. It may reshape internal interfaces, but only by updating every caller and test in the same change; anything that would change product-observable behavior or the acceptance criteria is reported, not applied.
 
-After applying changes, the original main model first inspects the actual delta and affected callers/tests against the accepted proposal, correcting or escalating discrepancies under the supervision rules above. Then:
+After applying changes, the original main model first inspects the actual delta and affected callers/tests against the authorized cleanup scope or accepted architecture proposal, correcting or escalating discrepancies under the supervision rules above. Then:
 1. run each new or updated regression test
 2. rerun relevant compiler, type-checker, formatter, and linter commands
 3. regenerate the patch against the original review base

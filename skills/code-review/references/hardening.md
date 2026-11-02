@@ -32,3 +32,15 @@ After it returns:
 1. Regenerate `.git/code-review.patch`, `.git/code-review.changed-files`, and the baseline output so Steps 4-7 review the hardened diff.
 2. Keep the hardener's scenario table for the report (Step 8).
 3. If the scope has no executable behavior (docs or config only), or the hardener surfaces a design question, continue and note why.
+
+Inspect hardener-added tests as well as author tests using
+[test cleanup](../../../references/test-cleanup.md). Record **Keep / Rewrite /
+Delete** retrospectively after authorized automatic cleanup. The writer directly
+removes redundant/obsolete implementation-only checks and rewrites useful guarantees
+through behavior interfaces, without per-test proposals or approval. Favor user
+interactions, observable outcomes, public contracts, and accessible semantics over
+incidental CSS, internal state, helper order, or production copy unless an explicit contract requires it. Exact fixture
+strings and structural accessibility checks can be valid. Reviewers remain read-only;
+ownership restrictions and explicit skip/read-only modes still apply. Keep/report
+blocked on unique-coverage uncertainty. A reproduced regression is not scaffolding:
+keep its guarantee and failing evidence. Never remove it to manufacture green.
