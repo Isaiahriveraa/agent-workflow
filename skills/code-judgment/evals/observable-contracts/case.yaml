@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: observable-contracts
+expected_outcome: |
+  Preserve exact fixture text and semantic accessibility guarantees. Keep the only
+  geometry protection until equivalent browser coverage is available; report its
+  weakness without replacing it with a visibility-only test or claiming browser proof.
+context:
+  scaffold_script: place-files.sh

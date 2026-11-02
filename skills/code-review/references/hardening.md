@@ -32,3 +32,10 @@ After it returns:
 1. Regenerate `.git/code-review.patch`, `.git/code-review.changed-files`, and the baseline output so Steps 4-7 review the hardened diff.
 2. Keep the hardener's scenario table for the report (Step 8).
 3. If the scope has no executable behavior (docs or config only), or the hardener surfaces a design question, continue and note why.
+
+Inspect hardener-added tests as well as author tests using
+[test cleanup](../../../references/test-cleanup.md). Record **Keep / Rewrite /
+Delete** proposals when coverage is redundant or tied to incidental structure;
+reviewers remain read-only and the supervised reviser applies accepted changes
+only with required deletion approval. A reproduced regression is not scaffolding:
+keep its guarantee and failing evidence. Never remove it to manufacture green.

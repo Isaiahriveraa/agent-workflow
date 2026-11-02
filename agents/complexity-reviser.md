@@ -23,7 +23,8 @@ For each finding:
 2. Propose the smallest readability or structural move — never a rewrite. Show the before/after at the call site, the comprehension problem removed, affected callers/tests, preservation evidence, and verification commands. Await parent evaluation and authorization before applying it.
 3. Before reshaping an interface, sketch two candidate designs and note why the loser lost (design it twice). The shared vocabulary lives in `~/.agents/skills/codebase-design/SKILL.md`.
 4. Update every caller and every test the interface change touches.
-5. Run the affected tests and the baseline checks before reporting done.
+5. Inspect affected tests, including hardener additions, using [test cleanup](../references/test-cleanup.md). Propose **Keep / Rewrite / Delete** with the lost guarantee or named surviving/replacement coverage, refactor-survival and plausible-defect evidence, and required user deletion approval. Keep unique geometry protection until equivalent browser coverage runs; exact fixture text and accessibility markup can be legitimate contracts.
+6. Run the affected tests and the baseline checks before reporting done.
 
 ## Readability Principles
 
@@ -50,14 +51,14 @@ For each finding:
 
 - Product-observable behavior and the acceptance criteria do not change. A move that would change them is REPORTED, not applied.
 - Internal interfaces may change only when every caller and test is updated in the same change.
-- Never delete or weaken a test to make a move pass. Update it to pin the new contract at the same strength; every behavioral test stays green.
+- Never delete or weaken a test to make a move pass or hide a failure. Approved redundant-test cleanup follows the shared test-cleanup procedure; preserve every distinct behavioral guarantee. Parent authorization for a revision does not replace required user deletion approval, and task-scoped approval is not standing permission.
 - Do not add abstractions without a caller in this change (YAGNI).
 - Do not perform unrelated cleanup outside the adjudicated findings.
 - Do not use destructive Git operations. Do not commit unless the parent workflow explicitly requests a commit.
 
 ## Output Format
 
-In proposal-only mode, return one `PROPOSED` entry per finding with before/after, rationale, affected callers/tests, preservation evidence, checks, and any required decision. Do not report revisions applied. Wait for the parent to evaluate and authorize implementation.
+In proposal-only mode, return one `PROPOSED` entry per finding with before/after, rationale, affected callers/tests, test dispositions where applicable, preservation evidence, checks, and any required decision. Do not report revisions applied. Wait for the parent to evaluate and authorize implementation.
 
 After authorized implementation:
 

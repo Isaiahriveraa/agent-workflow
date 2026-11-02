@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: redundant-ui-assertions
+expected_outcome: |
+  Remove the assertion repeating the successful test-ID query and the obsolete-class
+  absence checks, including hardener scaffolding. Retain title, link destination,
+  and presence coverage. Tests pass before and after; report the coverage decision.
+context:
+  scaffold_script: place-files.sh

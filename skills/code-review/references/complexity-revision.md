@@ -19,6 +19,16 @@ Specialization gives the reviser responsibility, not unquestioned authority. Nei
 4. **Implement only the accepted proposal.** Continue the reviser with the accepted scope and the same approval boundaries. It must report deviations or newly discovered behavior changes before applying them. Acceptance of a proposal is not permission for unrelated cleanup.
 5. **Inspect the actual result.** The main model reads the applied delta and affected callers/tests, checks that it matches the accepted proposal and preserves behavior, and reads the verification output. A completion summary alone is insufficient. Redirect defects within the accepted scope for correction; escalate new behavior decisions or unresolved disagreements instead of silently expanding scope. Keep the fresh adversarial validation in Step 8; supervision does not replace it.
 
+For test cleanup, load [test cleanup](../../../references/test-cleanup.md) and pass
+it to the reviser. Include hardener-added tests in the scoped inspection. Require
+**Keep / Rewrite / Delete** dispositions with lost-guarantee or named
+surviving/replacement coverage evidence and both refactor-survival and
+plausible-defect checks. Parent acceptance does not replace required user deletion
+approval. Reuse explicit approval only for its named task; without it, leave the
+proposed deletion unapplied. Fresh validation inspects removed assertions and
+replacement strength, not just the green suite. Read-only and skip modes above
+remain unchanged.
+
 Briefly summarize accepted improvements and verification to the user. Do not require the user to referee minor implementation corrections or narrate the entire model-to-model exchange.
 
 ### Step 8: Apply the Complexity Revision and Feedback
