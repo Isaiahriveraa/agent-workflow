@@ -2,8 +2,18 @@
 
 Use this procedure for tests inside the selected diff, including tests added by
 the hardener. Follow required caller/test updates, not a repository-wide sweep.
-Reviewers propose; only an authorized writer edits. Read-only, proposal-only,
-`--review-only`, `--no-revise`, and implementation ownership restrictions still apply.
+Only an authorized writer edits. In an authorized cleanup run, code-judgment and
+complexity-reviser directly clean the selected tests without per-test proposals or
+approval. The user's explicit automatic-cleanup authorization covers scoped test
+and assertion removal; it is not standing permission outside that scope. Explicit
+read-only, proposal-only, `--review-only`, `--no-revise`, and implementation ownership
+restrictions still apply. Reviewers remain independent and read-only; when the main
+agent owns the files, it performs the authorized cleanup itself.
+
+Activate automatic mode when the user explicitly requests automatic test cleanup
+for a selected diff or named test scope. Pass that authorization and the resolved
+scope to the writer; neither selecting a finding nor `--fix` alone grants it.
+Do not request a separate proposal or approval for each test inside that scope.
 
 ## Keep tests coupled to behavior
 
@@ -21,7 +31,8 @@ Ask both questions: would a behavior-preserving refactor keep it green, and woul
 a plausible behavioral defect make it fail? Inspect the implementation, callers,
 acceptance criteria, and surviving coverage rather than judging assertion syntax.
 
-Assign a disposition, with file/test evidence:
+Determine a disposition from file/test evidence, apply safe cleanup directly, then
+report **Keep / Rewrite / Delete** retrospectively, not as an approval checklist:
 
 | Disposition | Evidence required |
 |---|---|
@@ -44,13 +55,19 @@ Rewrite it as browser coverage for overlap, alignment, or hit targets where need
 without runnable equivalent coverage, **Keep** it and report the gap. Do not swap a
 geometry guarantee for a visibility or click assertion that cannot catch displacement.
 
-Before removing a test or assertion, record the disposition, lost guarantee or
-named surviving/replacement coverage, and verification. Obtain the repository's
-required deletion approval from the user; parent authorization cannot substitute
-for it. Existing explicit approval for the named cleanup can be reused within that
-scope, not treated as standing permission for later deletions. Without approval,
-propose deletion and leave the test intact. Never delete, skip, weaken, or loosen a
-test to conceal a failure, remove a reproduced bug, or claim a green baseline.
+Before removing protection, establish the lost guarantee or named equivalent
+surviving/replacement coverage. The retrospective report records that evidence and
+checks actually run. Do not pause for a per-test proposal or deletion approval when
+the selected automatic cleanup is already authorized. Without that authorization,
+leave proposed deletions intact pending the user's task-scoped deletion approval
+and the writer's implementation authorization. Parent acceptance cannot replace
+the user's deletion approval. Report the pending proposal, not an applied deletion.
+Keep and report blocked when unique
+coverage is uncertain or no safe equivalent replacement can run. Product behavior
+changes, unrelated architecture revisions, security-sensitive actions, destructive
+Git operations, and new dependencies retain their existing gates. Never delete,
+skip, weaken, or loosen a test to conceal a failure, remove a reproduced bug, or
+claim a green baseline.
 
 Run baseline checks before cleanup and affected checks afterward. For rewrites,
 demonstrate the replacement survives an equivalent refactor and detects the named

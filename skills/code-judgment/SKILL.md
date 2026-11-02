@@ -25,8 +25,9 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 ## Hard Constraints
 
 - **Behavior never changes.** Same inputs, same outputs, same side effects, same errors. A caller cannot tell the cleanup happened.
-- **Tests are the net, not exempt from cleanup.** Inspect scoped tests, including hardener additions, using [test cleanup](../../references/test-cleanup.md). Assign **Keep / Rewrite / Delete** with the lost guarantee or surviving/replacement coverage. Delete redundant scaffolding only with the required user approval; never weaken coverage or hide a failure. Approval for this cleanup is not permission for later deletions. Keep tests loosely coupled to implementation: user interactions, observable outcomes, public contracts, and accessible semantics, not CSS, internal state, helper order, or production copy without an explicit contract.
+- **Clean tests automatically within authorized scope.** Inspect scoped tests, including hardener additions, using [test cleanup](../../references/test-cleanup.md). Directly delete proven redundant or obsolete implementation-only assertions and rewrite useful guarantees through the behavior interface, without per-test proposals or approval when automatic cleanup is authorized. Keep tests loosely coupled to implementation: user interactions, observable outcomes, public contracts, and accessible semantics, not CSS, internal state, helper order, or production copy without an explicit contract. Report **Keep / Rewrite / Delete** retrospectively with lost-guarantee or surviving/replacement coverage evidence. Preserve unique guarantees; keep and report blocked if equivalent protection is uncertain. Never hide failures or extend authorization outside the selected scope. Explicit read-only and ownership restrictions still apply.
 - **Bugs are reported, not fixed.** A behavior defect goes under "Left alone" for `code-review` and the author; judgment never quietly changes behavior.
+- **Without automatic-cleanup authorization:** leave proposed test deletions intact and request the user's task-scoped deletion approval. Parent acceptance cannot replace that approval. A normal caller that supplies no automatic-cleanup authorization uses this fallback, not automatic mode.
 - **Green before, green after.** Run the repo's checks (the floor in AGENTS.md **Enforce in tools, not prose**) before the first edit and after every batch. If baseline is red, report it before cleanup; do not hide it. Undo only your own failing batch, never unrelated user work.
 - **No feature work.** No new dependencies, no config changes, no refactors outside the checklist.
 - **No style noise.** The formatter and linter own style.
@@ -84,11 +85,11 @@ Short — the cleaned diff is the artifact; the report says why.
 |---|---|---|
 | Suspected off-by-one in pagination | src/list.ts:88 | Behavior — routed to code-review |
 
-### Test dispositions
+### Test cleanup performed (retrospective)
 
-| Test/assertion | Keep / Rewrite / Delete | Guarantee lost or surviving/replacement coverage | Approval and verification |
+| Test/assertion | Keep / Rewrite / Delete | Guarantee lost or surviving/replacement coverage | Scope and verification |
 |---|---|---|---|
-| <file:test> | <disposition> | <specific evidence, not just "implementation detail"> | <approval scope; checks actually run> |
+| <file:test> | <applied disposition, blocked Keep, or proposed deletion awaiting user approval when unauthorized> | <specific evidence, not just "implementation detail"> | <authorized scope or pending approval; checks actually run> |
 
 ### Verification
 
