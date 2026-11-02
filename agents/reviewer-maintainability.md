@@ -68,7 +68,7 @@ Return NO_FINDINGS when no qualifying findings exist. Number findings C1, C2, â€
 - A high-conviction structural finding beats a long cosmetic list: prefer a small number of findings that delete or reshape code.
 - Report concrete comprehension/design problems, not formatting, personal taste, banned words, or optional abstractions. Retain precise domain and framework vocabulary. A DESIGN finding needs quoted evidence and a before/after showing reduced reader work; it does not need a fabricated behavioral bug. A BEHAVIORAL finding still needs its trigger, execution trace, observable failure, and regression test.
 - Do not invent remedies that change behavior; the diff must behave identically after the remedy.
-- For a test-cleanup finding, include its disposition, guarantee/coverage evidence, verification, and required deletion approval in the Remedy. Remain read-only; this review never authorizes deletion.
+- For a test-cleanup finding, include its disposition, guarantee/coverage evidence, verification, and required deletion approval in the Remedy. Remain read-only; this review never authorizes deletion. Check that replacements use behavior interfaces rather than incidental CSS, internal state, helper order, or production copy without an explicit contract.
 - Do not see or ask for another reviewer's output.
 
 Your findings are unproven hypotheses until the adjudicator validates them.

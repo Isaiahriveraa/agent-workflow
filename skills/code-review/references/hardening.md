@@ -37,5 +37,8 @@ Inspect hardener-added tests as well as author tests using
 [test cleanup](../../../references/test-cleanup.md). Record **Keep / Rewrite /
 Delete** proposals when coverage is redundant or tied to incidental structure;
 reviewers remain read-only and the supervised reviser applies accepted changes
-only with required deletion approval. A reproduced regression is not scaffolding:
+only with required deletion approval. Favor user
+interactions, observable outcomes, public contracts, and accessible semantics over
+incidental CSS, internal state, helper order, or production copy unless an explicit contract requires it. Exact fixture
+strings and structural accessibility checks can be valid. A reproduced regression is not scaffolding:
 keep its guarantee and failing evidence. Never remove it to manufacture green.

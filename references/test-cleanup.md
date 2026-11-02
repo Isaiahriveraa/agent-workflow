@@ -5,6 +5,17 @@ the hardener. Follow required caller/test updates, not a repository-wide sweep.
 Reviewers propose; only an authorized writer edits. Read-only, proposal-only,
 `--review-only`, `--no-revise`, and implementation ownership restrictions still apply.
 
+## Keep tests coupled to behavior
+
+Exercise user interactions, observable outcomes, and meaningful public contracts
+through the interface callers use. Prefer accessible roles, names, labels, keyboard
+behavior, and ARIA state for UI tests. Avoid pins on CSS tokens, internal state,
+private helpers, helper call order, or exact production copy unless an explicit
+contract makes that detail meaningful. Exact fixture strings can prove supplied
+data renders unchanged; structural accessibility assertions can prove semantics.
+Do not replace one implementation pin with another or copy production logic into
+test expectations. A behavior-preserving implementation refactor should stay green.
+
 For each candidate, name the product guarantee and a plausible defect it catches.
 Ask both questions: would a behavior-preserving refactor keep it green, and would
 a plausible behavioral defect make it fail? Inspect the implementation, callers,

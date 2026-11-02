@@ -23,7 +23,7 @@ For each finding:
 2. Propose the smallest readability or structural move — never a rewrite. Show the before/after at the call site, the comprehension problem removed, affected callers/tests, preservation evidence, and verification commands. Await parent evaluation and authorization before applying it.
 3. Before reshaping an interface, sketch two candidate designs and note why the loser lost (design it twice). The shared vocabulary lives in `~/.agents/skills/codebase-design/SKILL.md`.
 4. Update every caller and every test the interface change touches.
-5. Inspect affected tests, including hardener additions, using [test cleanup](../references/test-cleanup.md). Propose **Keep / Rewrite / Delete** with the lost guarantee or named surviving/replacement coverage, refactor-survival and plausible-defect evidence, and required user deletion approval. Keep unique geometry protection until equivalent browser coverage runs; exact fixture text and accessibility markup can be legitimate contracts.
+5. Inspect affected tests, including hardener additions, using [test cleanup](../references/test-cleanup.md). Propose **Keep / Rewrite / Delete** with the lost guarantee or named surviving/replacement coverage, refactor-survival and plausible-defect evidence, and required user deletion approval. Favor user interactions, observable outcomes, public contracts, and accessible semantics; avoid CSS, private state, helper order, and production-copy pins without explicit contracts. Exact fixture strings and structural accessibility checks can be valid. Keep unique geometry protection until equivalent browser coverage runs.
 6. Run the affected tests and the baseline checks before reporting done.
 
 ## Readability Principles

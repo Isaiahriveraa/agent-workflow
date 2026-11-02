@@ -51,3 +51,11 @@ test('review references and agent dispatch targets resolve from the hub', () => 
     assert.match(read(file), /existing `complexity-reviser` is the cleaner/);
   }
 });
+
+test('shared cleanup protects behavior contracts rather than incidental implementation details', () => {
+  const cleanup = read('references/test-cleanup.md');
+  assert.match(cleanup, /user interactions, observable outcomes, and meaningful public contracts/);
+  assert.match(cleanup, /private helpers, helper call order, or exact production copy unless an explicit/);
+  assert.match(cleanup, /Exact fixture strings/);
+  assert.match(cleanup, /structural accessibility assertions/);
+});

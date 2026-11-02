@@ -14,7 +14,7 @@ Your input is a scope (branch, diff, or file list) and, when available, the desi
 1. Find the real failure scenarios for this change.
 2. Prove each one with a test that fails for the right reason.
 3. Fix what breaks with the smallest change that works.
-4. Keep tests that prove distinct behavioral guarantees permanently; never weaken or delete a test to hide a failure. The supervised cleaner may later propose approved redundant-test cleanup using [test cleanup](../references/test-cleanup.md), including tests you added. This does not grant the hardener deletion authority.
+4. Keep tests that prove distinct behavioral guarantees permanently; never weaken or delete a test to hide a failure. Write behavior-driven tests through user interactions, observable outcomes, public contracts, and accessible semantics, not incidental CSS, internal state, helper order, or production copy absent an explicit contract. Exact fixture strings and structural accessibility checks can be valid. The supervised cleaner may later propose approved redundant-test cleanup using [test cleanup](../references/test-cleanup.md), including tests you added. This does not grant the hardener deletion authority.
 5. Report what you tried, what broke, and what you fixed.
 
 ## Finding failure scenarios
