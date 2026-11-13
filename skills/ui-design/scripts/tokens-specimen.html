@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Token specimen — must pass auditUI()</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  body { margin: 0; padding: var(--space-6); }
+  main { max-width: 64rem; display: grid; gap: var(--gap-section); }
+  section[data-ui-density] { padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  p { margin: 0; max-width: 65ch; }
+  .row { display: flex; align-items: center; gap: var(--gap-inline); flex-wrap: wrap; }
+  .stack { display: grid; gap: var(--gap-stack); }
+  button { border: 1px solid var(--border-control); background: var(--surface); color: var(--text); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); }
+  button.primary { background: var(--primary); color: var(--primary-contrast); border-color: var(--primary); }
+  button[disabled] { color: var(--text-muted); border-color: var(--border-subtle); background: var(--surface-sunken); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--text-dense); }
+  th, td { text-align: left; padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--border-subtle); }
+  th { color: var(--text-secondary); font-weight: var(--weight-label); }
+  input { border: 1px solid var(--border-control); border-radius: var(--radius-sm); padding: var(--space-2); background: var(--surface); width: 16rem; }
+  .dot { width: 8px; height: 8px; border-radius: var(--radius-full); display: inline-block; }
+</style>
+
+<main>
+  <section data-ui-density="scan">
+    <div class="stack">
+      <h2 data-ui-role="primary">Token specimen</h2>
+      <p data-ui-role="secondary">Every role is sampled here, so a lowered ratio fails here first.</p>
+      <p data-ui-role="muted">Updated 2 minutes ago</p>
+      <div class="row">
+        <button class="primary">Save changes</button>
+        <button>Cancel</button>
+        <button disabled>Archive</button>
+      </div>
+      <div class="row">
+        <span class="dot" style="background:var(--success)"></span><span data-ui-role="secondary">Completed</span>
+        <span class="dot" style="background:var(--warning)"></span><span data-ui-role="secondary">Needs review</span>
+        <span class="dot" style="background:var(--danger)"></span><span data-ui-role="secondary">Failed</span>
+      </div>
+      <label data-ui-role="secondary" for="who">Recipient</label>
+      <input id="who" placeholder="maya@example.com">
+    </div>
+  </section>
+
+  <section data-ui-density="dense">
+    <table>
+      <thead><tr><th data-ui-role="dense">Name</th><th data-ui-role="dense">Status</th><th data-ui-role="dense" style="text-align:right">Amount</th></tr></thead>
+      <tbody>
+        <tr><td data-ui-role="dense">Maya Okafor</td><td data-ui-role="dense">Pending</td><td data-ui-role="dense" style="text-align:right">1,240.00</td></tr>
+        <tr><td data-ui-role="dense">Sam Whitfield</td><td data-ui-role="dense">Paid</td><td data-ui-role="dense" style="text-align:right">86.50</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script src="./audit-ui.js"></script>
+<script>
+  // Smoke check in the console; the fixture harness is the contract test.
+  globalThis.auditSpecimen = () => auditUI();
+</script>
+</html>

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exemplars — the same content, designed and defaulted</title>
+<style>
+  /* Gallery chrome only. Each pair is self-contained so its rules do not leak. */
+  :root {
+    --ink: #14171b;
+    --ink-2: #4b5158;
+    --ink-3: #6b7178;
+    --paper: #fbfbfc;
+    --line: #e3e5e8;
+    --accent: #2f6ec8;
+    --warm: #fbf7f2;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px 32px 96px; }
+  header.gallery { max-width: 1180px; margin: 0 auto 56px; }
+  header.gallery h1 { font-size: 32px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 600; margin: 0 0 12px; max-width: 22ch; }
+  header.gallery p { font-size: 16px; line-height: 1.6; color: var(--ink-2); max-width: 62ch; margin: 0 0 8px; }
+  header.gallery .rule { height: 1px; background: var(--line); margin-top: 32px; }
+  section.pair { max-width: 1180px; margin: 0 auto 72px; }
+  .pair-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+  .pair-head h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+  .pair-head .stance { font-size: 14px; color: var(--ink-3); }
+  .pair-head .job { margin-left: auto; font-size: 14px; color: var(--ink-3); max-width: 46ch; text-align: right; }
+  .pair-head .rule { flex: 1; }
+  .frames { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .frames > * { min-width: 0; }
+  .frame, .frame .body { min-width: 0; }
+  @media (max-width: 900px) { .frames { grid-template-columns: 1fr; } .pair-head .job { display: none; } }
+  @media (max-width: 600px) {
+    body { padding: 32px 16px 64px; }
+    .frame .body { padding: 16px; }
+    .frame-label { flex-wrap: wrap; gap: 2px 12px; }
+    .deltas div { grid-template-columns: 1fr; gap: 4px; }
+    .deltas dt { font-size: 13px; }
+  }
+  .frame-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; margin: 0 0 8px; }
+  .frame-label b { font-weight: 600; }
+  .frame-label span { color: var(--ink-3); }
+  .frame { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+  .frame .bar { height: 28px; background: #f4f5f6; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 6px; padding: 0 12px; }
+  .frame .bar i { width: 7px; height: 7px; border-radius: 50%; background: #d4d7db; }
+  .frame .body { padding: 28px; }
+  .deltas { margin-top: 16px; border-top: 1px solid var(--line); }
+  .deltas div { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.5; }
+  .deltas dt { color: var(--ink-3); }
+  .deltas dd { margin: 0; color: var(--ink); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: #f1f2f4; padding: 1px 5px; border-radius: 4px; }
+
+  /* ── pair 1: utilitarian review row ───────────────────────────────────── */
+  .u { font-size: 14px; line-height: 1.45; color: #14171b; }
+  .u .head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px; }
+  .u .head h3 { font-size: 18px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .u .count { font-size: 14px; color: #6b7178; }
+  .u .before-card { border: 1px solid #e3e5e8; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.08); padding: 16px; margin-bottom: 12px; }
+  .u .title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .u .meta { font-size: 13px; color: #9aa0a6; margin: 0 0 8px; }
+  .u .orig { font-size: 13px; color: #6b7178; margin: 0 0 12px; }
+  .u .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #eef0ff; color: #4b54b8; margin-left: 8px; }
+  .u .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .u .actions button { font: inherit; font-size: 14px; border-radius: 8px; border: 1px solid #d4d7db; background: #fff; padding: 7px 12px; color: #14171b; }
+  .u .actions button.primary { background: #14171b; color: #fff; border-color: #14171b; }
+  .u .list { border-top: 1px solid #e3e5e8; }
+  .u .row { display: grid; grid-template-columns: minmax(0, 1fr) 60px auto; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid #e3e5e8; }
+  .u .row .name { font-size: 16px; font-weight: 500; margin: 0 0 2px; }
+  .u .row .ctx { font-size: 14px; color: #4b5158; margin: 0; }
+  .u .time { font-size: 14px; color: #6b7178; text-align: right; font-variant-numeric: tabular-nums; }
+  .u .status { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: #4b5158; white-space: nowrap; }
+  .u .status i { width: 8px; height: 8px; border-radius: 50%; background: #8a8f96; display: inline-block; }
+  .u .review { font: inherit; font-size: 14px; font-weight: 500; color: #14171b; background: transparent; border: 0; border-bottom: 1px solid #c9ccd0; padding: 0 0 2px; cursor: pointer; }
+  .u .review:focus-visible { outline: 2px solid #2f6ec8; outline-offset: 3px; }
+
+  /* ── pair 2: editorial index ──────────────────────────────────────────── */
+  .e { color: #14171b; font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  .e .before-hero { background: linear-gradient(135deg, #6d5efc, #4a9ef8); border-radius: 14px; padding: 32px 24px; text-align: center; color: #fff; margin-bottom: 20px; }
+  .e .before-hero h3 { font-size: 24px; margin: 0 0 8px; }
+  .e .before-hero p { font-size: 14px; margin: 0 0 16px; opacity: .95; }
+  .e .pillbtn { display: inline-block; font-size: 14px; padding: 8px 16px; border-radius: 999px; background: #fff; color: #3646c8; margin: 0 4px; }
+  .e .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .e .card { border: 1px solid #e3e5e8; border-radius: 12px; padding: 14px; text-align: center; }
+  .e .card .ico { font-size: 18px; }
+  .e .card h4 { font-size: 14px; margin: 6px 0 4px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .e .card p { font-size: 12px; color: #6b7178; margin: 0; line-height: 1.5; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .e .masthead { border-bottom: 1px solid #14171b; padding-bottom: 16px; margin-bottom: 0; }
+  .e .masthead .kicker { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; color: #4b5158; margin: 0 0 12px; }
+  .e .masthead h3 { font-size: clamp(30px, 4vw, 44px); line-height: 1.08; letter-spacing: -0.02em; font-weight: 500; margin: 0; max-width: 20ch; }
+  .e .lead { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; padding: 20px 0; border-bottom: 1px solid #d9dcdf; }
+  .e .lead p { font-size: 16px; line-height: 1.55; margin: 0; max-width: 46ch; font-family: ui-sans-serif, system-ui, sans-serif; color: #2b3035; }
+  .e .lead .aside { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; color: #4b5158; align-self: end; }
+  .e .index { list-style: none; margin: 0; padding: 0; }
+  .e .index li { display: grid; grid-template-columns: 56px 1fr auto; gap: 16px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid #e3e5e8; }
+  .e .index .year { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; color: #6b7178; font-variant-numeric: tabular-nums; }
+  .e .index .t { font-size: 18px; line-height: 1.3; }
+  .e .index .kind { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; color: #6b7178; }
+
+  /* ── pair 3: bold brand ───────────────────────────────────────────────── */
+  .b { font-family: ui-sans-serif, system-ui, sans-serif; color: #14171b; }
+  .b .timid { padding: 28px 20px; text-align: center; }
+  .b .timid h3 { font-size: 26px; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .b .timid p { font-size: 14px; color: #6b7178; margin: 0 auto 18px; max-width: 42ch; }
+  .b .timid .btns span { display: inline-block; font-size: 14px; padding: 8px 14px; border-radius: 999px; margin: 0 4px; }
+  .b .timid .btns .a { background: #4f46e5; color: #fff; }
+  .b .timid .btns .b2 { border: 1px solid #d4d7db; }
+  .b .bold { background: oklch(0.72 0.17 45); color: oklch(0.18 0.03 45); padding: 28px 24px 24px; border-radius: 10px; position: relative; overflow: hidden; }
+  .b .bold .mark { position: absolute; right: -28px; bottom: -56px; font-family: Georgia, serif; font-size: 200px; line-height: 1; font-weight: 700; color: oklch(0.18 0.03 45 / 0.14); letter-spacing: -0.06em; }
+  .b .bold .kicker { font-size: 14px; font-weight: 600; opacity: .85; margin: 0 0 40px; }
+  .b .bold h3 { font-size: clamp(34px, 6vw, 54px); line-height: 0.98; letter-spacing: -0.035em; font-weight: 600; margin: 0 0 14px; max-width: 12ch; position: relative; }
+  .b .bold p { font-size: 15px; line-height: 1.5; margin: 0 0 22px; max-width: 36ch; position: relative; }
+  .b .bold .cta { display: inline-block; background: oklch(0.18 0.03 45); color: oklch(0.98 0.01 45); font-size: 15px; font-weight: 600; padding: 11px 18px; border-radius: 6px; text-decoration: none; position: relative; }
+  .b .bold .logos { display: flex; gap: 18px; margin-top: 34px; font-size: 12px; letter-spacing: .06em; opacity: .55; position: relative; }
+
+  /* ── pair 4: warm product ─────────────────────────────────────────────── */
+  .w { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; color: #2a2420; }
+  .w .cool { background: #f6f7f9; padding: 20px; border: 1px solid #e3e5e8; border-radius: 8px; }
+  .w .cool h3 { font-size: 18px; margin: 0 0 14px; }
+  .w .cool .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .w .cool .tile { background: #fff; border: 1px solid #e3e5e8; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .w .cool .tile span { color: #4b5158; }
+  .w .cool .toggle { width: 34px; height: 18px; border-radius: 999px; background: #d4d7db; position: relative; }
+  .w .cool .toggle::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 2px; left: 2px; }
+  .w .cool .toggle.on { background: #4f46e5; }
+  .w .cool .toggle.on::after { left: 18px; }
+  .w .warm { background: #fbf7f2; border-radius: 16px; padding: 26px; border: 1px solid #efe6da; }
+  .w .warm .eyebrow { font-size: 14px; color: #7a6a58; margin: 0 0 6px; font-weight: 500; }
+  .w .warm h3 { font-size: 30px; line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 4px; font-weight: 500; }
+  .w .warm .sub { color: #6b5d4d; margin: 0 0 24px; }
+  .w .warm .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-top: 1px solid #efe6da; }
+  .w .warm .row:last-of-type { border-bottom: 1px solid #efe6da; }
+  .w .warm .row .label { font-size: 16px; }
+  .w .warm .row .hint { font-size: 14px; color: #6b5d4d; margin-top: 2px; }
+  .w .warm .sw { width: 44px; height: 26px; border-radius: 999px; background: #e6dbcc; position: relative; flex: none; }
+  .w .warm .sw::after { content: ""; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; top: 3px; left: 3px; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .w .warm .sw.on { background: #566a3c; }
+  .w .warm .sw.on::after { left: 21px; }
+  .w .warm .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; }
+  .w .warm .foot .fig { font-size: 15px; color: #6b5d4d; }
+  .w .warm .foot .fig strong { font-size: 22px; color: #2a2420; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .w .warm .foot button { font: inherit; font-size: 15px; font-weight: 500; border: 0; border-radius: 8px; padding: 10px 16px; background: #2a2420; color: #fff; }
+
+  /* Demo reflow, after the base rules so it actually wins. */
+  @media (max-width: 600px) {
+    .u .row { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+    .u .row > div:first-child { flex: 1 1 100%; }
+    .u .time { text-align: left; order: 2; }
+    .u .row > div:last-child { order: 3; margin-left: auto; }
+    .e .lead { grid-template-columns: 1fr; gap: 8px; }
+    .e .index li { grid-template-columns: 44px minmax(0, 1fr); }
+    .e .index .kind { grid-column: 2; }
+    .w .warm { padding: 20px; }
+    .b .bold { padding: 24px 20px 20px; }
+  }
+</style>
+
+<header class="gallery">
+  <h1>Same content. Two outcomes.</h1>
+  <p>Each pair holds the content constant and changes only the decisions. Read the deltas, not the screenshots: the delta is the transferable part. Every “designed” panel follows the skill’s rules; every “default” panel is what an agent ships when it styles a form instead of designing one.</p>
+  <p>What does not transfer: the exact colors, the typeface, the copy. What does: which thing leads, what got deleted, where color was spent, and how many signals carry one meaning.</p>
+  <div class="rule"></div>
+</header>
+
+<!-- 1 -->
+<section class="pair">
+  <div class="pair-head">
+    <h2>Review queue row</h2><span class="stance">Utilitarian</span>
+    <div class="job">Job: decide, twice a minute. The row must answer “what is this, is it mine, what do I do” in one glance.</div>
+  </div>
+  <div class="frames">
+    <div>
+      <p class="frame-label"><b>Defaulted</b><span>card, four controls, dot-separated meta</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body u">
+        <div class="head"><h3>Review queue</h3><span class="count">3 pending</span></div>
+        <div class="before-card">
+          <p class="title">Email the meeting agenda <span class="pill">● High</span></p>
+          <p class="meta">Maya Okafor · Hall Council · 2 days ago · 3 comments</p>
+          <p class="orig">Original: “Send the agenda to the council before Thursday”</p>
+          <div class="actions"><button class="primary">Approve</button><button>Edit</button><button>Skip</button><button>Delete</button></div>
+        </div>
+      </div></div>
+    </div>
+    <div>
+      <p class="frame-label"><b>Designed</b><span>hairline row, one action, status as dot + word</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body u">
+        <div class="head"><h3>To review</h3><span class="count" style="margin-left:auto">12 min</span></div>
+        <div class="list">
+          <div class="row">
+            <div><p class="name">Email the meeting agenda</p><p class="ctx">Hall Council · from last week’s notes</p></div>
+            <div class="time">2 days</div>
+            <div style="display:flex;align-items:center;gap:16px"><span class="status"><i></i>Waiting</span><button class="review">Review</button></div>
+          </div>
+          <div class="row">
+            <div><p class="name">Book the room for Thursday</p><p class="ctx">Hall Council · needs a second approval</p></div>
+            <div class="time">2 days</div>
+            <div style="display:flex;align-items:center;gap:16px"><span class="status"><i style="background:oklch(.5 .12 70)"></i>Blocked</span><button class="review">Review</button></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <dl class="deltas">
+    <div><dt>Recording the count</dt><dd>“3 pending” in the header is the only place a count appears. Inside the row it is a fact the reader already has.</dd></div>
+    <div><dt>Card → row</dt><dd>Delete the surface and the shadow. Peers separate with one hairline and 14px of vertical space, so the list reads as one object with two rows.</dd></div>
+    <div><dt>Four controls → one</dt><dd>Approve, edit, skip and delete are decisions for the opened row, not for the scan view. The row carries one action; the rest appear after Review.</dd></div>
+    <div><dt>Meta by separator → by slot</dt><dd>Author, group, time and status each get a fixed slot. The time column is right-aligned and tabular, so a column of rows is scannable instead of merely aligned.</dd></div>
+    <div><dt>Badge → dot + word</dt><dd>Status is an 8px semantic dot plus the word “Waiting”. Color is the second signal; the row is never tinted.</dd></div>
+    <div><dt>13px gray → 14px muted</dt><dd>The metadata was small to fit four facts. Deleting two facts let it grow to the floor, which is why it now reads as designed rather than cramped.</dd></div>
+  </dl>
+</section>
+
+<!-- 2 -->
+<section class="pair">
+  <div class="pair-head">
+    <h2>Article index</h2><span class="stance">Editorial</span>
+    <div class="job">Job: convince a thoughtful reader that the writing is worth an hour. Hierarchy is type, measure and rules.</div>
+  </div>
+  <div class="frames">
+    <div>
+      <p class="frame-label"><b>Defaulted</b><span>gradient hero, centered, three equal cards</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body e">
+        <div class="before-hero"><h3>Ideas that shape better software</h3><p>Essays on craft, decisions and the systems behind them.</p><span class="pillbtn">Start reading</span><span class="pillbtn">Subscribe</span></div>
+        <div class="cards">
+          <div class="card"><div class="ico">◈</div><h4>Craft</h4><p>How small details compound into trust.</p></div>
+          <div class="card"><div class="ico">◎</div><h4>Decisions</h4><p>Choosing before you build.</p></div>
+          <div class="card"><div class="ico">◇</div><h4>Systems</h4><p>Making the next change cheaper.</p></div>
+        </div>
+      </div></div>
+    </div>
+    <div>
+      <p class="frame-label"><b>Designed</b><span>one lead, ruled index, type carrying the hierarchy</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body e">
+        <div class="masthead">
+          <p class="kicker">Notebook / issue 34</p>
+          <h3>The cost of a decision you didn’t name</h3>
+        </div>
+        <div class="lead">
+          <p>Essays on craft, decisions and the systems behind them. One long read a week, no feed, no notifications.</p>
+          <div class="aside">Issue 34<br>18 min read</div>
+        </div>
+        <ul class="index">
+          <li><span class="year">2026</span><span class="t">Small details compound into trust</span><span class="kind">Craft</span></li>
+          <li><span class="year">2026</span><span class="t">Choose the direction before the code</span><span class="kind">Decisions</span></li>
+          <li><span class="year">2025</span><span class="t">Make the next change cheaper</span><span class="kind">Systems</span></li>
+        </ul>
+      </div></div>
+    </div>
+  </div>
+  <dl class="deltas">
+    <div><dt>Centered → left edge</dt><dd>One left margin carries the whole page. The masthead is the only large moment; nothing else competes for the center.</dd></div>
+    <div><dt>Gradient → paper + rules</dt><dd>The gradient was doing the work a type scale should do. A rule, a kicker and a 44px display line are enough, and they survive dark mode.</dd></div>
+    <div><dt>Three cards → one lead</dt><dd>Equal cards answer “which matters?” with silence. One lead item and a ruled index answer it with hierarchy.</dd></div>
+    <div><dt>Serif display, sans interface</dt><dd>Two families paired by contrast, not similarity: the reading face carries voice, the sans carries labels and numbers.</dd></div>
+    <div><dt>Kicker → display → body</dt><dd>Three type steps and no boxes. The jump from a 14px label to a 44px display is the one deliberate move; everything else is conventional.</dd></div>
+  </dl>
+</section>
+
+<!-- 3 -->
+<section class="pair">
+  <div class="pair-head">
+    <h2>Launch hero</h2><span class="stance">Bold brand</span>
+    <div class="job">Job: be remembered. The brief asked for bold, so the failure mode is a timid page with a saturated button.</div>
+  </div>
+  <div class="frames">
+    <div>
+      <p class="frame-label"><b>Defaulted</b><span>26px headline on white, two pills, one purple</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body b">
+        <div class="timid">
+          <h3>Move faster with clarity</h3>
+          <p>Transform your workflow with an all-in-one workspace that helps teams do their best work.</p>
+          <div class="btns"><span class="a">Get started</span><span class="b2">Learn more</span></div>
+        </div>
+      </div></div>
+    </div>
+    <div>
+      <p class="frame-label"><b>Designed</b><span>one color field, 54px display, one graphic idea, one action</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body b">
+        <div class="bold">
+          <div class="mark">c</div>
+          <p class="kicker">Clarity, version 2</p>
+          <h3>Stop guessing what to build.</h3>
+          <p>One workspace for the decision, the record and the next step.</p>
+          <a class="cta" href="#">Start free</a>
+          <div class="logos"><span>ARC</span><span>FIELD</span><span>NORTH</span><span>PACE</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <dl class="deltas">
+    <div><dt>Color volume up</dt><dd>A bold brief spends a full field, not a fill on one button. The page is the color; the type is dark-on-warm for contrast.</dd></div>
+    <div><dt>26px → 54px</dt><dd>The display scale is the stance. 54px at −0.035em tracking with 0.98 leading is what makes the page feel like a decision.</dd></div>
+    <div><dt>One graphic idea</dt><dd>A single oversized letterform cropped by the edge. One idea, held; not three gradient blobs.</dd></div>
+    <div><dt>Two CTAs → one</dt><dd>“Learn more” is the second button of a page with nothing to decide. The logo row does the credibility work instead.</dd></div>
+    <div><dt>Copy is design material</dt><dd>“Stop guessing what to build” is a claim with a verb. “Transform your workflow” is a placeholder wearing a headline’s clothes.</dd></div>
+  </dl>
+</section>
+
+<!-- 4 -->
+<section class="pair">
+  <div class="pair-head">
+    <h2>Habit settings</h2><span class="stance">Warm product</span>
+    <div class="job">Job: adjust a routine without feeling managed. Warmth comes from surface, space and one accent, not from rounded cards everywhere.</div>
+  </div>
+  <div class="frames">
+    <div>
+      <p class="frame-label"><b>Defaulted</b><span>cool gray, six tiles, indigo on every switch</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body w">
+        <div class="cool">
+          <h3>Preferences</h3>
+          <div class="grid">
+            <div class="tile"><span>Morning</span><div class="toggle on"></div></div>
+            <div class="tile"><span>Evening</span><div class="toggle"></div></div>
+            <div class="tile"><span>Weekends</span><div class="toggle on"></div></div>
+            <div class="tile"><span>Reminders</span><div class="toggle on"></div></div>
+            <div class="tile"><span>Sound</span><div class="toggle on"></div></div>
+            <div class="tile"><span>Analytics</span><div class="toggle"></div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div>
+      <p class="frame-label"><b>Designed</b><span>one warm surface, rows not tiles, accent where state changes</span></p>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><div class="body w">
+        <div class="warm">
+          <p class="eyebrow">Routine</p>
+          <h3>Two sessions a day</h3>
+          <p class="sub">Adjust when it happens, not how hard it is.</p>
+          <div class="row"><div><div class="label">Morning session</div><div class="hint">07:30 · weekday</div></div><div class="sw on"></div></div>
+          <div class="row"><div><div class="label">Evening session</div><div class="hint">20:00 · weekday</div></div><div class="sw on"></div></div>
+          <div class="row"><div><div class="label">Weekend pause</div><div class="hint">Off by default</div></div><div class="sw"></div></div>
+          <div class="foot"><div class="fig"><strong>18</strong> day streak</div><button>Save changes</button></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <dl class="deltas">
+    <div><dt>Cool gray → warm paper</dt><dd>Warmth is a hue-consistent neutral ramp, not a terracotta accent. One surface with a 16px radius beats six 8px tiles.</dd></div>
+    <div><dt>Six tiles → three rows</dt><dd>Rows grouped by time of day read as a routine; a 2×3 tile grid reads as a settings table with no owner.</dd></div>
+    <div><dt>Accent → state only</dt><dd>The accent appears only on switches that are on and the one primary action. Nothing else is tinted.</dd></div>
+    <div><dt>Rate → figure</dt><dd>“18 day streak” is the one number on the screen, with its unit and subject separated. The switches are the context.</dd></div>
+    <div><dt>Space scale, not padding drift</dt><dd>26px around, 16px inside rows, 24px above the action. Every gap comes from one scale, so the page has rhythm without borders.</dd></div>
+  </dl>
+</section>
+</html>

@@ -1,0 +1,195 @@
+/*
+ * tokens.css — a role-token starter for the ui-design skill.
+ *
+ * Copy this block, rename nothing, delete what the product does not use.
+ * Components reference roles only; a component that names a hue or a hex is a
+ * bug. Measured contrast ratios are recorded per role so a palette edit has a
+ * number to beat, not a feeling to preserve.
+ *
+ * Verify after editing: open `tokens-specimen.html`, call `auditUI()`.
+ * Numbers below are WCAG 2.x sRGB from the audit's compositor, on `--bg`
+ * unless stated.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── surfaces ─────────────────────────────────────────────────────────── */
+  --bg:            oklch(0.985 0.002 250);  /* page canvas */
+  --surface:       oklch(1     0     0);    /* the thing that sits on the page */
+  --surface-sunken: oklch(0.965 0.003 250); /* wells, table headers, code blocks */
+  --surface-hover: oklch(0.960 0.003 250);  /* hover is a tint of a surface, never a hue */
+
+  /* ── lines ────────────────────────────────────────────────────────────── */
+  /* Decorative edges: quiet. Necessary input boundaries: 3.49:1 (3:1 floor). */
+  --border-subtle:  oklch(0.900 0.004 250);
+  --border-control: oklch(0.620 0.008 250);
+  --border-strong:  oklch(0.480 0.010 250);
+
+  /* ── text ─────────────────────────────────────────────────────────────── */
+  /* Tiers are only ~1.5:1 apart because every one clears 4.5:1. Hierarchy
+     above that is weight, size and position, not a lighter gray. */
+  --text:           oklch(0.205 0.008 250); /* 17.2:1 */
+  --text-secondary: oklch(0.455 0.012 250); /*  7.0:1 */
+  --text-muted:     oklch(0.535 0.012 250); /*  4.9:1 — counts, timestamps, ids */
+  --text-inverse:   oklch(0.985 0.002 250);
+  /* Placeholders are examples, never labels. In dark they sit one tier higher
+     because the quieter tier loses apparent contrast on a dark ground. */
+  --text-placeholder: var(--text-muted);
+
+  /* ── accent: primary action, links, focus. Nothing else. ──────────────── */
+  --accent:          oklch(0.545 0.155 258); /* 4.8:1 on bg, 5.0:1 on white */
+  --accent-contrast: oklch(1     0     0);   /* 5.0:1 on --accent */
+  --accent-subtle:   oklch(0.545 0.155 258 / 0.10);
+
+  /* A neutral inverted primary competes with nothing. Prefer it when the
+     brand is not the point. */
+  --primary:          oklch(0.205 0.008 250);
+  --primary-contrast: oklch(1     0     0);
+  --primary-hover:    oklch(0.285 0.008 250);
+
+  /* ── semantic, glyph scale only (dot, tick, badge, one word) ──────────── */
+  --danger:  oklch(0.520 0.190  25); /* 5.8:1 */
+  --success: oklch(0.500 0.110 155); /* 5.4:1 */
+  --warning: oklch(0.500 0.120  70); /* 5.9:1 */
+  --info:    var(--accent);
+
+  /* ── focus: 2px, offset, never removed ────────────────────────────────── */
+  --focus-ring-color: var(--accent);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus-ring-color);
+
+  /* ── type: one ratio (1.2 dense UI), rem, root untouched ──────────────── */
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-dense:  0.8125rem; /* 13px — tabular cells/headers only, data-ui-role="dense" */
+  --text-sm:     0.875rem;  /* 14px — the UI floor: labels, buttons, meta */
+  --text-body:   1rem;      /* 16px — body, record names */
+  --text-body-lg: 1.0625rem;
+  --text-lg:     1.25rem;   /* section heading */
+  --text-xl:     1.5rem;
+  --text-2xl:    1.875rem;  /* page title */
+  --text-3xl:    2.375rem;
+  --text-display: clamp(2.5rem, 1.6rem + 4.5vw, 4rem); /* display scales; body never does */
+
+  --leading-tight: 1.15;
+  --leading-heading: 1.25;
+  --leading-ui: 1.45;
+  --leading-body: 1.6;
+
+  --tracking-display: -0.022em;
+  --tracking-heading: -0.012em;
+  --tracking-body: 0;
+  --tracking-caps: 0.06em;
+
+  --weight-body: 400;
+  --weight-label: 500;
+  --weight-strong: 600;
+
+  /* ── space: one 4px scale, role-mapped ────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  --gap-inline: var(--space-2);   /* icon to its label */
+  --gap-stack:  var(--space-3);   /* related blocks */
+  --gap-group:  var(--space-5);   /* between groups */
+  --gap-section: var(--space-7);  /* between sections, always larger than inside */
+
+  /* ── radius: one base, derived. Inner = outer − padding. ─────────────── */
+  --radius-base: 8px;
+  --radius-sm:   calc(var(--radius-base) * 0.6);   /* 4.8px — controls inside containers */
+  --radius-md:   calc(var(--radius-base) * 1);
+  --radius-lg:   calc(var(--radius-base) * 1.4);   /* 11.2px */
+  --radius-xl:   calc(var(--radius-base) * 1.8);   /* 14.4px — dialogs, sheets */
+  --radius-full: 999px;                            /* only avatars, count chips, toggles */
+
+  /* ── elevation: overlays only. One language, translucent. ────────────── */
+  --shadow-overlay: 0 1px 2px oklch(0 0 0 / 0.06), 0 8px 24px oklch(0 0 0 / 0.10);
+  --shadow-popover: 0 1px 2px oklch(0 0 0 / 0.08), 0 16px 48px oklch(0 0 0 / 0.14);
+
+  /* ── motion: explains a state change, 120–320ms ──────────────────────── */
+  --duration-instant: 90ms;   /* press feedback */
+  --duration-fast:    140ms;  /* hover, focus */
+  --duration-base:    200ms;  /* popover, disclosure */
+  --duration-slow:    320ms;  /* sheet, page transition */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1); /* reserve for entrance, never layout */
+
+  /* ── density: row height by job, not by taste ────────────────────────── */
+  --row-scan: 48px;    /* many peers, one line of meta */
+  --row-review: 80px;  /* one decision at a time */
+  --row-dense: 36px;   /* data table */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Not inverted: re-picked against the dark ground. Elevation is lighter
+       than its parent, never darker. Floors are higher (7 / 6 / 5.5). */
+    --bg:             oklch(0.175 0.006 250);
+    --surface:        oklch(0.205 0.006 250);  /* +1 step from bg */
+    --surface-sunken: oklch(0.205 0.006 250);
+    --surface-hover:  oklch(0.245 0.006 250);
+
+    --border-subtle:  oklch(1 0 0 / 0.12);
+    --border-control: oklch(1 0 0 / 0.42);  /* 3.8:1 against bg */
+    --border-strong:  oklch(1 0 0 / 0.60);
+
+    --text:           oklch(0.955 0.004 250); /* 16.6:1 */
+    --text-secondary: oklch(0.775 0.008 250); /*  9.3:1 */
+    --text-muted:     oklch(0.685 0.010 250); /*  6.7:1 */
+    --text-inverse:   oklch(0.175 0.006 250);
+    --text-placeholder: var(--text-secondary);
+
+    --accent:          oklch(0.760 0.135 258); /* 8.5:1 on bg, 7.5:1 on raised */
+    --accent-contrast: oklch(0.180 0.020 258);
+    --accent-subtle:   oklch(0.760 0.135 258 / 0.14);
+
+    --primary:          oklch(0.960 0.004 250);
+    --primary-contrast: oklch(0.175 0.006 250);
+    --primary-hover:    oklch(0.895 0.004 250);
+
+    --danger:  oklch(0.660 0.170  25); /* 5.6:1 */
+    --success: oklch(0.750 0.130 155); /* 9.0:1 */
+    --warning: oklch(0.800 0.120  75); /* 10.0:1 */
+
+    --shadow-overlay: 0 1px 2px oklch(0 0 0 / 0.40), 0 8px 24px oklch(0 0 0 / 0.40);
+    --shadow-popover: 0 1px 2px oklch(0 0 0 / 0.45), 0 16px 48px oklch(0 0 0 / 0.55);
+  }
+}
+
+/* Base wiring. Components use roles; nothing below invents a value. */
+html { background: var(--bg); color: var(--text); }
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-optical-sizing: auto;
+  font-variant-numeric: proportional-nums;
+  -webkit-font-smoothing: antialiased;
+}
+:where(h1, h2, h3) {
+  font-weight: var(--weight-strong);
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-heading);
+  text-wrap: balance;
+}
+:where(p, li) { text-wrap: pretty; }
+:where(table) { font-variant-numeric: tabular-nums; }
+:where(button, input, select, textarea) { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus-ring-color); outline-offset: 2px; }
+/* The UA placeholder is a contrast failure waiting to ship. It is an example,
+   never the label, and it uses the muted tier at full opacity. */
+::placeholder { color: var(--text-placeholder); opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-instant: 1ms; --duration-fast: 1ms; --duration-base: 1ms; --duration-slow: 1ms; }
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
