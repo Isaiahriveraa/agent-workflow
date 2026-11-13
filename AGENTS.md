@@ -55,6 +55,11 @@ Repository-local restrictions still apply: inspect relevant local instructions
 before editing or executing project code. Git storage does not activate coding
 ceremony for an essay, notes, or a conceptual question.
 
+Inside a Herdr tab (`HC_TERMINAL_ID` is set), keep the tab's Board card current
+for any multi-step task by following `skills/board/SKILL.md`: set the goal when
+you start, and log milestones, decisions, blockers and done. Skip it for quick
+one-answer questions.
+
 ## Code quality theory (every mode that touches code)
 
 Whether I write the code, you write it, or we review or tutor it, judge code by
