@@ -1,42 +1,48 @@
 # Hierarchy
 
-Hierarchy guides attention through a screen. It fails when emphasis hides what matters or makes unrelated elements compete, not merely when several peer items share the same weight.
+Hierarchy is the order in which the eye reads a screen. Weak hierarchy is the most common AI-UI failure: every heading, card, and button competes at the same weight, so nothing wins.
 
 ## The levers
 
-Use primary, secondary, and tertiary as relative roles within the current task, not fixed ranks for every kind of content. Control emphasis with these levers:
+Each element has one level: primary, secondary, or tertiary. Control the level with these levers, in rough order of strength:
 
 | Lever | Primary | Secondary | Tertiary |
 |---|---|---|---|
-| Size | larger | medium | smaller |
+| Size | larger, at least 16px for body/records | readable, at least 14px | at least 14px, or deferred |
 | Weight | bold / semibold | regular | regular |
 | Contrast (color) | full text color | muted text | faint text, still passing contrast |
 | Space | isolated, more air around | normal | grouped tight to related items |
-| Position | early in the audience's reading order, or the dominant area | after primary | supporting region |
+| Position | top-left in reading order, or the dominant area | after primary | footer, sidebar, meta row |
 | Depth | filled surface, shadow | flat surface | no surface, text only |
 
-Combine levers where useful. Size plus space can establish emphasis without extra color or ornament.
+Use two or three levers together. Size alone is weak. Size plus space is strong.
+
+**In light mode, contrast barely separates the three tiers.** Every text tier has to
+clear 4.5:1, which leaves very little room between "secondary" and "muted". So
+hierarchy at the quiet end is carried by weight, size and position; the color tier
+is the smallest nudge, not the main lever. In dark mode the floors are further
+apart, so contrast can do a little more.
 
 ## Rules
 
-- **Prioritize the task.** Give a focused task a clear focal point. Comparison screens, peer records, and monitoring dashboards may need equally prominent items; make the relationship and next action clear rather than manufacturing a winner.
-- **Keep summaries decision-focused.** Show the figures and context needed to interpret the result. A comparison may need several figures; avoid duplicating unrelated facts merely to fill a region. See `layout.md` for grouping and responsive behavior.
-- **De-emphasize before you emphasize.** Lighten labels, meta text, and borders before making the headline larger. Reducing the noise around the focal point gives it more weight than inflating it.
-- **Rank information by consequence.** Labels and metadata are often supporting information, but a deadline, unread count, or safety warning may be the key fact. De-emphasis must preserve readability and contrast.
-- **Use color deliberately.** A neutral-first sketch can help establish hierarchy. Apply the product's palette by role; do not remove meaningful category or status colors to enforce a single accent.
-- **Separate grouping from emphasis.** Use `layout.md` to choose space, alignment, or common regions. A filled surface can show containment without making its content the most important thing on the screen.
+- **One primary per view.** If two things need the primary level, one of them is a secondary thing you have not admitted yet.
+- **One figure per region.** A summary area reports one number; give it more and the reader ranks them instead of reading them. Everything else in that region is a context fact at the next level down — or it belongs somewhere else.
+- **Delete and defer before styling.** Remove redundant visible copy and defer rare controls. Then quiet the remaining metadata and decorative boundaries. Increasing whitespace around an always-open form does not make it a scan view.
+- **Labels and metadata recede without becoming tiny.** Use position, weight, neutral color and fewer default-visible facts. Preserve readable text and the contrast floor.
+- **Start with too little color.** Build the layout in neutral grays first, then add one accent for the single action or state that needs it. Color used on everything stops meaning anything.
+- **Reduce borders before adding them.** Separate groups with space first. Add a border or surface only when space cannot carry the grouping.
 
 ## Focal point checklist
 
-- Can a reader find the information and action needed for the task?
-- Does emphasis reflect importance rather than merely size or decoration?
-- Are peer items comparable and supporting information distinguishable?
-- Does a blurred screenshot reveal the intended grouping and emphasis? This is a visual screening aid, not a usability test.
+- Can you name the element the eye hits first, in under a second?
+- Is that element the one the job depends on, not just the largest one?
+- Does every other element clearly sit one level below it?
+- If you squint or blur the screenshot, is one region clearly dominant?
 
 ## Common failures
 
 - Headline, subhead, body, and button all in the same weight and near-same size.
-- A stat grid that conceals an important exception or gives no context for interpreting the figures.
-- A summary region crowded with facts unrelated to the current decision. Remove duplication or regroup content before shrinking text.
-- Peer cards whose repeated decoration makes meaningful differences hard to scan.
+- A stat grid where every number has equal size and color, so none reads as the answer.
+- A summary region that reports everything it knows — a figure, a bar, two facts — instead of the one thing that decides what the reader does next. The fix is deletion, not a smaller font.
+- A repeated record that exposes original text, rationale, confidence, four priority choices, labels, a toggle, destination and notes before the user has chosen Edit.
 - A primary button that is the same color and size as the secondary "Cancel" beside it.
