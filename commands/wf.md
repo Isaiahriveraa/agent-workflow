@@ -1,6 +1,6 @@
 ---
-description: Commit the current work with the commit skill, then push and open a PR via the pr skill — one concern, approved by the commit-pr-reviewer subagent before each step
-argument-hint: "[--no|--no-review] [base-branch]"
+description: Commit the current work with the commit-review skill, then push and open a PR via the pr skill — one concern, approved by the commit-pr-reviewer subagent before each step
+argument-hint: "[base-branch]"
 ---
 
 # wf — Commit and PR in One Flow
