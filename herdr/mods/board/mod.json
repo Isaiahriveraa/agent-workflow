@@ -1,0 +1,5 @@
+{
+  "place": "none",
+  "title": "Board",
+  "overlay": { "kind": "popup", "width": 420, "height": 640 }
+}

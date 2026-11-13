@@ -178,6 +178,27 @@ Adapters change ergonomics, not behavior. Source of truth stays in this repo.
 
 `sync.sh migrate` regenerates all adapter outputs and verifies parity.
 
+## Herdr app
+
+I run my agents inside [Herdr](https://herdr.dev), a desktop app for terminals and coding agents (`herdr-app` for the window, `hc` for herdr-core). This repo holds the Herdr pieces my workflow depends on:
+
+| Path | What it is | Installed as |
+|---|---|---|
+| `herdr/mods/board/` | Board mod: a catch-up panel with one row per tab (goal, current step, next step, blockers, a short log of milestones and decisions) plus an archive of closed tabs. See its `RECIPE.md`. | symlink `~/.config/herdr-app/mods/board` |
+| `herdr/scripts/board.mjs` | The command agents use to write a tab's board (`set --goal --now --log --decision ...`) | symlink `~/.config/herdr/scripts/board.mjs` |
+| `skills/board/` | Tells agents when to update the board and what is worth logging | via the skills symlink |
+| `hooks/board-stamp.sh` | UserPromptSubmit hook: stamps each prompt on the tab's board | via the hooks symlink; registered in `~/.claude/settings.json` |
+
+Install the board in your own Herdr:
+
+```bash
+ln -s ~/.agents/herdr/mods/board ~/.config/herdr-app/mods/board
+mkdir -p ~/.config/herdr/scripts && ln -s ~/.agents/herdr/scripts/board.mjs ~/.config/herdr/scripts/board.mjs
+herdr-app check ~/.config/herdr-app/mods/board
+```
+
+Then add a `board` block to one of your layouts (an example is in the recipe) and add the hook to your agent's settings. Tests: `node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/`.
+
 ## Skills
 
 Skills live in `skills/` covering the full pipeline and domain specialties. Key pipeline skills:
@@ -217,7 +238,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `recall/` | Resume from handoff |
 | `recall-worktree/` | Reconstruct dirty work, history, and context freshness for the main agent through a lightweight subagent |
 | `later/` | Future improvement notes in `future/` |
-| `board/` | Keep each open Herdr tab's goal, current step, next steps and blockers current on its Board card |
+| `board/` | Keep each Herdr tab's Board card current: goal, step, next, blockers, and a short log of milestones and decisions |
 | `wf/` | Commit + PR in one flow (commit-review → pr). |
 | `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
 | `codebase-drill/` | OA-style codebase navigation training |
@@ -295,6 +316,7 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 │   ├── wait-what/
 │   └── ...                # Additional domain skills
 ├── scripts/               # Tooling (init/reset, context paths, worktree helpers, model router)
+├── herdr/                 # Herdr app mods and scripts (board)
 ├── adapters/              # 5 CLI adapter configs
 └── .omc/                  # OpenCode project memory (regenerated)
 ```
@@ -302,7 +324,7 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 ## What Gets Shared
 
 - `commands/`, `agents/`, `skills/`, `adapters/`
-- `scripts/`, `manifest.json`, `package.json`, `sync.sh`
+- `scripts/`, `herdr/`, `manifest.json`, `package.json`, `sync.sh`
 - Onboarding docs (`README.md`, `SHARING.md`)
 
 ## What Stays Local

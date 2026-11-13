@@ -105,6 +105,20 @@
       "tier": 1,
       "tool": "antigravity",
       "type": "directory"
+    },
+    {
+      "source": "~/.config/herdr-app/mods/board",
+      "target": "~/.agents/herdr/mods/board",
+      "tier": 2,
+      "tool": "herdr-app",
+      "type": "directory"
+    },
+    {
+      "source": "~/.config/herdr/scripts/board.mjs",
+      "target": "~/.agents/herdr/scripts/board.mjs",
+      "tier": 2,
+      "tool": "herdr-app",
+      "type": "file"
     }
   ],
   "not_managed": [
