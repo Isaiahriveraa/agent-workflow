@@ -188,6 +188,7 @@ I run my agents inside [Herdr](https://herdr.dev), a desktop app for terminals a
 | `herdr/scripts/board.mjs` | The command agents use to write a tab's board (`set --goal --now --log --decision ...`) | symlink `~/.config/herdr/scripts/board.mjs` |
 | `skills/board/` | Tells agents when to update the board and what is worth logging | via the skills symlink |
 | `hooks/board-stamp.sh` | UserPromptSubmit hook: stamps each prompt on the tab's board | via the hooks symlink; registered in `~/.claude/settings.json` |
+| `herdr/opencode/board-stamp.js` | The same prompt stamp for opencode, as a plugin | symlink `~/.config/opencode/plugins/board-stamp.js` |
 
 Install the board in your own Herdr:
 

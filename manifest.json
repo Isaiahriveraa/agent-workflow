@@ -119,6 +119,13 @@
       "tier": 2,
       "tool": "herdr-app",
       "type": "file"
+    },
+    {
+      "source": "~/.config/opencode/plugins/board-stamp.js",
+      "target": "~/.agents/herdr/opencode/board-stamp.js",
+      "tier": 2,
+      "tool": "opencode",
+      "type": "file"
     }
   ],
   "not_managed": [
