@@ -184,7 +184,7 @@ I run my agents inside [Herdr](https://herdr.dev), a desktop app for terminals a
 
 | Path | What it is | Installed as |
 |---|---|---|
-| `herdr/mods/board/` | Board mod: a catch-up panel with one row per tab (goal, current step, next step, blockers, a short log of milestones and decisions) plus an archive of closed tabs. See its `RECIPE.md`. | symlink `~/.config/herdr-app/mods/board` |
+| `herdr/mods/board/` | Board mod: a catch-up panel with one row per tab (goal, current step, next step, blockers, a short log of milestones and decisions) plus an archive of closed tabs. | symlink `~/.config/herdr-app/mods/board` |
 | `herdr/scripts/board.mjs` | The command agents use to write a tab's board (`set --goal --now --log --decision ...`) | symlink `~/.config/herdr/scripts/board.mjs` |
 | `skills/board/` | Tells agents when to update the board and what is worth logging | via the skills symlink |
 | `hooks/board-stamp.sh` | UserPromptSubmit hook: stamps each prompt on the tab's board | via the hooks symlink; registered in `~/.claude/settings.json` |
@@ -197,7 +197,14 @@ mkdir -p ~/.config/herdr/scripts && ln -s ~/.agents/herdr/scripts/board.mjs ~/.c
 herdr-app check ~/.config/herdr-app/mods/board
 ```
 
-Then add a `board` block to one of your layouts (an example is in the recipe) and add the hook to your agent's settings. Tests: `node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/`.
+Then add a `board` block to one of your layouts, beside the tab block (use your panes' border color so it matches them):
+
+```json
+{ "id": "board", "type": "block", "content": { "mod": "board" }, "size": { "px": 360 },
+  "background": "background", "border": { "width": 1, "color": "#33363b" }, "radius": 12 }
+```
+
+And register `hooks/board-stamp.sh` as a UserPromptSubmit hook in your agent's settings. Tests: `node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/`.
 
 ## Skills
 
