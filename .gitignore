@@ -14,6 +14,8 @@ memory.db
 gsd-local-patches/
 .pids/
 config/
+skills/synced/
+skills/.trash/
 !projects/.gitkeep
 .omx/
 .om*
