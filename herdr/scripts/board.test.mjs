@@ -174,3 +174,26 @@ test("run through a symlink, the command still runs", () => {
 	assert.equal(result.status, 1);
 	assert.match(result.stderr, /board:/);
 });
+
+test("moving to a new step logs the old one as finished", () => {
+	let board = emptyBoard({ tab: "t", root: "/r", project: "r" });
+	board = applySet(board, { now: "write tests" }, { at: "T1", by: "x" });
+	board = applySet(board, { now: "wire the page" }, { at: "T2", by: "x" });
+	board = applySet(board, { now: "wire the page" }, { at: "T3", by: "x" });
+	assert.deepEqual(board.log, [{ at: "T2", kind: "step", text: "write tests" }]);
+});
+
+test("a finished task's done line is not logged again as a step", () => {
+	let board = { ...emptyBoard({ tab: "t", root: "/r", project: "r" }), now: "done: shipped" };
+	board = applySet(board, { now: "next task" }, { at: "T", by: "x" });
+	assert.deepEqual(board.log, []);
+});
+
+test("each prompt joins the trail once", () => {
+	let board = emptyBoard({ tab: "t", root: "/r", project: "r" });
+	board = applyStamp(board, { prompt: "fix login", at: "T1", by: "x" });
+	board = applyStamp(board, { prompt: "fix login", at: "T2", by: "x" });
+	board = applyStamp(board, { prompt: "add tests", at: "T3", by: "x" });
+	assert.deepEqual(board.log.map((e) => [e.kind, e.text]), [["prompt", "fix login"], ["prompt", "add tests"]]);
+	assert.equal(board.goal, "");
+});

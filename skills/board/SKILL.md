@@ -9,12 +9,12 @@ description: "Keep this Herdr tab's Board card current: goal, current step, next
 | When | Flags |
 |---|---|
 | Start a task | `--goal "<what this tab is for>" --now "<step>" --next "<step>"` |
-| Finish a step | `--log "<outcome>" --now "<new step>"` |
+| Finish a step | `--now "<new step>"` (the old step joins the trail by itself); add `--log "<outcome>"` only when the outcome says more than the step name |
 | Make a decision | `--decision "<chose X over Y>"` |
 | Blocked / unblocked | `--blocker "<what you need>"` / `--clear-blockers` |
 | Done | `--now "done: <outcome>" --clear-blockers` |
 
-Log only what helps the user resume after a week away:
+The trail also records each user prompt automatically. Log only what helps the user resume after a week away:
 - Milestones, decisions (with what you rejected), blocked or unblocked, done.
 - Never reads, searches, retries, single edits or "starting X".
 - At most one line per 10–15 minutes of work; merge small steps.

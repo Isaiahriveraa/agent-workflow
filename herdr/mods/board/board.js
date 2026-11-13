@@ -123,10 +123,10 @@ export function repoGroups(cards, tabOrder) {
 		.map(([label, list]) => ({ label, cards: list }));
 }
 
-/** @behavior How many of a board's log lines were written after `seenAt` (an ISO time). */
+/** @behavior How many agent-written log lines came after `seenAt` (an ISO time); the user's own prompts aren't news. */
 export function unseenCount(board, seenAt) {
 	if (!seenAt) return 0;
-	return (board?.log ?? []).filter((entry) => entry.at > seenAt).length;
+	return (board?.log ?? []).filter((entry) => entry.kind !== "prompt" && entry.at > seenAt).length;
 }
 
 /**
@@ -151,7 +151,7 @@ export function contextText(card) {
 	if (board.now) lines.push(`Now: ${board.now}`);
 	for (const blocker of board.blockers ?? []) lines.push(`Blocked: ${blocker}`);
 	const log = board.log ?? [];
-	if (log.length) lines.push("Log:", ...log.slice(-8).map((entry) => `- ${entry.kind === "decision" ? "Decided: " : ""}${entry.text}`));
+	if (log.length) lines.push("Log:", ...log.slice(-8).map((entry) => `- ${entry.kind === "decision" ? "Decided: " : entry.kind === "prompt" ? "Asked: " : ""}${entry.text}`));
 	if (board.next?.length) lines.push("Next:", ...board.next.map((step) => `- ${step}`));
 	return lines.join("\n");
 }

@@ -84,3 +84,8 @@ test("a board's own project and root win over the terminal's", () => {
 	assert.equal(card.project, "api");
 	assert.equal(card.root, "/code/api");
 });
+
+test("the user's own prompts never count as new", () => {
+	const board = { log: [{ at: "2026-01-02T00:00:00Z", kind: "prompt" }, { at: "2026-01-02T00:00:00Z", kind: "step" }] };
+	assert.equal(unseenCount(board, "2026-01-01T00:00:00Z"), 1);
+});

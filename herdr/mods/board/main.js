@@ -5,7 +5,7 @@ import * as fs from "fs/promises";
 import { ageLabel, cardsFor, contextText, isDone, parseBoard, tabFolder, toggleOpen, peekLine, repoGroups, statusGroups, unseenCount } from "./board.js";
 
 const MAX_OPEN = 3;
-const LOG_SHOWN = 2;
+const LOG_SHOWN = 5;
 const ICONS = "mods/workspace-chrome";
 const OWN = "mods/board";
 
@@ -197,8 +197,11 @@ export default class Board extends View {
       .child(header);
 
     if (!isOpen) {
-      return shell.when(Boolean(peek), (el) => el.child(div().pl(30).pr(8).pb(6).mt(-4).truncate().text_size(11.5)
-        .text_color(needs ? t.muted : t.dim).child(peek)));
+      const waiting = peek === "no board yet";
+      const line = div().pl(30).pr(8).pb(6).mt(-4).truncate().text_size(11.5).text_color(needs ? t.muted : t.dim);
+      return shell.when(Boolean(peek), (el) => el.child(waiting
+        ? line.frames(["no board yet", "no board yet.", "no board yet..", "no board yet..."], 400)
+        : line.child(peek)));
     }
 
     const body = v_flex().pl(30).pr(8).pb(8).pt(2).gap(2);
@@ -221,11 +224,15 @@ export default class Board extends View {
       const shown = showAll ? log : log.slice(-LOG_SHOWN);
       if (shown.length) {
         body.child(v_flex().mt(6).gap(1).children(shown.map((entry) => {
-          const unseen = entry.at > this.seenAt;
+          const prompt = entry.kind === "prompt";
+          const unseen = !prompt && entry.at > this.seenAt;
           const decision = entry.kind === "decision";
+          // The trail reads as a conversation: › what you asked, ✓ what got done, ◆ what was decided.
+          const mark = prompt ? "›" : decision ? "◆" : "✓";
           return h_flex().gap(8).items_start().text_size(11.5)
             .text_color(unseen ? t.foreground : decision ? t.muted : t.dim)
-            .child(div().w(10).flex_none().text_color(decision ? t.foreground : t.done).child(decision ? "◆" : "✓"))
+            .when(prompt, (el) => el.mt(3))
+            .child(div().w(10).flex_none().text_color(prompt ? t.accent : decision ? t.foreground : t.done).child(mark))
             .child(div().flex_1().min_w(0).child(entry.text))
             .when(unseen, (el) => el.child(div().size(5).mt(6).rounded(3).flex_none().bg(t.accent)))
             .child(div().flex_none().text_size(11).text_color(t.dim).child(shortAge(entry.at, now)));

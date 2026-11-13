@@ -25,6 +25,11 @@ export const LIMITS = { text: 200, item: 160, listItems: 5, logItems: 30, linkLa
 const clip = (text, max) => String(text).slice(0, max);
 const clipList = (items, max) => items.slice(0, LIMITS.listItems).map((item) => clip(item, max));
 
+/** @behavior Adds entries to a board's log, newest last, keeping the last LIMITS.logItems. */
+function appendLog(log, entries) {
+	return [...(log ?? []), ...entries].slice(-LIMITS.logItems);
+}
+
 export function emptyBoard({ tab, root, project }) {
 	return { version: 1, tab, root, project, goal: "", now: "", next: [], blockers: [], links: [], log: [], last_prompt: "", updated: null, by: null };
 }
@@ -32,14 +37,22 @@ export function emptyBoard({ tab, root, project }) {
 /**
  * @behavior Returns the board with the fields `changes` names replaced and every
  *   other field kept. A list given as [] empties it.
- *   `changes.log` entries are added to the board's log, stamped with `at`.
+ *   `changes.log` entries are added to the board's log, stamped with `at`. Changing
+ *   `now` also logs the previous step as finished (unless it was "done: ..."), so the
+ *   trail grows even when an agent only updates its current step.
  * @param changes {goal?, now?, next?, blockers?, links?, log?: [{text, kind: "step" | "decision"}]}
  * @param stamp {at, by}: when the write happened and which terminal wrote it
  */
 export function applySet(board, changes, { at, by }) {
 	const next = { ...board, updated: at, by };
 	if (changes.goal !== undefined) next.goal = clip(changes.goal, LIMITS.text);
-	if (changes.now !== undefined) next.now = clip(changes.now, LIMITS.text);
+	const trail = [];
+	if (changes.now !== undefined) {
+		next.now = clip(changes.now, LIMITS.text);
+		// Moving to a new step finishes the old one: it joins the trail on its own.
+		const finished = (board.now ?? "").trim();
+		if (finished && finished !== next.now && !/^done\b/.test(finished)) trail.push({ at, kind: "step", text: clip(finished, LIMITS.item) });
+	}
 	if (changes.next !== undefined) next.next = clipList(changes.next, LIMITS.item);
 	if (changes.blockers !== undefined) next.blockers = clipList(changes.blockers, LIMITS.item);
 	if (changes.links !== undefined) {
@@ -48,16 +61,21 @@ export function applySet(board, changes, { at, by }) {
 			target: clip(target, LIMITS.linkTarget),
 		}));
 	}
-	if (changes.log !== undefined) {
-		const added = changes.log.map(({ text, kind }) => ({ at, kind, text: clip(text, LIMITS.item) }));
-		next.log = [...(board.log ?? []), ...added].slice(-LIMITS.logItems);
-	}
+	if (changes.log !== undefined) trail.push(...changes.log.map(({ text, kind }) => ({ at, kind, text: clip(text, LIMITS.item) })));
+	if (trail.length) next.log = appendLog(board.log, trail);
 	return next;
 }
 
-/** @behavior Records the latest prompt and time. Goal, now and next are never touched. */
+/**
+ * @behavior Records the latest prompt and time, and adds the prompt to the trail as a
+ *   "prompt" entry (a repeat of the last prompt is not added twice). Goal, now and next
+ *   are never touched.
+ */
 export function applyStamp(board, { prompt, at, by }) {
-	return { ...board, last_prompt: clip(prompt, LIMITS.prompt), updated: at, by };
+	const text = clip(prompt, LIMITS.prompt);
+	const last = (board.log ?? []).at(-1);
+	const repeat = last?.kind === "prompt" && last.text === text;
+	return { ...board, last_prompt: text, updated: at, by, log: repeat ? board.log ?? [] : appendLog(board.log, [{ at, kind: "prompt", text }]) };
 }
 
 export function tabFromLabels(labels) {
