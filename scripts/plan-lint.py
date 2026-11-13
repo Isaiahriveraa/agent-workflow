@@ -18,6 +18,12 @@ A plan directory with step files lints the step files and skips
 `00-index.md`; a directory holding only `00-index.md` lints the index.
 A file passed directly is always linted.
 
+A linted `00-index.md` also needs its visual map link (see the plan-map
+skill), or an explicit skip the user asked for:
+
+    **Plan map:** https://claude.ai/code/artifact/<id>
+    **Plan map:** skipped (user)
+
 Usage:
     python3 scripts/plan-lint.py <path> [<path> ...]
 
@@ -40,6 +46,9 @@ LABEL = re.compile(
     r"^\s*(?:\*\*\s*(?P<bold>interface sketch|rejected alternative|alternative considered)\s*:?\s*\*\*(?P<bold_rest>.*)"
     r"|#{1,6}\s+(?P<head>interface sketch|rejected alternative|alternative considered)\s*:?\s*(?P<head_rest>.*))$",
     re.IGNORECASE,
+)
+PLAN_MAP = re.compile(
+    r"^\s*(?:[-*]\s+)?\*\*Plan map:\*\*\s*(?:https://claude\.ai/\S+|skipped\b)", re.IGNORECASE
 )
 HEADING = re.compile(r"^\s*#{1,6}\s")
 BULLET_BOLD = re.compile(r"^\s*(?:[-*]\s+)?\*\*[^*]+\*\*")
@@ -150,6 +159,18 @@ def lint_lines(lines, fenced):
     return findings
 
 
+def plan_map_findings(lines, fenced):
+    if any(PLAN_MAP.match(line) for index, line in enumerate(lines) if not fenced[index]):
+        return []
+    return [
+        (
+            1,
+            "plan map",
+            'add "**Plan map:** <artifact url>" from the plan-map skill, or "**Plan map:** skipped (user)"',
+        )
+    ]
+
+
 def collect_files(paths):
     files = []
     for raw in paths:
@@ -198,7 +219,10 @@ def main(argv=None):
             continue
         scanned += 1
         fenced = fenced_lines(lines)
-        for line_number, match, fix in lint_lines(lines, fenced):
+        file_findings = lint_lines(lines, fenced)
+        if markdown.name == "00-index.md":
+            file_findings += plan_map_findings(lines, fenced)
+        for line_number, match, fix in file_findings:
             if line_number <= len(lines) and DISABLE_LINE in lines[line_number - 1]:
                 continue
             findings.append((markdown, line_number, match, fix))

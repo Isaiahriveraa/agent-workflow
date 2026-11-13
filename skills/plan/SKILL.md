@@ -83,6 +83,7 @@ Write these gate fields exactly once as standalone lines, not list items or back
 **Planned at:** <full commit SHA inspected>
 **In-scope files:** <comma-separated repo-relative file paths>
 **Plan status:** draft
+**Plan map:** <artifact url from /skill:plan-map>
 ```
 
 Ticket must match the queue's Ticket path or recorded Issue exactly. Scope paths are literal files, not globs; include existing and new files whose behavior or contracts the plan relies on. Do not create an executable plan from uncommitted production changes that are absent from its intended base. Keep these additional sections proportional:
@@ -110,7 +111,7 @@ python3 ~/.agents/scripts/slop-lint.py context/plans/<slug>/
 python3 ~/.agents/scripts/plan-lint.py context/plans/<slug>/
 ```
 
-Link the plan in the selected queue row's Plan cell using a plain repo-relative path. Present the ticket, plan path, repository evidence, technical choice, verification, and open risks, then stop awaiting human review. Set `**Plan status:** approved` only after the user approves it. Plan approval is not an implementation request and does not authorize a branch, worktree, commit, push, or PR.
+Run `/skill:plan-map` on the plan and write its `**Plan map:** <artifact url>` line under the gate fields; `plan-lint.py` requires it. Link the plan in the selected queue row's Plan cell using a plain repo-relative path. Lead the presentation with the map link; the user answers decisions and approves on the map, and its `APPROVED` message is the approval below. Then the ticket, plan path, repository evidence, technical choice, verification, and open risks, then stop awaiting human review. Set `**Plan status:** approved` only after the user approves it. Plan approval is not an implementation request and does not authorize a branch, worktree, commit, push, or PR.
 
 After feedback, refresh the plan, affected ticket/card, queue links, and evidence; material scope or code changes require renewed plan review. Implementation starts only on request through `/skill:implement` or `/skill:issue-delivery`. They find the matching approved linked plan and validate it against the actual execution base; never autostart them.
 

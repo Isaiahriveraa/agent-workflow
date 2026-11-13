@@ -129,3 +129,22 @@ test("matches declarations and labels case-insensitively", () => {
 	const result = run(root, "10-case.md");
 	assert.equal(result.status, 0);
 });
+
+test("requires a plan map line on a linted 00-index.md", () => {
+	const root = makeRepo();
+	write(root, "context/plans/nomap/00-index.md", "# Plan\n\n- **Interface impact:** none — private.\n");
+	const missing = run(root, "context/plans/nomap");
+	assert.equal(missing.status, 1);
+	assert.match(missing.stdout, /plan map/);
+
+	write(root, "context/plans/map/00-index.md", "# Plan\n\n**Plan map:** https://claude.ai/code/artifact/abc\n\n- **Interface impact:** none — private.\n");
+	write(root, "context/plans/skip/00-index.md", "# Plan\n\n**Plan map:** skipped (user)\n\n- **Interface impact:** none — private.\n");
+	const present = run(root, "context/plans/map", "context/plans/skip");
+	assert.equal(present.status, 0, present.stdout);
+});
+
+test("does not require a plan map on step files", () => {
+	const root = makeRepo();
+	write(root, "06-step.md", "# Step\n\n- **Interface impact:** none — private.\n");
+	assert.equal(run(root, "06-step.md").status, 0);
+});

@@ -1,0 +1,704 @@
+<title>__PLAN_TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!--
+  Plan Studio page template (plan-map skill), layout "Map + your call". Don't edit
+  per plan: write the plan's map JSON and run
+  `node ~/.agents/scripts/plan-map.mjs render <json> <out.html>`, which inlines the
+  core logic and the data below. Why it looks this way: design-principles.md.
+-->
+<script type="application/json" id="plan-data">/*__PLAN_DATA__*/</script>
+<script>/*__PLAN_CORE__*/</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout "Map + your call": the system picture leads on the left with the build
+     order under it; everything you act on lives in one rail on the right. Details
+     open on tap. Hue only means what something asks of you. */
+  :root {
+    --bg: #f2f3f5;
+    --panel: #ffffff;
+    --panel-2: #f7f7f8;
+    --ink: #111114;
+    --ink-2: #3f3f46;
+    --muted: #71717a;
+    --faint: #a1a1aa;
+    --line: #e4e4e7;
+    --line-strong: #d0d0d6;
+    --focus: #2563eb;
+    --focus-soft: #e3ebff;
+    --decide: #c2690a;
+    --decide-soft: #fff1d6;
+    --risk: #d12f2f;
+    --risk-soft: #fde4e4;
+    --done: #148a45;
+    --done-soft: #ddf5e6;
+    --shadow-sm: 0 1px 2px rgba(17, 17, 20, .06);
+    --shadow: 0 1px 2px rgba(17, 17, 20, .05), 0 10px 28px rgba(17, 17, 20, .1);
+    --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0b0d; --panel: #141417; --panel-2: #1b1b1f; --ink: #ededf0; --ink-2: #c6c6ce; --muted: #8d8d97; --faint: #5f5f69;
+      --line: #26262c; --line-strong: #34343b; --focus: #6b9bff; --focus-soft: #1a2546; --decide: #f2a93b; --decide-soft: #33260c;
+      --risk: #f47272; --risk-soft: #3a1618; --done: #43cf85; --done-soft: #10301e;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 12px 30px rgba(0, 0, 0, .5);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0b0d; --panel: #141417; --panel-2: #1b1b1f; --ink: #ededf0; --ink-2: #c6c6ce; --muted: #8d8d97; --faint: #5f5f69;
+    --line: #26262c; --line-strong: #34343b; --focus: #6b9bff; --focus-soft: #1a2546; --decide: #f2a93b; --decide-soft: #33260c;
+    --risk: #f47272; --risk-soft: #3a1618; --done: #43cf85; --done-soft: #10301e;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 12px 30px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14.5px/1.55 var(--font); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  p { margin: 0; }
+  .mini { margin: 0; font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .grow { flex: 1; }
+
+  .app { height: 100%; display: grid; grid-template-rows: 52px minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) 360px; }
+
+  /* top bar: only identity and state */
+  .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; background: var(--panel); border-bottom: 1px solid var(--line);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); min-width: 0; }
+  .logo { width: 22px; height: 22px; border-radius: 6px; background: var(--ink); display: grid; place-items: center; flex: none; }
+  .logo i { width: 8px; height: 8px; border-radius: 2px; background: var(--panel); transform: rotate(45deg); }
+  .plan-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .status-pill { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
+  .status-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+  .status-pill.open i { background: var(--decide); }
+  .status-pill.waiting i { background: var(--focus); }
+  .status-pill.ready i, .status-pill.approved i { background: var(--done); }
+  .link-state { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .link-state.live { color: var(--done); }
+
+  /* left: the picture and the build order */
+  .main { overflow-y: auto; min-width: 0; padding: 24px 28px 40px max(24px, env(safe-area-inset-left, 0px)); }
+  .main-inner { max-width: 1040px; margin: 0 auto; display: grid; gap: 16px; }
+  .main-inner > * { min-width: 0; }
+  .headline { margin: 0; font-size: 20px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; max-width: 66ch; }
+  .analogy { color: var(--ink-2); max-width: 72ch; }
+  .terms { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .term { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; color: var(--ink-2); }
+  .term:hover, .term[aria-expanded="true"] { border-color: var(--ink-2); }
+  details.change { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  details.change summary { cursor: pointer; font-weight: 600; font-size: 13.5px; }
+  .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+  .ba ul { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; color: var(--ink-2); }
+
+  .map { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 6px; }
+  .map-fit { overflow: hidden; }
+  .sys { position: relative; transform-origin: 0 0; }
+  .sys svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+  .lane-label { font: 500 10.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; fill: var(--faint); }
+  .lane-rule { stroke: var(--line); stroke-dasharray: 2 5; }
+  .edge path { fill: none; stroke: var(--line-strong); stroke-width: 1.5; stroke-dasharray: 4 4; transition: opacity .3s; }
+  .edge.main path { stroke: var(--ink-2); stroke-width: 1.75; stroke-dasharray: none; opacity: .7; }
+  .edge .tag-bg { fill: var(--panel); stroke: var(--line); }
+  .edge .tag-text { font: 500 10.5px/1 var(--mono); fill: var(--muted); }
+  .edge.lit path { stroke: var(--focus); stroke-width: 2.5; opacity: 1; stroke-dasharray: none; }
+  .edge.ghost { opacity: .07; }
+  .node { position: absolute; display: grid; align-content: center; gap: 4px; padding: 0 12px; text-align: left; border-radius: 9px; border: 1px solid var(--line-strong);
+    background: var(--panel); box-shadow: var(--shadow-sm); transition: opacity .3s, box-shadow .2s, border-color .2s; }
+  .node .name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .node .meta { display: flex; gap: 6px; align-items: center; min-height: 16px; }
+  .badge { font: 500 10px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 3px 6px; border-radius: 4px; }
+  .badge.new { background: var(--ink); color: var(--panel); }
+  .badge.changed { border: 1px solid var(--ink-2); padding: 2px 5px; }
+  .badge.existing { color: var(--faint); padding-left: 0; }
+  .flag { font: 600 10px/1 var(--mono); padding: 3px 6px; border-radius: 4px; }
+  .flag.decide { background: var(--decide-soft); color: var(--decide); }
+  .flag.done { background: var(--done-soft); color: var(--done); }
+  .flag.risk { background: var(--risk-soft); color: var(--risk); }
+  .node.existing { background: var(--panel-2); border-color: var(--line); box-shadow: none; }
+  .node.existing .name { color: var(--muted); font-weight: 500; }
+  .node:hover { border-color: var(--ink-2); }
+  .node.lit, .node.open { border-color: var(--focus); box-shadow: 0 0 0 3px var(--focus-soft); }
+  .node.ghost { opacity: .1; }
+
+  .popover { position: absolute; z-index: 5; width: 300px; max-width: calc(100% - 16px); background: var(--panel); border: 1px solid var(--line-strong); border-radius: 12px; box-shadow: var(--shadow); padding: 14px; display: grid; gap: 8px; }
+  .popover h3 { margin: 0; font-size: 15px; font-weight: 600; padding-right: 20px; }
+  .popover p { color: var(--ink-2); font-size: 13.5px; }
+  .popover code { font: 11.5px/1.5 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+  .popover .close { position: absolute; top: 8px; right: 8px; border: 0; background: transparent; color: var(--muted); font-size: 16px; line-height: 1; padding: 4px 6px; border-radius: 6px; }
+
+  .ask { display: grid; gap: 6px; }
+  .ask textarea, .note { width: 100%; min-height: 54px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; padding: 8px 10px; }
+  .ask textarea::placeholder, .note::placeholder { color: var(--faint); }
+
+  .build { display: grid; gap: 10px; }
+  .build-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .scrub { display: flex; gap: 6px; }
+  .scrub button { flex: 1 1 0; min-width: 0; display: grid; gap: 6px; justify-items: start; border: 0; background: transparent; padding: 4px 0; text-align: left; }
+  .scrub .bar { width: 100%; height: 4px; border-radius: 2px; background: var(--line-strong); transition: background .2s; }
+  .scrub button.past .bar { background: var(--ink-2); }
+  .scrub button[aria-current="step"] .bar { background: var(--focus); }
+  .scrub .lbl { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .scrub button[aria-current="step"] .lbl { color: var(--ink); font-weight: 600; }
+  .why-now { background: var(--focus-soft); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px; }
+  .why-now b { font-weight: 600; }
+  .why-now .facts { color: var(--ink-2); font-size: 13.5px; }
+  .why-now .facts span { color: var(--muted); }
+  .step-nav { display: flex; gap: 6px; }
+
+  /* right: your call */
+  .rail { background: var(--panel); border-left: 1px solid var(--line); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; min-width: 0; }
+  .rail-head { padding: 18px 18px 6px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .rail-head h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .rail-body { overflow-y: auto; padding: 6px 18px 18px; display: grid; align-content: start; gap: 14px; }
+  .empty-call { color: var(--muted); font-size: 13.5px; }
+  .dcard { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; transition: border-color .2s, box-shadow .2s; }
+  .dcard.open, .dcard.answered { border-color: var(--decide); box-shadow: 0 0 0 3px var(--decide-soft); }
+  .dcard.sent { border-color: var(--focus); }
+  .dcard.decided { border-color: var(--done); }
+  .chip { justify-self: start; font: 500 10.5px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; }
+  .dcard.open .chip, .dcard.answered .chip { background: var(--decide-soft); color: var(--decide); }
+  .dcard.sent .chip { background: var(--focus-soft); color: var(--focus); }
+  .dcard.decided .chip { background: var(--done-soft); color: var(--done); }
+  .dcard h3 { margin: 0; font-size: 14.5px; font-weight: 600; }
+  .dcard .why { color: var(--muted); font-size: 13px; }
+  .opts { display: grid; gap: 6px; }
+  .opt { text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: 9px; padding: 9px 11px; display: grid; gap: 2px; }
+  .opt:hover:not(:disabled) { border-color: var(--line-strong); background: var(--panel-2); }
+  .opt b { font-weight: 600; font-size: 13.5px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .opt span { color: var(--muted); font-size: 12.5px; }
+  .opt[aria-pressed="true"] { border-color: var(--ink); background: var(--panel-2); }
+  .dcard.decided .opt[aria-pressed="true"] { border-color: var(--done); }
+  .dcard.decided .opt:not([aria-pressed="true"]) { opacity: .45; }
+  .opt:disabled { cursor: default; }
+  .reco { font: 500 10px/1 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; padding: 2px 5px; }
+  .link-btn { justify-self: start; border: 0; background: transparent; color: var(--muted); font-size: 12.5px; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+  details.extra { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  details.extra summary { cursor: pointer; font-weight: 600; font-size: 13.5px; }
+  details.extra .body { display: grid; gap: 8px; margin-top: 10px; }
+  .done-box { background: var(--done-soft); border-radius: 9px; padding: 9px 11px; font-size: 13.5px; }
+  .risk-row { display: flex; gap: 8px; align-items: flex-start; background: var(--risk-soft); border-radius: 9px; padding: 8px 10px; font-size: 13px; }
+  .risk-row::before { content: "!"; flex: none; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; background: var(--risk); color: #fff; font: 700 10px/1 var(--mono); margin-top: 1px; }
+  .check p { color: var(--ink-2); font-size: 13.5px; margin-top: 6px; }
+
+  .rail-foot { border-top: 1px solid var(--line); padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; background: var(--panel); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--panel); font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+  .btn:hover:not(:disabled) { background: var(--panel-2); }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+  .btn.primary:hover:not(:disabled) { background: var(--ink); opacity: .9; }
+  .btn.decide { background: var(--decide); border-color: var(--decide); color: #fff; }
+  .btn.decide:hover:not(:disabled) { background: var(--decide); opacity: .9; }
+  .btn.done { background: var(--done); border-color: var(--done); color: #fff; }
+  .btn.small { height: 30px; padding: 0 10px; font-size: 12.5px; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn .count { font: 600 11px/1 var(--mono); padding: 3px 6px; border-radius: 999px; background: rgba(255, 255, 255, .22); }
+  .foot-note { color: var(--muted); font-size: 12.5px; }
+
+  .toasts { position: fixed; top: calc(60px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 30; display: grid; gap: 8px; justify-items: center; pointer-events: none; width: max-content; max-width: calc(100% - 32px); }
+  .toast { background: var(--ink); color: var(--panel); border-radius: 10px; padding: 9px 14px; font-size: 13.5px; box-shadow: var(--shadow); }
+  .toast b { font-weight: 600; }
+  .just-updated { animation: updated 3.5s ease-out 1; }
+  @keyframes updated { 0%, 60% { box-shadow: 0 0 0 3px var(--focus); } 100% { box-shadow: none; } }
+
+  /* narrow: the picture, then your call; send/approve stays reachable at the bottom */
+  @media (max-width: 900px) {
+    .app { display: block; height: auto; }
+    .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; height: 52px; }
+    body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+    .link-state { display: none; }
+    .main { overflow: visible; padding: 18px max(16px, env(safe-area-inset-right, 0px)) 18px max(16px, env(safe-area-inset-left, 0px)); }
+    .ba { grid-template-columns: 1fr; }
+    .rail { border-left: 0; border-top: 1px solid var(--line); display: block; }
+    .rail-head, .rail-body { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    .rail-body { overflow: visible; }
+    .rail-foot { position: sticky; bottom: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="app">
+  <header class="topbar">
+    <span class="logo" aria-hidden="true"><i></i></span>
+    <span class="plan-title" id="plan-title"></span>
+    <span class="status-pill" id="status-pill"><i></i><span></span></span>
+    <span class="grow"></span>
+    <span class="link-state" id="link-state" aria-live="polite"></span>
+  </header>
+
+  <main class="main">
+    <div class="main-inner">
+      <p class="headline" id="headline"></p>
+      <p class="analogy" id="analogy" hidden></p>
+      <div class="terms" id="terms" hidden></div>
+      <details class="change" id="change" hidden><summary>What changes for you</summary><div class="ba"><div><p class="mini">Today</p><ul id="before"></ul></div><div><p class="mini">After this plan</p><ul id="after"></ul></div></div></details>
+      <div class="map" id="map"><div class="map-fit" id="map-fit"><div class="sys" id="sys"></div></div></div>
+      <section class="build" aria-labelledby="build-h">
+        <div class="build-head"><p class="mini" id="build-h">Build order · each step stands on the one before</p><span class="grow"></span>
+          <div class="step-nav"><button class="btn small" id="step-all" type="button">Whole system</button><button class="btn small" id="step-prev" type="button" aria-label="Previous step">←</button><button class="btn small" id="step-next" type="button" aria-label="Next step">→</button></div></div>
+        <div class="scrub" id="scrub" role="tablist" aria-label="Build steps"></div>
+        <div class="why-now" id="why-now" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+
+  <aside class="rail" aria-labelledby="call-h">
+    <div class="rail-head"><h2 id="call-h">Your call</h2><span class="mini" id="call-count"></span></div>
+    <div class="rail-body" id="rail-body"></div>
+    <div class="rail-foot">
+      <button class="btn primary" id="primary" type="button"></button>
+      <p class="foot-note" id="foot-note"></p>
+    </div>
+  </aside>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+  const Core = window.PlanMapCore;
+  const plan = JSON.parse(document.getElementById("plan-data").textContent);
+  const PLAN_KEY = `plan-map:${plan.id || plan.title}`;
+  const $ = (id) => document.getElementById(id);
+  const esc = (text) => String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const store = {
+    get(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+    set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} },
+  };
+  // A capability namespace, or null when this view can't run it (or isn't inside claude.ai).
+  const use = (name) => (window.claude?.use ? window.claude.use(name).catch(() => null) : Promise.resolve(null));
+  const partById = Object.fromEntries((plan.parts || []).map((part) => [part.id, part]));
+  const steps = plan.steps || [];
+  const decisions = plan.decisions || [];
+  const risks = (plan.risks || []).map((risk) => (typeof risk === "string" ? { text: risk } : risk));
+  const stepOf = Core.stepOfParts(plan);
+  const STATUS_TEXT = { new: "New", changed: "Changed", existing: "Exists" };
+
+  const state = {
+    step: null,                                   // build step in view, or null for the whole system
+    answers: store.get(`${PLAN_KEY}:answers`, {}),
+    approved: Core.approvalHolds(plan, store.get(`${PLAN_KEY}:approved`, null)),
+  };
+  let db = null, comments = null, room = null;
+
+  // ---------------------------------------------------------------- header + anchor
+  $("plan-title").textContent = plan.title;
+  $("headline").textContent = plan.headline;
+  if (plan.analogy) { $("analogy").hidden = false; $("analogy").textContent = `Think of it like ${plan.analogy.charAt(0).toLowerCase()}${plan.analogy.slice(1)}`; }
+  if ((plan.terms || []).length) {
+    $("terms").hidden = false;
+    $("terms").innerHTML = `<span class="mini">Words</span>` + plan.terms.map((t, i) => `<button class="term" type="button" data-term="${i}" aria-expanded="false">${esc(t.term)}</button>`).join("");
+  }
+  if ((plan.before || []).length || (plan.after || []).length) {
+    $("change").hidden = false;
+    $("before").innerHTML = (plan.before || []).map((t) => `<li>${esc(t)}</li>`).join("");
+    $("after").innerHTML = (plan.after || []).map((t) => `<li>${esc(t)}</li>`).join("");
+    $("change").open = store.get(`${PLAN_KEY}:change-open`, true);
+    $("change").addEventListener("toggle", () => store.set(`${PLAN_KEY}:change-open`, $("change").open));
+  }
+
+  // ---------------------------------------------------------------- the system picture
+  function partFlags(id) {
+    const states = Core.decisionStates(plan, state.answers);
+    const flags = [];
+    for (const d of decisions) if (d.part === id) flags.push(states[d.id].state === "decided" ? "done" : "decide");
+    if (risks.some((r) => r.part === id)) flags.push("risk");
+    return flags;
+  }
+
+  function renderSystem() {
+    const L = Core.layoutSystem(plan);
+    const sys = $("sys");
+    sys.style.width = `${L.width}px`;
+    sys.style.height = `${L.height}px`;
+    let svg = `<svg width="${L.width}" height="${L.height}" viewBox="0 0 ${L.width} ${L.height}" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/></marker></defs>`;
+    L.lanes.forEach((lane, i) => {
+      const x = 32 + i * (Core.CARD.w + 96);
+      svg += `<text class="lane-label" x="${x}" y="44">${esc(lane.label)}</text>`;
+      if (i) svg += `<line class="lane-rule" x1="${x - 48}" x2="${x - 48}" y1="32" y2="${L.height - 32}"/>`;
+    });
+    for (const e of L.edges) svg += `<g class="edge${e.main ? " main" : ""}" data-from="${esc(e.from)}" data-to="${esc(e.to)}"><path d="${e.d}" ${e.main ? 'marker-end="url(#arrow)"' : ""}/></g>`;
+    for (const e of L.edges) if (e.label) svg += `<g class="edge${e.main ? " main" : ""}" data-from="${esc(e.from)}" data-to="${esc(e.to)}"><rect class="tag-bg" x="${e.label.x - e.label.w / 2}" y="${e.label.y - 10}" width="${e.label.w}" height="20" rx="10"/><text class="tag-text" x="${e.label.x}" y="${e.label.y + 3.5}" text-anchor="middle">${esc(e.label.text)}</text></g>`;
+    svg += "</svg>";
+    let cards = "";
+    for (const [id, c] of Object.entries(L.cards)) {
+      const part = partById[id];
+      cards += `<button class="node ${part.status}" type="button" data-part="${esc(id)}" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px" aria-label="${esc(part.name)}, ${STATUS_TEXT[part.status]}">
+        <span class="meta"><span class="badge ${part.status}">${STATUS_TEXT[part.status]}</span><span class="flags"></span></span><span class="name">${esc(part.name)}</span></button>`;
+    }
+    sys.innerHTML = svg + cards;
+    fitMap();
+  }
+
+  // The whole picture always fits its column: it scales down, never scrolls.
+  function fitMap() {
+    const sys = $("sys"), wrap = $("map-fit");
+    const k = Math.min(1, wrap.clientWidth / sys.offsetWidth || 1);
+    sys.style.transform = `scale(${k})`;
+    wrap.style.height = `${sys.offsetHeight * k}px`;
+  }
+
+  function paintSystem() {
+    const built = state.step === null ? null : Core.builtThrough(plan, state.step);
+    const current = state.step === null ? null : new Set(steps[state.step].parts);
+    document.querySelectorAll(".node").forEach((n) => {
+      const id = n.dataset.part;
+      n.classList.toggle("ghost", !!built && !built.has(id));
+      n.classList.toggle("lit", !!current && current.has(id));
+      n.querySelector(".flags").innerHTML = partFlags(id).map((f) => `<span class="flag ${f}">${f === "decide" ? "Decide" : f === "done" ? "Decided" : "Risk"}</span>`).join("");
+    });
+    document.querySelectorAll(".edge").forEach((e) => {
+      const both = !built || (built.has(e.dataset.from) && built.has(e.dataset.to));
+      e.classList.toggle("ghost", !both);
+      e.classList.toggle("lit", !!current && both && (current.has(e.dataset.from) || current.has(e.dataset.to)));
+    });
+  }
+
+  // ---------------------------------------------------------------- build order
+  function renderBuild() {
+    $("scrub").innerHTML = steps.map((s, i) => `<button type="button" role="tab" data-step="${i}" class="${state.step !== null && i < state.step ? "past" : ""}" ${i === state.step ? 'aria-current="step" aria-selected="true"' : 'aria-selected="false"'}><span class="bar"></span><span class="lbl">${i + 1}. ${esc(s.title)}</span></button>`).join("");
+    const box = $("why-now");
+    if (state.step === null) {
+      const changing = (plan.parts || []).filter((p) => p.status !== "existing").length;
+      box.innerHTML = `<b>The whole system.</b><p class="facts">${changing} of ${(plan.parts || []).length} parts are new or changed; gray ones already exist. Tap a step, or press →, to watch it get built in order.</p>`;
+    } else {
+      const s = steps[state.step];
+      const builds = s.parts.length ? s.parts.map((id) => partById[id]?.name).join(" + ") : s.title;
+      box.innerHTML = `<b>Step ${state.step + 1} of ${steps.length}: ${esc(builds)}</b>
+        <p class="facts"><span>Stands on</span> ${esc(state.step ? steps[state.step - 1].title : "what already exists")}. <span>Why now</span> ${esc(s.because)}${s.gives ? ` <span>Unlocks</span> ${esc(s.gives)}` : ""}</p>`;
+    }
+    $("step-all").disabled = state.step === null;
+    $("step-prev").disabled = state.step === null || state.step === 0;
+    $("step-next").disabled = state.step === steps.length - 1;
+    paintSystem();
+  }
+  function setStep(step) { state.step = step; closePopover(); renderBuild(); }
+  $("scrub").addEventListener("click", (e) => { const b = e.target.closest("[data-step]"); if (b) setStep(Number(b.dataset.step)); });
+  $("step-all").addEventListener("click", () => setStep(null));
+  $("step-prev").addEventListener("click", () => setStep(Math.max(0, state.step - 1)));
+  $("step-next").addEventListener("click", () => setStep(state.step === null ? 0 : Math.min(steps.length - 1, state.step + 1)));
+  document.addEventListener("keydown", (e) => {
+    if (e.target.closest?.("textarea, input") || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === "ArrowRight" && !$("step-next").disabled) $("step-next").click();
+    if (e.key === "ArrowLeft" && state.step !== null) (state.step === 0 ? $("step-all") : $("step-prev")).click();
+    if (e.key === "Escape") closePopover();
+  });
+
+  // ---------------------------------------------------------------- details on tap
+  let popover = null;
+  function closePopover() {
+    popover?.remove();
+    popover = null;
+    document.querySelectorAll(".node.open").forEach((el) => el.classList.remove("open"));
+    document.querySelectorAll(".term[aria-expanded=true]").forEach((el) => el.setAttribute("aria-expanded", "false"));
+  }
+  function placePopover(anchor, html) {
+    closePopover();
+    popover = document.createElement("div");
+    popover.className = "popover";
+    popover.setAttribute("role", "dialog");
+    popover.innerHTML = `<button class="close" type="button" aria-label="Close">×</button>${html}`;
+    const map = $("map");
+    map.appendChild(popover);
+    const a = anchor.getBoundingClientRect(), m = map.getBoundingClientRect();
+    const left = Math.max(8, Math.min(a.left - m.left, map.clientWidth - popover.offsetWidth - 8));
+    const below = a.bottom - m.top + 8;
+    const fitsBelow = below + popover.offsetHeight <= map.clientHeight || a.top - m.top < popover.offsetHeight + 16;
+    popover.style.left = `${left}px`;
+    popover.style.top = `${fitsBelow ? below : a.top - m.top - popover.offsetHeight - 8}px`;
+    popover.querySelector(".close").addEventListener("click", closePopover);
+    return popover;
+  }
+
+  $("sys").addEventListener("click", (e) => {
+    const node = e.target.closest(".node");
+    if (!node) return;
+    if (node.classList.contains("open")) return closePopover();
+    const part = partById[node.dataset.part];
+    const step = stepOf[part.id];
+    const related = decisions.filter((d) => d.part === part.id);
+    const partRisks = risks.filter((r) => r.part === part.id);
+    const pop = placePopover(node, `
+      <p class="mini">${STATUS_TEXT[part.status]}${step !== undefined ? ` · built in step ${step + 1}` : ""}</p>
+      <h3>${esc(part.name)}</h3>
+      <p>${esc(part.why)}</p>
+      ${part.without ? `<p><span class="mini" style="display:block;margin-bottom:3px">Without it</span>${esc(part.without)}</p>` : ""}
+      ${related.map((d) => `<p><span class="flag decide">Decide</span> ${esc(d.question)}</p>`).join("")}
+      ${partRisks.map((r) => `<div class="risk-row">${esc(r.text)}</div>`).join("")}
+      ${(part.files || []).length ? `<code>${part.files.map(esc).join("<br>")}</code>` : ""}
+      <form class="ask"><textarea id="ask-${esc(part.id)}" placeholder="Ask Claude or suggest a change to ${esc(part.name)}" aria-label="Message to Claude about ${esc(part.name)}"></textarea><button class="btn small primary" type="submit">Send to Claude</button></form>`);
+    node.classList.add("open");
+    pop.querySelector("form").addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const text = pop.querySelector("textarea").value.trim();
+      if (!text) return;
+      const button = pop.querySelector("button[type=submit]");
+      send({ kind: "comment", ids: [], text: `About "${part.name}" in plan "${plan.title}": ${text}${plan.source ? `\nPlan file: ${plan.source}` : ""}` }, button)
+        .then((ok) => { if (ok) closePopover(); });
+    });
+  });
+
+  $("terms").addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-term]");
+    if (!chip) return;
+    if (chip.getAttribute("aria-expanded") === "true") return closePopover();
+    const t = plan.terms[Number(chip.dataset.term)];
+    // Terms sit above the map; their definition opens at the map's top edge.
+    placePopover($("map"), `<h3>${esc(t.term)}</h3><p>${esc(t.plain)}</p>`).style.top = "8px";
+    chip.setAttribute("aria-expanded", "true");
+  });
+  document.addEventListener("click", (e) => { if (popover && !e.target.closest(".popover, .node, .term")) closePopover(); });
+
+  // ---------------------------------------------------------------- your call (the rail)
+  const CHIP = { open: "Needs your call", answered: "Answered · not sent", sent: "Sent · Claude is applying it", decided: "Decided" };
+  function renderRail() {
+    const decisionHtml = decisions.length
+      ? decisions.map((d) => `
+        <div class="dcard" id="decision-${esc(d.id)}" data-decision="${esc(d.id)}">
+          <span class="chip"></span>
+          <h3>${esc(d.question)}</h3>
+          ${d.why ? `<p class="why">${esc(d.why)}</p>` : ""}
+          <div class="opts" role="group" aria-label="${esc(d.question)}">
+            ${(d.options || []).map((o) => `<button class="opt" type="button" data-option="${esc(o.id)}" aria-pressed="false"><b>${esc(o.label)}${o.recommended ? '<span class="reco">Recommended</span>' : ""}</b><span>${esc(o.tradeoff || "")}</span></button>`).join("")}
+          </div>
+          <button class="link-btn" type="button" data-note-toggle>Add a note</button>
+          <textarea class="note" id="note-${esc(d.id)}" hidden placeholder="A note for Claude (optional)" aria-label="Note for Claude"></textarea>
+        </div>`).join("")
+      : `<p class="empty-call">Nothing here needs your decision. Everything in this plan is routine and reversible.</p>`;
+    const extras = [];
+    if (plan.done) extras.push(`<p class="mini">You'll know it works when</p><div class="done-box">${esc(plan.done)}</div>`);
+    if (risks.length) extras.push(`<p class="mini">Watch out for</p>${risks.map((r) => `<div class="risk-row">${esc(r.text)}</div>`).join("")}`);
+    if (plan.check?.question) extras.push(`<details class="check"><summary>Check yourself: ${esc(plan.check.question)}</summary><p>${esc(plan.check.answer)}</p></details>`);
+    $("rail-body").innerHTML = decisionHtml + (extras.length ? `<details class="extra"><summary>Done when${risks.length ? ` · ${risks.length} ${risks.length === 1 ? "risk" : "risks"}` : ""}</summary><div class="body">${extras.join("")}</div></details>` : "");
+    $("rail-body").querySelectorAll(".note").forEach(bindNote);
+  }
+
+  function refreshRail() {
+    const states = Core.decisionStates(plan, state.answers);
+    let handled = 0;
+    for (const d of decisions) {
+      const card = document.getElementById(`decision-${d.id}`);
+      if (!card) continue;
+      const s = states[d.id];
+      if (s.state !== "open") handled += 1;
+      card.className = `dcard ${s.state}`;
+      card.querySelector(".chip").textContent = CHIP[s.state];
+      card.querySelectorAll(".opt").forEach((o) => {
+        o.setAttribute("aria-pressed", String(o.dataset.option === s.option));
+        o.disabled = s.state === "decided";
+      });
+      const note = card.querySelector(".note");
+      if (document.activeElement !== note) note.value = s.note || "";
+      if (s.note) note.hidden = false;
+      note.disabled = s.state === "decided";
+      card.querySelector("[data-note-toggle]").hidden = !note.hidden || s.state === "decided";
+    }
+    $("call-count").textContent = decisions.length ? `${handled} of ${decisions.length}` : "";
+    renderPrimary();
+    paintSystem();
+  }
+
+  $("rail-body").addEventListener("click", (e) => {
+    const opt = e.target.closest(".opt");
+    if (opt && !opt.disabled) {
+      const id = opt.closest(".dcard").dataset.decision;
+      state.answers[id] = { ...(state.answers[id] || {}), option: opt.dataset.option, sentAt: null };
+      saveAnswer(id);
+      refreshRail();
+      return;
+    }
+    const toggle = e.target.closest("[data-note-toggle]");
+    if (toggle) {
+      const note = toggle.closest(".dcard").querySelector(".note");
+      note.hidden = false;
+      toggle.hidden = true;
+      note.focus();
+    }
+  });
+
+  const noteTimers = {};
+  function bindNote(note) {
+    note.addEventListener("input", () => {
+      const id = note.closest(".dcard").dataset.decision;
+      state.answers[id] = { ...(state.answers[id] || {}), note: note.value.slice(0, 600), sentAt: null };
+      clearTimeout(noteTimers[id]);
+      noteTimers[id] = setTimeout(() => { saveAnswer(id); refreshRail(); }, 600);
+    });
+  }
+
+  const writes = {};
+  function saveAnswer(id) {
+    store.set(`${PLAN_KEY}:answers`, state.answers);
+    if (!db) return;
+    // One write at a time per document: chain onto the previous one.
+    writes[id] = (writes[id] || Promise.resolve())
+      .then(() => db.collection("decisions").doc(id).set({ ...state.answers[id], updatedAt: Date.now() }))
+      .catch(() => toast("Couldn't save that answer online. It's kept in this browser."));
+  }
+
+  // ---------------------------------------------------------------- the one action
+  function renderPrimary() {
+    const action = Core.nextAction(plan, state.answers, state.approved);
+    const waiting = Object.values(Core.decisionStates(plan, state.answers)).some((s) => s.state === "sent");
+    const [cls, text] = action.kind === "approved" ? ["approved", "Approved"]
+      : action.kind === "open" ? ["open", `${action.count} ${action.count === 1 ? "decision" : "decisions"} open`]
+      : action.kind === "send" ? ["open", `${action.count} not sent`]
+      : waiting ? ["waiting", "Claude is applying your answers"] : ["ready", "Ready to approve"];
+    $("status-pill").className = `status-pill ${cls}`;
+    $("status-pill").querySelector("span").textContent = text;
+
+    const b = $("primary");
+    b.disabled = false;
+    b.className = "btn";
+    if (action.kind === "send") { b.classList.add("decide"); b.innerHTML = `Send to Claude <span class="count">${action.count}</span>`; }
+    else if (action.kind === "open") { b.textContent = `Answer ${action.count} more to send`; b.disabled = true; }
+    else if (action.kind === "approve") { b.classList.add("primary"); b.textContent = "Approve plan"; }
+    else { b.classList.add("done"); b.textContent = "Approved ✓"; b.disabled = true; }
+
+    $("foot-note").textContent = {
+      send: "Goes straight to Claude in the terminal.",
+      open: "Pick an option on each amber card.",
+      approve: waiting ? "Claude is updating the plan with your answers. You can approve now or wait to see the changes." : "Approving tells Claude to start building, one step at a time.",
+      approved: "Claude is building this plan.",
+    }[action.kind];
+  }
+
+  function pendingMessage() {
+    const action = Core.nextAction(plan, state.answers, state.approved);
+    if (action.kind === "send") {
+      const ids = Object.entries(Core.decisionStates(plan, state.answers)).filter(([, s]) => s.state === "answered").map(([id]) => id);
+      return { kind: "decisions", ids, text: Core.decisionMessage(plan, state.answers, ids) };
+    }
+    if (action.kind === "approve") return { kind: "approve", ids: [], text: Core.approvalMessage(plan, state.answers) };
+    return null;
+  }
+
+  $("primary").addEventListener("click", () => {
+    const message = pendingMessage();
+    if (message) send(message, $("primary"));
+  });
+
+  /**
+   * @behavior Delivers a message to Claude without asking the viewer to paste:
+   *   a comment that wakes the watching terminal session, else the viewer's
+   *   own Claude session, else saved in this page's database for the next
+   *   session. Marks decisions sent and records approval on success.
+   * @returns whether the message reached Claude or was saved for it
+   */
+  async function send(message, button) {
+    button.disabled = true;
+    const result = await Core.deliverToClaude(message.text, {
+      comment: comments && (async (text) => {
+        const anchor = await comments.anchorFor(button.isConnected ? button : document.body);
+        await comments.sendToClaude({ anchor, text });
+      }),
+      session: room && (async (text) => {
+        const can = await room.canSendToClaudeSession();
+        if (!["available", "available_if_summoned"].includes(can)) throw { code: "claude_unavailable" };
+        await room.sendToClaudeSession({ label: plan.title, message: text, planFile: plan.source || "" }, { deliver: "send", attachPresence: false });
+      }),
+      save: async (text) => {
+        if (!db) throw new Error("no database");
+        await db.collection("inbox").add({ text, kind: message.kind, at: Date.now() });
+      },
+    });
+    button.disabled = false;
+    if (!result.via) {
+      toast(result.reason === "consent" ? "Allow this page to comment for you (claude.ai asks once), then press Send again."
+        : result.reason === "rate_limited" ? "Too many sends at once. Wait a few seconds and press Send again."
+        : "Couldn't reach Claude or save your message. Check your connection and press Send again.", 6000);
+      renderPrimary();
+      return false;
+    }
+    const now = Date.now();
+    for (const id of message.ids) { state.answers[id] = { ...state.answers[id], sentAt: now, via: result.via }; saveAnswer(id); }
+    if (message.kind === "approve") {
+      state.approved = true;
+      const approval = { at: now, revision: plan.revision };
+      store.set(`${PLAN_KEY}:approved`, approval);
+      if (db) db.doc("status/plan").set(approval).catch(() => {});
+    }
+    const what = message.kind === "approve" ? "Approval" : message.kind === "decisions" ? "Your answers" : "Your message";
+    toast(result.via === "saved"
+      ? `<b>${what} saved.</b> No Claude session is listening right now. The next one that opens this plan picks it up.`
+      : `<b>${what} sent to Claude.</b> Its changes appear here, outlined in blue.`, 6000);
+    refreshRail();
+    return true;
+  }
+
+  // ---------------------------------------------------------------- link to Claude
+  async function refreshLink() {
+    let live = false;
+    try { if (comments?.canSendToClaude) live = (await comments.canSendToClaude()) === "available"; } catch {}
+    if (!live && room?.canSendToClaudeSession) {
+      try { live = ["available", "available_if_summoned"].includes(await room.canSendToClaudeSession()); } catch {}
+    }
+    const el = $("link-state");
+    el.classList.toggle("live", live);
+    el.textContent = live ? "● Connected to Claude" : db ? "Claude isn't listening · answers are saved for it" : "";
+  }
+
+  // ---------------------------------------------------------------- database
+  async function connectDb() {
+    db = await use("db");
+    if (!db) return;
+    db.collection("decisions").onSnapshot((snap) => {
+      for (const doc of snap.docs) {
+        const id = doc.id;
+        if (document.activeElement?.closest?.(`#decision-${CSS.escape(id)}`)) continue; // don't overwrite a note mid-typing
+        const body = doc.data() || {};
+        state.answers[id] = { option: body.option || null, note: body.note || "", sentAt: body.sentAt || null, via: body.via };
+      }
+      store.set(`${PLAN_KEY}:answers`, state.answers);
+      refreshRail();
+    }, () => {});
+    db.doc("status/plan").onSnapshot((snap) => {
+      if (snap.exists) { state.approved = Core.approvalHolds(plan, snap.data()) || state.approved; refreshRail(); }
+    }, () => {});
+  }
+
+  // ---------------------------------------------------------------- toasts + what changed
+  function toast(html, ms = 4200) {
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = html;
+    $("toasts").appendChild(el);
+    setTimeout(() => el.remove(), ms);
+  }
+
+  function showChangesSinceLastVisit() {
+    const last = store.get(`${PLAN_KEY}:seen`, null);
+    store.set(`${PLAN_KEY}:seen`, plan);
+    const diff = Core.diffPlans(last, plan);
+    if (!diff.summary.length) return;
+    for (const id of diff.parts) document.querySelector(`.node[data-part="${CSS.escape(id)}"]`)?.classList.add("just-updated");
+    for (const i of diff.steps) document.querySelector(`#scrub [data-step="${i}"]`)?.classList.add("just-updated");
+    for (const id of diff.decisions) document.getElementById(`decision-${id}`)?.classList.add("just-updated");
+    const lines = diff.summary.slice(0, 3).map(esc).join(" · ");
+    toast(`<b>Claude updated the plan.</b> ${lines}${diff.summary.length > 3 ? ` · +${diff.summary.length - 3} more` : ""}`, 7000);
+  }
+
+  // ---------------------------------------------------------------- boot
+  function start(hot) {
+    if (hot && "step" in hot) state.step = hot.step;
+    renderSystem();
+    renderRail();
+    renderBuild();
+    refreshRail();
+    showChangesSinceLastVisit();
+    window.claude?.hot?.snapshot?.(() => ({ step: state.step }));
+    Promise.all([connectDb(), use("comments").then((c) => { comments = c; }), use("room").then((r) => { room = r; })])
+      .then(() => { refreshLink(); setInterval(refreshLink, 20000); });
+  }
+
+  let resizeTimer = 0;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { closePopover(); fitMap(); }, 100); });
+  if (document.fonts?.ready) document.fonts.ready.then(fitMap);
+  if (window.claude?.hot?.ready) window.claude.hot.ready(start);
+  else start(window.claude?.hot?.data ?? null);
+})();
+</script>
