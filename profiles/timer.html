@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sprint timer</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 32rem; margin: 10vh auto; padding: 1.5rem; line-height: 1.6; }
+    h1 { margin-bottom: .25rem; }
+    #remaining { display: block; font-size: clamp(4rem, 20vw, 7rem); font-variant-numeric: tabular-nums; }
+    input, button { font: inherit; padding: .6rem; margin: .25rem; }
+    input { width: 4rem; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid #7289da; outline-offset: 3px; }
+    .note { opacity: .8; }
+  </style>
+</head>
+<body>
+  <h1>Your attempt</h1>
+  <p>Think first. Bring back rough notes, a sketch, or code. Finish early when ready.</p>
+  <label for="minutes">Minutes</label>
+  <input id="minutes" type="number" min="1" max="120" value="3">
+  <button id="start" type="button">Start</button>
+  <button id="reset" type="button">Reset</button>
+  <output id="remaining" role="timer" aria-label="Time remaining">3:00</output>
+  <p id="status" role="status">Ready. Start when you begin your attempt.</p>
+  <p class="note">Usually 3–5 minutes. Longer than 10 is your choice, not the default.
+    Keep this tab visible. This page does not send system notifications, report
+    progress to the agent, or keep running after you close it.</p>
+  <script>
+    const minutes = document.getElementById('minutes');
+    const remaining = document.getElementById('remaining');
+    const status = document.getElementById('status');
+    let interval;
+    let deadline;
+    function stop() {
+      clearInterval(interval);
+    }
+    function render() {
+      const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      remaining.textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+      if (seconds === 0) {
+        stop();
+        status.textContent = 'Time is up. Bring back what you have; an incomplete attempt counts.';
+      }
+    }
+    document.getElementById('start').addEventListener('click', () => {
+      const duration = Number(minutes.value);
+      if (!Number.isFinite(duration) || duration < 1 || duration > 120) {
+        status.textContent = 'Choose a duration between 1 and 120 minutes.';
+        return;
+      }
+      stop();
+      deadline = Date.now() + duration * 60000;
+      status.textContent = 'Running. Focus on one question, not a perfect answer.';
+      interval = setInterval(render, 250);
+      render();
+    });
+    document.getElementById('reset').addEventListener('click', () => {
+      stop();
+      remaining.textContent = '—';
+      status.textContent = 'Ready. Start when you begin your attempt.';
+    });
+  </script>
+</body>
+</html>
