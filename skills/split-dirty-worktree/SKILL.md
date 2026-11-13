@@ -10,7 +10,7 @@ Turn a large mixed working tree into a set of reviewable **draft** PRs. The plan
 The plan reuses the existing formats so there is one vocabulary:
 
 - PR title, description, and the one-concern rule: `skills/pr/SKILL.md`
-- Commit messages, responsibility tests, and hunk staging: `skills/commit/SKILL.md`
+- Commit messages, responsibility tests, and hunk staging: `skills/commit/references/grouping.md` and `skills/commit/references/messages.md`
 - Branch, worktree, stack, and transport commands: `MECHANICS.md`
 
 Read-only until approval. Analysis never touches the index, refs, stash, files, branches, worktrees, or PR state.
@@ -49,7 +49,7 @@ Note mixed files (one file assigned to more than one concern), flags, staged ver
 
 ## Step 2 — Group the changes into concerns
 
-A concern is one PR-sized capability or fix with one reason to exist and one reviewer story. The `pr` skill's Level 1 rule applies: one concern per PR. Inside each concern, every commit is one responsibility (the `commit` skill's Responsibility Unit).
+A concern is one PR-sized capability or fix with one reason to exist and one reviewer story. The `pr` skill's Level 1 rule applies: one concern per PR. Inside each concern, every commit is one responsibility (the `commit` skill's grouping.md).
 
 - Group by change type, domain or scope, motivation, and revertability. Do not group merely because files were edited together.
 - Keep tests with the behavior they prove. Keep docs with the change they document.
@@ -93,7 +93,7 @@ For each PR, write:
 
 - **Title**: a Conventional Commit title for one concern, with no "and" (`pr` skill).
 - **Description**: the `pr` skill's Senior Developer PR Description Standard and template, verbatim: Rationale, Observable Behavior, Verification, about 150 words. Add `## Stack Context` only to stacked layers: one sentence explaining how this PR contributes to the stack's overall goal and what it builds on or enables, following the `pr` skill's template rather than a PR-number chain or line count. Never add `## Files`.
-- **Commits**: ordered, one responsibility each. Each commit carries the `commit` skill's proposal fields: Message, Purpose (one sentence), Dependency, Indivisible, Files (whole or by hunk), Diff (`+a -d`, file count), and Verification. Every hunk maps to exactly one commit.
+- **Commits**: ordered, one responsibility each. Each commit carries the `commit-review` proposal fields (`skills/commit-review/references/proposal.md`): Message, Purpose (one sentence), Dependency, Indivisible, Files (whole or by hunk), Diff (`+a -d`, file count), and Verification. Every hunk maps to exactly one commit.
 - **PR totals**: the sum of its commits. The preview row is computed from the same numbers, never estimated by hand.
 
 ## Step 6 — Present the plan
@@ -164,7 +164,7 @@ Read `MECHANICS.md` before transporting anything.
    - Stack: each layer starts from the layer below it, so layer 1 is `git switch -c <b1> <trunk>`, layer 2 is `git switch -c <b2> <b1>`, and so on. Transport and commit a layer before creating the next one.
    - Worktrees only when the plan says `worktree` and the branches are independent. A stack is built in place. Verify with `git worktree list`.
 4. Transport each concern (`MECHANICS.md` section A or B). Verify `git diff --cached --numstat` equals the planned per-commit numbers.
-5. Commit each commit with the approved message through `skills/commit/SKILL.md` Phase 2. If the staged diff does not match the approved plan, stop and return to planning.
+5. Commit each commit with the approved message following `skills/commit-review/SKILL.md` step 5. If the staged diff does not match the approved plan, stop and return to planning.
    Before pushing, check that each branch builds on its own: run the repo's build, typecheck, or focused tests with that branch checked out. If a branch fails, stop and report it; do not push a branch that does not build.
 6. Push and open the drafts:
    - Parallel PRs: `git push -u origin <branch>`, then `gh pr create --draft --base <base> --head <branch> --title "<title>" --body-file <file>`. Write the body file outside the repo.

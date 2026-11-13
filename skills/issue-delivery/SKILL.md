@@ -89,7 +89,7 @@ Do not add adjacent cleanup or expand the ticket. If implementation reveals a pr
 
 ### 4. Commit and prepare the PR
 
-Use `/skill:commit` for each concern; follow its review and approval gates. Use `/skill:pr` to prepare a draft PR that references `Fixes #<number>` and makes only claims supported by the ticket and verification.
+Use `/skill:commit-review` for each concern; follow its review and approval gates. Use `/skill:pr` to prepare a draft PR that references `Fixes #<number>` and makes only claims supported by the ticket and verification.
 
 Present the exact branch, base, commits, changed files, verification results, review status, PR title, and PR body. Only explicit approval of that packet authorizes pushing and creating the draft PR. If the branch, head, base, title, body, or issue reference materially changes after approval, present the revised packet and obtain approval again. Confirm the resulting URL, base, head, draft state, body, and issue reference. Never merge or mark it ready.
 
@@ -110,5 +110,5 @@ Stop for user input on ambiguous or conflicting acceptance; new dependencies; au
 - The selected published issue and its approved, matching plan drove the work.
 - The exact Delivery Proposal was explicitly approved before branch/worktree creation, the plan gate passed, and all changes stayed isolated.
 - Tests/checks and code review have actual recorded results; known gaps are explicit.
-- Commits followed `/skill:commit` approval and atomicity rules.
+- Commits followed `/skill:commit-review` approval and atomicity rules.
 - A draft PR was created only after approval of the exact publish packet, or the verified branch remains local.
