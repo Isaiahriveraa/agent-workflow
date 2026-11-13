@@ -1,10 +1,10 @@
 # Deep Review
 
-Read only with `--deep`, after Step 4 and before Step 6 in `review-process.md`.
+Read only for the specialists `triage.md` selected, alongside Step 4 in `review-process.md`.
 
-### Step 5: Triggered Deep Review (`--deep` only)
+### Step 5: Triggered Specialists
 
-Deep mode does not mean "spawn every specialist." Dispatch only the specialists whose mechanical trigger appears in the diff. Each specialist remains independent and receives the patch plus only the context required for its domain.
+Dispatch only the specialists triage selected. Each specialist remains independent and receives the patch plus only the context required for its domain.
 
 #### Security Specialist
 Trigger when changes touch:

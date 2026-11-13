@@ -1,6 +1,6 @@
 ---
 name: reviewer-contract
-description: "Repository-contract code reviewer: assumes the diff breaks an existing contract and hunts concrete mismatches — callers, specs, scope, API shape, asymmetric paths — each with two citing evidence locations. Lens B of the code-review trio."
+description: "Repository-contract code reviewer: assumes the diff breaks an existing contract and hunts concrete mismatches — callers, specs, scope, API shape, asymmetric paths — each with two citing evidence locations. Lens B selected by code-review triage."
 tools: Read, Grep, Glob, Bash
 isolated: true
 ---

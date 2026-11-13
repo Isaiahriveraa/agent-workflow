@@ -1,6 +1,6 @@
 ---
 name: reviewer-behavioral
-description: "Blind behavioral code reviewer: sees only the patch, assumes the changed code is wrong, and reports concrete bugs with exact evidence, a trigger, a trace, and an impact — or NO_FINDINGS. Lens A of the code-review trio."
+description: "Blind behavioral code reviewer: sees only the patch, assumes the changed code is wrong, and reports concrete bugs with exact evidence, a trigger, a trace, and an impact — or NO_FINDINGS. Lens A selected by code-review triage."
 tools: Read, Grep, Glob, Bash
 isolated: true
 ---

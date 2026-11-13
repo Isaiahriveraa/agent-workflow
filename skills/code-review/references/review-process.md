@@ -1,10 +1,10 @@
 # Independent Review
 
-Read for local review or an external observe-only child. Setup is in `setup.md`; deep specialists are in `deep-review.md` and load only with `--deep`. Preserve the shared independence rules in `../SKILL.md`.
+Read for local review or an external observe-only child. Setup is in `setup.md`; which reviewers run is decided in `triage.md`; specialist details are in `deep-review.md`. Preserve the shared independence rules in `../SKILL.md`.
 
-### Step 4: Spawn Three Independent Adversarial Reviewers
+### Step 4: Spawn the Selected Independent Reviewers
 
-Dispatch Reviewer A, Reviewer B, and Reviewer C in parallel in separate subagent contexts.
+Dispatch only the reviewers triage selected, in parallel, in separate subagent contexts. When triage split a lens by concern, give each copy only its concern's file list in place of the full changed-files list. The prompts below are the per-lens templates.
 They must not receive each other's output or the implementer's reasoning.
 
 #### Reviewer A — Blind Behavioral Adversary
@@ -44,7 +44,7 @@ Minimal context: .git/code-review.context.txt
 
 Reviewer output is not yet a code review. Treat every candidate as potentially wrong.
 
-Spawn the `adjudicator` subagent — a registered agent type whose instructions live in `~/.agents/agents/adjudicator.md` — with full repository access. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
+Skip this step when no reviewer returned a candidate finding. Otherwise spawn the `adjudicator` subagent — a registered agent type whose instructions live in `~/.agents/agents/adjudicator.md` — with full repository access. If the runtime cannot resolve it by name, spawn a generic subagent with that file's content as its prompt and the same block:
 
 ```text
 Candidate findings:

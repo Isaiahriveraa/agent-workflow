@@ -1,7 +1,7 @@
 ---
 name: code-review
-description: "Review code for concrete bugs, contract mismatches, and evidenced readability/design problems using independent adversarial reviewers and adjudication. The existing complexity-reviser proposes cleanup first; the parent evaluates and authorizes behavior-preserving implementation, tests, and fresh independent validation. Preserves review-only, --no-revise, implementation ownership, and behavior-change approval boundaries."
-argument-hint: "[scope] [--fix] [--no-revise] [--deep] [--artifact] [--runner ask|subagents|opencode|omp] [--review-only --report <path>]"
+description: "Review code for concrete bugs, contract mismatches, and evidenced readability/design problems using independent adversarial reviewers and adjudication. The existing complexity-reviser directly performs authorized test cleanup; unrelated design revisions remain proposal-first with parent evaluation and authorization. Both retain behavior-preserving implementation, tests, and fresh independent validation. Preserves review-only, --no-revise, implementation ownership, and behavior-change approval boundaries."
+argument-hint: "[scope] [--fix] [--no-revise] [--artifact] [--runner ask|subagents|opencode|omp] [--review-only --report <path>]"
 shell-timeout: 10
 ---
 
@@ -13,11 +13,11 @@ Review changes using independent adversarial contexts. The goal is not to summar
 
 This file owns shared policy and routing. Read references only when their stage is needed; do not load the entire directory. Reference paths are relative to this skill root. Helpers, templates, and `${SKILL_DIR}` continue to refer to the skill root, not `references/`.
 
-1. Parse scope and flags below. For every mode, read [setup](references/setup.md) and run Steps 1-2. Stop if the selected scope has no changes.
-2. **Observe-only (`--review-only --report <path>`):** do not ask for a runner or dispatch again. Read [review process](references/review-process.md) for Steps 4, 6, and 7; with `--deep`, load [deep review](references/deep-review.md) for Step 5 before adjudication. Finish with Step 13 in [reporting](references/reporting.md), using Step 9 only for findings formatting. Do not load or execute hardening, revision, external dispatch, or QA.
-3. **Full review, local subagents:** choose the runner after baseline checks. Read [hardening](references/hardening.md) for Step 3, then [review process](references/review-process.md) for Steps 4-7, inserting [deep review](references/deep-review.md) only with `--deep`.
-4. **Full review, OpenCode or OMP:** read the selected dispatch section of [external runners](references/external-runners.md). The original harness loads [hardening](references/hardening.md); the external child starts here in observe-only mode. Do not run a second local reviewer trio. Read the returned findings before proceeding.
-5. **Apply feedback in the original harness:** load [complexity revision](references/complexity-revision.md) for Step 8 when `--fix` is present or revision is enabled. Skip defect application without `--fix` and skip design revision with `--no-revise`. Use the proposal → main-model evaluation → accepted implementation → inspection sequence; retain fresh adversarial validation.
+1. Parse scope and flags below. For every mode, read [setup](references/setup.md) and run Steps 1-2. Stop if the selected scope has no changes. Then read [triage](references/triage.md): read the diff, split it into concerns, and pick only the reviewers its triggers call for. Triage decides every spawn below, including the hardener and adjudicator.
+2. **Observe-only (`--review-only --report <path>`):** do not ask for a runner or dispatch again. Read [review process](references/review-process.md) for Steps 4, 6, and 7; load [deep review](references/deep-review.md) only for specialists triage selected. Finish with Step 13 in [reporting](references/reporting.md), using Step 9 only for findings formatting. Do not load or execute hardening, revision, external dispatch, or QA.
+3. **Full review, local subagents:** choose the runner after baseline checks. Read [hardening](references/hardening.md) for Step 3, only when triage selected the hardener, then [review process](references/review-process.md) for Steps 4-7, loading [deep review](references/deep-review.md) only for specialists triage selected.
+4. **Full review, OpenCode or OMP:** read the selected dispatch section of [external runners](references/external-runners.md). The original harness loads [hardening](references/hardening.md); the external child starts here in observe-only mode. Do not run a second local review. Read the returned findings before proceeding.
+5. **Apply feedback in the original harness:** load [complexity revision](references/complexity-revision.md) for Step 8 when `--fix` is present or revision is enabled. Skip defect application without `--fix` and skip revision with `--no-revise`. Authorized scoped test cleanup runs directly without per-test proposals or approval, followed by retrospective evidence and inspection. Unrelated design revisions use proposal → main-model evaluation → accepted implementation → inspection. Retain fresh adversarial validation for both.
 6. **Finish a full review:** read Step 9 in [reporting](references/reporting.md), then Steps 10-12 in [completion](references/completion.md) for human QA, completion, and optional artifacts.
 
 Step numbers are stable across references so existing delegated prompts that request Steps 1, 2, and 4-7 still work. Follow this routing even when a caller names the old step numbers.
@@ -45,8 +45,9 @@ behavior-change approval or bypass the fresh validation pass.
 ## Core Loop
 
 ```text
-setup + baseline → choose runner → hardener in original harness
-    → independent reviewers (+ triggered deep specialists) → adjudicator
+setup + baseline → triage the diff (concerns → lenses) → choose runner
+    → hardener if triage selected it
+    → only the reviewers triage selected → adjudicator if any findings
     → verified findings → approved fixes with --fix
     → supervised complexity revision (unless --no-revise)
     → regression checks + fresh adversarial validation
@@ -56,7 +57,7 @@ setup + baseline → choose runner → hardener in original harness
 With `--review-only --report <path>`:
 
 ```text
-resolve scope → gather context → reviewers A/B/C → adjudicator → Step 13 report
+resolve scope → gather context → triage → selected reviewers → adjudicator if any findings → Step 13 report
 ```
 
 Role separation is mandatory:
@@ -98,7 +99,6 @@ Scope resolution is delegated to the bundled helper at Step 1 — it depends on 
 ### Flags
 - `--fix` — apply verified fixes after approval of their behavior changes and add regression tests; this flag is not behavior-change approval
 - `--no-revise` — skip the default complexity revision pass (used by the commit gate, which must not edit code)
-- `--deep` — add triggered specialist reviews for security, concurrency, dependencies, persistence, and public compatibility
 - `--artifact` — write a persistent Markdown review document
 - `--review-only --report <path>` — observe-only review for a delegated run (Step 13 in `references/reporting.md`). Runs Steps 1, 2, and 4-7; no hardener, revision, fixer, or QA. Writes `findings.md` and a `REVIEW-REPORT v1` block to `<path>`. Requires `--report`.
 - `--runner ask|subagents|opencode|omp` — where this review runs; overrides the default runner for this run (see Runner).
@@ -121,7 +121,7 @@ Where the review runs. The default runner is the setting; change it on the line 
 
 The original harness's main model remains the user's point of contact for every runner. Delegating review changes its location, not who owns product decisions. External reviewers only return adjudicated findings; code-writing stages stay in the original harness.
 
-- **Act, verify, inform:** behavior-preserving refactors may proceed without routine permission requests. The specialized complexity reviser proposes the smallest simplification using `codebase-design` principles: deep modules, information hiding, fewer dependencies, and less cognitive load. The main model evaluates the proposal before authorizing implementation and inspects the result afterward; it supervises rather than duplicating the reviser's design work. Briefly report what changed, why it is simpler, and the checks actually run.
+- **Act, verify, inform:** behavior-preserving refactors may proceed without routine permission requests. Authorized automatic test cleanup directly removes redundant/obsolete implementation-only assertions and rewrites useful guarantees through behavior interfaces; report Keep / Rewrite / Delete retrospectively, not as per-test proposals. Keep/report blocked on unique-coverage uncertainty. For unrelated design revisions, the specialized complexity reviser proposes the smallest simplification using `codebase-design` principles: deep modules, information hiding, fewer dependencies, and less cognitive load. The main model evaluates the proposal before authorizing implementation and inspects the result afterward; it supervises rather than duplicating the reviser's design work. It also inspects the actual result of automatic cleanup. Briefly report what changed, why it is simpler, and the checks actually run. Reviewers remain independent and read-only; ownership and explicit skip/read-only restrictions remain in force.
 - **Explain, ask, wait:** before adding, removing, or changing observable behavior, explain the current behavior, proposed behavior, and reason in plain language, then wait for the user's decision. Bug fixes also change behavior; neither `--fix` nor a reproduced failure grants approval. Record explicit approval for the specific change and pass it to the writer; do not repeatedly ask for that same approved change.
 - **Uncertainty needs a decision:** if behavior preservation cannot be established, report the uncertainty rather than labeling the change a refactor. Observable behavior includes public contracts, errors, persisted data, side effects, and customer workflows, not just UI output.
 - **Safety gates remain:** destructive, security-sensitive, or dependency changes still follow repository approval rules even during a refactor.
@@ -145,18 +145,9 @@ Pass these approval boundaries to every code-writing subagent, including the har
 12. **Suspicious workaround comments are not proof.** If code needs a paragraph-long comment to argue that an unsafe-looking workaround is correct, inspect the behavior instead of accepting the explanation.
 13. **Never claim the code is correct.** Say only that no qualifying verified findings were found in the reviewed scope.
 
-## Escalation Rules
+## Reviewer Selection
 
-Recommend `--deep` when the diff includes:
-- authentication or authorization
-- payments or irreversible external operations
-- migrations or durable-state transformations
-- unsafe code or manual memory management
-- concurrency or distributed coordination
-- cryptography, secrets, or untrusted deserialization
-- public API or protocol compatibility
-- infrastructure or deployment configuration
-- large cross-layer state-machine changes
+There is no fixed trio and no deep mode. Triage (`references/triage.md`) reads every diff and spawns only the lenses its triggers call for, including security, concurrency, persistence, and dependency specialists. A docs-only diff may spawn none. Report the triage plan with the result.
 
 ## Final Principles
 

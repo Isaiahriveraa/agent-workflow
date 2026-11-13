@@ -46,9 +46,9 @@ Review incomplete because required checks could not run.
 
 Never hide blocked tests, unresolved verified findings, or a QA pass that could not be prepared.
 
-### Step 12: Optional Artifact (`--artifact` or `--deep`)
+### Step 12: Optional Artifact (`--artifact`, or a specialist found something)
 
-Write a Markdown document only when `--artifact` is supplied or deep mode produced at least one verified finding. Use the template at `templates/review.md`, fill every `{placeholder}` with reconciled values from Steps 6-9, and include the hardener's scenario table (Step 3) and the QA script (Step 10) in the body.
+Write a Markdown document only when `--artifact` is supplied or a triage-selected specialist produced at least one verified finding. Use the template at `templates/review.md`, fill every `{placeholder}` with reconciled values from Steps 6-9, and include the hardener's scenario table (Step 3) and the QA script (Step 10) in the body.
 
 Suggested filename:
 ```text
