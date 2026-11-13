@@ -29,6 +29,7 @@ policy copies here.
 - When the user needs to perform an action, give instructions one step at a time
   instead of a long command walkthrough. This does not require a checkpoint for
   every action the agent performs independently.
+- Only use Haiku-model subagents; never spawn a subagent on any other model.
 <!-- end claude-reflect -->
 
 @RTK.md

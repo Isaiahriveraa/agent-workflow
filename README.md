@@ -1,10 +1,10 @@
 # Agents Workflow Hub
 
-Shared operating contract for AI-assisted coding across multiple tools. Commands, agents, skills, and adapters live here. Machine-local state does not.
+Shared operating contract for thinking, learning, research, and coding across terminal agents. Commands, agents, skills, and adapters live here. Machine-local state does not.
 
 ## About
 
-This is an opinionated delivery workflow — adapters bridge tool ergonomics, `AGENTS.md` governs agent behavior, and skill pipelines route work from fuzzy idea to clean commit.
+`AGENTS.md` selects a session profile before loading a workflow. Adapters bridge tool ergonomics; coding delivery loads its detailed contract only when needed. The previous coding rules are preserved in `references/coding-contract.md`.
 
 The hub serves Claude Code, Codex CLI, OpenCode, Antigravity/Gemini, and Cursor CLI from the same commands, agents, and skills.
 
@@ -27,9 +27,58 @@ The hub serves Claude Code, Codex CLI, OpenCode, Antigravity/Gemini, and Cursor 
 └──────────────────────────────┘
 ```
 
-## Workflow
+## Session modes
 
-The workflow is experience-first and risk-aware: understand the user problem, make uncertain interactions visible, agree on behavior, then derive essential features and plan one end-to-end slice. System, behavior, feature, architecture, and implementation are views to move between, not whole-product phases. A PRD is optional; building the whole frontend before backend is not the goal. Local drafts are tracked by file path; published work is identified by GitHub issue number.
+Run these from the directory you want to work in. Each starts an independent
+session; it does not swap shared files or change another terminal's mode.
+
+```sh
+sprint                    # attempt-first engineering, defaults to Pi
+ideation                  # attempt-first problems and solution options
+school-learn              # attempt-first course learning
+school-fast               # organize and complete assignment work
+research                  # concise, evidence-based answers
+coding                    # ordinary agent-written software delivery
+sprint --harness claude    # Claude Code
+sprint --harness codex     # Codex CLI
+```
+
+The executable aliases point to `scripts/workflow-session.mjs`. Without aliases,
+use `node ~/.agents/scripts/workflow-session.mjs sprint`, or `aw sprint`.
+Set `AGENT_HARNESS=pi|claude|codex` to choose a default. Place `--harness` immediately
+after the mode (or first after an alias); remaining arguments pass through to the
+harness. The launcher appends only the mode's profile; the harness already loads
+`AGENTS.md` itself.
+
+Sprint and Ideation use one 3–5 minute attempt at a time, capped at 10 minutes
+unless requested. The agent gives one concrete task and waits before revealing a
+solution. Your existing voice dump or notes can count as the attempt. Afterward,
+it synthesizes your reasoning, identifies one gap, and helps you revise. Explicit
+hints, examples, and bounded delegation remain available. School Learn adapts
+this loop to course material; School Fast does not impose tutoring.
+
+Inside a session, say "switch to sprint", "school learn", "school fast",
+"research mode", "ideation mode", or "coding mode". A bounded request such as
+"research this API" stays inside the current mode and returns to the pending
+question. Switching is instruction-based, not a harness-native command or a
+mechanical guarantee that a model will obey. Existing sessions may retain older
+loaded instructions; explicitly ask them to reread `~/.agents/AGENTS.md`.
+
+For an actual local countdown, open `~/.agents/profiles/timer.html` in a browser
+(`open ~/.agents/profiles/timer.html` on macOS), select the duration, and click
+Start. It needs no server or dependencies. It does not send system notifications
+or communicate with the agent. HTML flow diagrams should likewise stay small and
+self-contained rather than launching the full Explain UI for every sketch.
+
+The launchers add the shared contract and selected profile to Pi/Claude system
+instructions or Codex developer instructions. They do not disable project rules,
+permissions, hooks, extensions, or skill discovery. Other installed hooks and
+stale adapter copies can still add context; this is not a claim that all harness
+startup overhead has been removed. Relevant repository safety still applies.
+
+## Coding workflow
+
+The coding workflow is experience-first and risk-aware: understand the user problem, make uncertain interactions visible, agree on behavior, then derive essential features and plan one end-to-end slice. System, behavior, feature, architecture, and implementation are views to move between, not whole-product phases. A PRD is optional; building the whole frontend before backend is not the goal. Local drafts are tracked by file path; published work is identified by GitHub issue number.
 
 ```
 /design: user problem + experience walkthrough
@@ -89,7 +138,7 @@ Slash commands in `commands/` extend the tool's native surface:
 | `/ch` | Create a handoff document to resume work in a future session |
 | `/rw [worktree-path]` | Recall dirty work through a detailed read-only subagent report; flag outdated context without resuming implementation |
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
-| `/wf` | Commit the current work, then push and open a PR; `/wf --no` or `/wf --no-review` skips only the nested commit pre-commit code-review gate (all approvals, staging/atomicity, verification, and PR gates remain required) |
+| `/wf` | Commit the current work with `commit-review`, then push and open a draft PR. |
 
 Workflow skills (`spawn`, `enforce`, `pr`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
 
@@ -135,29 +184,32 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 
 | Skill | Role |
 |-------|------|
-| `caveman/` | Default session chat style: concise, answer-first replies; normal prose for persisted writing, full detail when requested. `normal mode` disables it for the session; `/caveman` re-enables it. Skill only, no proxy or telemetry |
+| `caveman/` | Explicit concise, answer-first style; ordinary chat uses the shared contract's concise defaults without mandatory skill reads. `normal mode` disables the style; `/caveman` enables it |
+| `human/` | Explicit natural-writing guidance; `/human` writes, rewrites, or audits text while preserving facts and voice. Ordinary chat uses natural defaults without mandatory skill reads |
 | `explain/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants (Explain UI lives at `skills/explain/explain-ui/`) |
 | `prototype/` | Optional discovery for an unclear flow or finished-quality comparisons of competing UI designs; not required for an agreed production direction. Keep production approval separate |
 | `design/` | Frame user problems, visualize uncertain experiences, and derive essential features and numbered behavior cards; preserve evidence, assumptions, dependencies, and deferred ideas |
 | `to-issues/` | Turn design topics into behavior-focused local tickets under `context/issues/<slug>/`; after review and separate approval, optionally publish them to GitHub |
+| `jira-tpm/` (`~/.codex/skills`) | Organize Jira backlogs with actionable tickets, meaningful priorities, appropriate subtasks, real dependencies, and verified status |
 | `plan/` | Discuss meaningful backend choices from the frontend experience, then plan one current-code-based slice with test seams and Git baseline for approval |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
-| `research/` | Explicit question or next eligible item → missing facts only, local code first, linked cited evidence |
+| `research/` | Standalone questions use the concise Research profile without a delivery queue; queued coding investigations retain their selection and evidence rules |
 | `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |
 | `issue-delivery/` | One published ready issue with an explicit or uniquely linked approved, fresh plan → isolated worktree, TDD, cleanup, review, and human-approved draft PR |
 | `implement/` | Explicit or next eligible approved slice → worktree → TDD → code-judgment → code-review → human gates; refresh queue |
 | `wait-what/` | 3-line verbosity corrective |
 | `spawn/` | Max-context sub-agent decomposition |
 | `tdd/` | Red-green-refactor with seam discipline |
-| `code-review/` | Start at `SKILL.md` for shared policy and stage-specific references. Adversarial review with `--runner subagents\|opencode\|omp` (default: ask), independent reviewers, and adjudication of behavioral and evidenced readability/design findings. The existing `complexity-reviser` is the cleaner: proposal → parent evaluation/authorization → behavior-preserving implementation → tests and fresh independent validation. No overlapping agent; review-only, `--no-revise`, and implementation ownership boundaries remain. Behavior changes need user approval, including hardener fixes. External runners return observe-only reports; OpenCode uses `scripts/opencode-review.mjs`, OMP uses verified installed Herdr/CLI dispatch |
-| `code-judgment/` | Behavior-preserving cleanup before review — dead code, YAGNI, names, comments, module shape, cohesion/coupling |
+| `code-review/` | Start at `SKILL.md` for shared policy and stage-specific references. Adversarial review that triages the diff and spawns only the reviewers it needs (`--runner subagents\|opencode\|omp`, default: ask), and adjudication of behavioral and evidenced readability/design findings. The existing `complexity-reviser` directly performs authorized scoped test cleanup with retrospective evidence; unrelated design revisions retain proposal → parent evaluation/authorization → behavior-preserving implementation → tests and fresh independent validation. Fresh independent validation also follows automatic cleanup. No overlapping agent; review-only, `--no-revise`, and implementation ownership boundaries remain. Behavior changes need user approval, including hardener fixes. External runners return observe-only reports; OpenCode uses `scripts/opencode-review.mjs`, OMP uses verified installed Herdr/CLI dispatch |
+| `code-judgment/` | Behavior-preserving cleanup before review: dead code, YAGNI, names, comments, module shape, cohesion/coupling; includes authorized automatic test cleanup with retrospective Keep / Rewrite / Delete evidence and behavior contracts over implementation pins |
 | `pair-reviewer/` | Interactive reading partner for a branch or worktree the user names: resolves the target, gathers its plan, commit history, and code, then talks through the answers in 2-5 sentences and stops, critiquing only on request (`/skill:pair-reviewer <branch-or-worktree>`); depth follows you — evidence, provenance, and the `REVIEW-THINKING.md` method come when asked; "probe me" withholds a finding behind a location hint so you guess it first; read-only, hands off to `code-review/` for a full adversarial pass |
 | `grill-with-docs/` | Relentless interview, glossary + ADRs |
 | `domain-modeling/` | Sharpen terminology, ADR management |
-| `commit/` | Normal `commit` invocation runs the pre-commit code-review gate; `commit --no` or `commit --no-review` explicitly skips that gate only. Stage whole files when all changes belong to one concern and use hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition. |
+| `commit/` | Fast atomic commits, no subagents, for when you are the reviewer. Rules live in `references/` (grouping, messages, edge cases). |
+| `commit-review/` | Atomic commits for agent-built work: commit-pr-reviewer approves the exact plan, and an optional code-review gate runs first. Reuses `commit/references/`. |
 | `pr/` | Senior developer PR workflow: auto-detects single PR, stacked PRs (gh stack), or parallel worktrees; generates review-ready descriptions focused on rationale and behavior |
 | `split-dirty-worktree/` | Oversized dirty tree → mandatory `gh stack` for dependent concerns with a named branch-stack proposal; independent concerns may use separate worktrees. Includes commits per branch; read-only until approved (or end to end in autonomous mode), every PR a draft, then hands off to `commit/` and `pr/` |
 | `handoff/` | Session handoff documents |
@@ -165,11 +217,13 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `recall/` | Resume from handoff |
 | `recall-worktree/` | Reconstruct dirty work, history, and context freshness for the main agent through a lightweight subagent |
 | `later/` | Future improvement notes in `future/` |
-| `wf/` | Commit + PR in one flow (commit → pr); supports `wf --no` and `wf --no-review` as passthroughs to skip only the nested commit review gate. |
+| `board/` | Keep each open Herdr tab's goal, current step, next steps and blockers current on its Board card |
+| `wf/` | Commit + PR in one flow (commit-review → pr). |
 | `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning and explanation; human coding practice only when explicitly requested |
-| `tutor/` | Adaptive coaching: diagnose the specific gap, trace real code, and use focused explanations or closely matched worked examples |
+| `rederive/` | User-invoked only: re-derive a codebase's design decisions through Socratic problems, repository history, and incremental constraints (`/skill:rederive`) |
+| `tutor/` | User-invoked only: adaptive coaching to diagnose the specific gap, trace real code, and use focused explanations or closely matched worked examples |
 | `diagnose/` | Bug and performance diagnosis |
 | `security-review/` | Team-mode vulnerability research |
 | `e2e-testing-patterns/` | Playwright/Cypress testing standards |

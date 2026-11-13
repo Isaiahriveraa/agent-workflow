@@ -1,5 +1,10 @@
 # One outcome at a time
 
+This is the coding delivery contract, not the default for every terminal task.
+Session profiles in `AGENTS.md` own interaction. Sprint preserves the human's
+attempt-first reasoning; this contract governs authorized delivery and verification.
+Standalone research, ideation, and non-code schoolwork do not need this queue.
+
 Read this contract when design, research, tickets, planning, or delivery need to
 choose or refresh the next item. It does not authorize a later stage.
 

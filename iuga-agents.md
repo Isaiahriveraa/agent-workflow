@@ -17,7 +17,7 @@ This website is IUGA’s public front door and participation hub. It is not the 
 
 A visitor should be able to understand who IUGA is, see how it can be useful to them, and choose a clear next step. The site should make it easy to:
 
-1. Find upcoming **academic, social, and professional** events—from town halls and workshops to game nights, company panels, and networking.
+1. Find upcoming **academic, social, and career** events—from town halls and workshops to game nights, company panels, and networking.
 2. Find relevant academic, career, wellbeing, and community resources, including other iSchool student organizations.
 3. Share feedback that can help IUGA represent Informatics students.
 4. Join a committee, help with an event, or bring an idea to IUGA.
@@ -30,7 +30,7 @@ The value is broader than event promotion: IUGA helps students feel connected, i
 | Page | Job it should do |
 |---|---|
 | **Home** (`/`) | Be the centerpiece and orientation point. Explain IUGA plainly, introduce the main things it offers, and guide visitors to a useful next step. Make current events and other important destinations easy to discover. It should feel like a welcome and a map—not only a campaign poster or a generic hero. |
-| **Events** (`/events`) | Help students discover and act on IUGA events. Keep academic, social, and professional opportunities visible; IUGA is not only a career-networking organization. Make dates, times, location or format, audience, cost, and RSVP details clear when known. |
+| **Events** (`/events`) | Help students discover and act on IUGA events. Keep academic, social, and career opportunities visible; IUGA is not only a career-networking organization. Make dates, times, location or format, audience, cost, and RSVP details clear when known. |
 | **Resources** (`/resources`) | Curate routes to useful iSchool resources and student organizations. Make clear who provides each resource; a link in IUGA’s directory does not mean IUGA operates or guarantees that service. |
 | **Student Voice** (`/student-voice`) | Give students a clear way to share input that informs IUGA’s advocacy and programming. The current page requires UW sign-in. Do not promise anonymity, confidentiality, or a particular response unless the specific form says so. |
 | **Get Involved** (`/get-involved`) | Turn interest into participation: explain current committees and ways to help with events or propose ideas. Keep openings and contact routes current. |
@@ -63,7 +63,7 @@ After a worktree is merged, use `~/.agents/scripts/cleanup-worktree.sh <branch>`
 - **Welcome the range of Informatics students.** Use plain, inclusive language and authentic community context. Avoid implying that every student has the same schedule, interests, background, or access to an opportunity.
 - **Keep essential paths usable on small screens and with assistive technology.** Events and next steps are core functions, not decorative content. Preserve clear labels, readable details, keyboard access, and responsive layouts when changing the experience.
 
-For event categories, use the current public labels **Academic**, **Social**, and **Professional**. Some existing event data may use the legacy label **Career**; follow the app’s existing normalization rather than creating a duplicate category.
+For event categories, use the current public labels **Academic**, **Social**, and **Career**.
 
 ## Sources and project references
 
