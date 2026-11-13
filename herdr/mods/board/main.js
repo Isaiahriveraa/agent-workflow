@@ -1,25 +1,32 @@
 import { View, div, svg } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { focused, home, props, spaces, run, theme, readTextFile, watchFolder } from "herdr";
+import { exec, focused, home, panes, props, spaces, run, theme, readTextFile, watchFolder } from "herdr";
 import * as fs from "fs/promises";
-import { ageLabel, cardsFor, contextText, isDone, parseBoard, toggleOpen, peekLine, repoGroups, statusGroups, unseenCount } from "./board.js";
+import { ageLabel, cardsFor, contextText, isDone, parseBoard, tabFolder, toggleOpen, peekLine, repoGroups, statusGroups, unseenCount } from "./board.js";
 
 const MAX_OPEN = 3;
 const LOG_SHOWN = 2;
 const ICONS = "mods/workspace-chrome";
 const OWN = "mods/board";
 
-// Every open tab in Herdr, in its space order.
-function openTabs() {
+// Every open tab in Herdr, in its space order, with the folder its terminal is in
+// and that folder's repo (from `repos`, filled in the background by resolveRepos).
+function openTabs(repos) {
   const here = focused()?.tab;
+  const livePanes = panes();
   return spaces().flatMap((space) =>
-    space.tabs.map((tab) => ({
-      id: tab.id,
-      name: tab.name,
-      status: tab.status,
-      active: tab.id === here,
-      space: { id: space.id, name: space.name },
-    })));
+    space.tabs.map((tab) => {
+      const folder = tabFolder(livePanes, tab.id);
+      return {
+        id: tab.id,
+        name: tab.name,
+        status: tab.status,
+        active: tab.id === here,
+        space: { id: space.id, name: space.name },
+        folder,
+        repo: folder ? repos[folder] ?? "" : "",
+      };
+    }));
 }
 
 const shortAge = (iso, now) => ageLabel(iso, now).replace(" ago", "").replace("just now", "now");
@@ -45,6 +52,8 @@ export default class Board extends View {
   init(_props, cx) {
     this.folder = `${home()}/.config/herdr-app/board`;
     this.boards = {};
+    this.repos = {};
+    this.asking = new Set();
     this.mode = load("mode", "status");
     this.open = load("open", null); // tab ids, oldest opened first; null until the first fold
     this.seenAt = load("seenAt", null);
@@ -81,6 +90,26 @@ export default class Board extends View {
       }
       cx.notify();
     });
+  }
+
+  // The repo name for each folder a tab is in: the git root's name, or "" outside a
+  // repo. Asked once per folder; a folder's answer doesn't change while it exists.
+  resolveRepos(tabs, cx) {
+    for (const folder of new Set(tabs.map((tab) => tab.folder).filter(Boolean))) {
+      if (folder in this.repos || this.asking.has(folder)) continue;
+      this.asking.add(folder);
+      cx.spawn(async (cx) => {
+        try {
+          const result = await exec("git", ["rev-parse", "--show-toplevel"], { cwd: folder, timeout: 5000 });
+          const root = result.stdout.trim();
+          this.repos[folder] = root ? root.split("/").pop() : "";
+        } catch {
+          this.repos[folder] = "";
+        }
+        this.asking.delete(folder);
+        cx.notify();
+      });
+    }
   }
 
   markSeen() {
@@ -142,7 +171,7 @@ export default class Board extends View {
     const needs = card.status === "blocked" || card.status === "done";
     const fresh = unseenCount(board, this.seenAt);
     const title = board?.goal || card.title;
-    const path = (board?.root ?? "").replace(home(), "~");
+    const path = (card.root ?? "").replace(home(), "~");
     const peek = peekLine(card);
     const age = shortAge(board?.updated, now);
 
@@ -157,7 +186,7 @@ export default class Board extends View {
       .when(Boolean(age), (el) => el.child(div().flex_none().text_size(11).text_color(t.dim).child(age)))
       .when(Boolean(path), (el) => el.child(this.copied === `path-${card.tabId}`
         ? div().w(22).flex_none().text_size(10.5).text_color(t.done).child("✓")
-        : this.iconButton(`copy-${card.tabId}`, `${OWN}/copy.svg`, `Copy ${path}`, t, (_e, cx) => this.copy(board.root, `path-${card.tabId}`, cx))))
+        : this.iconButton(`copy-${card.tabId}`, `${OWN}/copy.svg`, `Copy ${path}`, t, (_e, cx) => this.copy(card.root, `path-${card.tabId}`, cx))))
       .child(svg(`${ICONS}/chevron-${isOpen ? "down" : "right"}.svg`).size(12).flex_none().text_color(t.dim));
 
     const shell = v_flex().id(`card-${card.tabId}`).mx(6).my(1).rounded(6).flex_none()
@@ -292,7 +321,8 @@ export default class Board extends View {
   render(cx) {
     const t = theme();
     const now = Date.now();
-    const tabs = openTabs();
+    const tabs = openTabs(this.repos);
+    this.resolveRepos(tabs, cx);
     const cards = cardsFor(tabs, this.boards);
     const tabOrder = tabs.map((tab) => tab.id);
     const groups = this.mode === "repo" ? repoGroups(cards, tabOrder) : statusGroups(cards, tabOrder);

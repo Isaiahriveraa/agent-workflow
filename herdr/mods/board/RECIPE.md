@@ -42,6 +42,8 @@ Top to bottom, in a 360px-wide panel with no background of its own (the layout's
 - The prompt hook updates `updated` on every prompt, so "updated" alone is not news; only new log lines and newly blocked or done tasks count.
 - Run through a symlink, `board.mjs` must compare real paths in its main-module check, or it silently does nothing.
 - `board.mjs` imports `scripts/project-context.mjs` from this repo to find the git root; copy it too, or replace it with `git rev-parse --show-toplevel`.
+- A tab's repo and folder come from its agent's live folder (`panes()` `cwd`, run through `git rev-parse --show-toplevel` once per folder), so tabs whose agent never writes a board still group by repo. A board's own `project`/`root` win.
+- Herdr doesn't hot-reload a mod folder that is a symlink: after editing through one, restart the copy (switch layouts and back).
 - Needs Node and `jq` (the hook).
 
 ## Done when

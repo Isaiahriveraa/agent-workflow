@@ -22,7 +22,9 @@ export function parseBoard(text) {
  * @behavior One card per open tab, then one per board whose tab is gone. Open tabs
  *   with a board come first (most urgent, then most recently updated); open tabs
  *   without one follow, dimmed; boards of closed tabs come last.
- * @param tabs [{id, name, status, space: {id, name}}]: the open tabs, in Herdr's order
+ * @param tabs [{id, name, status, space: {id, name}, folder?, repo?}]: the open tabs, in
+ *   Herdr's order; folder and repo come from the tab's live terminal and are used when
+ *   no agent has written a board (a board's own root and project win)
  * @param boards {[tabId]: board}: boards read from the board folder
  * @returns [{tabId, spaceId, title, space, project, status, board, placement, active}]
  *   where placement is "open", "unstarted" or "closed"
@@ -36,7 +38,8 @@ export function cardsFor(tabs, boards) {
 			spaceId: tab.space.id,
 			title: tab.name,
 			space: tab.space.name,
-			project: board?.project ?? "",
+			project: board?.project || tab.repo || "",
+			root: board?.root || tab.folder || "",
 			status: tab.status ?? null,
 			board,
 			placement: board ? "open" : "unstarted",
@@ -55,6 +58,7 @@ export function cardsFor(tabs, boards) {
 			title: "Closed tab",
 			space: "",
 			project: board.project ?? "",
+			root: board.root ?? "",
 			status: null,
 			board,
 			placement: "closed",
@@ -164,4 +168,14 @@ export function isDone(card) {
 export function toggleOpen(openIds, tabId, max) {
 	if (openIds.includes(tabId)) return openIds.filter((id) => id !== tabId);
 	return [...openIds, tabId].slice(-max);
+}
+
+/**
+ * @behavior The folder a tab is working in: its agent's terminal's live folder, else
+ *   its first terminal's. Null when no terminal reports one (a mod-only tab).
+ * @param panes Herdr's panes(): [{tab, terminal, cwd, app}]
+ */
+export function tabFolder(panes, tabId) {
+	const terminals = panes.filter((pane) => pane.tab === tabId && pane.terminal && pane.cwd);
+	return (terminals.find((pane) => pane.app) ?? terminals[0])?.cwd ?? null;
 }

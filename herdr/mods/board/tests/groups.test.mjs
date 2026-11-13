@@ -56,3 +56,31 @@ test("a task is done when the tab says so or its step starts with done", () => {
 test("a tab with only a stamped prompt shows what was asked", () => {
 	assert.equal(peekLine({ board: { last_prompt: "fix login" } }), "asked: fix login");
 });
+
+import { cardsFor, tabFolder } from "../board.js";
+
+test("a tab's folder is its agent's live folder, else its first terminal's", () => {
+	const panes = [
+		{ tab: "a", terminal: "t1", cwd: "/home/me", app: null },
+		{ tab: "a", terminal: "t2", cwd: "/code/web", app: "opencode" },
+		{ tab: "a", terminal: null, cwd: null, app: null },
+		{ tab: "b", terminal: "t3", cwd: "/tmp", app: null },
+	];
+	assert.equal(tabFolder(panes, "a"), "/code/web");
+	assert.equal(tabFolder(panes, "b"), "/tmp");
+	assert.equal(tabFolder(panes, "c"), null);
+});
+
+test("a tab with no board still gets its repo and folder from its terminal", () => {
+	const tab = { id: "a", name: "2", status: "working", space: { id: "s", name: "S" }, folder: "/code/web/src", repo: "web" };
+	const [card] = cardsFor([tab], {});
+	assert.equal(card.project, "web");
+	assert.equal(card.root, "/code/web/src");
+});
+
+test("a board's own project and root win over the terminal's", () => {
+	const tab = { id: "a", name: "2", status: "working", space: { id: "s", name: "S" }, folder: "/x", repo: "x" };
+	const [card] = cardsFor([tab], { a: { project: "api", root: "/code/api" } });
+	assert.equal(card.project, "api");
+	assert.equal(card.root, "/code/api");
+});
