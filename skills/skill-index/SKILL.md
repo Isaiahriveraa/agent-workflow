@@ -8,6 +8,21 @@ disable-model-invocation: true
 
 You don't remember every skill, so ask.
 
+## Session profiles come first
+
+The shared `AGENTS.md` selects interaction before delivery skills. Use `sprint`
+for short attempt-first engineering, `ideation` for attempt-first problem and
+option discovery, `school-learn` for course practice, `school-fast` for assignment
+completion, and `research` for concise evidence-based answers. These are profiles
+under `profiles/`, not additional skill pipelines. `coding` retains agent-written
+delivery. Terminal launchers select one session; conversational mode changes do
+not rewrite shared files. Research is also an activity within every mode.
+
+Do not load this index at startup when the selected profile already owns the task.
+The main delivery flow below applies to software delivery, not ordinary schoolwork,
+standalone research, or ideation. Sprint's attempt-first ownership takes precedence
+over default agent-written reasoning; coding safety and checks still apply.
+
 ## The main flow: idea → ship
 
 Start with the user problem and one intended outcome. Follow the experience-first,
@@ -35,7 +50,7 @@ Use the parts of this route that answer the current question:
 8. **Need to see or try the experience?** → **`/skill:prototype`** — discovery mode explores one flow cheaply; visual-comparison mode presents finished-quality alternatives when appearance or motion is the question. Record observations and return to design or the selected plan; selection does not authorize production work.
 9. **Need a spec draft or issue?** → **`/skill:to-spec`** — synthesize the conversation locally (Problem/Stories/Decisions/OutOfScope); review before separate exact-content publication approval. No code/file-path planning.
 10. **Standalone cited research?** → **`/skill:research`** — answer a concrete question using local evidence and primary sources; a standalone question needs no delivery queue.
-11. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit`).
+11. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit-review` for agent-built work, `/skill:commit` when the user reviews).
 
 Each stage owns a different question: design says what problem to solve, a ticket records the agreed behavior, a plan chooses how to change this repository, and delivery implements one approved ticket. Downstream stages reuse upstream intent and investigate only what their stage needs.
 
@@ -52,10 +67,10 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 
 ## Code quality & review
 
-- **Clean and simplify a diff before review** → **`/skill:code-judgment`** — behavior-preserving cleanup: dead code, YAGNI, names, comments, module shape, cohesion/coupling. Runs after implementation, before `code-review`.
+- **Clean and simplify a diff before review** → **`/skill:code-judgment`** — behavior-preserving cleanup: dead code, YAGNI, names, comments, module shape, cohesion/coupling. Includes authorized automatic test cleanup with retrospective Keep / Rewrite / Delete evidence and behavior contracts over implementation pins. Runs after implementation, before `code-review`.
 
-- **Full code review** → **`/skill:code-review`** — start at `SKILL.md`, which routes by mode and loads stage-specific references only as needed. Choose `--runner subagents|opencode|omp` (default: ask). Independent reviewers and an adjudicator validate behavioral and concrete readability/design findings; the existing `complexity-reviser` is the cleaner: proposal first, parent evaluation and authorization, behavior-preserving implementation, tests, then fresh independent validation. No overlapping cleaner agent. Review-only and `--no-revise` skip cleanup; implementation ownership stays unchanged. Behavior-changing fixes require the user's decision, including during hardening. External OpenCode/OMP runs use `--review-only --report <path>`; OpenCode has `scripts/opencode-review.mjs`, while OMP uses verified installed Herdr/CLI dispatch.
-- **Question what a branch's code means, or critique it interactively** → **`/skill:pair-reviewer <branch-or-worktree>`** — resolves the target, gathers its plan, commit history, and code, then answers the current question in short plain conversation and stops, critiquing only when asked. Depth follows you: evidence, provenance, and the review method in `REVIEW-THINKING.md` come on request. Ask it to "probe me" and it hints at a defect instead of naming it, so you guess first. Read-only on the target; user-invoked.
+- **Full code review** → **`/skill:code-review`** — start at `SKILL.md`, which routes by mode and loads stage-specific references only as needed. Choose `--runner subagents|opencode|omp` (default: ask). Independent reviewers and an adjudicator validate behavioral and concrete readability/design findings; the existing `complexity-reviser` directly performs authorized scoped test cleanup with retrospective Keep / Rewrite / Delete evidence. Unrelated design revisions retain proposal first, parent evaluation and authorization, behavior-preserving implementation, tests, then fresh independent validation. Fresh independent validation also follows automatic cleanup. No overlapping cleaner agent. Review-only and `--no-revise` skip cleanup; implementation ownership stays unchanged. Behavior-changing fixes require the user's decision, including during hardening. External OpenCode/OMP runs use `--review-only --report <path>`; OpenCode has `scripts/opencode-review.mjs`, while OMP uses verified installed Herdr/CLI dispatch.
+- **Question what a branch's code means, or critique it interactively** → **`/skill:pair-reviewer <branch-or-worktree>`** — resolves the target, gathers its plan, commit history, and code, then answers the current question in short plain conversation and stops, critiquing only when asked. Invokes `codebase-design` for a proportional design lens; ask to learn a principle for a concrete example from the target. Depth follows you: evidence, provenance, and the review method in `REVIEW-THINKING.md` come on request. Ask it to "probe me" and it hints at a defect instead of naming it, so you guess first. Read-only on the target; available to Claude when requested by name.
 - **Security audit** → **`/skill:security-review`**.
 
 ## Architecture & design
@@ -79,6 +94,7 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 ## Planning & execution
 
 - **Plan work** → **`/plan [ticket]`** — explicit target or next eligible ticket, inspected against current code: one reviewable outcome, test seams, baseline, and verification.
+- **See, decide on, and approve a plan** → **`/skill:plan-map [plan-path]`** — publishes Plan Studio, a private Figma-like workspace for the plan: what changes, the whole system, a step-by-step build-up, decision cards, and comments that reach this terminal; the user approves there. Required before presenting a `/plan` (plan-lint) and right after plan mode (hooks).
 - **Understand or present an existing plan** → **`/skill:plan-standup-notes <plan-path>`** — turns the plan into compact iPad handwriting notes, a 30-second standup, and senior-level tradeoffs; explanation only, not implementation.
 - **Design brief → tickets** → **`/skill:to-issues`** — drafts behavior-focused tickets without waiting for an implementation plan; after review and separate approval, optionally publishes them to GitHub.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues for discovery, not implementation tickets; planning now lives in `/plan`.
@@ -86,7 +102,9 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 - **Agent too verbose** → say **`wait-what`** — forces a short, direct answer (3 lines).
 ## Session management
 
-- **Default chat style** → **`caveman`** — load at session start for concise, answer-first replies. Keep learning and decision explanations useful; persisted writing stays normal. Say `normal mode` to disable it for the session or `/caveman` to re-enable it.
+- **Natural conversation and human-sounding writing** → **`human`** — use for explicit style requests; the shared contract supplies concise, natural defaults without mandatory startup reads. Human keeps sentences natural; Caveman keeps replies concise. `/human` writes or rewrites; an audit diagnoses without rewriting. Preserve facts and required technical evidence. `stop human` disables Human; `normal mode` disables both defaults.
+
+- **Default chat style** → **`caveman`** — use when requested for concise, answer-first replies. Keep learning and decision explanations useful; persisted writing stays normal. Say `normal mode` to disable it for the session or `/caveman` to re-enable it.
 
 - **Handoff to new session** → **`/skill:handoff`** — compact conversation into handoff doc. Shorthand: **`/skill:ch`** — same flow, optional description.
 - **Resume from handoff** → **`/skill:recall`** — pick up where a handoff left off.
@@ -99,16 +117,20 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 
 ## Productivity
 
-- **Understand current code or practice reasoning** → **`/skill:tutor`** — diagnose the specific gap, trace real code, and choose a hint, focused explanation, or closely matched worked example. Hands-on practice does not complete the learner's task; ordinary delivery stays agent-written.
+- **Organize or update Jira work** → **`jira-tpm`** — inspect the live project, write actionable tickets, choose Epics and subtasks, assign meaningful priorities, link real blockers, and verify the board after edits.
+- **Re-derive a codebase's design decisions** → **`/skill:rederive`** — user-invoked only; learn through Socratic problems and incremental constraints using repository history and structure.
+- **Understand current code or practice reasoning** → **`/skill:tutor`** — user-invoked only; diagnose the specific gap, trace real code, and choose a hint, focused explanation, or closely matched worked example. Hands-on practice does not complete the learner's task; ordinary delivery stays agent-written.
 - **Learning sessions** → **`/skill:learn-plan`** — optional planning and explanation overlay; hands-on coding practice only when explicitly requested. Understanding while building does not require this skill. Ordinary backend collaboration stays in `/plan`.
 - **Capture a future idea** → **`/skill:later`** — record a future improvement note in `future/` without implementing.
-- **Commit + PR in one flow** → **`/skill:wf`** — commit skill then pr skill, two approval gates.
+- **Show what this Herdr tab is doing on the Board** → **`/skill:board`** — record goal, current step, next steps and blockers for this tab's card. Model-invoked during work; it does not replace the plan.
+- **Commit + PR in one flow** → **`/skill:wf`** — commit-review then pr, two approval gates.
 
 ## Quick utilities
 
 - **Resolve merge conflicts** → **`/skill:resolving-merge-conflicts`** — structured conflict resolution.
 - **Dirty tree too big to commit** → **`/skill:split-dirty-worktree`** — inventory uncommitted changes and group them into concerns; dependent concerns require `gh stack` and a named branch-stack proposal, while independent concerns may use separate worktrees. Plan the commits for each branch. Read-only until approved, or end to end when the user says to just split it (autonomous mode); every PR opens as a draft. Hands the plan to `commit` and `pr`.
-- **Commit** → **`/skill:commit`** — normal `commit` invocation runs the pre-commit code-review gate; `commit --no` explicitly skips that gate only. Stage whole files when all changes belong to one concern and use hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition.
+- **Commit (you review)** → **`/skill:commit`**: fast atomic commits with no subagents.
+- **Commit (agent work, independent check)** → **`/skill:commit-review`**: same grouping, plus commit-pr-reviewer approval and an optional code-review gate. Stage whole files when all changes belong to one concern and use hunk staging only for mixed-concern files. Splitting is responsibility-first: the plan opens with a responsibility inventory, and a subject that joins two stories with "and" is a failure condition.
 - **PR** → **`/skill:pr`** — auto-detects strategy (single PR, gh stack, or parallel worktrees) and generates review-ready PR descriptions focused on rationale and behavior.
 - **Herdr terminal multiplexer** → **`/skill:herdr`** — inspect and control workspaces, tabs, panes, and coding agents inside Herdr.
-- **Keep chatting while work runs in the background** → **`/skill:orchestration`** — assess a bounded assignment together, obtain approval, then use a background subagent or an independent CLI in its own Herdr pane/worktree. Keep coordinator focus, progress logs, and report-first handoffs; a Herdr notice is not an automatic model wake-up.
+- **Keep chatting while work runs in a subagent** → **`/skill:orchestration`** — assess a bounded assignment together, obtain approval, then dispatch a subagent (default). Use an isolated Herdr pane/worktree CLI worker only when the user explicitly asks for Herdr or a separate agent session; details in the skill's `references/herdr.md`.
