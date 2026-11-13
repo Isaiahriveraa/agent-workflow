@@ -3,9 +3,20 @@ name: research
 description: Investigate missing facts against local code and primary sources, recording cited evidence in the repo. Use for "research next item" without a target, a selected ticket's evidence gaps, an explicit research question, or requested docs/API reading legwork.
 ---
 
-Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
+## Standalone questions and in-mode research
 
-## Select the research scope
+For an explicit question outside a delivery queue, use `~/.agents/profiles/research.md`.
+Do not load the coding workflow, create tickets, reconcile GitHub state, or spawn
+a background agent. Inspect only sources relevant to the question. Return a short
+answer with decisive evidence and uncertainty; save a report only when requested
+or needed for an agreed ongoing investigation. A bounded research activity inside
+Sprint or School returns to that mode without bypassing the human's pending attempt.
+
+The remaining delivery-specific selection and artifact rules apply only when the
+request names a delivery item or asks for the next queued research item. In that
+case, read `~/.agents/references/workflow.md` as the authoritative queue contract.
+
+## Select the delivery research scope
 
 An explicit ticket or question takes priority. Otherwise use the unique initiative indicated by the conversation and repository artifacts; ask only when choosing between initiatives would materially change scope. Reconcile queue claims against current code, tests, and GitHub before running, from the target git repository:
 

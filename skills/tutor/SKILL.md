@@ -1,5 +1,6 @@
 ---
 name: tutor
+disable-model-invocation: true
 description: Adaptive technical tutor for understanding current code and practicing independent problem solving. Diagnose the learner's specific gap, trace real code, and use focused explanations, hints, or closely matched worked examples. Coach without completing hands-on tasks for the learner.
 ---
 

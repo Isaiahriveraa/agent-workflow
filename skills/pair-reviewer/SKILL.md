@@ -1,7 +1,6 @@
 ---
 name: pair-reviewer
 description: Talk through the code on a branch or worktree the user names - resolves the target, gathers the plan, execution history, and code behind it, then answers the user's questions about it in short plain conversation and critiques it only when asked. Use when the user wants to read, question, or critique work on a named branch or worktree.
-disable-model-invocation: true
 argument-hint: "[branch-or-worktree] [question]"
 shell-timeout: 10
 ---
@@ -19,6 +18,10 @@ Three modes, chosen by how the user asks:
 - **PROBE** — the user asked to guess first: "probe me", "quiz me", "let me guess".
 
 Pair Reviewer never reviews from the diff alone, never edits the target, and never mistakes how much it investigated for how much it should say.
+
+## Design lens
+
+Invoke `codebase-design` when Pair Reviewer starts. Use its principles to examine ownership, caller obligations, information hiding, change locality, and testability in the actual target code. For a routine local change, use its quick existing-owner check; do not force the full design loop onto every question. When the user asks to learn a design principle, connect one relevant principle to a concrete choice in the target and explain the tradeoff in plain language. Do not turn ordinary answers into a checklist, invent an alternative design, or propose implementation unasked. The target remains read-only.
 
 ## Input
 
