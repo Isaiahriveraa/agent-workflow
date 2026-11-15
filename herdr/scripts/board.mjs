@@ -78,6 +78,64 @@ export function applyStamp(board, { prompt, at, by }) {
 	return { ...board, last_prompt: text, updated: at, by, log: repeat ? board.log ?? [] : appendLog(board.log, [{ at, kind: "prompt", text }]) };
 }
 
+const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
+
+function transcriptEntries(jsonl) {
+	return jsonl.split("\n").filter(Boolean).flatMap((text) => {
+		try {
+			return [JSON.parse(text)];
+		} catch {
+			return [];
+		}
+	});
+}
+
+// A real prompt from the person: plain text, not a tool result the agent got back.
+function startsTurn(entry) {
+	if (entry.type !== "user") return false;
+	const content = entry.message?.content;
+	return typeof content === "string" || (Array.isArray(content) && content.some((block) => block.type === "text"));
+}
+
+function plainText(markdown) {
+	return markdown
+		.replace(/```[\s\S]*?```/g, " ")
+		.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+		.replace(/`([^`]*)`/g, "$1")
+		.replace(/\*\*|__|^#+\s*/gm, "")
+		.replace(/\s+/g, " ")
+		.trim();
+}
+
+function firstSentence(text) {
+	const match = text.match(/^(.+?[.!?])(\s|$)/);
+	return match ? match[1] : text;
+}
+
+/**
+ * @behavior One plain-text line for the latest turn in a Claude transcript (JSONL text),
+ *   or null when the turn used no tools (a chat-only answer is not logged). It names the
+ *   files it edited, up to three, then the first sentence of the reply.
+ */
+export function turnLine(jsonl) {
+	const entries = transcriptEntries(jsonl);
+	const start = entries.findLastIndex(startsTurn);
+	if (start < 0) return null;
+	const blocks = entries
+		.slice(start + 1)
+		.filter((entry) => entry.type === "assistant" && Array.isArray(entry.message?.content))
+		.flatMap((entry) => entry.message.content);
+	const tools = blocks.filter((block) => block.type === "tool_use");
+	if (tools.length === 0) return null;
+
+	const files = [...new Set(tools.filter((tool) => EDIT_TOOLS.has(tool.name)).map((tool) => path.basename(tool.input?.file_path ?? tool.input?.notebook_path ?? "")).filter(Boolean))];
+	const reply = plainText(blocks.filter((block) => block.type === "text").map((block) => block.text).at(-1) ?? "");
+	const edited = files.length > 0 ? `Edited ${files.slice(0, 3).join(", ")}${files.length > 3 ? ` +${files.length - 3}` : ""}` : "";
+	const fallback = tools.some((tool) => tool.name === "Bash") ? "Ran commands" : "Used tools";
+	const summary = reply ? firstSentence(reply) : "";
+	return clip([edited || fallback, summary].filter(Boolean).join(": "), LIMITS.item);
+}
+
 export function tabFromLabels(labels) {
 	return labels?.["herdr.tab"] || null;
 }
@@ -155,6 +213,7 @@ export function parseArgs(argv) {
 			case "--log": (parsed.changes.log ??= []).push({ text: value(), kind: "step" }); break;
 			case "--decision": (parsed.changes.log ??= []).push({ text: value(), kind: "decision" }); break;
 			case "--prompt": parsed.prompt = value(); break;
+			case "--transcript": parsed.transcript = value(); break;
 			default: throw new Error(`unknown option ${flag}`);
 		}
 	}
@@ -185,7 +244,14 @@ function run(argv) {
 		writeBoardAtomic(file, { ...applyStamp(existing, { prompt: args.prompt, at, by }), root, project });
 		return;
 	}
-	throw new Error("usage: board.mjs set | show | stamp --prompt T");
+	if (args.command === "turn") {
+		if (args.transcript === undefined) throw new Error("turn needs --transcript");
+		const line = turnLine(fs.readFileSync(args.transcript, "utf8"));
+		if (line === null) return;
+		writeBoardAtomic(file, { ...applySet(existing, { log: [{ text: line, kind: "step" }] }, { at, by }), root, project });
+		return;
+	}
+	throw new Error("usage: board.mjs set | show | stamp --prompt T | turn --transcript FILE");
 }
 
 // Compare real paths: the command is usually run through a symlink (~/.config/herdr/scripts).

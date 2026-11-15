@@ -15,6 +15,7 @@ import {
 	readBoard,
 	resolveTab,
 	tabFromLabels,
+	turnLine,
 	writeBoardAtomic,
 } from "./board.mjs";
 
@@ -196,4 +197,50 @@ test("each prompt joins the trail once", () => {
 	board = applyStamp(board, { prompt: "add tests", at: "T3", by: "x" });
 	assert.deepEqual(board.log.map((e) => [e.kind, e.text]), [["prompt", "fix login"], ["prompt", "add tests"]]);
 	assert.equal(board.goal, "");
+});
+
+const line = (entry) => JSON.stringify(entry);
+const userPrompt = (text) => line({ type: "user", message: { role: "user", content: text } });
+const toolResult = () => line({ type: "user", message: { role: "user", content: [{ type: "tool_result", content: "ok" }] } });
+const assistant = (...blocks) => line({ type: "assistant", message: { role: "assistant", content: blocks } });
+const edit = (file) => ({ type: "tool_use", name: "Edit", input: { file_path: `/repo/src/${file}` } });
+const text = (value) => ({ type: "text", text: value });
+
+test("a turn that edited files logs the files and the first sentence of the reply", () => {
+	const transcript = [
+		userPrompt("fix the login redirect"),
+		assistant({ type: "tool_use", name: "Grep", input: {} }),
+		toolResult(),
+		assistant(edit("login.ts"), edit("session.ts")),
+		toolResult(),
+		assistant(text("**Fixed** the `login` redirect. Tests pass now.")),
+	].join("\n");
+	assert.equal(turnLine(transcript), "Edited login.ts, session.ts: Fixed the login redirect.");
+});
+
+test("a turn with only tool calls and no reply still logs what ran", () => {
+	const transcript = [userPrompt("run the tests"), assistant({ type: "tool_use", name: "Bash", input: { command: "npm test" } })].join("\n");
+	assert.equal(turnLine(transcript), "Ran commands");
+});
+
+test("a chat-only turn logs nothing", () => {
+	const transcript = [userPrompt("what does this do?"), assistant(text("It stamps the board."))].join("\n");
+	assert.equal(turnLine(transcript), null);
+});
+
+test("only the latest turn counts, and tool results don't start a new turn", () => {
+	const transcript = [
+		userPrompt("old task"),
+		assistant(edit("old.ts"), text("Old work done.")),
+		userPrompt("new task"),
+		assistant(edit("new.ts")),
+		toolResult(),
+		assistant(text("New work done.")),
+	].join("\n");
+	assert.equal(turnLine(transcript), "Edited new.ts: New work done.");
+});
+
+test("more than three edited files are counted, not listed", () => {
+	const transcript = [userPrompt("rename"), assistant(edit("a.ts"), edit("b.ts"), edit("c.ts"), edit("d.ts"), text("Renamed it."))].join("\n");
+	assert.equal(turnLine(transcript), "Edited a.ts, b.ts, c.ts +1: Renamed it.");
 });

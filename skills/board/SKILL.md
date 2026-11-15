@@ -1,6 +1,6 @@
 ---
 name: board
-description: "Keep this Herdr tab's Board card current: goal, current step, next step, blockers, and a short log of milestones and decisions, so the user can catch up on every tab at a glance. Use when you start a task in a Herdr tab, finish a step, make a decision, get blocked, or finish."
+description: "Keep this Herdr tab's Board card current: goal, current step, next step, blockers, and decisions. A hook adds a plain one-line log entry for every turn. Use when you start a task in a Herdr tab, finish a step, make a decision, get blocked, or finish."
 ---
 # Board
 
@@ -9,16 +9,16 @@ description: "Keep this Herdr tab's Board card current: goal, current step, next
 | When | Flags |
 |---|---|
 | Start a task | `--goal "<what this tab is for>" --now "<step>" --next "<step>"` |
-| Finish a step | `--now "<new step>"` (the old step joins the trail by itself); add `--log "<outcome>"` only when the outcome says more than the step name |
+| Finish a step | `--now "<new step>"` (the old step joins the trail by itself) |
 | Make a decision | `--decision "<chose X over Y>"` |
 | Blocked / unblocked | `--blocker "<what you need>"` / `--clear-blockers` |
 | Done | `--now "done: <outcome>" --clear-blockers` |
 
-The trail also records each user prompt automatically. Log only what helps the user resume after a week away:
-- Milestones, decisions (with what you rejected), blocked or unblocked, done.
-- Never reads, searches, retries, single edits or "starting X".
-- At most one line per 10–15 minutes of work; merge small steps.
-- Start with a verb and name the outcome ("Wired rate limiter to /login", not "Edited limiter.ts"). About 60 characters.
+The Stop hook (`~/.agents/hooks/board-turn.sh`) writes the log itself: after each turn that used tools, it adds one plain line, such as "Edited login.ts: Fixed the login redirect." Do not add `--log` lines for routine work; the hook already did. Use `--decision` only for real choices, with what you rejected.
+
+Rules:
+- `--next` and `--blocker` replace their whole list; repeat the flag per item.
+- Outside a Herdr tab it exits 1 and writes nothing. If it fails or is missing, say so once and carry on.
 
 Rules:
 - `--next` and `--blocker` replace their whole list; repeat the flag per item.
