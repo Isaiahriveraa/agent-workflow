@@ -15,6 +15,7 @@ This is technical design guidance, not permission to implement, bypass plan appr
 - **Meaningful design change:** use the five-step loop below when ownership, invariants, persisted facts, caller obligations, or dependency direction change.
 - **Backend or persisted-data work:** read [backend and schema checks](references/backend-and-schema.md), selecting only questions relevant to the actual risk. Even an apparently small migration needs a historical-data and deployment-compatibility check.
 - **Legacy code or external effects:** read [legacy and integration checks](references/legacy-and-integration.md) when safe change or test isolation is difficult.
+- **Interface shape:** apply [software design](../../references/software-design.md), especially the generalize-or-specialize questions and design-it-twice, before fixing a new interface.
 - **Rationale and attribution:** consult [sources](references/sources.md) when explaining or revisiting a principle; it is not a mandatory reading list for each task.
 
 ## Design loop

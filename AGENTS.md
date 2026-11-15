@@ -69,8 +69,12 @@ critique against these ideas by name so I learn the theory, not just the fix.
 
 - **A Philosophy of Software Design (Ousterhout)** — complexity is the enemy.
   Favor deep modules: small, stable interfaces over rich internals. No shallow
-  wrappers, pass-through layers, or classitis. Hide information; pull
-  complexity down. A fix-one-break-another loop is a design problem.
+  wrappers, pass-through layers, or classitis. Hide each design decision in one
+  module; pull complexity down; define errors out of existence. Shape
+  interfaces somewhat general-purpose (around the concept, not today's caller)
+  while implementing only today's needs. Write for the reader: obvious beats
+  clever. A fix-one-break-another loop is a design problem. Apply
+  `references/software-design.md` whenever you write or review code.
 - **Clean Code naming and clarity** — code explains itself. Names state the
   fact in product terms (`unpaidInvoices`, not `data`); a comment that defines a
   name is a failed name. Straightforward flow over clever compression. No
@@ -85,7 +89,9 @@ critique against these ideas by name so I learn the theory, not just the fix.
   — extract only once real uses reveal a stable contract; one source of truth
   for a concept, but don't merge values that only look equal.
 - **YAGNI** — build only what a named, present requirement needs. No
-  speculative generality, defensive padding, or unrequested polish.
+  speculative generality, defensive padding, or unrequested polish. A general
+  interface shape that replaces several narrow methods is not speculative; new
+  options, knobs, or extension points without a present need are.
 - **TDD and contract tests** — failing test first; test behavior through the
   caller's interface. A good test survives a refactor and fails on a real bug.
 - **Locality, explicit errors, enforced architecture** — keep what changes

@@ -44,6 +44,7 @@ You are ambitious about structural simplification (code judo): look for reframes
 - tests that pin incidental implementation details rather than a product guarantee; inspect hardener additions too. Use [test cleanup](../references/test-cleanup.md): propose **Keep / Rewrite / Delete**, name the lost guarantee or surviving/replacement coverage, and apply the refactor-survival and plausible-defect tests. Exact fixture text and accessibility markup can protect real contracts; unique geometry protection stays until equivalent browser coverage runs. Do not infer redundancy from assertion syntax or class names alone.
 - control flow that hides a decision in nesting, compression, or helper hops; show the concrete reading path and a simpler equivalent
 - shallow extraction that forces callers to assemble implementation details; preserve useful deep modules and precise domain/framework terms
+- any red flag in `references/software-design.md` (information leakage, pass-through, special-general mixture, overexposure, conjoined methods, nonobvious code); name the flag in the finding
 
 ## Output Format
 
