@@ -18,12 +18,14 @@ if (!modes.includes(mode) || !['pi', 'claude', 'codex'].includes(harness)) {
   process.exit(2);
 }
 
-const profile = mode === 'coding' ? 'ship-fast' : mode;
 let prompt;
 try {
+  const profileBody = mode === 'coding'
+    ? 'Coding is the default mode defined in AGENTS.md; no extra profile applies.\n'
+    : fs.readFileSync(path.join(root, 'profiles', `${mode}.md`), 'utf8');
   prompt = `Workflow hub: ${root}\nActive session profile: ${mode}\n` +
     'Use this explicit session selection instead of inferring a mode. Resolve hub-relative references against the workflow hub above. AGENTS.md is already loaded by the harness.\n\n' +
-    fs.readFileSync(path.join(root, 'profiles', `${profile}.md`), 'utf8');
+    profileBody;
 } catch (error) {
   console.error(`workflow-session: ${error.message}`);
   process.exit(1);

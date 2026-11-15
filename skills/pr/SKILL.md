@@ -49,7 +49,7 @@ When invoked, the skill evaluates the current branch against the target base bra
 
 ### Strategy 3: Parallel Worktrees / Independent PRs — *Mutually Independent Concerns*
 - **When auto-detected**: The branch mixes multiple concerns that do *not* depend on each other (e.g. an unrelated bugfix noticed mid-task, a tooling/deps chore, and a new feature).
-- **Why parallel worktrees**: Independent concerns should never be grouped together or block each other. Per `AGENTS.md` Concern Discipline, each belongs in its own isolated worktree (`~/.agents/scripts/new-worktree.sh <branch>`) targeting `main`/`development` directly.
+- **Why parallel worktrees**: Independent concerns should never be grouped together or block each other. Per AGENTS.md **Choose the worktree before implementation**, propose separate worktrees and create them only after the human chooses that split; each then gets its own isolated worktree (`~/.agents/scripts/new-worktree.sh <branch>`) targeting `main`/`development` directly.
 - **Execution**: Extracts the independent concerns into dedicated worktrees/branches, allowing each to be reviewed, approved, and merged in parallel without coupling.
 
 ---
@@ -71,7 +71,7 @@ Within each PR, **each commit addresses exactly one logical unit**. A single PR 
 
 ## Auto-Detection & Approval Gate
 
-**The skill MUST inspect and write the strategy, and get commit-pr-reviewer approval, before touching Git state, creating branches, or opening PRs.**
+**The skill MUST inspect and write the strategy, and get commit-pr-reviewer approval, before touching Git state, creating branches, or opening PRs.** The reviewer checks quality; the human's approval to publish comes from invoking this skill or saying so, never from the reviewer.
 
 ### Step 1: Discovery & Analysis
 Run read-only inspection commands:

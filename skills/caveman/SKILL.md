@@ -44,7 +44,7 @@ No greeting, hedging, pleasantries, recap, or closer. No "Sure!", "Let me", "I'l
 
 ### 4. Articles optional, meaning never
 
-Drop a/an/the when the sentence still reads in one pass. Fragments fine. Never drop not/never/no/only/except. Numbers and units exact.
+Drop a/an/the when the sentence still reads in one pass. Fragments fine when `human` is not active; with `human`, keep grammatical sentences. Never drop not/never/no/only/except. Numbers and units exact.
 
 Bad: "Migration drop column backup first."
 Good: "Back up first. Then run migration: it drops the column."
