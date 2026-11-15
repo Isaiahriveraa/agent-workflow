@@ -72,7 +72,6 @@ Two things make this a visual comparison rather than a single discovery flow:
 
 This is the *pre-implementation* gate for an unresolved visual direction, not every frontend change. The main agent builds the prototype and, when implementation is requested and its gates are satisfied, the production change; sub-agents research, they never write UI code. The prototype gets its own throwaway worktree; the approved winning version is rewritten as production code in a fresh worktree created from it. Cleanup after merge requires the normal destructive-action approval.
 
-Not to be confused with `/skill:explain`, which is the hub's reusable browser workspace (Excalidraw whiteboard + live previews) for explaining a design, logic, or schema question that is *not* your app's UI.
 
 ### When to run visual comparison
 

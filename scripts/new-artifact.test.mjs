@@ -90,11 +90,10 @@ describe("new-artifact.py", () => {
 		assert.ok(designOutput.includes(path.join(designRoot, "00-index.md")));
 		const design = fs.readFileSync(path.join(designRoot, "00-index.md"), "utf8");
 		assert.match(design, /type: design/);
-		for (const heading of ["## What we're doing and why", "## Raw intent (your words)", "## Topics", "## Order, dependencies, and parallel work", "## Open questions", "## Status"]) {
+		for (const heading of ["## Situation and who", "## Opportunity", "## Success", "## Decision", "## Capabilities (MoSCoW)", "## Domain", "## Slices", "## Brain spill (private)"]) {
 			assert.ok(design.includes(heading), `design missing ${heading}`);
 		}
-		assert.match(design, /Recheck technical overlap against live code before parallel delivery/);
-		assert.match(design, /ready-for-issues \| blocked/);
+		assert.match(design, /Invest, explore more, defer, or stop/);
 
 		const planOutput = run(root, "--type", "plans", "checkout flow");
 		const planRoot = path.join(root, "context", "plans", "checkout-flow");
@@ -102,7 +101,7 @@ describe("new-artifact.py", () => {
 		assert.ok(planOutput.includes(path.join(planRoot, "00-index.md")));
 		const plan = fs.readFileSync(path.join(planRoot, "00-index.md"), "utf8");
 		assert.match(plan, /type: plan/);
-		for (const heading of ["## Ticket", "## Goal", "## Relevant code and tests", "## Technical approach", "## Acceptance and verification", "## Interface impact", "## Status"]) {
+		for (const heading of ["## Ticket", "## Answers the ticket", "## Approach", "## Data", "## Security", "## Tests", "## Interface impact", "## Status"]) {
 			assert.ok(plan.includes(heading), `plan missing ${heading}`);
 		}
 		assert.ok(plan.includes("**Plan status:** draft"));
@@ -113,29 +112,21 @@ describe("new-artifact.py", () => {
 
 		const issueOutput = run(root, "--type", "issues", "checkout flow");
 		const issueRoot = path.join(root, "context", "issues", "checkout-flow");
-		assert.deepEqual(fs.readdirSync(issueRoot).sort(), ["000-index.md", "001-checkout-flow.md"]);
-		assert.ok(issueOutput.includes(path.join(issueRoot, "000-index.md")));
+		assert.deepEqual(fs.readdirSync(issueRoot).sort(), ["001-checkout-flow.md"]);
 		assert.ok(issueOutput.includes(path.join(issueRoot, "001-checkout-flow.md")));
-		const index = fs.readFileSync(path.join(issueRoot, "000-index.md"), "utf8");
-		assert.ok(index.includes("## Queue"));
-		assert.ok(index.includes("| ID | Ticket | Issue | Status | Depends on | Plan | Research | PR | Evidence |"));
-		assert.ok(index.includes("| 001 | context/issues/checkout-flow/001-checkout-flow.md | - | draft | - | - | - | - | - |"));
-		assert.equal(index.includes("## Problem"), false);
 		const issue = fs.readFileSync(path.join(issueRoot, "001-checkout-flow.md"), "utf8");
-		for (const heading of ["## Problem", "## Current behavior", "## Desired behavior", "## Context", "## Acceptance criteria"]) {
+		for (const heading of ["## User story", "## Context", "## User flow", "## Edge cases", "## Acceptance criteria", "## Out of scope", "## Done when"]) {
 			assert.ok(issue.includes(heading), `issue missing ${heading}`);
 		}
-		assert.match(issue, /<!-- Local issue draft metadata; remove this block when publishing\.\nSource design: [^<>\n]+\nLocal draft path: [^<>\n]+\n-->\n\n## Problem/);
-		assert.equal(/^Status:/m.test(issue), false, "the queue alone owns delivery status");
-		assert.equal(issue.includes("## Design reference"), false);
-		assert.equal(issue.includes("## Plan reference"), false);
+		assert.equal(issue.includes("context/"), false, "published ticket text never references private working files");
+		assert.equal(/^Status:/m.test(issue), false, "the Project alone owns status");
 	});
 
 	it("scaffolds experience discovery before tickets without inventing validation", () => {
 		const root = makeRepo();
 		const [file] = createdPaths(run(root, "--type", "designs", "find a study partner"));
 		const content = fs.readFileSync(file, "utf8");
-		for (const heading of ["## User and problem", "## Experience walkthrough", "## Evidence and assumptions", "## Smallest useful outcome"]) {
+		for (const heading of ["## Situation and who", "## Flow", "## Evidence", "## Slices"]) {
 			assert.ok(content.includes(heading), `design missing ${heading}`);
 		}
 		assert.match(content, /starting state, action, visible result/i);

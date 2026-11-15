@@ -13,22 +13,14 @@ or needed for an agreed ongoing investigation. A bounded research activity insid
 Sprint or School returns to that mode without bypassing the human's pending attempt.
 
 The remaining delivery-specific selection and artifact rules apply only when the
-request names a delivery item or asks for the next queued research item. In that
-case, read `~/.agents/references/workflow.md` as the authoritative queue contract.
+request names a ticket, such as a Research ticket on the Project. In that case,
+read `~/.agents/references/workflow.md` as the authoritative contract.
 
 ## Select the delivery research scope
 
-An explicit ticket or question takes priority. Otherwise use the unique initiative indicated by the conversation and repository artifacts; ask only when choosing between initiatives would materially change scope. Reconcile queue claims against current code, tests, and GitHub before running, from the target git repository:
+An explicit ticket or question takes priority; ask only when the scope is genuinely unclear. Read the ticket with `gh issue view <n> --json title,body,state,blockedBy,parent` and its comments. Research only that ticket's question; never research the backlog. If its blocked-by issues are open, report the blocker instead of researching something else. A Research ticket ends in a decision: state the options, the evidence, and the recommendation, and ask the user to choose.
 
-```sh
-python3 ~/.agents/scripts/workflow.py select context/issues/<slug>/000-index.md
-# For an explicit ticket:
-python3 ~/.agents/scripts/workflow.py select context/issues/<slug>/000-index.md --target <id>
-```
-
-The index is the sole execution queue. Resolve an explicit ticket path or issue to its queue ID; never fall back to another item if that target is blocked. Select one ready ticket with all dependencies done and no active PR; do not research the backlog. The CLI cannot prove completion or safe parallel work. If tickets do not exist, choose the next not-implemented design outcome by dependencies and default priority and use `/skill:to-issues` to draft the necessary local ticket as preparation authorized by this research request. Review it against agreed intent before marking it ready; do not bypass unresolved behavior decisions. This does not authorize publication. If no item is eligible, report its blocker rather than researching a different scope.
-
-Read the selected card, ticket, and linked prior research. Before outside documentation, inspect the current relevant local modules, callers, and tests to establish what already exists and which facts are actually missing. Investigate only those gaps for this slice. Reuse linked evidence; update the queue's Research link when needed, rather than generating a timestamped duplicate without a reason. If no evidence is missing, skip the external pass and report that result. Standalone research on an explicit question remains valid without a design or queue; inspect relevant local context when available.
+Read the ticket and any linked prior research. Before outside documentation, inspect the current relevant local modules, callers, and tests to establish what already exists and which facts are actually missing. Investigate only those gaps for this slice. Reuse existing evidence rather than generating a duplicate without a reason. If no evidence is missing, skip the external pass and report that result. Standalone research on an explicit question needs no ticket; inspect relevant local context when available.
 
 Spin up a **background agent** to do the research, so you keep working while it
 reads the bounded question. Do not delegate an external pass when existing evidence already answers it.
@@ -76,6 +68,6 @@ Research may list architecture options and suggest one, but it never chooses one
 
 ## Completion
 
-Refresh affected evidence, ticket links, and open questions after feedback; distinguish verified facts from assumptions. Keep queue changes within the shared contract and do not infer approval to publish, implement, or merge. Research informs one later plan; it does not plan or start delivery.
+Refresh affected evidence, ticket links, and open questions after feedback; distinguish verified facts from assumptions. Post the decision summary on the ticket only when the user asks, never a private `context/` path, and do not infer approval to publish, implement, or merge. Research informs one later plan; it does not plan or start delivery.
 
-The human-facing synthesis follows the **Research Mode** protocol in `references/communication.md`: Question, Conclusion, Key Evidence, Options & Tradeoffs, Recommendation, and Remaining Uncertainty. Reference the cited Markdown file in the response.
+The human-facing synthesis follows the **Research** report shape in `references/communication.md`: Question, Conclusion, Key Evidence, Options & Tradeoffs, Recommendation, and Remaining Uncertainty. Reference the cited Markdown file in the response.

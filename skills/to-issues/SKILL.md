@@ -1,7 +1,7 @@
 ---
 name: to-issues
-description: Turn a design brief into behavior-focused ticket drafts, then publish only after separate human approval.
-argument-hint: "[design bundle or brief] [optional topic]"
+description: Split an approved overview into behavior tickets and, once the user approves the split, create them as GitHub issues on the product's Project. Use when the user says "split this into tickets", "make the issues", or an overview's scope was just approved.
+argument-hint: "[design draft or parent issue] [optional slice]"
 shell-timeout: 20
 ---
 
@@ -9,116 +9,46 @@ shell-timeout: 20
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
 
-Turn one design bundle or settled behavior brief into local tickets that are understandable and independently verifiable. This is the stage where a backlog item becomes a ticket; do not require a technical plan first. The next stage is `/plan` for one selected ticket.
+Turn an approved overview into tickets a teammate or an agent can pick up cold. Tickets say what and why; nobody plans how until a ticket is taken.
 
 ## When to use
 
-- A design brief is ready for tickets.
-- A local ticket draft needs review or correction.
-- The user explicitly asks to publish an approved local ticket set.
+- An overview's scope was approved and its slices need tickets.
+- A published ticket needs to be corrected or split.
 
-For new work, do not start from an implementation plan. Existing plans may be converted only when the user explicitly asks to migrate them into tickets. Unresolved product behavior returns to `/design`; an issue whose purpose is to record a decision belongs to `/issue-discovery`.
+Unsettled product behavior returns to `/design`. Never start from an implementation plan.
 
-## Modes and approval
+## Workflow
 
-- **Draft mode (default):** write or update local Markdown drafts only. An explicit draft request, or preparation of the one selected outcome for `/research` or `/plan` when tickets do not exist, is enough authorization. It never calls GitHub mutation APIs.
-- **Publication mode:** only after the user explicitly asks to publish reviewed drafts. Show the exact issue actions and get separate approval immediately before creating or updating GitHub issues.
+1. **Read the overview.** Use the approved design draft or the parent issue. Reconcile with any existing issues on the Project so reruns update instead of duplicating.
+2. **Draft the split.** One ticket per slice, in the contract's ticket format, following its split rules: vertical slices, thinnest working path first, INVEST, size XS-M, Research tickets for unknowns or anything that cannot be sized. Use Type Feature, Bug, Task, or Research.
+3. **Run the CRUD check.** Grid the tickets against the overview's domain things and mark create, read, update, delete. Show the grid and list each empty column as a question: a missing ticket or a deliberate Won't.
+4. **Present the split.** A short table (ticket, type, priority, size, blocked by) above the release line and below it, the CRUD questions, and any ticket marked as needing a product decision. Ask for approval of the split.
+5. **Publish on approval.** Approval of the split is approval to create these issues. First make sure the parent issue exists, using the design draft's problem brief and overview as its body, then create each ticket in order so "blocked by" numbers resolve:
 
-Plan approval, draft approval, and publication approval are distinct. Do not infer one from another. Publishing tickets does not authorize planning or implementation.
+   ```sh
+   gh issue create --title "<title>" --body-file <draft> --parent <parent> --blocked-by <n,...> --project "<project>"
+   ```
 
-## Input and output
+   Set the Project fields (Status Ready or Backlog, Priority, Size, Type) with `gh project item-edit`. If the token lacks the `project` scope, stop and ask the user to run `gh auth refresh -s project`. Report every created issue with its number; if creation stops partway, report what was created, what failed, and what was not attempted, and reconcile before any retry.
 
-Read the full design index and selected topic card(s), or the complete supplied behavior brief. An explicit request to draft the whole brief may produce its entire ticket set by default; an explicit topic limits drafting to that topic. Preparation invoked by `/research` or `/plan` drafts only the one selected next outcome, never the whole bundle. Keep unresolved behavior marked `needs-review` or `blocked`; do not invent answers, expand scope, or plan dependencies between unrelated topics. Check current behavior only as needed to ground the ticket, and distinguish observed facts from user reports.
+Status is Ready only when the ticket passes INVEST, is sized, has known dependencies, and has no open product question; otherwise Backlog, with the open question stated in the ticket.
 
-Before drafting or publishing, reconcile the selected source with the existing local ticket bundle and any matching GitHub issues. Preserve authored edits and review notes. If the source and ticket materially disagree, do not overwrite the disagreement silently; mark the ticket `needs-review` and report what conflicts.
+## Drafts
 
-Create the standard local bundle:
+Write drafts in `context/issues/<slug>/NNN-<topic>.md` before publishing. They are private working files: the published issue body never contains a `context/` path, a link to a draft or plan, or local metadata.
 
-```sh
-python3 ~/.agents/scripts/new-artifact.py --type issues "<initiative>"
-```
+## Review checklist
 
-Use `context/issues/<slug>/`. `000-index.md` is the sole execution queue, not a delivery ticket or a published issue. Write one numbered ticket per independent user-visible or caller-visible outcome (`001-<topic>.md`, `002-<topic>.md`, etc.). Reuse existing IDs and paths on reruns and preserve human review notes. Do not create plans, separate manifests, completion reports, tests, branches, worktrees, or implementation artifacts.
-
-The index contains a `## Queue` Markdown table with exactly these fields:
-
-```markdown
-## Queue
-
-| ID | Ticket | Issue | Status | Depends on | Plan | Research | PR | Evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 001 | context/issues/<slug>/001-<topic>.md | - | draft | - | - | - | - | - |
-```
-
-Use plain repo-relative artifact paths, not Markdown links or backticks; use `-` for unset cells. IDs are `001`, `002`, etc.; dependencies are comma-separated IDs. Record published Issue and PR identities in their own cells. Status is exactly `draft`, `needs-review`, `ready`, `blocked`, `in-progress`, `in-review`, or `done`. Keep ticket metadata about its source and path, not a duplicate mutable status store. Review/feedback updates the queue and affected artifacts; a draft PR is `in-review`, not `done`. Mark `done` only after integrated behavior is verified against code, tests, and GitHub and link the evidence.
-
-Downstream selection reconciles those claims first, then runs `python3 ~/.agents/scripts/workflow.py select <index> [--target <id>]` from the target git repository. Explicit targets take priority; otherwise it selects the next `ready` row whose dependencies are all `done` and which has no active PR. The CLI cannot prove completion or safe parallel work.
-
-The ticket set may include several independent outcomes, but do not split by technical layer or create implementation subtasks. Each ticket should be small enough for one cohesive review and useful on its own; return oversized outcomes to a narrower behavior split, not one huge PR. Map genuine behavior prerequisites to stable queue IDs and name the observable outcome each allows. If a prerequisite is incomplete, mark the dependent ticket `blocked`. Preserve provisional parallel candidates in the design map, not a second queue; technical overlap and readiness are re-evaluated just before planning or delivery.
-
-## Ticket format
-
-Every ticket must include these sections in this order:
-
-```markdown
-# <Action-oriented title>
-
-<!-- Local metadata; remove this block from the published issue body.
-Source design: <bundle/card path or brief source>
-Local draft path: <path under context/issues/<slug>/>
--->
-
-## Problem
-
-Who is affected, what is difficult or missing, and why it matters.
-
-## Current behavior
-
-What happens now and its observable effect. Mark user-reported claims when not verified.
-
-## Desired behavior
-
-What the user, caller, or system should be able to observe instead.
-
-## Context
-
-Relevant behavior boundaries, genuine issue dependencies, and scope notes. Do not add a technical implementation plan.
-
-## Acceptance criteria
-
-- [ ] Observable outcome that can be confirmed after implementation.
-
-```
-
-Acceptance criteria must be specific enough to guide later tests and human review. Do not invent behavior, technical choices, ownership, or verification evidence. If a material question is open, mark the affected ticket `needs-review` or `blocked` and state what must be decided.
-
-The ticket is the durable statement of the problem and desired behavior. Keep it useful without the design conversation. Technical implementation choices belong in the later plan, not in the public ticket.
-
-Derive acceptance from the selected experience: starting state, action, observable
-result, and consequential failure or recovery. Link existing prototype decisions
-and task observations in Context when relevant, marking simulated or untested
-claims. Neither a PRD nor a polished prototype is required. If the flow is
-still materially unclear, return that question to `/design` rather than turning
-speculative screens or feature lists into commitments.
-
-## Draft review
-
-Before presenting drafts, verify:
-
-- each ticket maps to one independent behavior outcome and one coherent review;
-- the exact problem, current behavior, desired behavior, and observable acceptance criteria are present;
-- facts are verified or labeled as user-reported, and assumptions/open questions are visible;
-- dependencies are genuine behavior dependencies, not a guessed technical schedule;
-- no implementation plan, file-by-file checklist, or technical-layer ticket split was introduced;
-- paths are stable and reruns do not duplicate or silently remap drafts.
-
-Present the source, draft paths, ticket summaries, and any unresolved gaps. Publication requires a separate explicit request and approval. Before publishing, re-read the selected drafts, confirm the repository, and reconcile each draft with its recorded issue number or an exact title-and-source match. Stop if a match is ambiguous, materially different, or conflicts with the recorded mapping. Publish only approved tickets; preserve unrelated issue text, comments, labels, and local notes on updates. After each successful create or update, record its issue number and URL in `000-index.md`. If publication stops partway through, report completed, failed, and not-yet-attempted tickets, keep the completed mappings, and reconcile them against GitHub before any retry. Never publish `needs-review` or `blocked` tickets without explicit approval of that exception.
-
-After ticket review, set `ready` only when behavior is settled and verified prerequisites allow selection; record blockers otherwise. The next step is `/plan` for the next available ticket, or `/plan <target>` for an explicit one. Local tickets do not require publication before planning. Do not plan the whole backlog or start implementation. After feedback or delivery, refresh affected cards, tickets, and queue links from evidence without assuming permission to publish updates or merge.
+- Each ticket is one vertical, user-visible outcome that one review can cover.
+- User story, context, user flow, edge cases, acceptance criteria, and out of scope are present.
+- Acceptance criteria are observable Given / When / Then checks, specific enough to test.
+- No frameworks, schemas, data fields, file layout, or task lists.
+- Dependencies are real behavior dependencies, not a guessed coding order.
+- Facts are verified or labeled as user-reported; open questions are visible.
 
 ## Done when
 
-- The selected behavior is represented by a concise, zero-context ticket or is explicitly marked blocked/needs-review.
-- Draft mode changed only local issue documents and made no GitHub mutations.
-- Publication, if requested, had its own immediate approval and only approved issues were created or updated.
-- The queue and artifacts agree, and the user has a clear next step: `/plan` selects one available ticket unless a target is explicit.
+- The user approved the split, and every ticket exists as a sub-issue of the parent on the Project with its fields and "blocked by" links set.
+- The CRUD gaps were each answered by a ticket or a deliberate Won't.
+- No published text references a private working file.

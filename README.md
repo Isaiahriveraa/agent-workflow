@@ -69,7 +69,7 @@ For an actual local countdown, open `~/.agents/profiles/timer.html` in a browser
 (`open ~/.agents/profiles/timer.html` on macOS), select the duration, and click
 Start. It needs no server or dependencies. It does not send system notifications
 or communicate with the agent. HTML flow diagrams should likewise stay small and
-self-contained rather than launching the full Explain UI for every sketch.
+self-contained.
 
 The launchers add the shared contract and selected profile to Pi/Claude system
 instructions or Codex developer instructions. They do not disable project rules,
@@ -79,97 +79,29 @@ startup overhead has been removed. Relevant repository safety still applies.
 
 ## Coding workflow
 
-The coding workflow is experience-first and risk-aware: understand the user problem, make uncertain interactions visible, agree on behavior, then derive essential features and plan one end-to-end slice. System, behavior, feature, architecture, and implementation are views to move between, not whole-product phases. A PRD is optional; building the whole frontend before backend is not the goal. Local drafts are tracked by file path; published work is identified by GitHub issue number.
+Product work runs one outcome at a time, with a GitHub Project per product as the source of truth. The full contract is `references/workflow.md`.
 
 ```
-/design: user problem + experience walkthrough
-↔ /prototype discovery when needed → agreed behavior + essential features
-→ local tickets + dependency queue
-→ /research [item] when needed → /plan [item] → plan map → I approve on the map
-→ /implement [item] → TDD → code-judgment → hardener → code-review → my feedback
-→ /wf or /wf-auto (commits, then a draft PR) → verified integration → refresh queue
+/design   frame the problem (invest / explore / defer / stop)
+          → overview: vision, goals, scope, MoSCoW, flow, domain, slices
+/to-issues split into behavior tickets + CRUD check
+          → I approve the split → sub-issues on the Project
+/plan     when a ticket is taken: implementation plan against today's code
+          → I approve → build
+/implement TDD → code-judgment → review per speed → my feedback → commit / PR
 
-or
-
-/implement (for a small, obvious fix that does not need the full workflow)
+or, for direct requests: Quick / Small / Full speed per AGENTS.md
 ```
 
-Every plan becomes a plan map before I see it: a private page with the system picture on top, the build order underneath, and one rail for the decisions I need to make. I approve or comment there, and my answers come back to the terminal. In Claude Code, the `require-plan-map` hook won't let a session leave plan mode until the plan has a map line.
+Tickets say what and why (user story, user flow, edge cases, acceptance criteria) and never how. Nothing technical is planned until a ticket is taken; an unknown becomes a Research ticket that ends in a decision. Drafts and plans live in the ignored `context/` folder and are never referenced from issues, PRs, or commits.
 
-After the code works, `code-judgment` cleans up the diff (dead code, names, YAGNI) so the reviewers look at a frozen version. The `hardener` agent then writes tests for the ways the change could really fail. `code-review` runs independent reviewers through an adjudicator, and only verified findings reach me.
-Design captures intent, task observations, assumptions, behavior examples, prerequisites, and provisional parallel groups. Discovery can return to earlier questions at any time; it does not authorize production work. The ticket index owns execution state. Research, planning, and implementation honor a named item or resolve the next eligible one from current evidence. Only that small slice is planned; implementation requires its matching approved, fresh plan. Each invocation stops at the requested stage. Publication, commits, PRs, and merge keep their separate human gates.
-
-Choose the next activity by uncertainty: investigate users for an unclear need, sketch or prototype an unclear interaction, and research a concrete feasibility gap before promising it. Examine costly decisions such as permissions, sensitive data, payments, and migrations early. Once behavior and feasibility are understood, stop exploring and build one tested flow across the necessary layers. Borrow rapid prototyping from RAD, feedback cycles from Agile, and upfront analysis for expensive commitments; do not impose every stage on a small fix.
-
-Humans own product priorities, experience judgment, and consequential decisions. AI challenges assumptions, compares flows, explains architecture from the user action backward, and implements agreed behavior. Prototype approval is not evidence of demand or production correctness; record what users actually tried and what remains untested.
-
-For UI product work, start from the frontend experience and discuss meaningful
-backend needs together before coding them. One agreed direction goes directly to
-production code once implementation is requested and approved. Use disposable
-prototypes only to understand an unclear flow or compare UI designs. Show the
-actual feature when useful; not every change needs a demo or a throwaway version.
-The agent writes code unless the user explicitly requests hands-on tutor mode.
-
-The shared [workflow contract](references/workflow.md) defines the Markdown queue, reconciliation, and the read-only `scripts/workflow.py` selection/approval/drift gate. A draft PR is `in-review`, not `done`; parallel candidates require a fresh overlap check. After feedback or integration, refresh the owning artifacts and identify the next item without automatically starting it.
-
-### Pipeline stages
-
-| Stage | Skill | What it produces | Where |
-|-------|-------|------------------|-------|
-| Design | `/design` + `grill-with-docs` | Numbered behavior cards, meaningful scenarios, dependencies, and provisional parallel groups | `context/designs/<slug>/` |
-| Discovery, when needed | `prototype` discovery mode | Sketch or focused interactive flow, task observations, and unresolved assumptions | Linked from the owning design card |
-| Tickets | `to-issues` | Behavior-focused local tickets; review drafts, then separately approve publication | `context/issues/<slug>/` → GitHub issue numbers |
-| Research | `/research [item or question]` | Only the missing facts for an explicit or next eligible item; standalone questions supported | `context/research/` linked from queue |
-| Plan | `/plan [ticket]` | One current-code-based slice, test seams, Git baseline, and verification; awaiting approval | `context/plans/<slug>/` |
-| Plan map | `plan-map` | A private page where I review the plan, answer its open decisions, and approve | claude.ai artifact, linked from the plan |
-| Delivery | `/implement [ticket]` or `issue-delivery <issue> [--plan <path>]` | One approved concern through an isolated worktree, TDD, cleanup, review, and human gates | Queue → branch/worktree → draft PR |
-
-### How to choose
-
-1. **New behavior or feature** → `/design`: user problem and walkthrough → discovery prototype if needed → agreed behavior and essential features → local ticket queue → risk-driven research → `/plan` → approve plan → `/implement`; publish tickets separately when GitHub delivery is wanted
-2. **Already have a published issue** → `/plan <issue>` → approve the plan → `/skill:issue-delivery <issue> --plan <path>`
-3. **Small, obvious fix** → `/skill:tdd` and `/skill:implement`; skip design and planning when they add no value
-4. **Need to clarify behavior** → `/design`; **need to record a decision** → `/skill:issue-discovery`
-5. **Standalone cited research** → `/skill:research` — use only when a concrete evidence gap needs it
-6. **Audit an existing codebase** → `/skill:improve` — read-only survey, then use findings in design or a selected ticket's plan
-7. **Sharpen an idea** → `/skill:grill-with-docs`
-8. **Ask which skill fits** → `/skill:skill-index`
-
-## Commands
-
-Slash commands in `commands/` extend the tool's native surface:
-
-| Command | Description |
-|---------|-------------|
-| `/ch` | Create a handoff document to resume work in a future session |
-| `/rw [worktree-path]` | Recall dirty work through a detailed read-only subagent report; flag outdated context without resuming implementation |
-| `/later` | Record a future improvement idea as a scannable note in `future/` |
-| `/wf [base]` | Commit with the `commit` skill, then open a PR with the `pr` skill. Use it when I've reviewed the work myself. |
-| `/wf-auto [base]` | Same as `/wf`, but commits through `commit-review`, so the `commit-pr-reviewer` agent approves the plan first. Use it for work an agent produced on its own. |
-
-Everything else is a skill. Claude Code lists them as slash commands; Codex, OpenCode, and the others load them by name. When I'm not sure which one fits, `skill-index` routes the request.
-
-This hub repo is the exception to the branch-and-PR flow: I commit straight to `master` here (see `.claude/CLAUDE.md`).
-
-Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch under `<repo>-worktrees/<branch path>` (e.g. `iuga-worktrees/feat/merch-page`), `cleanup-worktree.sh <branch>` tears it down after merge. New branch names must follow `<type>/<short-description>` with lowercase words joined by hyphens — `scripts/branch-name-rules.sh` rejects process words and dates (override: `WORKTREE_SKIP_NAME_CHECK=1`).
-
-`scripts/slop-lint.py` flags AI-slop words and phrases in Markdown prose; run `python3 ~/.agents/scripts/slop-lint.py <file-or-dir>` over docs you write. The `design` and `plan` skills check their output with it.
-
-`scripts/plan-lint.py` checks plan step files declare their interface impact — a `new` or `changed` boundary needs an interface sketch and a rejected alternative (design it twice); run `python3 ~/.agents/scripts/plan-lint.py <file-or-dir>` over plan outputs. The `plan` skill checks its output with it.
-
-`scripts/workflow.py select <queue-index> [--target <id>]` reports the next eligible item and blockers as JSON. `check <queue-index> --target <id> --plan <path> [--base <ref>]` validates approval, identity, and scoped Git drift before execution. Both are read-only; neither grants consent or proves behavior from status labels.
-
-### Explain UI browser workspace
-
-`Explain UI` provides the default browser workspace for disposable whiteboard, schema, logic, and visual-design experiments. Attach it directly to the current Git checkout, or use a linked worktree when stronger isolation is useful:
-
-```sh
-npm ci --prefix <hub>/skills/explain/explain-ui
-node ~/.agents/scripts/explain.mjs init <slug> [--project <path>]
-node ~/.agents/scripts/explain.mjs dev <slug> [--project <path>] [--port <number>]
-```
-
-Edit only the generated project source (`explanations/<slug>/explanation.tsx` and local files). `.kit` and `node_modules` are links to the central Explain UI and must not be edited through an explanation. Save and load diagrams explicitly from the workspace; preview state is disposable and not automatically persisted.
+| Stage | Skill | Output |
+|---|---|---|
+| Frame + overview | `design` | Problem brief and overview → the parent issue |
+| Tickets | `to-issues` | Behavior tickets as sub-issues with "blocked by" links on the Project |
+| Research | `/research [ticket or question]` | A decision for a Research ticket, or a cited answer |
+| Plan | `/plan [ticket]` | Implementation plan in `context/plans/<slug>/`, answering each acceptance criterion |
+| Build | `/implement [ticket]` | The change, tested and reviewed per speed, with the card moved along |
 
 ## Hooks
 
@@ -178,7 +110,6 @@ Edit only the generated project source (`explanations/<slug>/explanation.tsx` an
 | Hook | What it does |
 |---|---|
 | `guard-destructive-bash.cjs` | Stops force pushes, hard resets, forced git cleans, and recursive forced deletes until I approve them |
-| `require-plan-map.cjs` | Blocks leaving plan mode until the plan has a plan map, then reminds the agent that approval happens on the map |
 | `board-stamp.sh` | Stamps each prompt on the tab's Herdr board |
 | `herdr-agent-state.sh` | Reports agent state to Herdr; Herdr installs and overwrites it |
 
@@ -235,23 +166,19 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 |-------|------|
 | `caveman/` | Explicit concise, answer-first style; ordinary chat uses the shared contract's concise defaults without mandatory skill reads. `normal mode` disables the style; `/caveman` enables it |
 | `human/` | Explicit natural-writing guidance; `/human` writes, rewrites, or audits text while preserving facts and voice. Ordinary chat uses natural defaults without mandatory skill reads |
-| `explain/` | Default browser workspace for disposable Excalidraw diagrams, schema/data-model and logic exploration, and visual variants (Explain UI lives at `skills/explain/explain-ui/`) |
 | `prototype/` | Optional discovery for an unclear flow or finished-quality comparisons of competing UI designs; not required for an agreed production direction. Keep production approval separate |
-| `design/` | Frame user problems, visualize uncertain experiences, and derive essential features and numbered behavior cards; preserve evidence, assumptions, dependencies, and deferred ideas |
-| `to-issues/` | Turn design topics into behavior-focused local tickets under `context/issues/<slug>/`; after review and separate approval, optionally publish them to GitHub |
+| `design/` | Frame the problem (invest, explore, defer, stop) and write the what-and-why overview that becomes the parent issue |
+| `to-issues/` | Split an approved overview into behavior tickets and create them on the product's GitHub Project once the split is approved |
 | `jira-tpm/` (`~/.codex/skills`) | Organize Jira backlogs with actionable tickets, meaningful priorities, appropriate subtasks, real dependencies, and verified status |
-| `plan/` | Discuss meaningful backend choices from the frontend experience, then plan one current-code-based slice with test seams and Git baseline for approval |
-| `plan-map/` | Publish a plan as a private plan map page where I review, decide, and approve |
+| `plan/` | Implementation plan for a taken ticket or a direct Full request, against current code; approval means build |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
 | `research/` | Standalone questions use the concise Research profile without a delivery queue; queued coding investigations retain their selection and evidence rules |
 | `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |
-| `issue-delivery/` | One published ready issue with an explicit or uniquely linked approved, fresh plan → isolated worktree, TDD, cleanup, review, and human-approved draft PR |
 | `implement/` | Explicit or next eligible approved slice → worktree → TDD → code-judgment → code-review → human gates; refresh queue |
 | `wait-what/` | 3-line verbosity corrective |
-| `spawn/` | Max-context sub-agent decomposition |
 | `tdd/` | Red-green-refactor with seam discipline |
 | `code-review/` | Start at `SKILL.md` for shared policy and stage-specific references. Adversarial review that triages the diff and spawns only the reviewers it needs (`--runner subagents\|opencode\|omp`, default: ask), and adjudication of behavioral and evidenced readability/design findings. The existing `complexity-reviser` directly performs authorized scoped test cleanup with retrospective evidence; unrelated design revisions retain proposal → parent evaluation/authorization → behavior-preserving implementation → tests and fresh independent validation. Fresh independent validation also follows automatic cleanup. No overlapping agent; review-only, `--no-revise`, and implementation ownership boundaries remain. Behavior changes need user approval, including hardener fixes. External runners return observe-only reports; OpenCode uses `scripts/opencode-review.mjs`, OMP uses verified installed Herdr/CLI dispatch |
 | `code-judgment/` | Behavior-preserving cleanup before review: dead code, YAGNI, names, comments, module shape, cohesion/coupling; includes authorized automatic test cleanup with retrospective Keep / Rewrite / Delete evidence and behavior contracts over implementation pins |
@@ -292,7 +219,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `performance/` | Web performance optimization |
 | `supabase-postgres-best-practices/` | Postgres optimization from Supabase |
 | `herdr/` | Control Herdr terminal multiplexer for coding agents |
-| `orchestration/` | Approval-gated background subagents or isolated CLI workers in Herdr panes/worktrees, with a conversational coordinator, progress logs, and verified handoffs |
+| `orchestration/` | Delegate approved work to subagents, including splitting a large task into parallel units with self-contained prompts, review, and a correction loop |
 | `skill-index/` | Skill router — ask which skill fits |
 
 Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, codebase-locator, reviewer-behavioral, reviewer-contract, reviewer-maintainability, security-reviewer, adjudicator, fixer, complexity-reviser.
@@ -310,7 +237,6 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 ├── agents/                # Specialist expert agents
 ├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules
-│   ├── explain/            # Explain UI browser explanation workspace
 │   ├── prototype/          # Throwaway UI prototyping
 │   ├── brag/               # Project launch video workflow
 │   ├── plan/

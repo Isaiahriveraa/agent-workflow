@@ -7,7 +7,7 @@ description: "Behavior-preserving cleanup of a diff: delete dead and redundant c
 
 The Cleaner stage: make the diff small and readable without changing what it does. This skill edits code; the tests prove nothing moved. It runs **before** `code-review`, which verifies a frozen diff — cleanup must never race the review.
 
-Invoked by `implement`, `issue-delivery`, `spawn`, and `wf` as the step between implementation and review.
+Invoked by `implement`, `orchestration`, and `wf` as the step between implementation and review.
 
 ## When To Use This Skill
 
@@ -28,7 +28,7 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 - **Clean tests automatically within authorized scope.** Inspect scoped tests, including hardener additions, using [test cleanup](../../references/test-cleanup.md). Directly delete proven redundant or obsolete implementation-only assertions and rewrite useful guarantees through the behavior interface, without per-test proposals or approval when automatic cleanup is authorized. Keep tests loosely coupled to implementation: user interactions, observable outcomes, public contracts, and accessible semantics, not CSS, internal state, helper order, or production copy without an explicit contract. Report **Keep / Rewrite / Delete** retrospectively with lost-guarantee or surviving/replacement coverage evidence. Preserve unique guarantees; keep and report blocked if equivalent protection is uncertain. Never hide failures or extend authorization outside the selected scope. Explicit read-only and ownership restrictions still apply.
 - **Bugs are reported, not fixed.** A behavior defect goes under "Left alone" for `code-review` and the author; judgment never quietly changes behavior.
 - **Without automatic-cleanup authorization:** leave proposed test deletions intact and request the user's task-scoped deletion approval. Parent acceptance cannot replace that approval. A normal caller that supplies no automatic-cleanup authorization uses this fallback, not automatic mode.
-- **Green before, green after.** Run the repo's checks (the floor in AGENTS.md **Enforce in tools, not prose**) before the first edit and after every batch. If baseline is red, report it before cleanup; do not hide it. Undo only your own failing batch, never unrelated user work.
+- **Green before, green after.** Run the repo's checks (the floor in `references/coding-contract.md` **Enforce in tools, not prose**) before the first edit and after every batch. If baseline is red, report it before cleanup; do not hide it. Undo only your own failing batch, never unrelated user work.
 - **No feature work.** No new dependencies, no config changes, no refactors outside the checklist.
 - **No style noise.** The formatter and linter own style.
 
@@ -37,20 +37,20 @@ Default: the current branch diff against the repo's default branch. Accepts `cod
 | # | Finding | Signal | Action |
 |---|---|---|---|
 | 1 | Dead code | Unused export, parameter, flag, or config key; unreachable branch; orphaned helper | Delete it |
-| 2 | Speculative generality | Unused options or abstractions with no present ownership, isolation, translation, or testability purpose | Inline or remove only when no useful contract is lost; one caller or production adapter is not by itself a defect (AGENTS.md **One source of truth**) |
+| 2 | Speculative generality | Unused options or abstractions with no present ownership, isolation, translation, or testability purpose | Inline or remove only when no useful contract is lost; one caller or production adapter is not by itself a defect (`references/coding-contract.md` **One source of truth**) |
 | 3 | Shallow wrapper | The deletion test: removing it loses no behavior, only indirection | Delete it; call the real thing |
 | 4 | Duplicated logic | The same behavior in two places | Share only when meaning and ownership match and the contract is stable; caller-specific special cases can signal the wrong abstraction, but meaningful domain options are valid |
-| 5 | Comments | Restates the code, stale, or carries jargon/slop — an AI-slop word (see `scripts/slop-lint.py`), a term only this session uses, an unexplained abbreviation | Delete the restating ones; keep or sharpen only comments explaining non-obvious *why* — and rewrite them in plain words (AGENTS.md **Code explains itself**) |
+| 5 | Comments | Restates the code, stale, or carries jargon/slop — an AI-slop word (see `scripts/slop-lint.py`), a term only this session uses, an unexplained abbreviation | Delete the restating ones; keep or sharpen only comments explaining non-obvious *why* — and rewrite them in plain words (`references/coding-contract.md` **Code explains itself**) |
 | 6 | Names | Vague, cryptic, misleading, invented acronym, or jargon the ordinary word already covers | Rename to the project's domain term or the plain word; no shorthand a newcomer cannot read |
-| 7 | Module shape | Fat function or file; feature logic in a general module; wrong layer | Split, move, or deepen the interface (AGENTS.md **Architecture is enforced**; use `codebase-design` vocabulary and the red flags in [software design](../../references/software-design.md)) |
+| 7 | Module shape | Fat function or file; feature logic in a general module; wrong layer | Split, move, or deepen the interface (`references/coding-contract.md` **Architecture is enforced**; use `codebase-design` vocabulary and the red flags in [software design](../../references/software-design.md)) |
 | 8 | Cohesion and coupling | Things that change together live apart; unrelated things bundled; imports crossing layers the wrong way | Move them together; dependencies point one way |
-| 9 | Information leakage | The same knowledge — a format, a rule, an ordering, a representation — encoded in two modules, or an interface exposing what should stay internal | Move the knowledge behind one interface; callers learn one thing, not the data's shape (AGENTS.md **One source of truth**) |
+| 9 | Information leakage | The same knowledge — a format, a rule, an ordering, a representation — encoded in two modules, or an interface exposing what should stay internal | Move the knowledge behind one interface; callers learn one thing, not the data's shape (`references/coding-contract.md` **One source of truth**) |
 | 10 | Leaked sequencing | Callers must manage ordering or a lifecycle the module could safely own | Fold accidental sequencing into the owner; preserve required transaction, streaming, and resource lifecycles (see `codebase-design` → Designing a new module) |
-| 11 | Bespoke helper | One shared helper already does this | Use the shared one (AGENTS.md **One source of truth**) |
+| 11 | Bespoke helper | One shared helper already does this | Use the shared one (`references/coding-contract.md` **One source of truth**) |
 | 12 | Defensive padding | Fallback for an unreachable state; broad catch; re-validation inside a trusted boundary | Remove it (AGENTS.md **YAGNI**) |
 | 13 | Unrequested polish | Anything in the diff serving a request other than this one | Remove it from the diff; queue the idea |
 | 14 | Change locality | A plausible next addition of the same kind would scatter edits across files — or force rewriting the implementation | Reshape so the next case lands behind an existing seam: small interface, behavior behind it, dependencies one-way; still no speculative options or flags (AGENTS.md **YAGNI**) |
-| 15 | Diff prose | Strings, error messages, CLI help, or changed Markdown that says something a customer or teammate would never say | Rewrite plainly; `python3 ~/.agents/scripts/slop-lint.py` over the changed files flags the words (AGENTS.md **Code explains itself**) |
+| 15 | Diff prose | Strings, error messages, CLI help, or changed Markdown that says something a customer or teammate would never say | Rewrite plainly; `python3 ~/.agents/scripts/slop-lint.py` over the changed files flags the words (`references/coding-contract.md` **Code explains itself**) |
 
 ## Simplicity With Flexibility
 
@@ -60,7 +60,7 @@ Use one plausible next change as a design probe, not permission to build it or r
 
 ## Method
 
-1. Fix the target: read the diff plus the code, callers, tests, and config around it (AGENTS.md **Read before writing**).
+1. Fix the target: read the diff plus the code, callers, tests, and config around it (`references/coding-contract.md` **Read before writing**).
 2. Run the baseline checks; they must be green before the first edit.
 3. Apply the checklist smallest-blast-radius first: deletions, comments, names, then structure. Splits and moves come last — they touch the most.
 4. Re-run the checks after each batch. Red → undo only your batch and re-examine. Apply both the refactor-survival and plausible-defect tests to changed coverage; green alone is insufficient.

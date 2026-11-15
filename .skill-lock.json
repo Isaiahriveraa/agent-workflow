@@ -78,30 +78,12 @@
       "installedAt": "2026-07-16T00:00:00.000Z",
       "updatedAt": "2026-07-16T00:00:00.000Z"
     },
-    "spawn": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/spawn",
-      "skillPath": "skills/spawn/SKILL.md",
-      "skillFolderHash": "850f8d9a86cb4616bd69a638cbbaddd2891b0a35",
-      "installedAt": "2026-07-16T00:00:00.000Z",
-      "updatedAt": "2026-09-09T00:00:00.000Z"
-    },
     "split-dirty-worktree": {
       "source": ".agents",
       "sourceType": "hub",
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/split-dirty-worktree",
       "skillPath": "skills/split-dirty-worktree/SKILL.md",
       "skillFolderHash": "02e05d2f00c252d1386df8b22e58b26bb019abe1"
-    },
-    "issue-delivery": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/issue-delivery",
-      "skillPath": "skills/issue-delivery/SKILL.md",
-      "skillFolderHash": "7704e7b1f8444981003e331f9980b6285ca7a9e6",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-09-08T00:00:00.000Z"
     },
     "issue-discovery": {
       "source": ".agents",
@@ -379,15 +361,6 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/orchestration",
       "skillPath": "skills/orchestration/SKILL.md",
       "skillFolderHash": "0d9208abb60dc182800e5f0115d4c8e235568957",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
-    },
-    "explain": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/explain",
-      "skillPath": "skills/explain/SKILL.md",
-      "skillFolderHash": "5ca2494a5a3ef2d59e2f9f344765cef477c54270",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },

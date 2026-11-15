@@ -1,124 +1,82 @@
 ---
 name: plan
-description: Plan the next available behavior slice or an explicit ticket against current code. Use when the user says "plan this" or "plan the next slice"; stop for human plan review, never start implementation automatically.
-argument-hint: "[issue number, local ticket path, or ticket to plan]"
+description: Write the implementation plan for a ticket that was just taken, or for a Full-speed request made directly, against the current code. Use when the user says "plan this", takes a ticket, or asks for Full-speed work; the user's approval of the plan means build it.
+argument-hint: "[issue number, or a description of the direct request]"
 shell-timeout: 20
 ---
 
-# Plan One Ticket
+# Plan
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
 
-Plan one selected ticket against the current repository. This is just-in-time technical planning, not another product-design or backlog-decomposition stage. The ticket owns the problem, current behavior, desired behavior, and acceptance criteria; the plan explains a safe, proportionate way to implement and verify that outcome.
+Plan how to deliver one ticket, now that it has been taken, against today's code. The plan has one job: answer that ticket. For a Full-speed request made directly, the request plays the ticket's role.
 
 ## When to use
 
-- A published GitHub issue or local ticket draft has been selected for implementation.
-- The user asks for a technical plan before starting a specific behavior change.
+- A ticket was just taken (moved to In progress).
+- The user asks for a plan, or asks directly for Full-speed work.
 
-Do not plan an entire design bundle, initiative, or backlog. For unclear product behavior, return to `/design`; for a decision-record issue, use `/issue-discovery`. Keep a small fix's plan correspondingly short, not exempt from the selected ticket's approval gate.
+Never plan tickets that have not been taken, a whole overview, or a backlog.
 
-## Input and preflight
+## Before planning
 
-An explicit GitHub issue number/URL, local ticket path, or ID takes priority. Otherwise resolve the unique contextual initiative; ask only for material ambiguity. Reconcile its queue against current code, tests, and GitHub before running from the target git repository:
+1. Read the ticket with `gh issue view <n> --json title,body,state,blockedBy,parent`, including its comments. Confirm its blocked-by issues are closed.
+2. Read today's code: the owning modules, callers, configuration, and tests. Cite real paths and symbols and separate verified facts from assumptions.
+3. If the code contradicts the ticket, an acceptance criterion is ambiguous, or a product or security decision is open, stop and bring the exact question to the user. Never rewrite the ticket to fit the plan.
 
-```sh
-python3 ~/.agents/scripts/workflow.py select context/issues/<slug>/000-index.md
-# For an explicit ticket:
-python3 ~/.agents/scripts/workflow.py select context/issues/<slug>/000-index.md --target <id>
-```
+## Plan content
 
-Resolve an explicit issue or ticket path to its queue ID; never fall back to another item if that target is blocked. Read the complete selected ticket and relevant published comments. Confirm a concrete problem, current behavior, desired behavior, and observable acceptance criteria. Selection requires `ready`, all dependencies `done`, and no active PR; the CLI cannot prove completion or safe parallel work. If tickets do not exist, choose the next not-implemented design outcome by dependencies and default priority and use `/skill:to-issues` to draft the necessary local ticket as preparation authorized by this plan request, not permission to publish. Review it against agreed intent before marking it ready; do not bypass unresolved behavior decisions. If no item is eligible, report the blocker instead of planning another scope.
-
-Treat the ticket as the product contract. Verify its current-behavior claims against the repository where practical. If code contradicts the ticket, acceptance is ambiguous, or a material product/security decision is unresolved, stop and return the exact discrepancy instead of silently rewriting the ticket or choosing an outcome.
-
-## Planning work
-
-Begin with the user's outcome and one action-to-result walkthrough before naming
-modules. Work backward to required data, server-enforced rules, returned results,
-and consequential failures; omit irrelevant categories for non-UI work. Link any
-chosen prototype and observations, distinguishing simulated behavior from verified
-capability. Do not require a prototype when the behavior is already clear.
-
-For new or materially changed backend capabilities, work through the frontend's
-data and actions with the user before settling the approach: what must be read or
-saved, what the server must enforce, the recommendation, and meaningful tradeoffs.
-Resolve material choices together; do not defer that conversation to a finished
-plan. Reuse prior agreement and keep routine implementation details out of it.
-An agreed UI direction can proceed directly to production implementation once
-requested and approved; a prototype or separate demo is not a prerequisite.
-
-If experience uncertainty changes acceptance, return to `/design` or discovery
-prototyping rather than guessing. If feasibility or a costly-to-reverse decision
-is uncertain, investigate it before committing to the approach. Scale planning to
-that risk, not the size of the feature list; do not wait for an entire frontend.
-
-1. **Inspect the relevant code.** Trace the current behavior through the owning modules, callers, configuration, and tests. Cite real repository paths and symbols; distinguish verified facts from assumptions.
-2. **Find the smallest complete change.** Identify the behavior boundary, existing conventions to reuse, and the public seam through which the result can be tested. Keep the outcome end-to-end; do not split by database/API/UI layers. If it is too large for one cohesive review, return a narrow behavior split to `/to-issues` instead of planning a huge one-ticket PR.
-3. **Choose proportionate technical direction.** Use `codebase-design` for meaningful backend, schema, ownership, invariant, interface, or dependency changes, including its relevant data/compatibility checks; routine work needs only the quick existing-owner check. State the recommended approach and important tradeoff in this plan, not a separate design artifact. For a consequential choice, record why it fits, a meaningful alternative, and any risk, guardrail, or signal that should trigger a revisit. Keep routine reversible choices brief. Reuse linked research; use `/skill:research` only for missing facts about this slice, skipping an external pass when evidence suffices. Re-evaluate technical overlap against active work now; a design's parallel candidates do not prove safety.
-4. **Define proof.** Map each ticket acceptance criterion to a test or observable verification. Include only real edge cases and relevant project-native checks.
-5. **Check interface impact.** Use the exact declaration format checked by `plan-lint.py`:
-
-   ```markdown
-   - **Interface impact:** none — <why the boundary does not change>
-   ```
-
-   If the impact is `new` or `changed`, replace `none` with that value and add non-empty `**Interface sketch**` and `**Rejected alternative**` blocks. Follow `codebase-design`; avoid speculative architecture and unrelated cleanup.
-6. **Ask only for material decisions.** Small reversible implementation choices belong in the plan; user-visible, security-sensitive, irreversible, or architecture choices (as defined in `/skill:research`) need the user's decision. Read the linked research's **Decision needed from you** blocks first. An UNDECIDED architecture choice inside this ticket's scope stops planning until the user records a `**Chosen:**` answer, and the Technical approach follows that answer. An UNDECIDED choice outside the scope goes under Risks and open questions and stays undecided.
-
-## Local plan
-
-Initialize the plan bundle with the repository generator:
+Create the plan with:
 
 ```sh
 python3 ~/.agents/scripts/new-artifact.py --type plans "issue-<number>-<short-title>"
 ```
 
-For a local ticket, use a stable slug based on its title. Write one plan at `context/plans/<slug>/00-index.md`. The plan must include:
+Write `context/plans/<slug>/00-index.md`, keeping each section proportional:
 
-Write these gate fields exactly once as standalone lines, not list items or backticked values:
+- **Answers the ticket** — every acceptance criterion and edge case, and how the change meets it. Anything the ticket does not ask for is out.
+- **Current behavior** — what the code does today, with locations.
+- **Approach** — the smallest complete change through the existing modules, following `references/software-design.md`. Name architecture changes and new dependencies with the reason. Use `codebase-design` for meaningful backend, schema, ownership, invariant, interface, or dependency changes. The first ticket of an overview usually sets direction that later tickets follow; say so when it does.
+- **Data** — what is created, read, updated, or deleted; migrations; data dictionary entries added or changed, with exact validation (type, length, allowed values, case and characters, date formats); behavior with no data and as data grows.
+- **Failure** — errors, timeouts, empty states, and a dependency that is down.
+- **Security** — only the areas this ticket touches (authentication, access control, input, logging), plus one to three misuse cases such as "a non-member calls the endpoint directly".
+- **Tests** — at least one per acceptance criterion and one per misuse case, through public interfaces.
+- **Decisions** — a choice that is hard to reverse gets its reason, the alternative considered, and the tradeoff. Small reversible choices stay brief.
+- **Interface impact** — the exact declaration `plan-lint.py` checks:
+
+  ```markdown
+  - **Interface impact:** none — <why the boundary does not change>
+  ```
+
+  For `new` or `changed`, add non-empty `**Interface sketch**` and `**Rejected alternative**` blocks.
+
+Record these fields once, as standalone lines:
 
 ```markdown
-**Ticket:** context/issues/<slug>/001-<topic>.md
+**Ticket:** #<issue number>, or "direct request"
 **Planned at:** <full commit SHA inspected>
-**In-scope files:** <comma-separated repo-relative file paths>
+**In-scope files:** <comma-separated repo-relative paths>
 **Plan status:** draft
-**Plan map:** <artifact url from /skill:plan-map>
 ```
 
-Ticket must match the queue's Ticket path or recorded Issue exactly. Scope paths are literal files, not globs; include existing and new files whose behavior or contracts the plan relies on. Do not create an executable plan from uncommitted production changes that are absent from its intended base. Keep these additional sections proportional:
-
-- **Goal:** one sentence tied to the ticket's desired behavior;
-- **Current behavior:** verified code behavior and relevant locations;
-- **Desired behavior:** the ticket's observable outcome, without scope expansion;
-- **Relevant code and tests:** the existing modules, callers, and test seams involved;
-- **Technical approach:** the smallest complete change and material tradeoffs;
-- **Scope and non-goals:** boundaries for this implementation;
-- **Acceptance and verification:** how each ticket criterion will be proved;
-- **Risks and open questions:** only concrete risks or unresolved decisions;
-- **Interface impact:** `none`, `new`, or `changed` using the exact `plan-lint.py` declaration, with a non-empty sketch and rejected alternative when applicable;
-
-Plan status is `draft`, `approved`, or `blocked`; write `**Plan status:** approved` only after human approval.
-
-Do not create step files or split one ticket into separate deliverables. If execution needs several reviewable steps, use a short ordered checklist of end-to-end slices with the proof for each; do not split by technical layer or pre-plan other tickets. Keep plans under `context/plans/`; do not publish GitHub changes from this skill.
+An open architecture choice inside the ticket's scope (see `/skill:research`) stops planning until the user answers it. If the ticket is too large for one review, propose a split back to `/skill:to-issues` instead of a huge plan.
 
 ## Review and handoff
 
-Run the repository's plan checks:
+Run the plan checks:
 
 ```sh
 python3 ~/.agents/scripts/slop-lint.py context/plans/<slug>/
 python3 ~/.agents/scripts/plan-lint.py context/plans/<slug>/
 ```
 
-Run `/skill:plan-map` on the plan and write its `**Plan map:** <artifact url>` line under the gate fields; `plan-lint.py` requires it. Link the plan in the selected queue row's Plan cell using a plain repo-relative path. Lead the presentation with the map link; the user answers decisions and approves on the map, and its `APPROVED` message is the approval below. Then the ticket, plan path, repository evidence, technical choice, verification, and open risks, then stop awaiting human review. Set `**Plan status:** approved` only after the user approves it. Plan approval is not an implementation request and does not authorize a branch, worktree, commit, push, or PR.
+Present the plan in the **Planning** report shape from `references/communication.md`, leading with how it answers the ticket, then the approach, decisions to challenge, and risks. On the user's approval, set `**Plan status:** approved` and continue with `/skill:implement`: approval means build. Worktree placement and review still follow `AGENTS.md`.
 
-After feedback, refresh the plan, affected ticket/card, queue links, and evidence; material scope or code changes require renewed plan review. Implementation starts only on request through `/skill:implement` or `/skill:issue-delivery`. They find the matching approved linked plan and validate it against the actual execution base; never autostart them.
+The plan is a private working file. Never mention, link, or quote it in the issue, a PR, a commit message, or code; published text describes the change on its own terms.
 
 ## Done when
 
-- Exactly one selected ticket has a concise plan grounded in the current repository.
-- The technical direction stays within the ticket's desired behavior and acceptance criteria.
-- Every acceptance criterion has observable proof, and interface impact is declared.
-- `slop-lint.py` and `plan-lint.py` pass, or any unavoidable exception is explicit.
-- The plan is marked approved only after explicit human approval.
+- One taken ticket (or direct request) has a plan grounded in today's code.
+- Every acceptance criterion and edge case maps to how it is met and how it is tested.
+- `slop-lint.py` and `plan-lint.py` pass.
+- The plan is approved only after the user approves it.

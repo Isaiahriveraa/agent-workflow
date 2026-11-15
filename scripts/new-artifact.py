@@ -41,11 +41,11 @@ def frontmatter(title: str, date_str: str, kind: str, extra: str = "") -> str:
 def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str:
     profiles = {
         "handoffs": ("handoff", "Agent Handoff", ["Active Goal", "Current State", "Latest User Intent", "Locked Decisions", "Do Not Repeat", "Work Completed", "Relevant Files", "Remaining Work", "Open Questions or Blockers", "Resume Here", "Verification", "Success Criteria", "Completion"]),
-        "designs": ("design", "Design", ["What we're doing and why", "Raw intent (your words)", "User and problem", "Experience walkthrough", "Evidence and assumptions", "Smallest useful outcome"]),
+        "designs": ("design", "Design", ["Situation and who", "Evidence", "Opportunity", "Success", "Worth it?", "Key nouns", "Open questions", "Decision", "Vision and goals", "Scope", "Capabilities (MoSCoW)", "Flow", "Domain", "Unknowns", "Slices", "Brain spill (private)"]),
         "research": ("research", "Research", ["Workflow links", "Question", "Conclusion", "Key Evidence", "Options & Tradeoffs", "Recommendation & System Impact", "Decision needed from you", "Remaining Uncertainty", "Sources"]),
         "review": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
         "reviews": ("review", "Review", ["Summary", "Rationale Table", "Remaining Issues", "Per-module Details", "Related Notes"]),
-        "plans": ("plan", "Plan", ["Ticket", "Code baseline", "Goal", "Current behavior", "Desired behavior", "Relevant code and tests", "Technical approach", "Scope and non-goals", "Acceptance and verification", "Risks and open questions", "Interface impact", "Status"]),
+        "plans": ("plan", "Plan", ["Ticket", "Code baseline", "Answers the ticket", "Current behavior", "Approach", "Data", "Failure", "Security", "Tests", "Decisions", "Interface impact", "Status"]),
         "discover": ("discover", "Discovery", ["Question", "Context", "Findings", "Decisions", "Next Steps"]),
         "frd": ("frd", "Functional Requirements", ["Functional Requirements", "Problem Statement", "Requirements", "Acceptance Criteria"]),
         "tickets": ("tickets", "Tickets", ["Summary", "Scope", "Acceptance Criteria"]),
@@ -61,21 +61,36 @@ def profile_template(kind: str, title: str, date_str: str, time_str: str) -> str
         if kind == "plans" and section == "Status":
             placeholder = "**Plan status:** draft"
         elif kind == "plans" and section == "Ticket":
-            placeholder = "**Ticket:** <!-- Queue Ticket path or recorded Issue value. -->"
+            placeholder = "**Ticket:** <!-- #<issue number>, or \"direct request\". -->"
         elif kind == "plans" and section == "Code baseline":
-            placeholder = "**Planned at:** <!-- Full commit SHA inspected for this slice. -->\n\n**In-scope files:** <!-- Comma-separated repository-relative literal paths; no globs. -->"
+            placeholder = "**Planned at:** <!-- Full commit SHA inspected for this ticket. -->\n\n**In-scope files:** <!-- Comma-separated repository-relative literal paths; no globs. -->"
+        elif kind == "plans" and section == "Answers the ticket":
+            placeholder = "<!-- Each acceptance criterion and edge case from the ticket, and how the change meets it. Anything the ticket does not ask for is out. -->"
+        elif kind == "plans" and section == "Interface impact":
+            placeholder = "- **Interface impact:** <!-- none | new | changed --> — <!-- why -->"
         elif kind == "research" and section == "Workflow links":
-            placeholder = "<!-- Link the selected design card, queue ID/ticket, and existing evidence; use 'standalone' when no delivery item applies. -->"
+            placeholder = "<!-- The ticket (#n) and existing evidence; write 'standalone' when no ticket applies. -->"
         elif kind == "research" and section == "Decision needed from you":
             placeholder = "<!-- One block per architecture decision: the question, its options, a suggestion labeled as a suggestion, then `**Status:** UNDECIDED` until the user records `**Chosen:** <option>`. Leave none when no architecture decision is open. -->"
-        elif kind == "designs" and section == "User and problem":
-            placeholder = "<!-- Name the user or caller, their situation, current workaround, and intended outcome. -->"
-        elif kind == "designs" and section == "Experience walkthrough":
-            placeholder = "<!-- One journey: starting state, action, visible result, and a consequential failure or recovery. Link any sketch or prototype and the question it explores; use only the fidelity needed. -->"
-        elif kind == "designs" and section == "Evidence and assumptions":
-            placeholder = "<!-- Separate observations, user reports, and assumptions. Record task feedback when available; otherwise say not tested. Prototype approval alone does not establish demand or feasibility. -->"
-        elif kind == "designs" and section == "Smallest useful outcome":
-            placeholder = "<!-- Name one useful end-to-end outcome, the essential capabilities supporting it, and deferred extras. No full frontend-first build or implementation plan. -->"
+        elif kind == "designs":
+            placeholder = {
+                "Situation and who": "<!-- Who has the problem, how it shows up, and today's workaround. -->",
+                "Evidence": "<!-- Each claim marked certain, supposed, or unknown. Record task feedback when available; otherwise say not tested. -->",
+                "Opportunity": "<!-- The problem stated without a solution in it. -->",
+                "Success": "<!-- 1-3 measurable results with a baseline. -->",
+                "Worth it?": "<!-- Desirable, viable, feasible, responsible. -->",
+                "Key nouns": "<!-- The things people keep naming; the first domain picture. -->",
+                "Open questions": "<!-- Ranked by importance x uncertainty. -->",
+                "Decision": "<!-- Invest, explore more, defer, or stop. Only the user decides. -->",
+                "Vision and goals": "<!-- One or two sentences of vision; goals are the success measures above. -->",
+                "Scope": "<!-- In and out. -->",
+                "Capabilities (MoSCoW)": "<!-- Must, Should, Could, Won't (this round). -->",
+                "Flow": "<!-- One Mermaid flowchart: starting state, action, visible result, and a consequential failure. Link any sketch or prototype and the question it explores. -->",
+                "Domain": "<!-- Mermaid erDiagram of the main things, read as sentences. -->",
+                "Unknowns": "<!-- Each becomes a Research ticket. -->",
+                "Slices": "<!-- Ordered, each with priority and what blocks it, plus a first-release line. -->",
+                "Brain spill (private)": "<!-- The user's original words; never published. -->",
+            }[section]
         else:
             placeholder = "<!-- Record only verified information, decisions, or clearly labeled placeholders. -->"
         result += f"## {section}\n\n{placeholder}\n\n"
@@ -136,40 +151,28 @@ def bundle_files(kind: str, title: str, date_str: str, time_str: str) -> dict[st
         }
     if kind == "designs":
         index = profile_template("designs", title, date_str, time_str)
-        index += "## Topics\n\n<!-- One card per independent user-visible or caller-visible outcome: NN-<topic>.md. -->\n\n## Order, dependencies, and parallel work\n\n<!-- Record default priority, real behavior prerequisites with reasons, and provisional independent groups. Recheck technical overlap against live code before parallel delivery. Do not plan later implementations here. The linked ticket index owns execution state. -->\n\n## Open questions\n\n<!-- Unresolved decisions, with impact and what would resolve them. -->\n\n## Status\n\n- <!-- Choose exactly one: ready-for-issues | blocked -->\n"
         return {
             "00-index.md": index,
         }
     ticket_name = f"001-{slug(title)}.md"
     return {
-        "000-index.md": (
-            f"# Ticket set: {title}\n\n"
-            "<!-- Local backlog map only; do not publish this file as a delivery ticket. -->\n\n"
-            "**Source design:** <!-- Design bundle path. -->\n\n"
-            "## Queue\n\n"
-            "<!-- See ~/.agents/references/workflow.md. Plain repository-relative paths; '-' means unset. Reconcile evidence before selection; draft rows are not ready. -->\n\n"
-            "| ID | Ticket | Issue | Status | Depends on | Plan | Research | PR | Evidence |\n"
-            "|---|---|---|---|---|---|---|---|---|\n"
-            f"| 001 | context/issues/{slug(title)}/{ticket_name} | - | draft | - | - | - | - | - |\n\n"
-            "## Open decisions\n\n"
-            "- <!-- Record decisions that block truthful ticket drafts. -->\n"
-        ),
         ticket_name: (
             f"# {title}\n\n"
-            "<!-- Local issue draft metadata; remove this block when publishing.\n"
-            "Source design: design bundle or card path\n"
-            f"Local draft path: context/issues/{slug(title)}/{ticket_name}\n"
-            "-->\n\n"
-            "## Problem\n\n"
-            "<!-- Who is affected, what is difficult or missing, and why it matters. -->\n\n"
-            "## Current behavior\n\n"
-            "<!-- What happens today and its observable effect. Mark unverified claims as user-reported. -->\n\n"
-            "## Desired behavior\n\n"
-            "<!-- Describe the observable user or system behavior this ticket should achieve. -->\n\n"
+            "Parent: #<!-- n --> · Priority: <!-- Must | Should | Could --> (<!-- reason -->) · Size: <!-- XS | S | M --> · Blocked by: <!-- #n or - -->\n\n"
+            "## User story\n\n"
+            "As a <!-- role -->, I want <!-- capability --> so that <!-- outcome -->.\n\n"
             "## Context\n\n"
-            "<!-- Record scope boundaries and genuine behavior dependencies; do not prescribe implementation. -->\n\n"
+            "<!-- What happens today and why it matters. No solution named. -->\n\n"
+            "## User flow\n\n"
+            "<!-- Mermaid flowchart: the main path plus failures that change what the user sees. -->\n\n"
+            "## Edge cases\n\n"
+            "- <!-- variation or failure --> -> <!-- expected result -->\n\n"
             "## Acceptance criteria\n\n"
-            "- [ ] <!-- Observable result a user or caller can verify. -->\n\n"
+            "- [ ] Given <!-- state -->, when <!-- action -->, then <!-- observable result -->\n\n"
+            "## Out of scope\n\n"
+            "<!-- What this ticket deliberately excludes. -->\n\n"
+            "## Done when\n\n"
+            "Tests pass · reviewed · keyboard accessible\n"
         ),
     }
 

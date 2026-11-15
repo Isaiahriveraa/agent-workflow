@@ -151,7 +151,7 @@ section above instead.
    the decision in the local transcript instead; never claim it was edited.
     The artifact remains the source of truth whenever it is writable.
 
-   Refresh affected behavior cards and ticket/plan evidence after feedback. Once tickets exist, `context/issues/<slug>/000-index.md` alone owns execution status; do not add another queue to the design or transcript. Changes to approved scope require renewed review. Interview answers do not authorize implementation, publication, or merge.
+   Refresh affected behavior cards and ticket/plan evidence after feedback. Once tickets exist, the product's GitHub Project alone owns status; do not keep another status list in the design or transcript. Changes to approved scope require renewed review. Interview answers do not authorize implementation, publication, or merge.
 
 2. **If a term was resolved** or an ADR criterion was met, use
    `/domain-modeling` to capture it. It handles glossary updates and ADR
