@@ -312,7 +312,7 @@
 		return lines.join("\n");
 	}
 
-	/** The approval message: the plan, every final choice, and the go-ahead. */
+	/** The approval message accepts the plan, not implementation. */
 	function approvalMessage(plan, answers) {
 		const states = decisionStates(plan, answers);
 		const lines = [`APPROVED · ${plan.title}`];
@@ -320,7 +320,7 @@
 			lines.push(`- ${decision.question} → ${optionLabel(decision, states[decision.id].option)}`);
 		}
 		if (plan.source) lines.push(`Plan file: ${plan.source}`);
-		lines.push("Set the plan status to approved and start building.");
+		lines.push("Set the plan status to approved. Wait for an explicit implementation request before building.");
 		return lines.join("\n");
 	}
 

@@ -562,8 +562,8 @@
     $("foot-note").textContent = {
       send: "Goes straight to Claude in the terminal.",
       open: "Pick an option on each amber card.",
-      approve: waiting ? "Claude is updating the plan with your answers. You can approve now or wait to see the changes." : "Approving tells Claude to start building, one step at a time.",
-      approved: "Claude is building this plan.",
+      approve: waiting ? "Claude is updating the plan with your answers. Approval accepts the plan, not implementation." : "Approving accepts the plan; it does not start implementation.",
+      approved: "Plan approved. Ask Claude to implement it when ready.",
     }[action.kind];
   }
 

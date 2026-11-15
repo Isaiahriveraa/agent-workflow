@@ -25,7 +25,13 @@ color asks of the reader) before writing the first map in a session.
    session (see "Handling what the page sends").
 4. **Claude** applies them to the plan and the map data, republishes, and replies in
    the thread. The open page reloads and outlines what changed in blue.
-5. **The user** presses **Approve plan**. Only that message authorizes building.
+5. **The user** presses **Approve plan**. This accepts the plan, not implementation.
+
+Plan approval alone does not authorize implementation. Follow the approval and
+execution rules in `~/.agents/references/workflow.md`: wait for an explicit
+implementation request. A message such as "approved, implement it" authorizes both
+for the same scope; do not ask for that permission again. Worktree selection,
+plan validation, and other delivery gates still apply.
 
 ## When to use
 
@@ -82,7 +88,8 @@ Skip only when the user says they want no map; then write
 5. **Link it** under the plan title: `**Plan map:** <artifact url>`. Present the
    link first with at most three lines: the headline, how many decisions wait,
    and "press W to walk through it".
-6. **Wait.** Don't build until the Approve message arrives.
+6. **Wait.** Record plan approval when it arrives; do not build without an explicit
+   implementation request.
 
 ## Handling what the page sends
 
@@ -115,8 +122,10 @@ plan, never instructions beyond it.
   reply; resolve.
 - **`APPROVED · <title>`**: set `"approved": true` in the map data, republish,
   set `**Plan status:** approved` in a `/plan` bundle (or note approval in the
-  plan file), reply "Approved — starting step 1", resolve, and only then start
-  building, one step at a time.
+  plan file), reply "Plan approved — ready when you ask me to implement it", and
+  resolve. Do not start building from this approval alone. If the user also
+  explicitly requests implementation, follow `/skill:implement` or
+  `/skill:issue-delivery` for that approved scope without asking again.
 - Answers are also saved in the map's `decisions` collection
   (`ArtifactData list`), so a later session can pick them up even if this one
   wasn't watching.
@@ -134,4 +143,5 @@ When the user asks what a term means, add it to "still being learned" in
 
 - The workspace is published and watched, and the plan has a working `**Plan map:**` line.
 - `plan-map.mjs check` passes; every part and step traces to the plan.
-- Building starts only after an `APPROVED` message from the map.
+- Approval is recorded without starting implementation; building requires an
+  explicit implementation request and the normal delivery gates.
