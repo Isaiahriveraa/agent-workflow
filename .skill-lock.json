@@ -382,15 +382,6 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },
-    "wf": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/wf",
-      "skillPath": "skills/wf/SKILL.md",
-      "skillFolderHash": "c6ee7ded730aa6c2885f79212391d339761deb08",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
-    },
     "explain": {
       "source": ".agents",
       "sourceType": "hub",

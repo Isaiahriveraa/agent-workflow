@@ -13,7 +13,8 @@ You don't remember every skill, so ask.
 The shared `AGENTS.md` selects interaction before delivery skills. Use `sprint`
 for short attempt-first engineering, `ideation` for attempt-first problem and
 option discovery, `school-learn` for course practice, `school-fast` for assignment
-completion, and `research` for concise evidence-based answers. These are profiles
+completion, `research` for concise evidence-based answers, and `tutor` when I
+want to write the code myself with coaching. These are profiles
 under `profiles/`, not additional skill pipelines. `coding` retains agent-written
 delivery. Terminal launchers select one session; conversational mode changes do
 not rewrite shared files. Research is also an activity within every mode.
@@ -42,7 +43,7 @@ Use the parts of this route that answer the current question:
 
 1. **`/design`** — frame the user, problem, and current workaround; walk one experience before deriving essential features. Use `grill-with-docs` for unresolved decisions and `/prototype` discovery mode when the flow needs to be seen or tried. Record evidence and assumptions in numbered behavior cards under `context/designs/<slug>/`, not future implementation plans.
 2. **`/skill:to-issues`** — turn the selected design topics into behavior-focused local tickets under `context/issues/<slug>/`. Review the drafts, then separately approve publication. New work does not require an implementation plan before a ticket exists.
-3. **`/research` or `/plan [ticket]`** — resolve the next eligible item unless one is named. Research only missing facts; plan only one small end-to-end slice against current code, then obtain approval. Do not plan the backlog up front.
+3. **`/research` or `/plan [ticket]`** — resolve the next eligible item unless one is named. Research only missing facts; plan only one small end-to-end slice against current code, then publish it as a plan map (`/skill:plan-map`) and get approval there. Do not plan the backlog up front.
 4. **`/implement [ticket]`** or **`/skill:issue-delivery <issue-number> [--plan <path>]`** — implement one ready item with its matching approved, fresh plan in an isolated worktree. Published delivery retains its delivery and publication gates; local implementation retains commit and PR approval. Never treat selection as permission to start a later stage.
 5. **Small, obvious fix?** → implement directly with `/skill:tdd` and `/skill:implement`; the full design/ticket/plan path is for work that benefits from those handoffs.
 6. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
@@ -50,7 +51,7 @@ Use the parts of this route that answer the current question:
 8. **Need to see or try the experience?** → **`/skill:prototype`** — discovery mode explores one flow cheaply; visual-comparison mode presents finished-quality alternatives when appearance or motion is the question. Record observations and return to design or the selected plan; selection does not authorize production work.
 9. **Need a spec draft or issue?** → **`/skill:to-spec`** — synthesize the conversation locally (Problem/Stories/Decisions/OutOfScope); review before separate exact-content publication approval. No code/file-path planning.
 10. **Standalone cited research?** → **`/skill:research`** — answer a concrete question using local evidence and primary sources; a standalone question needs no delivery queue.
-11. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), review changes (`/skill:code-review`), commit (`/skill:commit-review` for agent-built work, `/skill:commit` when the user reviews).
+11. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), let the `hardener` agent add failure tests, review changes (`/skill:code-review`), then ship with `/wf-auto` for agent-built work or `/wf` when the user reviews.
 
 Each stage owns a different question: design says what problem to solve, a ticket records the agreed behavior, a plan chooses how to change this repository, and delivery implements one approved ticket. Downstream stages reuse upstream intent and investigate only what their stage needs.
 
@@ -72,6 +73,7 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 - **Full code review** → **`/skill:code-review`** — start at `SKILL.md`, which routes by mode and loads stage-specific references only as needed. Choose `--runner subagents|opencode|omp` (default: ask). Independent reviewers and an adjudicator validate behavioral and concrete readability/design findings; the existing `complexity-reviser` directly performs authorized scoped test cleanup with retrospective Keep / Rewrite / Delete evidence. Unrelated design revisions retain proposal first, parent evaluation and authorization, behavior-preserving implementation, tests, then fresh independent validation. Fresh independent validation also follows automatic cleanup. No overlapping cleaner agent. Review-only and `--no-revise` skip cleanup; implementation ownership stays unchanged. Behavior-changing fixes require the user's decision, including during hardening. External OpenCode/OMP runs use `--review-only --report <path>`; OpenCode has `scripts/opencode-review.mjs`, while OMP uses verified installed Herdr/CLI dispatch.
 - **Question what a branch's code means, or critique it interactively** → **`/skill:pair-reviewer <branch-or-worktree>`** — resolves the target, gathers its plan, commit history, and code, then answers the current question in short plain conversation and stops, critiquing only when asked. Invokes `codebase-design` for a proportional design lens; ask to learn a principle for a concrete example from the target. Depth follows you: evidence, provenance, and the review method in `REVIEW-THINKING.md` come on request. Ask it to "probe me" and it hints at a defect instead of naming it, so you guess first. Read-only on the target; available to Claude when requested by name.
 - **Security audit** → **`/skill:security-review`**.
+- **Gate delegated work or clean up existing code** → **`/skill:enforce`** — a what/why table of what needs to change, then the changes.
 
 ## Architecture & design
 
@@ -89,6 +91,10 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 - **Build frontend with the main agent implementing** → **`/skill:frontend-implement`** — the main agent is the sole writer of UI code; sub-agents only research, gather context, and propose plans (never write code). User-invoked.
 - **Explore an experience or compare visual directions** → **`/skill:prototype`** — choose a lightweight discovery walkthrough for an unsettled flow, or two or more finished-quality visual directions, one per URL, when visual comparison is needed. Visual comparisons load `ui-design`; production still requires selection and its own approval gates.
 - **Anti-slop landing page, portfolio, or redesign** → **`/skill:design-taste-frontend`** — reads the brief, infers the aesthetic direction, then ships with strict anti-pattern bans and a mandatory pre-flight check; not for dashboards or data-heavy product UI.
+- **shadcn/ui components** → **`/skill:shadcn`** — add, search, fix, and style shadcn components; use in projects with a `components.json`.
+- **Animation and micro-interactions** → **`/skill:framer-motion-animator`** — Framer Motion page transitions, gestures, and scroll animations.
+- **Next.js conventions** → **`/skill:next-best-practices`** — file conventions, RSC boundaries, data fetching, route handlers, metadata.
+- **Slow site** → **`/skill:performance`** — web performance audit and fixes for load time.
 - **Explain a design/logic/schema question** → **`/skill:explain`** — the hub's Explain UI browser workspace (Excalidraw whiteboard + live previews).
 
 ## Planning & execution
@@ -99,6 +105,7 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 - **Design brief → tickets** → **`/skill:to-issues`** — drafts behavior-focused tickets without waiting for an implementation plan; after review and separate approval, optionally publishes them to GitHub.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues for discovery, not implementation tickets; planning now lives in `/plan`.
 - **Research next work or a named question** → **`/skill:research`** — reuse local evidence, investigate only the missing facts, and link the findings to the selected item.
+- **Split a big task across parallel subagents** → **`/skill:spawn`** — decompose along natural seams, give each agent full context, and review every change; the orchestrator does not write code.
 - **Agent too verbose** → say **`wait-what`** — forces a short, direct answer (3 lines).
 ## Session management
 
@@ -107,6 +114,7 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 - **Default chat style** → **`caveman`** — use when requested for concise, answer-first replies. Keep learning and decision explanations useful; persisted writing stays normal. Say `normal mode` to disable it for the session or `/caveman` to re-enable it.
 
 - **Handoff to new session** → **`/skill:handoff`** — compact conversation into handoff doc. Shorthand: **`/skill:ch`** — same flow, optional description.
+- **Stop an active mode or workflow** → **`/skill:cancel`** — triggered by "cancel", "stop", or "abort".
 - **Resume from handoff** → **`/skill:recall`** — pick up where a handoff left off.
 - **Recall dirty work without a handoff** → **`/rw [worktree-path]`** / **`/skill:recall-worktree`** — a lightweight read-only subagent returns the detailed story, changed-file evidence, and context freshness assessment to the main agent. Does not resume implementation.
 
@@ -114,16 +122,19 @@ For next-item selection and reconciliation, read [the shared workflow contract](
 
 - **TDD cycle** → **`/skill:tdd`** — red-green-refactor, one test at a time. Reference [tests.md](../tdd/tests.md) and [mocking.md](../tdd/mocking.md).
 - **E2E testing** → **`/skill:e2e-testing-patterns`** — Playwright/Cypress patterns.
+- **Postgres queries and schema** → **`/skill:supabase-postgres-best-practices`** — query performance, indexing, and schema design.
 
 ## Productivity
 
-- **Organize or update Jira work** → **`jira-tpm`** — inspect the live project, write actionable tickets, choose Epics and subtasks, assign meaningful priorities, link real blockers, and verify the board after edits.
+- **Practice navigating an unfamiliar repo (OA-style)** → **`/skill:codebase-drill`** — writes a spec of what the system must do and coaches me through implementing it; it never implements for me.
+- **Write or fix a prompt for an AI tool** → **`/skill:prompt-master`** — only when I explicitly ask for a prompt.
+- **Organize or update Jira work (Codex only, `~/.codex/skills`)** → **`jira-tpm`** — inspect the live project, write actionable tickets, set real priorities and blockers, and verify the board after edits.
 - **Re-derive a codebase's design decisions** → **`/skill:rederive`** — user-invoked only; learn through Socratic problems and incremental constraints using repository history and structure.
 - **Understand current code or practice reasoning** → **`/skill:tutor`** — user-invoked only; diagnose the specific gap, trace real code, and choose a hint, focused explanation, or closely matched worked example. Hands-on practice does not complete the learner's task; ordinary delivery stays agent-written.
 - **Learning sessions** → **`/skill:learn-plan`** — optional planning and explanation overlay; hands-on coding practice only when explicitly requested. Understanding while building does not require this skill. Ordinary backend collaboration stays in `/plan`.
 - **Capture a future idea** → **`/skill:later`** — record a future improvement note in `future/` without implementing.
 - **Show what this Herdr tab is doing on the Board** → **`/skill:board`** — record goal, current step, next steps and blockers for this tab's card. Model-invoked during work; it does not replace the plan.
-- **Commit + PR in one flow** → **`/skill:wf`** — commit-review then pr, two approval gates.
+- **Commit + PR in one flow** → **`/wf`** command (commit skill, then pr skill) when I reviewed the work; **`/wf-auto`** (commit-review, then pr) for agent-produced work.
 
 ## Quick utilities
 

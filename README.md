@@ -39,6 +39,7 @@ school-learn              # attempt-first course learning
 school-fast               # organize and complete assignment work
 research                  # concise, evidence-based answers
 coding                    # ordinary agent-written software delivery
+aw tutor                  # hands-on coaching: I write the code, the agent coaches
 sprint --harness claude    # Claude Code
 sprint --harness codex     # Codex CLI
 ```
@@ -58,7 +59,7 @@ hints, examples, and bounded delegation remain available. School Learn adapts
 this loop to course material; School Fast does not impose tutoring.
 
 Inside a session, say "switch to sprint", "school learn", "school fast",
-"research mode", "ideation mode", or "coding mode". A bounded request such as
+"research mode", "ideation mode", "tutor mode", or "coding mode". A bounded request such as
 "research this API" stays inside the current mode and returns to the pending
 question. Switching is instruction-based, not a harness-native command or a
 mechanical guarantee that a model will obey. Existing sessions may retain older
@@ -84,14 +85,18 @@ The coding workflow is experience-first and risk-aware: understand the user prob
 /design: user problem + experience walkthrough
 ↔ /prototype discovery when needed → agreed behavior + essential features
 → local tickets + dependency queue
-→ /research [item] when needed → /plan [item] → human plan approval
-→ /implement [item] → TDD → cleanup → code review → human feedback
-→ approved commit / draft PR → verified integration → refresh queue
+→ /research [item] when needed → /plan [item] → plan map → I approve on the map
+→ /implement [item] → TDD → code-judgment → hardener → code-review → my feedback
+→ /wf or /wf-auto (commits, then a draft PR) → verified integration → refresh queue
 
 or
 
 /implement (for a small, obvious fix that does not need the full workflow)
 ```
+
+Every plan becomes a plan map before I see it: a private page with the system picture on top, the build order underneath, and one rail for the decisions I need to make. I approve or comment there, and my answers come back to the terminal. In Claude Code, the `require-plan-map` hook won't let a session leave plan mode until the plan has a map line.
+
+After the code works, `code-judgment` cleans up the diff (dead code, names, YAGNI) so the reviewers look at a frozen version. The `hardener` agent then writes tests for the ways the change could really fail. `code-review` runs independent reviewers through an adjudicator, and only verified findings reach me.
 Design captures intent, task observations, assumptions, behavior examples, prerequisites, and provisional parallel groups. Discovery can return to earlier questions at any time; it does not authorize production work. The ticket index owns execution state. Research, planning, and implementation honor a named item or resolve the next eligible one from current evidence. Only that small slice is planned; implementation requires its matching approved, fresh plan. Each invocation stops at the requested stage. Publication, commits, PRs, and merge keep their separate human gates.
 
 Choose the next activity by uncertainty: investigate users for an unclear need, sketch or prototype an unclear interaction, and research a concrete feasibility gap before promising it. Examine costly decisions such as permissions, sensitive data, payments, and migrations early. Once behavior and feasibility are understood, stop exploring and build one tested flow across the necessary layers. Borrow rapid prototyping from RAD, feedback cycles from Agile, and upfront analysis for expensive commitments; do not impose every stage on a small fix.
@@ -116,6 +121,7 @@ The shared [workflow contract](references/workflow.md) defines the Markdown queu
 | Tickets | `to-issues` | Behavior-focused local tickets; review drafts, then separately approve publication | `context/issues/<slug>/` → GitHub issue numbers |
 | Research | `/research [item or question]` | Only the missing facts for an explicit or next eligible item; standalone questions supported | `context/research/` linked from queue |
 | Plan | `/plan [ticket]` | One current-code-based slice, test seams, Git baseline, and verification; awaiting approval | `context/plans/<slug>/` |
+| Plan map | `plan-map` | A private page where I review the plan, answer its open decisions, and approve | claude.ai artifact, linked from the plan |
 | Delivery | `/implement [ticket]` or `issue-delivery <issue> [--plan <path>]` | One approved concern through an isolated worktree, TDD, cleanup, review, and human gates | Queue → branch/worktree → draft PR |
 
 ### How to choose
@@ -138,9 +144,12 @@ Slash commands in `commands/` extend the tool's native surface:
 | `/ch` | Create a handoff document to resume work in a future session |
 | `/rw [worktree-path]` | Recall dirty work through a detailed read-only subagent report; flag outdated context without resuming implementation |
 | `/later` | Record a future improvement idea as a scannable note in `future/` |
-| `/wf` | Commit the current work with `commit-review`, then push and open a draft PR. |
+| `/wf [base]` | Commit with the `commit` skill, then open a PR with the `pr` skill. Use it when I've reviewed the work myself. |
+| `/wf-auto [base]` | Same as `/wf`, but commits through `commit-review`, so the `commit-pr-reviewer` agent approves the plan first. Use it for work an agent produced on its own. |
 
-Workflow skills (`spawn`, `enforce`, `pr`, `to-issues`) are invoked via `skill(name="skill-name")`, not slash commands.
+Everything else is a skill. Claude Code lists them as slash commands; Codex, OpenCode, and the others load them by name. When I'm not sure which one fits, `skill-index` routes the request.
+
+This hub repo is the exception to the branch-and-PR flow: I commit straight to `master` here (see `.claude/CLAUDE.md`).
 
 Worktree tooling in `scripts/` supports the one-concern-per-branch discipline: `new-worktree.sh <branch>` creates an isolated worktree per branch under `<repo>-worktrees/<branch path>` (e.g. `iuga-worktrees/feat/merch-page`), `cleanup-worktree.sh <branch>` tears it down after merge. New branch names must follow `<type>/<short-description>` with lowercase words joined by hyphens — `scripts/branch-name-rules.sh` rejects process words and dates (override: `WORKTREE_SKIP_NAME_CHECK=1`).
 
@@ -161,6 +170,17 @@ node ~/.agents/scripts/explain.mjs dev <slug> [--project <path>] [--port <number
 ```
 
 Edit only the generated project source (`explanations/<slug>/explanation.tsx` and local files). `.kit` and `node_modules` are links to the central Explain UI and must not be edited through an explanation. Save and load diagrams explicitly from the workspace; preview state is disposable and not automatically persisted.
+
+## Hooks
+
+`hooks/` holds the Claude Code hooks registered in `~/.claude/settings.json`:
+
+| Hook | What it does |
+|---|---|
+| `guard-destructive-bash.cjs` | Stops force pushes, hard resets, forced git cleans, and recursive forced deletes until I approve them |
+| `require-plan-map.cjs` | Blocks leaving plan mode until the plan has a plan map, then reminds the agent that approval happens on the map |
+| `board-stamp.sh` | Stamps each prompt on the tab's Herdr board |
+| `herdr-agent-state.sh` | Reports agent state to Herdr; Herdr installs and overwrites it |
 
 ## Adapters
 
@@ -221,6 +241,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `to-issues/` | Turn design topics into behavior-focused local tickets under `context/issues/<slug>/`; after review and separate approval, optionally publish them to GitHub |
 | `jira-tpm/` (`~/.codex/skills`) | Organize Jira backlogs with actionable tickets, meaningful priorities, appropriate subtasks, real dependencies, and verified status |
 | `plan/` | Discuss meaningful backend choices from the frontend experience, then plan one current-code-based slice with test seams and Git baseline for approval |
+| `plan-map/` | Publish a plan as a private plan map page where I review, decide, and approve |
 | `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
@@ -247,7 +268,6 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `recall-worktree/` | Reconstruct dirty work, history, and context freshness for the main agent through a lightweight subagent |
 | `later/` | Future improvement notes in `future/` |
 | `board/` | Keep each Herdr tab's Board card current: goal, step, next, blockers, and a short log of milestones and decisions |
-| `wf/` | Commit + PR in one flow (commit-review → pr). |
 | `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
 | `codebase-drill/` | OA-style codebase navigation training |
 | `learn-plan/` | Learning-session planning and explanation; human coding practice only when explicitly requested |
@@ -286,7 +306,7 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 ├── package.json           # Node package — scripts
 ├── sync.sh                # Multi-CLI sync pipeline
 ├── .skill-lock.json       # Skill registry (tracked)
-├── commands/              # Slash commands (ch, later, wf)
+├── commands/              # Slash commands (ch, later, wf, wf-auto)
 ├── agents/                # Specialist expert agents
 ├── skills/                # Workflow + domain skill packs
 │   ├── _shared/           # Shared utility modules

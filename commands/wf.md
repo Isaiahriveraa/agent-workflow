@@ -1,8 +1,9 @@
 ---
-description: Commit the current work with the commit-review skill, then push and open a PR via the pr skill — one concern, approved by the commit-pr-reviewer subagent before each step
+description: Commit the current work with the commit skill, then open a PR with the pr skill
 argument-hint: "[base-branch]"
 ---
 
 # wf — Commit and PR in One Flow
 
-Shorthand for the `wf` skill. Read `~/.agents/skills/wf/SKILL.md` and follow it, with `$ARGUMENTS` as its input. That skill holds the full procedure.
+1. Read `~/.agents/skills/commit/SKILL.md` and follow it to commit the current work. If the commits already exist, skip this step.
+2. Then read `~/.agents/skills/pr/SKILL.md` and follow it to push the branch and open the PR, using `$ARGUMENTS` as the base branch when given.
