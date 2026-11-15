@@ -30,6 +30,7 @@ policy copies here.
   instead of a long command walkthrough. This does not require a checkpoint for
   every action the agent performs independently.
 - Only use Haiku-model subagents; never spawn a subagent on any other model.
+- Do not add code comments that describe implementation details likely to become outdated; keep comments durable.
 <!-- end claude-reflect -->
 
 @RTK.md
