@@ -6,5 +6,9 @@ log="$HOME/.config/herdr/board-stamp.log"
 [ -n "${HC_TERMINAL_ID:-}" ] || exit 0
 prompt=$(jq -r '.prompt // empty') || { echo "board-stamp: hook input is not JSON" >>"$log"; exit 0; }
 [ -n "$prompt" ] || exit 0
+# Background-task reports are not asks from the person: keep them out of "asked:".
+case "$prompt" in
+  *'<task-notification>'*) exit 0 ;;
+esac
 node "$HOME/.config/herdr/scripts/board.mjs" stamp --prompt "$prompt" >/dev/null 2>>"$log" || true
 exit 0
