@@ -29,7 +29,7 @@ Produce the **rationale table**. No edits in this phase — the output is the co
 
 | ID | File:line | What | Why (rule) | Impact | Smallest fix |
 |---|---|---|---|---|---|
-| F1 | `src/auth.ts:42` | `catch (e) {}` swallows errors | AGENTS.md — **Errors explicit** | silent token-refresh failure | log + rethrow |
+| F1 | `src/auth.ts:42` | `catch (e) {}` swallows errors | `references/coding-contract.md` **Errors explicit** | silent token-refresh failure | log + rethrow |
 
 Every row needs a verbatim quote at `file:line`, the rule it violates, an observable impact, and the smallest fix. A row without evidence is dropped. No style noise, no "might/could" without a path.
 
@@ -45,7 +45,7 @@ Writers apply the rationale table rows **only**. Nothing outside the table — n
 Who writes:
 
 - **Gate mode** → the responsible implementing subagent (it has the context). Send it the table rows with exact file/symbol direction, acceptance criteria, and non-goals.
-- **Hygiene mode** → parallel spawned enforcers via `skill(name="spawn")`, one per module group, each receiving the full table rows for its files.
+- **Hygiene mode** → parallel enforcers via `skill(name="orchestration")`, one per module group, each receiving the full table rows for its files.
 
 Writer rules (every writer):
 

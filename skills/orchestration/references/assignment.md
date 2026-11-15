@@ -15,9 +15,29 @@ Report: <absolute path, or "final response">
 Blocks: <dependencies, or none>
 ```
 
+For a split, show one block per unit plus the integration order and any shared interface the units must agree on.
+
 ## Subagent prompt
 
-For a subagent the prompt is the assignment. Make it self-contained: workers cannot see this conversation. Include the goal, scope, out-of-scope items, the acceptance evidence, any source excerpts, the repository instructions that apply, and the required report shape below. Tell it to stop and report if scope needs to grow.
+For a subagent the prompt is the assignment. Use the shared brief in `~/.agents/references/agent-handoff.md`; workers cannot see this conversation. For implementation work, write these sections:
+
+1. **Task** — one bounded deliverable, the stage it belongs to, and why it is needed now.
+2. **Expected output** — exact file paths, signatures, and data shapes. The worker writes the bodies.
+3. **Context** — relevant file paths with excerpts, existing patterns with exact references, sibling implementations, types, constants, and prior decisions.
+4. **Conventions** — naming, error handling, imports, and testing patterns, with a reference file for each.
+5. **Must do** — the edge cases to handle, the behavior to validate, and the pattern to match.
+6. **Must not do** — files outside scope, new dependencies, type suppression, unrelated refactors, placeholders or TODOs.
+7. **Done when** — a pass or fail checklist: outputs exist, tests pass, diagnostics are clean on changed files, scope held.
+
+Tell the worker to stop and report if scope needs to grow, and to end with the report shape below.
+
+Before dispatching, read each prompt literally, as the worker will:
+
+- **It stands alone.** No "as discussed", no pronouns pointing at this conversation, no shorthand coined in this session.
+- **Every word carries weight.** Use the project's canonical terms and exact names for files, symbols, commands, and flags. A worker guesses at ambiguity, and the guess becomes code.
+- **Verbatim where exact.** Paths, identifiers, commands, and code fragments stay character for character.
+
+If a worker would still need to ask where something lives or which pattern to follow, add that context before dispatch.
 
 ## Child completion report
 

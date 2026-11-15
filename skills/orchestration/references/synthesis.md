@@ -31,6 +31,21 @@ Mode-specific barriers:
 
 A prompt sent, an idle state, or a report alone never completes a concern.
 
+## Reviewing a worker's result
+
+Assume nothing is correct until checked. Review each result against the user's request, the plan or ticket, the worker's task, expected output, must-do, must-not-do, and done-when lists, the codebase's conventions, and `references/software-design.md`. Reject it when it misses requirements, touches files outside scope, adds abstractions or dependencies nobody needs, duplicates logic, couples unrelated modules, skips failure handling, or tests only the happy path. Accept a result only when you can explain why it satisfies the assignment.
+
+Then check the pieces together: interfaces match across units, naming is consistent, no two units implemented overlapping logic, no unit broke another's assumption, and the whole still matches the original task and stays simple.
+
+## Correction loop
+
+Rejected work goes back to the worker that wrote it:
+
+1. **Send it back with direction** in behavior terms: what is wrong or missing, why it matters, and the approach you expect (files, edge cases, tradeoffs). Never paste fixed code.
+2. **The worker revises** and reports what changed and why it now meets the direction.
+3. **Re-review the change** against the failed items, and check nothing that passed has regressed.
+4. **Escalate** when the same defect returns twice or the loop exposes a decision only the user can make. Sharpen the spec, shrink the unit, or bring the decision to the user; do not take over the implementation.
+
 ## Notifications
 
 A subagent's result returns to the main agent when it finishes; that result is the signal. For CLI workers, a Herdr toast alerts the user only; it does not wake the coordinator or inject into its context. Without a verified event route, say that results are collected on the next user turn or a requested status check. Do not claim automatic monitoring while idle.
