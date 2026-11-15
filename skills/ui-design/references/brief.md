@@ -5,7 +5,7 @@ competent and wrong: it answers a question nobody asked, at a density nobody
 needed, in a stance the audience does not trust. Spend the first ten minutes
 here; it is the cheapest ten minutes in the project.
 
-## The five answers
+## The six answers
 
 Write them down before opening a browser. One line each.
 
@@ -23,6 +23,9 @@ Write them down before opening a browser. One line each.
    over this skill's taste.
 5. **What does good mean here?** "Trusted", "fast", "memorable", "calm",
    "compliant". This is the acceptance test the rest of the work is judged against.
+6. **Who already does this job well?** Name 3-5 products whose users do the
+   same job, then study how they organize it (`proven-products.md`) before
+   sketching directions.
 
 If an answer is missing and the choice is reversible, assume, and write the
 assumption in one line. If the choice is expensive to reverse (a direction, a
@@ -108,6 +111,7 @@ Before handing off (or after building), write one short block:
 - **Mode / stance / strategy** in one sentence.
 - **The one thing** the eye reaches first, and why it is the right one.
 - **What was deleted** from the default view, and where it went.
+- **Proven products studied**: the conventions followed, the choices made where they differ, and anything deliberately different.
 - **The defects I know about**: unrunnable states, unmeasured backgrounds,
   placeholders for assets, judgement calls the reviewer should check.
 

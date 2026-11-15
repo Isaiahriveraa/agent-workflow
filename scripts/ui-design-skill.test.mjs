@@ -17,11 +17,10 @@ test("ui-design is discoverable through the hub", () => {
   assert.equal(registry.skills["ui-design"].skillPath, "skills/ui-design/SKILL.md");
 });
 
-test("the design workflow can load its familiar-interaction guidance and all bundled references", () => {
+test("every reference the skill routes to exists, including inspiration and interaction guidance", () => {
   const skill = readFileSync(path.join(skillRoot, "SKILL.md"), "utf8");
   const references = [...skill.matchAll(/references\/[a-z-]+\.md/g)].map(([reference]) => reference);
-  assert.ok(references.includes("references/familiar-interactions.md"));
-  for (const reference of ["motion-and-transitions", "audience-and-wording", "approved-examples", "dislikes-and-exceptions"]) {
+  for (const reference of ["proven-products", "attention-and-momentum", "inspiration", "interaction", "motion", "components", "critique"]) {
     assert.ok(references.includes(`references/${reference}.md`), reference);
   }
   for (const reference of new Set(references)) {

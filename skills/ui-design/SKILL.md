@@ -1,6 +1,6 @@
 ---
-name: jnk-ui-design
-description: Design and critique user interfaces at the level of an expert designer — frame the brief, choose a mode and stance, pick between directions, delete before styling, carry hierarchy with type and space, spend color at glyph scale, design every state and motion, then verify in a real browser with a deterministic readability/density audit. Use when building, restyling or critiquing a page, component, screen or app shell; when output looks generic, flat or AI-default; when auditing hierarchy, spacing, type, color, motion or states. Branches to brief, craft, typography, composition, layout, hierarchy, components, interaction, motion, color-system, type-color-space, imagery, accessibility, critique, evaluation, exemplars, inspiration and sources references.
+name: ui-design
+description: Design and critique user interfaces at the level of an expert designer — frame the brief, study how proven products organize the same job, choose a mode and stance, pick between directions, delete before styling, carry hierarchy with type and space, spend color at glyph scale, design every state, motion and moment of attention, then verify in a real browser with a deterministic readability/density audit. Use when building, restyling or critiquing a page, component, screen or app shell; when output looks generic, flat or AI-default; when auditing hierarchy, spacing, type, color, motion or states. Branches to brief, craft, typography, composition, layout, hierarchy, components, interaction, motion, color-system, type-color-space, imagery, accessibility, critique, evaluation, exemplars, proven-products, attention-and-momentum, inspiration and sources references.
 ---
 
 # UI design
@@ -33,45 +33,52 @@ Silently following the weaker rule is not.
 
 ## Steps
 
-0. **Frame the brief.** Answer five things before designing: who uses this and
+0. **Frame the brief.** Answer six things before designing: who uses this and
    how often; what they must decide or do; what content actually appears (0, 1,
    1000 items; longest real string); what brand and system already exist; what
-   "good" means for this surface. Make a material assumption explicit or ask;
+   "good" means for this surface; who already does this job well. Make a material assumption explicit or ask;
    never default silently. Reference: `references/brief.md`.
-1. **Name the mode, then the stance.** Mode is what the surface is for:
+1. **Study proven products.** For a new screen or flow, look at 3-5 products
+   that do the same job and map how they organize it: first screen, main
+   action, navigation, grouping, labels, states, and the path to done. Follow
+   what they all agree on; where they differ, choose and say why. Borrow
+   structure, never the brand. Reference: `references/proven-products.md`.
+2. **Name the mode, then the stance.** Mode is what the surface is for:
    **Operate** (a tool read daily), **Read** (text is the product), **Persuade**
    (the action is the point), **Experience** (the feel is the product). Mode sets
    ambition; stance sets texture: utilitarian, editorial, warm product,
    technical, bold brand. Say it in one sentence. Reference: `references/craft.md`.
-2. **Two directions.** For a page or screen, sketch two structurally different
+3. **Two directions.** For a page or screen, sketch two structurally different
    layouts in ten minutes each (ASCII or a rough HTML file), then choose one and
    say why the other loses. For a component, sketch the version with one element
    deleted. A single direction committed blind is how a default ships.
    Reference: `references/exemplars.md`.
-3. **Name the one thing.** The element the eye must reach first, and the single
+4. **Name the one thing.** The element the eye must reach first, and the single
    job of the screen. If you cannot name it, there is no hierarchy yet.
    Reference: `references/hierarchy.md`.
-4. **Budget the default view.** List what the user must read to make the common
+5. **Budget the default view.** List what the user must read to make the common
    decision; keep that. Move original values, explanations, advanced fields and
    rare actions behind a clear Edit/Details action. Never remove
    decision-critical information, consent, or a required question.
-5. **Set the structure.** Grid, spans, content width, row density, edges and
+6. **Set the structure.** Grid, spans, content width, row density, edges and
    bleeding, what leads. Group by proximity before adding a surface or divider.
    References: `references/composition.md`, `references/layout.md`.
-6. **Set type, then tokens.** One scale, one measure, one leading per role; one
+7. **Set type, then tokens.** One scale, one measure, one leading per role; one
    radius derived from a base; one spacing scale; one shadow language. Most
    hierarchy is weight, size and space, not borders or color.
    References: `references/typography.md`, `references/type-color-space.md`.
    Start from `scripts/tokens.css`.
-7. **Build from anatomy and states.** Default, hover, focus-visible, active,
+8. **Build from anatomy and states.** Default, hover, focus-visible, active,
    disabled, loading, empty, error. Define motion for state changes, not
-   decoration. The scan view is not the edit form.
+   decoration. The scan view is not the edit form. Design for short attention:
+   the 5-second test, visible progress, highlighted changes, copy that leads
+   with the point, and no manipulative urgency.
    References: `references/components.md`, `references/interaction.md`,
-   `references/motion.md`.
-8. **Spend color, both themes.** Pick a color strategy (restrained, committed,
+   `references/motion.md`, `references/attention-and-momentum.md`.
+9. **Spend color, both themes.** Pick a color strategy (restrained, committed,
    full, drenched) from the stance. One accent, glyph-scale semantics, dark mode
    re-picked rather than inverted. Reference: `references/color-system.md`.
-9. **Look, then audit.** Render with real content at 390 and 1440, in every
+10. **Look, then audit.** Render with real content at 390 and 1440, in every
    theme, plus an opened editor and an error state. Fix what one look shows
    before looking again. Then run `scripts/audit-ui.js`, read
    `references/readability-density.md`, and walk `references/critique.md`. Judge
@@ -162,5 +169,7 @@ is not a rut.
 - Rubric, blind skill comparison, screenshot baselines: `references/evaluation.md`
 - Deterministic audit, profiles, exemptions, limits: `references/readability-density.md`
 - Working token starter: `scripts/tokens.css` (verified by `scripts/tokens-specimen.html`)
-- Products and mechanics worth borrowing: `references/inspiration.md`
+- How proven products organize the same job (study before designing): `references/proven-products.md`
+- Visual mechanics worth borrowing: `references/inspiration.md`
+- The 5-second test, momentum, highlighting change, short-attention copy, celebration, ethical guardrails: `references/attention-and-momentum.md`
 - Who the principles come from, and what was read: `references/sources.md`

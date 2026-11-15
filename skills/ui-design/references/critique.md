@@ -104,6 +104,16 @@ Use this checklist on the rendered UI, not the code. Look at the screenshot at d
 - [ ] Nothing is revealed on hover only; keyboard and touch can reach it.
 - [ ] Modals are justified; inline expansion or a panel was considered first.
 
+**Attention and momentum**
+- [ ] The 5-second test passes: what the screen is for and the next action are clear at a glance.
+- [ ] Value is shown before signup, setup, or permission requests.
+- [ ] Multi-part work shows progress as done out of total, with finished items visible.
+- [ ] A change the user caused is briefly highlighted and announced politely to assistive technology.
+- [ ] Headings, labels, and messages lead with the point; buttons are 1-3 words, verb first.
+- [ ] Celebration, if any, marks a real milestone and leads to a next step.
+- [ ] No fake urgency, guilt-trip declines, punishing streaks, or exits harder than entries.
+- [ ] The structure follows conventions shared by the proven products studied, or the design note says why not.
+
 **Resilience**
 - [ ] 200% zoom and 320px width reflow without clipping or horizontal scroll.
 - [ ] A 40% longer language does not break a button, tab or header.
