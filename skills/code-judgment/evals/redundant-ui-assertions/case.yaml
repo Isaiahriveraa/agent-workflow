@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: redundant-ui-assertions
+expected_outcome: |
+  Directly clean the authorized tests without per-test proposals or approval.
+  Remove redundant ID and obsolete-class constraints, including hardener scaffolding.
+  Retain supplied-title, link-destination, presence, and link-semantics coverage through
+  behavior interfaces that survive test-ID removal and attribute reordering. Keep the
+  renderer unchanged and report Keep / Rewrite / Delete evidence retrospectively.
+context:
+  scaffold_script: place-files.sh
