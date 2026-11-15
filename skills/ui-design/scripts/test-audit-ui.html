@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rendered audit contract fixtures</title>
+<style>
+body {font:16px/1.5 system-ui,sans-serif;color:#151515;background:#fff;margin:32px}
+button {font:inherit;padding:12px 20px} pre {font:14px/1.5 ui-monospace,monospace;white-space:pre-wrap}
+iframe {display:block;width:900px;height:400px;border:0}
+</style>
+<h1>Rendered audit contract fixtures</h1>
+<button id="run" type="button">Run browser fixtures</button>
+<pre id="result">Not run.</pre>
+<div id="fixture"></div>
+<script>
+// Each case drives the public auditUI API in an isolated, genuinely rendered
+// document. Expected failures prove the gate rejects plausible regressions.
+const cases = [
+  {name:'readable neutral scan', pass:true, body:'<h2 data-ui-role="primary">Email the meeting agenda</h2><p data-ui-role="secondary">P2 for Hall Council</p><button>Edit</button>'},
+  {name:'small supporting text', pass:false, body:'<h2 data-ui-role="primary">Email the agenda</h2><p style="font-size:11px">This text is too small.</p>'},
+  {name:'small record name', pass:false, body:'<h2 data-ui-role="primary" style="font-size:14px">Email the agenda</h2>'},
+  {name:'low contrast text', pass:false, body:'<h2 data-ui-role="primary">Email the agenda</h2><p style="color:#aaa">This sentence is low contrast.</p>'},
+  {name:'ancestor opacity lowers contrast', pass:false, body:'<h2 data-ui-role="primary">Email the agenda</h2><div style="opacity:.25"><p>Opacity changes the rendered text.</p></div>'},
+  {name:'transparent ancestors preserve white background', pass:true, body:'<div style="background:transparent"><h2 data-ui-role="primary">Email the agenda</h2><p>Transparent backgrounds do not imply black.</p></div>'},
+  {name:'closed details exclude deferred copy', pass:true, body:'<h2 data-ui-role="primary">Email the agenda</h2><details><summary>Details</summary><button style="font-size:8px;color:#aaa">Hidden control</button></details>'},
+  {name:'hidden tiny text excluded', pass:true, body:'<h2 data-ui-role="primary">Email the agenda</h2><p>Visible supporting text</p><span hidden style="font-size:8px;color:#aaa">Not visible</span><span style="opacity:0;font-size:8px">Also not visible</span>'},
+  {name:'gradient requires manual sampling', pass:false, body:'<h2 data-ui-role="primary">Email the agenda</h2><p style="background-image:linear-gradient(#fff,#ccc)">Unknown local text background.</p>'},
+  {name:'too many exposed scan controls', pass:false, body:'<h2 data-ui-role="primary">Edit overload</h2>'+Array.from({length:6},(_,i)=>'<button>Choice '+(i+1)+'</button>').join('')},
+  {name:'too much default scan copy', pass:false, body:'<h2 data-ui-role="primary">Long explanation</h2><p>'+('Every capture repeats a long explanation. '.repeat(9))+'</p>'},
+  {name:'insufficient region padding', pass:false, css:'.region{padding:4px}', body:'<h2 data-ui-role="primary">Email the agenda</h2><p>Room to read matters.</p>'},
+  {name:'small placeholder is real UI text', pass:false, css:'input::placeholder{font-size:11px;color:#111;opacity:1}', body:'<h2 data-ui-role="primary">Answer the question</h2><input aria-label="Answer" placeholder="Who receives the agenda?">'},
+  {name:'explicit opened editor has separate control budget', pass:true, profile:'editor', body:'<h2 data-ui-role="primary">Edit the agenda</h2>'+Array.from({length:5},(_,i)=>'<button>Option '+(i+1)+'</button>').join('')},
+  {name:'zero sampled text is not an automatic pass', pass:false, body:''},
+  {name:'inactive control is exempt from contrast', pass:true, body:'<h2 data-ui-role="primary">Email the agenda</h2><button disabled style="color:#bbb;background:#fff">Archive</button>'},
+  {name:'dense role allows 13px table cells', pass:true, css:'table{font-size:13px;border-collapse:collapse}th,td{padding:4px 8px;text-align:left}', body:'<table data-ui-role="dense"><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody><tr><td>Maya Okafor</td><td>Pending</td></tr></tbody></table>'},
+  {name:'13px table text without the dense role still fails', pass:false, css:'table{font-size:13px}', body:'<table><tbody><tr><td>Maya Okafor</td></tr></tbody></table>'},
+  {name:'dense region accepts 12px padding', pass:true, profile:'dense', css:'.region{padding:12px}', body:'<table data-ui-role="dense" style="font-size:13px"><tbody><tr><td>Maya Okafor</td><td>Pending</td></tr></tbody></table>'},
+  {name:'brand profile turns gradient text into a manual item', pass:true, options:{profile:'brand'}, check:report=>report.readability.manual.length>0 && report.readability.unsupported.length===0, body:'<h2 data-ui-role="primary">A bolder promise</h2><p style="background-image:linear-gradient(#fff,#ddd)">Text over a gradient field.</p>'},
+  {name:'brand profile still fails tiny text', pass:false, options:{profile:'brand'}, body:'<h2 data-ui-role="primary">A bolder promise</h2><p style="font-size:11px">Text that is too small stays too small.</p>'}
+];
+
+window.runAuditFixtures = async function () {
+  const host = document.getElementById('fixture');
+  const results = [];
+  const response = await fetch('./audit-ui.js', {cache:'no-store'});
+  if (!response.ok) throw Error('Could not load current audit source');
+  const source = await response.text();
+  for (const test of cases) {
+    const frame = document.createElement('iframe');
+    frame.title = test.name;
+    const loaded = new Promise(resolve => frame.addEventListener('load',resolve,{once:true}));
+    frame.srcdoc = '<!doctype html><html><meta charset="utf-8"><style>body{margin:0;background:#fff;color:#111;font:16px/1.5 system-ui}h2,p{margin:0 0 16px}h2{font-size:18px;font-weight:600}button,input{font:16px/1.5 system-ui;color:#111;background:#fff;padding:12px;margin:0 12px 12px 0;border:1px solid #777}.region{padding:24px;width:800px;box-sizing:border-box}'+(test.css||'')+'</style><section class="region" data-ui-density="'+(test.profile||'scan')+'">'+test.body+'</section></html>';
+    host.append(frame);
+    await loaded;
+    try {
+      frame.contentWindow.eval(source);
+      if (typeof frame.contentWindow.auditUI !== 'function') throw Error('auditUI source did not load');
+      const report = frame.contentWindow.auditUI(test.options);
+      const checked = typeof test.check !== 'function' || test.check(report);
+      results.push({name:test.name,expectedPass:test.pass,actualPass:report.pass,ok:report.pass===test.pass && checked,report});
+    } catch (error) {
+      results.push({name:test.name,expectedPass:test.pass,ok:false,error:String(error)});
+    } finally {
+      frame.remove();
+    }
+  }
+  const summary = {pass:results.every(result=>result.ok),total:results.length,passed:results.filter(result=>result.ok).length,results};
+  document.getElementById('result').textContent = JSON.stringify(summary,null,2);
+  return summary;
+};
+document.getElementById('run').addEventListener('click',()=>window.runAuditFixtures());
+</script>
+</html>
