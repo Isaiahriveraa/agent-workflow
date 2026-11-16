@@ -98,7 +98,6 @@ For next-ticket selection, read [the shared workflow contract](../../references/
 ## Planning & execution
 
 - **Plan work** → **`/plan [ticket]`** — the implementation plan for a taken ticket or a direct Full request, answering each acceptance criterion against current code.
-- **Understand or present an existing plan** → **`/skill:plan-standup-notes <plan-path>`** — turns the plan into compact iPad handwriting notes, a 30-second standup, and senior-level tradeoffs; explanation only, not implementation.
 - **Overview → tickets** → **`/skill:to-issues`** — splits an approved overview into behavior tickets and creates them on the GitHub Project once the split is approved.
 - **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues for discovery, not implementation tickets; planning now lives in `/plan`.
 - **Research next work or a named question** → **`/skill:research`** — reuse local evidence, investigate only the missing facts, and link the findings to the selected item.
@@ -124,11 +123,8 @@ For next-ticket selection, read [the shared workflow contract](../../references/
 ## Productivity
 
 - **Practice navigating an unfamiliar repo (OA-style)** → **`/skill:codebase-drill`** — writes a spec of what the system must do and coaches me through implementing it; it never implements for me.
-- **Write or fix a prompt for an AI tool** → **`/skill:prompt-master`** — only when I explicitly ask for a prompt.
 - **Organize or update Jira work (Codex only, `~/.codex/skills`)** → **`jira-tpm`** — inspect the live project, write actionable tickets, set real priorities and blockers, and verify the board after edits.
 - **Re-derive a codebase's design decisions** → **`/skill:rederive`** — user-invoked only; learn through Socratic problems and incremental constraints using repository history and structure.
-- **Understand current code or practice reasoning** → **`/skill:tutor`** — user-invoked only; diagnose the specific gap, trace real code, and choose a hint, focused explanation, or closely matched worked example. Hands-on practice does not complete the learner's task; ordinary delivery stays agent-written.
-- **Learning sessions** → **`/skill:learn-plan`** — optional planning and explanation overlay; hands-on coding practice only when explicitly requested. Understanding while building does not require this skill. Ordinary backend collaboration stays in `/plan`.
 - **Capture a future idea** → **`/skill:later`** — record a future improvement note in `future/` without implementing.
 - **Show what this Herdr tab is doing on the Board** → **`/skill:board`** — record goal, current step, next steps and blockers for this tab's card. Model-invoked during work; it does not replace the plan.
 - **Commit + PR in one flow** → **`/wf`** command (commit skill, then pr skill) when I reviewed the work; **`/wf-auto`** (commit-review, then pr) for agent-produced work.

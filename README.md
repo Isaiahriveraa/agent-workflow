@@ -189,7 +189,6 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `to-issues/` | Split an approved overview into behavior tickets and create them on the product's GitHub Project once the split is approved |
 | `jira-tpm/` (`~/.codex/skills`) | Organize Jira backlogs with actionable tickets, meaningful priorities, appropriate subtasks, real dependencies, and verified status |
 | `plan/` | Implementation plan for a taken ticket or a direct Full request, against current code; approval means build |
-| `plan-standup-notes/` | Existing plan → compact iPad learning notes, standup narrative, and production tradeoffs |
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
@@ -215,15 +214,12 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `board/` | Keep each Herdr tab's Board card current: goal, step, next, blockers, and a short log of milestones and decisions |
 | `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
 | `codebase-drill/` | OA-style codebase navigation training |
-| `learn-plan/` | Learning-session planning and explanation; human coding practice only when explicitly requested |
 | `rederive/` | User-invoked only: re-derive a codebase's design decisions through Socratic problems, repository history, and incremental constraints (`/skill:rederive`) |
-| `tutor/` | User-invoked only: adaptive coaching to diagnose the specific gap, trace real code, and use focused explanations or closely matched worked examples |
 | `diagnose/` | Bug and performance diagnosis |
 | `security-review/` | Team-mode vulnerability research |
 | `e2e-testing-patterns/` | Playwright/Cypress testing standards |
 | `enforce/` | Review what needs to change (what/why rationale table) → apply it. Gate for delegated work; hygiene pass for existing code |
 | `cancel/` | Cancel active modes |
-| `prompt-master/` | Prompt engineering |
 | `resolving-merge-conflicts/` | Merge conflict resolution |
 | `frontend-design/` | Page and application visual direction; prototypes only for unresolved choices |
 | `ui-design/` | Expert UI design and critique: study how proven products organize the job, hierarchy, type, color, states, attention and momentum, then a rendered audit |
@@ -272,12 +268,10 @@ Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, code
 │   ├── handoff/
 │   ├── recall/
 │   ├── codebase-drill/
-│   ├── learn-plan/
 │   ├── diagnose/
 │   ├── codebase-design/
 │   ├── resolving-merge-conflicts/
 │   ├── research/
-│   ├── prompt-master/
 │   ├── frontend-design/
 │   ├── frontend-implement/
 │   ├── design-taste-frontend/

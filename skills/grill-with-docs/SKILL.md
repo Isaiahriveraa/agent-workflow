@@ -134,7 +134,7 @@ follow-up whys -- leads with the mechanism, not the history:
   Anything longer gets split: verdict now, mechanics on request.
 - **Distill when useful.** For a consequential multi-step explanation or requested learning session, ask the user to state the rule in one line. Do not require this for routine cards or clarifications.
 
-Boundary: deep multi-step teaching stays opt-in (the `/tutor` skill path
+Boundary: deep multi-step teaching stays opt-in (the `/rederive` skill path
 when the user explicitly asks to understand something). These rules
 govern the default bundled explanation that ships with every grill
 question and clarification answer.

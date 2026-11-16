@@ -101,13 +101,6 @@
       "installedAt": "2026-02-17T06:42:06.050Z",
       "updatedAt": "2026-02-17T06:42:06.050Z"
     },
-    "tutor": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/tutor/SKILL.md",
-      "skillPath": "skills/tutor/SKILL.md",
-      "skillFolderHash": "3790082ef9efcf404818877a71b9479a5f6c2491"
-    },
     "to-spec": {
       "source": ".agents",
       "sourceType": "hub",
@@ -198,13 +191,6 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-09-04T00:00:00.000Z"
     },
-    "prompt-master": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/prompt-master/SKILL.md",
-      "skillPath": "skills/prompt-master/SKILL.md",
-      "skillFolderHash": "cbc934f56bb0c39e13297fde1111aa0edf3d11b7"
-    },
     "recall": {
       "source": ".agents",
       "sourceType": "hub",
@@ -258,15 +244,6 @@
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-08-19T19:09:54.846045Z"
     },
-    "learn-plan": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/learn-plan",
-      "skillPath": "skills/learn-plan/SKILL.md",
-      "skillFolderHash": "658f9fbeafcb915208a444cb8472afd696764f68",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
-    },
     "improve": {
       "source": "shadcn/improve",
       "sourceType": "github",
@@ -318,15 +295,6 @@
       "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/herdr",
       "skillPath": "skills/herdr/SKILL.md",
       "skillFolderHash": "237ad2ab2d8123e2bb37956d3a41eed141f2d22a",
-      "installedAt": "2026-05-25T14:00:00.000Z",
-      "updatedAt": "2026-05-25T14:00:00.000Z"
-    },
-    "plan-standup-notes": {
-      "source": ".agents",
-      "sourceType": "hub",
-      "sourceUrl": "file:///Users/isaiahrivera/.agents/skills/plan-standup-notes",
-      "skillPath": "skills/plan-standup-notes/SKILL.md",
-      "skillFolderHash": "7998c4bb91c1d13beae36f839872f68e75149881",
       "installedAt": "2026-05-25T14:00:00.000Z",
       "updatedAt": "2026-05-25T14:00:00.000Z"
     },

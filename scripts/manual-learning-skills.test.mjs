@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const hubRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-for (const name of ["rederive", "tutor"]) {
+for (const name of ["rederive"]) {
   test(`${name} requires explicit user invocation`, () => {
     const skill = readFileSync(path.join(hubRoot, "skills", name, "SKILL.md"), "utf8");
     const frontmatter = skill.match(/^---\r?\n([\s\S]*?)\r?\n---/);

@@ -24,7 +24,7 @@ Center reports on observable behavior, interfaces, data contracts, and key decis
 
 ## Learning while delivering
 
-When the human wants to understand while building, keep agent-written delivery as the default. Neither `learn-plan` nor tutor mode is required, and no extra workflow or document is added.
+When the human wants to understand while building, keep agent-written delivery as the default. Neither `rederive` nor tutor mode is required, and no extra workflow or document is added.
 
 Before an unfamiliar slice, explain one concrete action through the system: entry point, data passed, rule owner, state change, result, and important failure. Show caller usage and the proposed interface shape for consequential design choices.
 
