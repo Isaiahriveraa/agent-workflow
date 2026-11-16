@@ -33,9 +33,8 @@ and explicitly delegated implementation. An honest attempt is required, not fail
 If the human stalls, shrink the task or offer a hint. At the timebox boundary,
 use what they have; choose synthesis, targeted help, delegation, or an explicit
 extension. Never enforce a minimum duration or automatically repeat an attempt.
-A timebox is suggested unless a real timer was started and confirmed. Offer the
-local browser timer in `profiles/timer.html`; never claim to monitor elapsed time
-or send a notification from an ordinary waiting chat turn.
+A timebox is only a suggestion; never claim to monitor elapsed time or send a
+notification from an ordinary waiting chat turn.
 
 ## Select the next question, not a mandatory pipeline
 

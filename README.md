@@ -67,12 +67,6 @@ question. Switching is instruction-based, not a harness-native command or a
 mechanical guarantee that a model will obey. Existing sessions may retain older
 loaded instructions; explicitly ask them to reread `~/.agents/AGENTS.md`.
 
-For an actual local countdown, open `~/.agents/profiles/timer.html` in a browser
-(`open ~/.agents/profiles/timer.html` on macOS), select the duration, and click
-Start. It needs no server or dependencies. It does not send system notifications
-or communicate with the agent. HTML flow diagrams should likewise stay small and
-self-contained.
-
 The launchers add the shared contract and selected profile to Pi/Claude system
 instructions or Codex developer instructions. They do not disable project rules,
 permissions, hooks, extensions, or skill discovery. Other installed hooks and
