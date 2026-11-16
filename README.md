@@ -4,7 +4,7 @@ Shared operating contract for thinking, learning, research, and coding across te
 
 ## About
 
-`AGENTS.md` selects a session profile before loading a workflow. Adapters bridge tool ergonomics; coding delivery loads its detailed contract only when needed. The previous coding rules are preserved in `references/coding-contract.md`.
+`AGENTS.md` is the contract every agent reads: modes, speed tiers, worktrees, safety, approvals, and communication. Detailed rules load only when a task needs them (see **Contracts**). Adapters bridge tool ergonomics; Codex and Claude read the same `AGENTS.md`.
 
 The hub serves Claude Code, Codex CLI, OpenCode, Antigravity/Gemini, and Cursor CLI from the same commands, agents, and skills.
 
@@ -38,8 +38,8 @@ ideation                  # attempt-first problems and solution options
 school-learn              # attempt-first course learning
 school-fast               # organize and complete assignment work
 research                  # concise, evidence-based answers
-coding                    # ordinary agent-written software delivery
-aw tutor                  # hands-on coaching: I write the code, the agent coaches
+coding                    # the default mode: agent-written delivery
+tutor                     # hands-on coaching: I write the code, the agent coaches
 sprint --harness claude    # Claude Code
 sprint --harness codex     # Codex CLI
 ```
@@ -50,6 +50,8 @@ Set `AGENT_HARNESS=pi|claude|codex` to choose a default. Place `--harness` immed
 after the mode (or first after an alias); remaining arguments pass through to the
 harness. The launcher appends only the mode's profile; the harness already loads
 `AGENTS.md` itself.
+
+Coding is the default when no mode is chosen; the others change who thinks first.
 
 Sprint and Ideation use one 3–5 minute attempt at a time, capped at 10 minutes
 unless requested. The agent gives one concrete task and waits before revealing a
@@ -76,6 +78,29 @@ instructions or Codex developer instructions. They do not disable project rules,
 permissions, hooks, extensions, or skill discovery. Other installed hooks and
 stale adapter copies can still add context; this is not a claim that all harness
 startup overhead has been removed. Relevant repository safety still applies.
+
+## Speed and review
+
+Coding work opens with one line naming its speed, and I can change it any time:
+
+- **Quick**: typo, copy, config, rename. Edit, check, one-line report.
+- **Small**: a fix I asked for in 1–3 files. Failing test, fix, checks, inline design check, short walkthrough, then my OK to commit.
+- **Full**: features, schema, auth, or a ticket. Implementation plan first; my approval means build.
+
+Work moves up a speed on its own (auth, migrations, shared interfaces, more than ~3 files or 100 lines) and says so. Code review is my call: off for Quick and Small, recommended when a trigger fires, on for Full. Without subagents it runs as a labeled self-review.
+
+## Contracts
+
+| File | Owns |
+|---|---|
+| `AGENTS.md` | Modes, speed, worktrees, safety, approvals, communication |
+| `references/coding-contract.md` | Code rules: TDD, verification, errors, YAGNI, commits |
+| `references/software-design.md` | Interfaces and modules (A Philosophy of Software Design) |
+| `references/code-clarity.md` | Names and comments |
+| `references/test-cleanup.md` | Test hygiene |
+| `references/workflow.md` | Product work on GitHub Projects and who approves what |
+| `references/communication.md` | Planning, implementation, and research report shapes |
+| `references/agent-handoff.md` | Briefs for delegated work |
 
 ## Coding workflow
 
@@ -111,6 +136,7 @@ Tickets say what and why (user story, user flow, edge cases, acceptance criteria
 |---|---|
 | `guard-destructive-bash.cjs` | Stops force pushes, hard resets, forced git cleans, and recursive forced deletes until I approve them |
 | `board-stamp.sh` | Stamps each prompt on the tab's Herdr board |
+| `board-turn.sh` | Logs one line per finished turn (files edited, how it ended) on the tab's board |
 | `herdr-agent-state.sh` | Reports agent state to Herdr; Herdr installs and overwrites it |
 
 ## Adapters
@@ -139,6 +165,7 @@ I run my agents inside [Herdr](https://herdr.dev), a desktop app for terminals a
 | `herdr/scripts/board.mjs` | The command agents use to write a tab's board (`set --goal --now --log --decision ...`) | symlink `~/.config/herdr/scripts/board.mjs` |
 | `skills/board/` | Tells agents when to update the board and what is worth logging | via the skills symlink |
 | `hooks/board-stamp.sh` | UserPromptSubmit hook: stamps each prompt on the tab's board | via the hooks symlink; registered in `~/.claude/settings.json` |
+| `hooks/board-turn.sh` | Stop hook: logs each finished turn on the tab's board | registered in `~/.claude/settings.json` |
 | `herdr/opencode/board-stamp.js` | The same prompt stamp for opencode, as a plugin | symlink `~/.config/opencode/plugins/board-stamp.js` |
 
 Install the board in your own Herdr:
@@ -175,7 +202,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
-| `research/` | Standalone questions use the concise Research profile without a delivery queue; queued coding investigations retain their selection and evidence rules |
+| `research/` | Cited answers to standalone questions, or a decision for a Research ticket on the Project |
 | `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |
 | `implement/` | Explicit or next eligible approved slice → worktree → TDD → code-judgment → code-review → human gates; refresh queue |
 | `wait-what/` | 3-line verbosity corrective |
@@ -208,7 +235,7 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `prompt-master/` | Prompt engineering |
 | `resolving-merge-conflicts/` | Merge conflict resolution |
 | `frontend-design/` | Page and application visual direction; prototypes only for unresolved choices |
-| `ui-design/` | Familiar interactions, useful skeuomorphism, and visual UI craft |
+| `ui-design/` | Expert UI design and critique: study how proven products organize the job, hierarchy, type, color, states, attention and momentum, then a rendered audit |
 | `frontend-implement/` | Main agent builds agreed production UI directly; research specialists, checks, cleanup, review, and useful human feedback; prototypes only for uncertainty |
 | `design-taste-frontend/` | Anti-slop landing pages, portfolios, and redesigns — brief-first aesthetic inference, strict pre-flight check (leonxlnx/taste-skill) |
 | `ui-ux-pro-max/` | Searchable cross-stack UI patterns and accessibility guidance; agreed directions go to authorized production |
