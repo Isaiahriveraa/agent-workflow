@@ -27,10 +27,9 @@ Top to bottom, in a 360px-wide panel with no background of its own (the layout's
 
 ## Built from
 
-- **Trail:** every prompt (stamped by the hooks) joins the log as `kind: "prompt"` (› in `accent`), and changing `now` logs the previous step as `kind: "step"`, so the trail grows without the agent remembering to log. Prompts never count as new.
-- **Data:** one JSON file per tab in `~/.config/herdr-app/board/<tab id>.json`: `{ version, tab, root, project, goal, now, next[], blockers[], links[], log[{at, kind: "step" | "decision", text}], last_prompt, updated, by }`.
-- **Writer:** `herdr/scripts/board.mjs` in this repo (install it as `~/.config/herdr/scripts/board.mjs`). `board.mjs set --goal --now --next --blocker --clear-blockers --log --decision` from inside a Herdr tab; it finds the tab from the terminal's `herdr.tab` label (`hc get $HC_TERMINAL_ID --json`) and writes atomically. `board.mjs stamp --prompt` records the last prompt; the `hooks/board-stamp.sh` UserPromptSubmit hook calls it.
-- **Agent instructions:** `skills/board/SKILL.md` says when to write and when to log.
+- **Trail:** changing `now` logs the previous step as `kind: "step"`, and the Stop hook adds one summary line per finished turn, so the trail grows without the agent remembering to log.
+- **Data:** one JSON file per tab in `~/.config/herdr-app/board/<tab id>.json`: `{ version, tab, root, project, goal, now, next[], blockers[], links[], log[{at, kind: "step" | "decision", text}], updated, by }`.
+- **Writer:** `herdr/scripts/board.mjs` in this repo (install it as `~/.config/herdr/scripts/board.mjs`). `board.mjs set --goal --now --next --blocker --clear-blockers --log --decision` from inside a Herdr tab; it finds the tab from the terminal's `herdr.tab` label (`hc get $HC_TERMINAL_ID --json`) and writes atomically.- **Agent instructions:** `skills/board/SKILL.md` says when to write and when to log.
 - **Mod files:** `board.js` holds every rule (grouping, folded line, done, the 3-open limit, copied context) and is tested with plain `node --test tests/`; `main.js` only draws. Icons: Herdr's `workspace-chrome` set plus `copy.svg`, `circle-alert.svg`, `circle.svg`, `collapse.svg` from Lucide.
 - **herdr API:** `spaces()`, `focused()`, `theme()`, `props()`, `home()`, `readTextFile`, `watchFolder`, `run("tab.new")`, `cx.write_to_clipboard`.
 - **Layout block** (example, beside the tab block):

@@ -129,7 +129,6 @@ Tickets say what and why (user story, user flow, edge cases, acceptance criteria
 | Hook | What it does |
 |---|---|
 | `guard-destructive-bash.cjs` | Stops force pushes, hard resets, forced git cleans, and recursive forced deletes until I approve them |
-| `board-stamp.sh` | Stamps each prompt on the tab's Herdr board |
 | `board-turn.sh` | Logs one line per finished turn (files edited, how it ended) on the tab's board |
 | `herdr-agent-state.sh` | Reports agent state to Herdr; Herdr installs and overwrites it |
 
@@ -158,9 +157,7 @@ I run my agents inside [Herdr](https://herdr.dev), a desktop app for terminals a
 | `herdr/mods/board/` | Board mod: a catch-up panel with one row per tab (goal, current step, next step, blockers, a short log of milestones and decisions) plus an archive of closed tabs. | symlink `~/.config/herdr-app/mods/board` |
 | `herdr/scripts/board.mjs` | The command agents use to write a tab's board (`set --goal --now --log --decision ...`) | symlink `~/.config/herdr/scripts/board.mjs` |
 | `skills/board/` | Tells agents when to update the board and what is worth logging | via the skills symlink |
-| `hooks/board-stamp.sh` | UserPromptSubmit hook: stamps each prompt on the tab's board | via the hooks symlink; registered in `~/.claude/settings.json` |
 | `hooks/board-turn.sh` | Stop hook: logs each finished turn on the tab's board | registered in `~/.claude/settings.json` |
-| `herdr/opencode/board-stamp.js` | The same prompt stamp for opencode, as a plugin | symlink `~/.config/opencode/plugins/board-stamp.js` |
 
 Install the board in your own Herdr:
 
@@ -177,7 +174,7 @@ Then add a `board` block to one of your layouts, beside the tab block (use your 
   "background": "background", "border": { "width": 1, "color": "#33363b" }, "radius": 12 }
 ```
 
-And register `hooks/board-stamp.sh` as a UserPromptSubmit hook in your agent's settings. Tests: `node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/`.
+And register `hooks/board-turn.sh` as a Stop hook in your agent's settings. Tests: `node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/`.
 
 ## Skills
 

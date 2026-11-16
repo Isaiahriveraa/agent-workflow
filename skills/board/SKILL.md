@@ -19,7 +19,3 @@ The Stop hook (`~/.agents/hooks/board-turn.sh`) writes the log itself: after eac
 Rules:
 - `--next` and `--blocker` replace their whole list; repeat the flag per item.
 - Outside a Herdr tab it exits 1 and writes nothing. If it fails or is missing, say so once and carry on.
-
-Rules:
-- `--next` and `--blocker` replace their whole list; repeat the flag per item.
-- Outside a Herdr tab it exits 1 and writes nothing. If it fails or is missing, say so once and carry on.

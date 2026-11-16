@@ -123,16 +123,15 @@ export function repoGroups(cards, tabOrder) {
 		.map(([label, list]) => ({ label, cards: list }));
 }
 
-/** @behavior How many agent-written log lines came after `seenAt` (an ISO time); the user's own prompts aren't news. */
+/** @behavior How many log lines came after `seenAt` (an ISO time). */
 export function unseenCount(board, seenAt) {
 	if (!seenAt) return 0;
-	return (board?.log ?? []).filter((entry) => entry.kind !== "prompt" && entry.at > seenAt).length;
+	return (board?.log ?? []).filter((entry) => entry.at > seenAt).length;
 }
 
 /**
  * @behavior The one line shown under a folded card: the blocker, the done outcome,
- *   the current step, the goal, or (when the agent hasn't written one) the user's
- *   last prompt, which the prompt hook stamps; for a tab with no board, what it is.
+ *   the current step, or the goal; for a tab with no board, what it is.
  */
 export function peekLine(card) {
 	const board = card.board;
@@ -140,7 +139,7 @@ export function peekLine(card) {
 	if (board.blockers?.length) return `blocked: ${board.blockers[0]}`;
 	if (board.now) return board.now;
 	if (board.goal) return board.goal;
-	return board.last_prompt ? `asked: ${board.last_prompt}` : "";
+	return "";
 }
 
 /** @behavior Plain text a new agent can start from: goal, where it stands, decisions, next. */
@@ -151,7 +150,7 @@ export function contextText(card) {
 	if (board.now) lines.push(`Now: ${board.now}`);
 	for (const blocker of board.blockers ?? []) lines.push(`Blocked: ${blocker}`);
 	const log = board.log ?? [];
-	if (log.length) lines.push("Log:", ...log.slice(-8).map((entry) => `- ${entry.kind === "decision" ? "Decided: " : entry.kind === "prompt" ? "Asked: " : ""}${entry.text}`));
+	if (log.length) lines.push("Log:", ...log.slice(-8).map((entry) => `- ${entry.kind === "decision" ? "Decided: " : ""}${entry.text}`));
 	if (board.next?.length) lines.push("Next:", ...board.next.map((step) => `- ${step}`));
 	return lines.join("\n");
 }

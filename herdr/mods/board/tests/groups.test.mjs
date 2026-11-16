@@ -53,10 +53,6 @@ test("a task is done when the tab says so or its step starts with done", () => {
 	assert.equal(isDone({ status: "working", board: { now: "doneness check" } }), false);
 });
 
-test("a tab with only a stamped prompt shows what was asked", () => {
-	assert.equal(peekLine({ board: { last_prompt: "fix login" } }), "asked: fix login");
-});
-
 import { cardsFor, tabFolder } from "../board.js";
 
 test("a tab's folder is its agent's live folder, else its first terminal's", () => {
@@ -85,7 +81,3 @@ test("a board's own project and root win over the terminal's", () => {
 	assert.equal(card.root, "/code/api");
 });
 
-test("the user's own prompts never count as new", () => {
-	const board = { log: [{ at: "2026-01-02T00:00:00Z", kind: "prompt" }, { at: "2026-01-02T00:00:00Z", kind: "step" }] };
-	assert.equal(unseenCount(board, "2026-01-01T00:00:00Z"), 1);
-});

@@ -7,7 +7,6 @@
 //   board.mjs set [--goal T] [--now T] [--next T]... [--blocker T]... [--clear-blockers] [--link label=target]...
 //                 [--log T]... [--decision T]...
 //   board.mjs show
-//   board.mjs stamp --prompt T
 //
 // A list flag given again replaces that whole list. --log and --decision add to the
 // card's log instead (newest last, the oldest dropped past LIMITS.logItems).
@@ -20,7 +19,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { getProjectContext } from "../../scripts/project-context.mjs";
 
-export const LIMITS = { text: 200, item: 160, listItems: 5, logItems: 30, linkLabel: 40, linkTarget: 200, prompt: 120 };
+export const LIMITS = { text: 200, item: 160, listItems: 5, logItems: 30, linkLabel: 40, linkTarget: 200 };
 
 const clip = (text, max) => String(text).slice(0, max);
 const clipList = (items, max) => items.slice(0, LIMITS.listItems).map((item) => clip(item, max));
@@ -31,7 +30,7 @@ function appendLog(log, entries) {
 }
 
 export function emptyBoard({ tab, root, project }) {
-	return { version: 1, tab, root, project, goal: "", now: "", next: [], blockers: [], links: [], log: [], last_prompt: "", updated: null, by: null };
+	return { version: 1, tab, root, project, goal: "", now: "", next: [], blockers: [], links: [], log: [], updated: null, by: null };
 }
 
 /**
@@ -64,18 +63,6 @@ export function applySet(board, changes, { at, by }) {
 	if (changes.log !== undefined) trail.push(...changes.log.map(({ text, kind }) => ({ at, kind, text: clip(text, LIMITS.item) })));
 	if (trail.length) next.log = appendLog(board.log, trail);
 	return next;
-}
-
-/**
- * @behavior Records the latest prompt and time, and adds the prompt to the trail as a
- *   "prompt" entry (a repeat of the last prompt is not added twice). Goal, now and next
- *   are never touched.
- */
-export function applyStamp(board, { prompt, at, by }) {
-	const text = clip(prompt, LIMITS.prompt);
-	const last = (board.log ?? []).at(-1);
-	const repeat = last?.kind === "prompt" && last.text === text;
-	return { ...board, last_prompt: text, updated: at, by, log: repeat ? board.log ?? [] : appendLog(board.log, [{ at, kind: "prompt", text }]) };
 }
 
 const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
@@ -189,7 +176,7 @@ export function writeBoardAtomic(file, board) {
 
 export function parseArgs(argv) {
 	const [command, ...rest] = argv;
-	const parsed = { command, changes: {}, prompt: undefined };
+	const parsed = { command, changes: {} };
 	for (let index = 0; index < rest.length; index++) {
 		const flag = rest[index];
 		const value = () => {
@@ -212,7 +199,6 @@ export function parseArgs(argv) {
 			}
 			case "--log": (parsed.changes.log ??= []).push({ text: value(), kind: "step" }); break;
 			case "--decision": (parsed.changes.log ??= []).push({ text: value(), kind: "decision" }); break;
-			case "--prompt": parsed.prompt = value(); break;
 			case "--transcript": parsed.transcript = value(); break;
 			default: throw new Error(`unknown option ${flag}`);
 		}
@@ -239,11 +225,6 @@ function run(argv) {
 		console.log(`Board updated for tab ${tab}.`);
 		return;
 	}
-	if (args.command === "stamp") {
-		if (args.prompt === undefined) throw new Error("stamp needs --prompt");
-		writeBoardAtomic(file, { ...applyStamp(existing, { prompt: args.prompt, at, by }), root, project });
-		return;
-	}
 	if (args.command === "turn") {
 		if (args.transcript === undefined) throw new Error("turn needs --transcript");
 		const line = turnLine(fs.readFileSync(args.transcript, "utf8"));
@@ -251,7 +232,7 @@ function run(argv) {
 		writeBoardAtomic(file, { ...applySet(existing, { log: [{ text: line, kind: "step" }] }, { at, by }), root, project });
 		return;
 	}
-	throw new Error("usage: board.mjs set | show | stamp --prompt T | turn --transcript FILE");
+	throw new Error("usage: board.mjs set | show | turn --transcript FILE");
 }
 
 // Compare real paths: the command is usually run through a symlink (~/.config/herdr/scripts).

@@ -224,15 +224,13 @@ export default class Board extends View {
       const shown = showAll ? log : log.slice(-LOG_SHOWN);
       if (shown.length) {
         body.child(v_flex().mt(6).gap(1).children(shown.map((entry) => {
-          const prompt = entry.kind === "prompt";
-          const unseen = !prompt && entry.at > this.seenAt;
+          const unseen = entry.at > this.seenAt;
           const decision = entry.kind === "decision";
-          // The trail reads as a conversation: › what you asked, ✓ what got done, ◆ what was decided.
-          const mark = prompt ? "›" : decision ? "◆" : "✓";
+          // The trail reads as a log: ✓ what got done, ◆ what was decided.
+          const mark = decision ? "◆" : "✓";
           return h_flex().gap(8).items_start().text_size(11.5)
             .text_color(unseen ? t.foreground : decision ? t.muted : t.dim)
-            .when(prompt, (el) => el.mt(3))
-            .child(div().w(10).flex_none().text_color(prompt ? t.accent : decision ? t.foreground : t.done).child(mark))
+            .child(div().w(10).flex_none().text_color(decision ? t.foreground : t.done).child(mark))
             .child(div().flex_1().min_w(0).child(entry.text))
             .when(unseen, (el) => el.child(div().size(5).mt(6).rounded(3).flex_none().bg(t.accent)))
             .child(div().flex_none().text_size(11).text_color(t.dim).child(shortAge(entry.at, now)));
@@ -266,8 +264,7 @@ export default class Board extends View {
   since(cards, t) {
     const changed = cards.filter((c) => (c.board?.updated ?? "") > this.seenAt);
     const fresh = cards.reduce((sum, c) => sum + unseenCount(c.board, this.seenAt), 0);
-    // The prompt hook stamps a board on every prompt, so "updated" alone isn't news:
-    // only new log lines and tasks that newly need the user are.
+    // Only new log lines and tasks that newly need the user are news.
     const blocked = changed.filter((c) => c.status === "blocked").length;
     const done = changed.filter((c) => c.status === "done").length;
     if (fresh === 0 && blocked === 0 && done === 0) return null;

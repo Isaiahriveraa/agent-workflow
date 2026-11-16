@@ -7,7 +7,6 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
 	applySet,
-	applyStamp,
 	emptyBoard,
 	LIMITS,
 	parseArgs,
@@ -77,15 +76,6 @@ test("an empty blockers list clears the blockers", () => {
 	const blocked = applySet(fresh(), { blockers: ["Waiting on an API key"] }, { at: NOW, by: "t1" });
 	const cleared = applySet(blocked, { blockers: [] }, { at: LATER, by: "t1" });
 	assert.deepEqual(cleared.blockers, []);
-});
-
-test("stamping records the prompt and time and leaves the plan fields alone", () => {
-	const board = applySet(fresh(), { goal: "Ship login", next: ["Write tests"] }, { at: NOW, by: "t1" });
-	const stamped = applyStamp(board, { prompt: "p".repeat(LIMITS.prompt + 80), at: LATER, by: "t1" });
-	assert.equal(stamped.goal, "Ship login");
-	assert.deepEqual(stamped.next, ["Write tests"]);
-	assert.equal(stamped.last_prompt.length, LIMITS.prompt);
-	assert.equal(stamped.updated, LATER);
 });
 
 test("the tab comes from the terminal's herdr.tab label", () => {
@@ -190,14 +180,6 @@ test("a finished task's done line is not logged again as a step", () => {
 	assert.deepEqual(board.log, []);
 });
 
-test("each prompt joins the trail once", () => {
-	let board = emptyBoard({ tab: "t", root: "/r", project: "r" });
-	board = applyStamp(board, { prompt: "fix login", at: "T1", by: "x" });
-	board = applyStamp(board, { prompt: "fix login", at: "T2", by: "x" });
-	board = applyStamp(board, { prompt: "add tests", at: "T3", by: "x" });
-	assert.deepEqual(board.log.map((e) => [e.kind, e.text]), [["prompt", "fix login"], ["prompt", "add tests"]]);
-	assert.equal(board.goal, "");
-});
 
 const line = (entry) => JSON.stringify(entry);
 const userPrompt = (text) => line({ type: "user", message: { role: "user", content: text } });
