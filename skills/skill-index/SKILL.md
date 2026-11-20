@@ -42,19 +42,19 @@ is requested.
 Use the parts of this route that answer the current question:
 
 1. **`/design`** — frame the problem (a brief that ends in invest, explore, defer, or stop), then write the what-and-why overview: vision, goals, scope, MoSCoW, flow, domain, and ordered slices. Brief and overview become the parent issue. Never an implementation plan.
-2. **`/skill:to-issues`** — split the approved overview into behavior tickets (user story, flow, edge cases, acceptance criteria), run the CRUD check, and on approval of the split create them as sub-issues on the product's GitHub Project.
-3. **`/plan [ticket]`** — when a ticket is taken, plan how to answer it against today's code; approval means build. `/research` answers a Research ticket's question. Nothing is planned before a ticket is taken.
-4. **`/implement [ticket]`** — build the taken ticket from its approved plan, moving its card on the Project. Commit and PR approval stay with the user.
-5. **Small, obvious fix?** → follow AGENTS.md **Pick the speed before coding** (Quick or Small); the full design/ticket/plan path is for work that benefits from those handoffs.
+2. **`/skill:to-issues`** — split the approved overview into delivery issues (user story, flow, edge cases, acceptance criteria), run the CRUD check, and on approval of the split create them as sub-issues on the product's GitHub Project.
+3. **`/plan [issue]`** — when an issue is taken, plan how to answer it against today's code; approval means build. `/research` answers a Research issue's question. Nothing is planned before an issue is taken.
+4. **`/implement [issue]`** — build the taken issue from its approved plan, moving its card on the Project. Commit and PR approval stay with the user.
+5. **Small, obvious fix?** → follow AGENTS.md **Pick the speed before coding** (Quick or Small); the full design/issue/plan path is for work that benefits from those handoffs.
 6. **Sharpening an idea first?** → **`/skill:grill-with-docs`** — interview against the codebase. Writes glossary and ADRs to `context/`.
 7. **Need to see or try the experience?** → **`/skill:prototype`** — discovery mode explores one flow cheaply; visual-comparison mode presents finished-quality alternatives when appearance or motion is the question. Record observations and return to design or the selected plan; selection does not authorize production work.
 8. **Need a spec draft or issue?** → **`/skill:to-spec`** — synthesize the conversation locally (Problem/Stories/Decisions/OutOfScope); review before separate exact-content publication approval. No code/file-path planning.
 9. **Standalone cited research?** → **`/skill:research`** — answer a concrete question using local evidence and primary sources; a standalone question needs no delivery queue.
 10. **Ready to build?** → Build it. Use TDD (`/skill:tdd`), clean the diff (`/skill:code-judgment`), let the `hardener` agent add failure tests, review changes (`/skill:code-review`), then ship with `/wf-auto` for agent-built work or `/wf` when the user reviews.
 
-Each stage owns a different question: design says what problem to solve, a ticket records the agreed behavior, a plan chooses how to change this repository, and delivery implements one approved ticket. Downstream stages reuse upstream intent and investigate only what their stage needs.
+Each stage owns a different question: design says what problem to solve, an issue records the agreed behavior, a plan chooses how to change this repository, and delivery implements one approved issue. Downstream stages reuse upstream intent and investigate only what their stage needs.
 
-For next-ticket selection, read [the shared workflow contract](../../references/workflow.md). The product's GitHub Project is the source of truth; Ready tickets are not automatically safe to run in parallel. After feedback and integration, refresh the evidence and hand off the next item without starting it.
+For how to choose the next issue, read [the shared workflow contract](../../references/workflow.md). The product's GitHub Project is the source of truth; Ready issues are not automatically safe to run in parallel. After feedback and integration, refresh the evidence and hand off the next item without starting it.
 
 ## Creative output
 
@@ -97,9 +97,9 @@ For next-ticket selection, read [the shared workflow contract](../../references/
 
 ## Planning & execution
 
-- **Plan work** → **`/plan [ticket]`** — the implementation plan for a taken ticket or a direct Full request, answering each acceptance criterion against current code.
-- **Overview → tickets** → **`/skill:to-issues`** — splits an approved overview into behavior tickets and creates them on the GitHub Project once the split is approved.
-- **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → decision GitHub issues for discovery, not implementation tickets; planning now lives in `/plan`.
+- **Plan work** → **`/plan [issue]`** — the implementation plan for a taken issue or a direct Full request, answering each acceptance criterion against current code.
+- **Overview → issues** → **`/skill:to-issues`** — splits an approved overview into delivery issues and creates them on the GitHub Project once the split is approved.
+- **Decision issues (compat)** → **`/skill:issue-discovery`** — ambiguous ideas → GitHub decision issues for discovery, not delivery issues; planning now lives in `/plan`.
 - **Research next work or a named question** → **`/skill:research`** — reuse local evidence, investigate only the missing facts, and link the findings to the selected item.
 - **Split a big task across parallel subagents** → **`/skill:orchestration`** — propose the split, get approval, give each worker a self-contained prompt, review every result, and send corrections back to the worker.
 - **Agent too verbose** → say **`wait-what`** — forces a short, direct answer (3 lines).

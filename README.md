@@ -79,7 +79,7 @@ Coding work opens with one line naming its speed, and I can change it any time:
 
 - **Quick**: typo, copy, config, rename. Edit, check, one-line report.
 - **Small**: a fix I asked for in 1–3 files. Failing test, fix, checks, inline design check, short walkthrough, then my OK to commit.
-- **Full**: features, schema, auth, or a ticket. Implementation plan first; my approval means build.
+- **Full**: features, schema, auth, or an issue. Implementation plan first; my approval means build.
 
 Work moves up a speed on its own (auth, migrations, shared interfaces, more than ~3 files or 100 lines) and says so. Code review is my call: off for Quick and Small, recommended when a trigger fires, on for Full. Without subagents it runs as a labeled self-review.
 
@@ -103,24 +103,24 @@ Product work runs one outcome at a time, with a GitHub Project per product as th
 ```
 /design   frame the problem (invest / explore / defer / stop)
           → overview: vision, goals, scope, MoSCoW, flow, domain, slices
-/to-issues split into behavior tickets + CRUD check
+/to-issues split into delivery issues + CRUD check
           → I approve the split → sub-issues on the Project
-/plan     when a ticket is taken: implementation plan against today's code
+/plan     when an issue is taken: implementation plan against today's code
           → I approve → build
 /implement TDD → code-judgment → review per speed → my feedback → commit / PR
 
 or, for direct requests: Quick / Small / Full speed per AGENTS.md
 ```
 
-Tickets say what and why (user story, user flow, edge cases, acceptance criteria) and never how. Nothing technical is planned until a ticket is taken; an unknown becomes a Research ticket that ends in a decision. Drafts and plans live in the ignored `context/` folder and are never referenced from issues, PRs, or commits.
+Issues say what and why (user story, user flow, edge cases, acceptance criteria) and never how. Nothing technical is planned until an issue is taken; an unknown becomes a Research issue that ends in a decision. Drafts and plans live in the ignored `context/` folder and are never referenced from issues, PRs, or commits.
 
 | Stage | Skill | Output |
 |---|---|---|
 | Frame + overview | `design` | Problem brief and overview → the parent issue |
-| Tickets | `to-issues` | Behavior tickets as sub-issues with "blocked by" links on the Project |
-| Research | `/research [ticket or question]` | A decision for a Research ticket, or a cited answer |
-| Plan | `/plan [ticket]` | Implementation plan in `context/plans/<slug>/`, answering each acceptance criterion |
-| Build | `/implement [ticket]` | The change, tested and reviewed per speed, with the card moved along |
+| Issues | `to-issues` | Standalone GitHub sub-issues with "blocked by" links on the Project |
+| Research | `/research [issue or question]` | A decision for a Research issue, or a cited answer |
+| Plan | `/plan [issue]` | Implementation plan in `context/plans/<slug>/`, answering each acceptance criterion |
+| Build | `/implement [issue]` | The change, tested and reviewed per speed, with the card moved along |
 
 ## Hooks
 
@@ -186,13 +186,13 @@ Skills live in `skills/` covering the full pipeline and domain specialties. Key 
 | `human/` | Explicit natural-writing guidance; `/human` writes, rewrites, or audits text while preserving facts and voice. Ordinary chat uses natural defaults without mandatory skill reads |
 | `prototype/` | Optional discovery for an unclear flow or finished-quality comparisons of competing UI designs; not required for an agreed production direction. Keep production approval separate |
 | `design/` | Frame the problem (invest, explore, defer, stop) and write the what-and-why overview that becomes the parent issue |
-| `to-issues/` | Split an approved overview into behavior tickets and create them on the product's GitHub Project once the split is approved |
+| `to-issues/` | Split an approved overview into delivery issues and create them on the product's GitHub Project once the split is approved |
 | `jira-tpm/` (`~/.codex/skills`) | Organize Jira backlogs with actionable tickets, meaningful priorities, appropriate subtasks, real dependencies, and verified status |
-| `plan/` | Implementation plan for a taken ticket or a direct Full request, against current code; approval means build |
+| `plan/` | Implementation plan for a taken issue or a direct Full request, against current code; approval means build |
 | `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
 | `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
 | `improve/` | Read-only codebase survey → prioritized executor-ready plans |
-| `research/` | Cited answers to standalone questions, or a decision for a Research ticket on the Project |
+| `research/` | Cited answers to standalone questions, or a decision for a Research issue on the Project |
 | `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |
 | `implement/` | Explicit or next eligible approved slice → worktree → TDD → code-judgment → code-review → human gates; refresh queue |
 | `wait-what/` | 3-line verbosity corrective |

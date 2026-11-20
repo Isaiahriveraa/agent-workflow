@@ -1,26 +1,26 @@
 ---
 name: research
-description: Investigate missing facts against local code and primary sources, recording cited evidence in the repo. Use for "research next item" without a target, a selected ticket's evidence gaps, an explicit research question, or requested docs/API reading legwork.
+description: Investigate missing facts against local code and primary sources, recording cited evidence in the repo. Use for "research next item" without a target, a selected issue's evidence gaps, an explicit research question, or requested docs/API reading legwork.
 ---
 
 ## Standalone questions and in-mode research
 
 For an explicit question outside a delivery queue, use `~/.agents/profiles/research.md`.
-Do not load the coding workflow, create tickets, reconcile GitHub state, or spawn
+Do not load the coding workflow, create issues, reconcile GitHub state, or spawn
 a background agent. Inspect only sources relevant to the question. Return a short
 answer with decisive evidence and uncertainty; save a report only when requested
 or needed for an agreed ongoing investigation. A bounded research activity inside
 Sprint or School returns to that mode without bypassing the human's pending attempt.
 
 The remaining delivery-specific selection and artifact rules apply only when the
-request names a ticket, such as a Research ticket on the Project. In that case,
+request names an issue, such as a Research issue on the Project. In that case,
 read `~/.agents/references/workflow.md` as the authoritative contract.
 
 ## Select the delivery research scope
 
-An explicit ticket or question takes priority; ask only when the scope is genuinely unclear. Read the ticket with `gh issue view <n> --json title,body,state,blockedBy,parent` and its comments. Research only that ticket's question; never research the backlog. If its blocked-by issues are open, report the blocker instead of researching something else. A Research ticket ends in a decision: state the options, the evidence, and the recommendation, and ask the user to choose.
+An explicit issue or question takes priority; ask only when the scope is genuinely unclear. Read the issue with `gh issue view <n> --json title,body,state,blockedBy,parent` and its comments. Research only that issue's question; never research the backlog. If its blocked-by issues are open, report the blocker instead of researching something else. A Research issue ends in a decision: state the options, the evidence, and the recommendation, and ask the user to choose.
 
-Read the ticket and any linked prior research. Before outside documentation, inspect the current relevant local modules, callers, and tests to establish what already exists and which facts are actually missing. Investigate only those gaps for this slice. Reuse existing evidence rather than generating a duplicate without a reason. If no evidence is missing, skip the external pass and report that result. Standalone research on an explicit question needs no ticket; inspect relevant local context when available.
+Read the issue and any linked prior research. Before outside documentation, inspect the current relevant local modules, callers, and tests to establish what already exists and which facts are actually missing. Investigate only those gaps for this slice. Reuse existing evidence rather than generating a duplicate without a reason. If no evidence is missing, skip the external pass and report that result. Standalone research on an explicit question needs no issue; inspect relevant local context when available.
 
 Spin up a **background agent** to do the research, so you keep working while it
 reads the bounded question. Do not delegate an external pass when existing evidence already answers it.
@@ -68,6 +68,6 @@ Research may list architecture options and suggest one, but it never chooses one
 
 ## Completion
 
-Refresh affected evidence, ticket links, and open questions after feedback; distinguish verified facts from assumptions. Post the decision summary on the ticket only when the user asks, never a private `context/` path, and do not infer approval to publish, implement, or merge. Research informs one later plan; it does not plan or start delivery.
+Refresh affected evidence, issue links, and open questions after feedback; distinguish verified facts from assumptions. Post the decision summary on the issue only when the user asks, never a private `context/` path, and do not infer approval to publish, implement, or merge. Research informs one later plan; it does not plan or start delivery.
 
 The human-facing synthesis follows the **Research** report shape in `references/communication.md`: Question, Conclusion, Key Evidence, Options & Tradeoffs, Recommendation, and Remaining Uncertainty. Reference the cited Markdown file in the response.

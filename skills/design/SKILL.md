@@ -1,13 +1,13 @@
 ---
 name: design
-description: Frame a product problem and write its overview before any tickets exist. Use when the user says "design this", "organize this idea", "is this worth building", or needs a product flow understood; produces a problem brief and a what-and-why overview that become the parent issue, never an implementation plan.
+description: Frame a product problem and write its overview before any issues exist. Use when the user says "design this", "organize this idea", "is this worth building", or needs a product flow understood; produces a problem brief and a what-and-why overview that become the parent issue, never an implementation plan.
 ---
 
 # Design
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
 
-Help the user decide whether a problem is worth solving, then describe what and why at a level a teammate reads in five minutes. Design never decides how: architecture, schemas, libraries, and file layout are planned when a ticket is taken.
+Help the user decide whether a problem is worth solving, then describe what and why at a level a teammate reads in five minutes. Design never decides how: architecture, schemas, libraries, and file layout are planned when an issue is taken.
 
 Use this for product changes, bugs whose intended behavior is unclear, backend work, and integrations. Quick, Small, and direct Full requests skip it.
 
@@ -17,8 +17,8 @@ Use this for product changes, bugs whose intended behavior is unclear, backend w
 2. **Challenge.** Before any overview, call out the red flags from the workflow contract (a solution in the problem statement, no measurable success, an assumed cause, only the requester quoted). Ask the questions that would change the decision, ranked by importance × uncertainty.
 3. **Ask for the decision.** Present the problem brief and ask: invest, explore more, defer, or stop. Stop here unless the user chooses invest.
 4. **Walk one experience.** From a realistic starting state through the user's actions to the visible result and one consequential failure. Sketch it as a Mermaid flowchart; use `/skill:prototype` discovery only when the interaction must be tried. For non-UI work, walk the caller's interaction.
-5. **Complete the design.** Extend the same document, not a second overview that repeats the brief. Add the proposed experience with its mandatory flowchart, scope and ordered slices with priorities, blockers, and a first-release line. Define only necessary key nouns and relationships. Put unresolved questions last in the main document; technical unknowns become Research ticket candidates. Ask the user to approve the scope.
-6. **Hand off.** Once the scope is approved, `/skill:to-issues` splits the slices into tickets. Design does not publish issues or start implementation.
+5. **Complete the design.** Extend the same document, not a second overview that repeats the brief. Add the proposed experience with its mandatory flowchart, scope and ordered slices with priorities, blockers, and a first-release line. Define only necessary key nouns and relationships. Put unresolved questions last in the main document; technical unknowns become Research issue candidates. Ask the user to approve the scope.
+6. **Hand off.** Once the scope is approved, `/skill:to-issues` splits the slices into issues. Design does not publish issues or start implementation.
 
 ## Output
 
@@ -53,11 +53,11 @@ Frame first, filling only the sections needed for the investment decision. Compl
 - Flowcharts are mandatory, not a substitute for the short walkthrough. Use fenced `mermaid` blocks, simple syntax, stable node IDs, and quoted labels. Fix syntax when updating a diagram; do not claim rendering was checked unless it was. Add other diagrams only when they clarify a decision.
 - Prefer observable behavior and plain language over technical prescriptions.
 - Research only what verifies current behavior or settles a material factual question, and cite it.
-- An open technical question never blocks the overview; it becomes a Research ticket or is answered when its ticket is taken.
+- An open technical question never blocks the overview; it becomes a Research issue or is answered when its issue is taken.
 - Do not guess a product decision to make the overview look complete; leave it as an open question.
 
 ## Done when
 
 - The user has made an invest, explore, defer, or stop decision on the problem brief.
-- For invest: the overview states what and why with no implementation detail, every unknown is a Research ticket candidate, and the user approved the scope.
+- For invest: the overview states what and why with no implementation detail, every unknown is a Research issue candidate, and the user approved the scope.
 - `python3 ~/.agents/scripts/slop-lint.py context/designs/<slug>/` passes, or remaining hits are deliberate.

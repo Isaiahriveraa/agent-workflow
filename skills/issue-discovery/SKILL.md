@@ -1,13 +1,13 @@
 ---
 name: issue-discovery
 description: >-
-  Turn an unresolved product or engineering choice into a clear decision issue. Use design for behavior briefs and planning for the technical approach to one selected ticket.
+  Turn an unresolved product or engineering choice into a clear decision issue. Use design for behavior briefs and planning for the technical approach to one selected issue.
 disable-model-invocation: true
 ---
 
 # Issue Discovery
 
-Use this when the work is to make or record a decision, not to deliver a behavior change. An unresolved user-facing behavior belongs in `/design`; implementation planning happens later in `/plan`, after a ticket is selected. This skill does not research deeply, plan implementation, or create delivery tickets.
+Use this when the work is to make or record a decision, not to deliver a behavior change. An unresolved user-facing behavior belongs in `/design`; implementation planning happens later in `/plan`, after an issue is selected. This skill does not research deeply, plan implementation, or create delivery issues.
 
 ## Decision issues
 
@@ -54,12 +54,12 @@ Do not introduce a manual-task label unless there is a recurring, clearly unders
 
 ## Invocation
 
-1. **Confirm this is a decision, not a delivery ticket.** If the user needs a behavior change, redirect to `/design`; if they need technical direction for a selected ticket, redirect to `/plan`.
+1. **Confirm this is a decision, not a delivery issue.** If the user needs a behavior change, redirect to `/design`; if they need technical direction for a selected issue, redirect to `/plan`.
 2. **Propose the issue set** — present the planned decision issues to the user for approval.
 3. **Create issues** — once approved, create GitHub issues with plain public labels.
 4. **Resolve** — if working a decision, resolve at most one per session.
 
 ## Done when
 
-- Behavior changes are routed to `/design`, and selected tickets are routed to `/plan` for technical planning.
+- Behavior changes are routed to `/design`, and selected issues are routed to `/plan` for technical planning.
 - Approved decision issues are published to GitHub with plain public labels.

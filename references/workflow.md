@@ -1,10 +1,10 @@
 # One outcome at a time
 
-The delivery contract for product work: frame the problem, write an overview,
-split it into tickets on a GitHub Project, and build one ticket at a time.
-`AGENTS.md` owns interaction, modes, speed, and worktrees. Quick and Small fixes,
-and Full requests made directly, never need a ticket. Reading this contract
-never authorizes a later stage.
+The GitHub delivery contract for product work: frame the problem, capture the
+approved overview in a parent issue, and deliver one sub-issue at a time on the
+product's GitHub Project. `AGENTS.md` owns interaction, modes, speed, and
+worktrees. Quick and Small fixes and direct Full requests do not require a
+GitHub issue. Reading this contract never authorizes a later stage.
 
 ## Each artifact has one job
 
@@ -30,16 +30,16 @@ from the approved plan.
    mandatory flowchart, scope, ordered slices, key nouns, and unresolved questions.
    What and why, never how. I approve the scope. The design becomes the
    **parent issue**, without repeating a separate brief and overview.
-3. **Split** (`to-issues`) — each slice becomes a behavior ticket a teammate or
+3. **Split** (`to-issues`) — each slice becomes a delivery issue a teammate or
    agent can pick up cold. My approval of the split creates the issues as
    sub-issues of the parent, with "blocked by" links, on the Project.
-4. **Take a ticket** (`plan`, then `implement`) — the agent writes the
+4. **Take an issue** (`plan`, then `implement`) — the agent writes the
    implementation plan only now, against today's code, and shows how it answers
    each acceptance criterion. My approval of that plan means build it.
 
-Nothing technical is planned ahead of a ticket being taken. An unknown that
-could sink the work becomes a **Research** ticket: a time-boxed question that
-ends in a decision, picked up early like any other ticket.
+Nothing technical is planned until the delivery issue is taken. An unknown
+that could sink the work becomes a **Research** issue: a time-boxed question
+that ends in a decision and is picked up early.
 
 ## Frame: the problem brief
 
@@ -60,7 +60,7 @@ appendix at the very bottom; never publish it.
 
 Call out red flags: the problem names a tool or feature; only the requester is
 quoted; no measurable success; an assumed cause or a symptom-level fix; a
-backlog with only Feature tickets and no Research. Skip PRDs, RACI charts, and anything
+backlog with only Feature issues and no Research. Skip PRDs, RACI charts, and anything
 that would not change the decision.
 
 ## Overview
@@ -86,7 +86,7 @@ if the diagram fails to render. Other diagrams are optional.
 
 **Scope and slices** states **In**, **Out**, and ordered end-to-end slices,
 each with Must/Should/Could priority and blockers, plus a first-release line.
-Technical unknowns go in Open questions as Research ticket candidates.
+Technical unknowns go in Open questions as candidates for Research issues.
 
 Use short bullets, plain language, `##` headings, and **bold** scan labels for
 MarkText. Keep one home for each fact. Never architecture, schemas, libraries,
@@ -96,35 +96,36 @@ One design has one `00-index.md`. Separate problems or independently approvable
 outcomes get separate design folders; steps toward the same outcome are slices.
 A collection index only links to designs, without duplicating their content.
 
-## Split: rules for tickets
+## Split: rules for issues
 
-- **Vertical slices.** Each ticket is a thin end-to-end piece a user can see
-  working. Never split by database, API, and UI layers.
+- **Vertical slices.** Each delivery issue is a thin end-to-end piece a user
+  can see working. Never split by database, API, and UI layers.
 - **Thinnest working path first**, then variations and exceptions as their own
-  tickets.
+  issues.
 - **INVEST** — independent, negotiable, valuable, estimable, small, testable.
-- **Effort XS, S, or M.** Split anything larger; turn anything that cannot be estimated into a Research ticket first.
+- **Effort XS, S, or M.** Split anything larger; turn anything that cannot be estimated into a Research issue first.
 - **Order** — Must above the release line, then risky items early, then whatever
   unblocks the most. Ask: would removing this stop the user finishing the task?
 - **CRUD check before approval.** Grid the slices against the domain's things
   and mark create, read, update, delete. Each empty column is a question for me:
-  a missing ticket or a deliberate Won't.
+  a missing issue or a deliberate Won't.
 
-## Ticket format
+## Issue format
 
-Written for a teammate who missed every meeting. What and why, never how.
-Use short bullets and plain language; the parent holds the broader design.
+Apply the [writing skill's GitHub issue guidance](../skills/writing/SKILL.md#github-issues).
+The issue says what and why, never how. The parent holds the broader design,
+not facts the reader needs to understand this issue.
 
 ```markdown
-# <Verb-led title>
+# <Verb-led title naming the affected thing and outcome>
 
 Parent: #<n>
 
 ## Change
-Who needs what to become possible or different?
+<Who needs what to change, and where it happens. For a Bug, give actual and expected behavior. For Research, state the question.>
 
 ## Why
-What happens today and why this specific change matters.
+<What happens today and what consequence makes this work matter. For Research, name the decision it unblocks.>
 
 ## Flowchart
 <Mandatory Mermaid flowchart: this slice's main path and consequential failure>
@@ -170,7 +171,7 @@ name the concrete maintenance result. Split unrelated outcomes instead of
 calling everything a Task. `feat`, `fix`, `chore`, `docs`, and `refactor` remain
 commit/PR prefixes, not a second issue classification system.
 
-### Research tickets
+### Research issues
 
 Research promises an answer, not a product change. Use the same compact format:
 **Change** names the question, **Why** names the decision it unblocks,
@@ -180,7 +181,7 @@ user's decision. **Out of scope** excludes implementation. Agree a timebox;
 if it ends without an answer, report the unresolved blocker rather than claiming
 completion. Taking it starts `research`, not a coding plan.
 
-A ticket with a report or dashboard adds: the decision it supports and who
+An issue with a report or dashboard adds: the decision it supports and who
 makes it, users and access limits, data sources, static or live, freshness, and
 what it shows with no data. Keep frameworks, schemas, data fields, file layout,
 and task lists out.
@@ -216,8 +217,8 @@ native GitHub issue fields own Type and Assignees, and relationships own depende
   the overview:
   Situation and goal, Desired experience with flowchart, Release scope, Done when).
   When touching a Project, find open orphans and propose grouping them under
-  existing or new parent issues. Keep one level: parent issues hold tickets,
-  tickets hold none. Call them "parent issues", not epics.
+  existing or new parent issues. Keep one level: parent issues have sub-issues;
+  sub-issues have none. Call them "parent issues", not epics.
 - **Backlog** — captured, but not yet agreed, understood, or unblocked.
 - **Ready** — passes INVEST, sized, behavior settled (or a Research question
   bounded), with no unresolved dependency blocking the start.
@@ -246,19 +247,19 @@ token's `project` scope; when it is missing, ask me to run
 
 ## Technical planning: apply PSD
 
-A taken delivery ticket or a direct Full-speed request needs an approved plan
+A taken delivery issue or a direct Full-speed request needs an approved plan
 before implementation. Use [plan](../skills/plan/SKILL.md) to apply
 [Software Design](software-design.md) before choosing the approach. Quick and
 Small work does not need a plan. My approval means build; a material change
 to the approved approach returns for approval.
 
-## Take a ticket
+## Take an issue
 
-1. Pick an explicit ticket, or the highest-priority Ready ticket whose
+1. Pick the requested issue, or the highest-priority Ready issue whose
    blocked-by issues are all closed. Move it to In progress.
-2. Read the ticket, comments, and relevant current code. If the promised behavior
+2. Read the issue, comments, and relevant current code. If the promised behavior
    conflicts with the code, or a product decision is missing, bring the exact
-   question to me. Never silently rewrite the ticket to fit an implementation.
+   question to me. Never silently rewrite the issue to fit an implementation.
 3. For a delivery issue, write the technical plan with `plan` only now. Lead with
    approach, meaningful tradeoffs, and risks; follow with affected modules,
    data/API changes, failures, and tests. Reference each Done when item rather
@@ -267,9 +268,9 @@ to the approved approach returns for approval.
    review is done, and to Done once merged and verified. A material change to
    the approved approach returns for approval; a changed promise returns to the issue.
 
-For a Research ticket, use `research` instead of steps 3–4: investigate the
+For a Research issue, use `research` instead of steps 3–4: investigate the
 bounded question, present evidence and options, and ask for the decision.
-Starting another ticket, publishing, closing issues, and implementing a finding
+Starting another issue, publishing, closing issues, and implementing a finding
 still require their own approval.
 
 ## Private working files
@@ -286,19 +287,19 @@ commit message, or code comment; published text must stand on its own.
 | Invest in a framed problem | Me |
 | Overview scope | Me |
 | The split, which also creates the issues on the Project | Me |
-| Implementation plan for a taken ticket | Me; approval means build |
+| Implementation plan for a taken issue | Me; approval means build |
 | Worktree placement | `AGENTS.md` **Choose the worktree before implementation** |
 | Code review | `AGENTS.md` **Pick the speed before coding** |
 | Deleting tests | Me, or my task-scoped cleanup authorization |
 | Commit | Me (`commit`); `commit-review` only for unattended work |
 | Push or open a PR | Me; invoking `/pr`, `/wf`, or `/wf-auto` counts |
-| Close, delete, or archive issues; merge; start the next ticket | Me, every time |
+| Close, delete, or archive issues; merge; start the next issue | Me, every time |
 
 Reviewer agents check quality; they never grant these approvals.
 
 ## Parallel work
 
-Before running tickets in parallel, inspect shared files, contracts, migrations,
-and integration order. Serialize a ticket that consumes another's unfinished
-contract, and coordinate independent tickets through `orchestration`. One
-ticket in progress per person or agent.
+Before working on issues in parallel, inspect shared files, contracts,
+migrations, and integration order. If one issue depends on an unfinished
+contract from another, work on them in order. Coordinate independent issues
+through `orchestration`. Keep one issue in progress per person or agent.

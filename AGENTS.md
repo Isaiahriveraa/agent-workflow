@@ -45,7 +45,7 @@ For actual software implementation, code review, or consequential technical
 design, read `references/coding-contract.md` before doing that work. It owns
 TDD, architecture, verification, code quality, and commit discipline. In
 Sprint, it governs implementation quality, not who attempts the reasoning first.
-Load `references/workflow.md` only when design, tickets, planning, or delivery
+Load `references/workflow.md` only when design, GitHub issues, planning, or delivery
 need it. Standalone research and non-code schoolwork need neither.
 Repository-local restrictions still apply: inspect relevant local instructions
 before editing or executing project code. Git storage does not activate coding
@@ -104,7 +104,7 @@ Match ceremony to risk. Open coding work with one line naming the speed, such as
   before → after walkthrough and wait for my OK to commit. No plan or worktree
   question.
 - **Full** — features, new interfaces, schema, auth, multi-concern work, and
-  tickets from the Project. Write an implementation plan with `plan` first; my
+  issues from the GitHub Project. Write an implementation plan with `plan` first; my
   approval of it means build (`references/workflow.md`).
 
 Move up a speed, and say so, when the work touches auth, payments, data

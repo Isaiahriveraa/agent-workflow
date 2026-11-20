@@ -1,6 +1,6 @@
 ---
 name: writing
-description: Write and edit anything a person reads — answers, docs, commit messages, design notes, error text — in plain English that leads with the answer and gives a next step when needed. Use for any reply longer than a sentence, and before writing or editing documentation.
+description: Default communication contract for plain-English replies, updates, docs, commit messages, design notes, GitHub issues, and error text. Read for any reply longer than a sentence and before writing or editing documentation.
 ---
 
 # Writing
@@ -127,6 +127,33 @@ code and not the conversation.
   transcript.
 - A table when the reader compares rows; prose when the reader follows one
   argument; neither for two facts.
+
+## GitHub issues
+
+Write for someone who missed the discussion. The first pass through the title,
+**Change**, and **Why** should answer: what changes, for whom or where, and why
+it matters. Keep the broader design in the parent; the issue must make sense
+without opening it, reading comments, or looking at the code.
+
+- **Title and Change:** Name the affected thing and the outcome in product
+  terms. For a bug, name where it happens and contrast actual with expected
+  behavior. For a Task, name what will be true when it is done. For Research,
+  state the question to answer and what decision the answer will inform.
+- **Why:** Give the current situation and its concrete consequence. Do not
+  repeat the requested change or invent an impact you have not established.
+- **Flowchart and Done when:** Show the path and consequential failure using
+  the same terms as the prose. Make each checkbox independently checkable:
+  name the starting state, the action, and the result the reviewer can observe.
+  The written issue must still make sense if the diagram does not render.
+- **Out of scope:** Name only likely misunderstandings about the boundary.
+  Use links for related work, not in place of explaining this issue.
+
+Avoid shorthand like "handle this", "fix the flow", or "as discussed". Name
+what those phrases refer to. For example, replace "Fix archive behavior" with
+"Move archived projects out of the active list". Before sharing, try summarizing
+what changes, why, and how to verify it using only the draft. Rewrite what you
+had to infer. If a missing product decision prevents an accurate draft, flag
+it as **Open:**; do not guess or mark the issue Ready.
 
 ## Bad news and limits
 

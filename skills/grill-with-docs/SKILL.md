@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: Interview the human about meaningful behavior walkthroughs, edge cases, and decisions in ideas, numbered design cards, tickets, plans, or RFCs. Use when the user says "grill this", "walk through the edge cases", or design needs behavior clarified; keep depth proportional and update local artifacts.
+description: Interview the human about meaningful behavior walkthroughs, edge cases, and decisions in ideas, numbered design cards, issues, plans, or RFCs. Use when the user says "grill this", "walk through the edge cases", or design needs behavior clarified; keep depth proportional and update local artifacts.
 ---
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
@@ -48,7 +48,7 @@ recommendation. Never open with an option, verdict, or solution.
 
 Introduce the active artifact in plain English:
 
-- **Artifact:** name the supplied plan, issue, design brief, RFC, ticket, or
+- **Artifact:** name the supplied plan, issue, design brief, RFC, or
   idea.
 - **What it says:** summarize the proposed change in one or two sentences.
 - **What we are grilling:** state the problem, intended behavior, architecture,
@@ -151,7 +151,7 @@ section above instead.
    the decision in the local transcript instead; never claim it was edited.
     The artifact remains the source of truth whenever it is writable.
 
-   Refresh affected behavior cards and ticket/plan evidence after feedback. Once tickets exist, the product's GitHub Project alone owns status; do not keep another status list in the design or transcript. Changes to approved scope require renewed review. Interview answers do not authorize implementation, publication, or merge.
+   Refresh affected behavior cards and issue/plan evidence after feedback. Once issues exist, the product's GitHub Project alone owns status; do not keep another status list in the design or transcript. Changes to approved scope require renewed review. Interview answers do not authorize implementation, publication, or merge.
 
 2. **If a term was resolved** or an ADR criterion was met, use
    `/domain-modeling` to capture it. It handles glossary updates and ADR
