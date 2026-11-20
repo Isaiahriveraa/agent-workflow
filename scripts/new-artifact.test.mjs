@@ -90,7 +90,7 @@ describe("new-artifact.py", () => {
 		assert.ok(designOutput.includes(path.join(designRoot, "00-index.md")));
 		const design = fs.readFileSync(path.join(designRoot, "00-index.md"), "utf8");
 		assert.match(design, /type: design/);
-		for (const heading of ["## Situation and who", "## Opportunity", "## Success", "## Decision", "## Capabilities (MoSCoW)", "## Domain", "## Slices", "## Brain spill (private)"]) {
+		for (const heading of ["## Situation and who", "## Opportunity", "## Success and worth it", "## Proposed experience", "## Scope and slices", "## Key nouns", "## Decisions", "## Open questions", "## Appendix: evidence", "## Appendix: original brain spill (private)"]) {
 			assert.ok(design.includes(heading), `design missing ${heading}`);
 		}
 		assert.match(design, /Invest, explore more, defer, or stop/);
@@ -109,15 +109,24 @@ describe("new-artifact.py", () => {
 			assert.ok(plan.includes(`**${field}:**`), `plan missing ${field}`);
 		}
 		assert.equal(plan.includes("## Concern map"), false);
+		const planHeadings = [...plan.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
+		assert.ok(planHeadings.indexOf("Approach") < planHeadings.indexOf("Code baseline"));
+		assert.ok(planHeadings.indexOf("Decisions") < planHeadings.indexOf("Current behavior"));
+		assert.match(plan, /Done when/);
 
 		const issueOutput = run(root, "--type", "issues", "checkout flow");
 		const issueRoot = path.join(root, "context", "issues", "checkout-flow");
 		assert.deepEqual(fs.readdirSync(issueRoot).sort(), ["001-checkout-flow.md"]);
 		assert.ok(issueOutput.includes(path.join(issueRoot, "001-checkout-flow.md")));
 		const issue = fs.readFileSync(path.join(issueRoot, "001-checkout-flow.md"), "utf8");
-		for (const heading of ["## User story", "## Context", "## User flow", "## Edge cases", "## Acceptance criteria", "## Out of scope", "## Done when"]) {
-			assert.ok(issue.includes(heading), `issue missing ${heading}`);
-		}
+		assert.deepEqual([...issue.matchAll(/^## (.+)$/gm)].map((match) => match[1]), [
+			"Change", "Why", "Flowchart", "Done when", "Out of scope",
+		]);
+		assert.match(issue, /mandatory Mermaid flowchart/i);
+		assert.match(issue, /- \[ \] Given/);
+		assert.match(issue, /failure.*access.*where relevant/i);
+		assert.equal(/^(Priority|Size|Blocked by):/m.test(issue), false);
+		assert.equal(issue.includes("Tests pass · reviewed"), false);
 		assert.equal(issue.includes("context/"), false, "published ticket text never references private working files");
 		assert.equal(/^Status:/m.test(issue), false, "the Project alone owns status");
 	});
@@ -126,12 +135,20 @@ describe("new-artifact.py", () => {
 		const root = makeRepo();
 		const [file] = createdPaths(run(root, "--type", "designs", "find a study partner"));
 		const content = fs.readFileSync(file, "utf8");
-		for (const heading of ["## Situation and who", "## Flow", "## Evidence", "## Slices"]) {
+		for (const heading of ["## Situation and who", "## Proposed experience", "## Appendix: evidence", "## Scope and slices"]) {
 			assert.ok(content.includes(heading), `design missing ${heading}`);
 		}
 		assert.match(content, /starting state, action, visible result/i);
 		assert.match(content, /not tested/i);
 		assert.match(content, /prototype.*question/i);
+		assert.match(content, /mandatory Mermaid flowchart/i);
+		assert.ok(content.includes("**Decided:**"));
+		assert.ok(content.includes("**Open:**"));
+		assert.deepEqual([...content.matchAll(/^## (.+)$/gm)].map((match) => match[1]), [
+			"Situation and who", "Opportunity", "Success and worth it", "Proposed experience",
+			"Scope and slices", "Key nouns", "Decisions", "Open questions",
+			"Appendix: evidence", "Appendix: original brain spill (private)",
+		]);
 		assert.equal(fs.existsSync(path.join(root, "context", "issues")), false);
 	});
 

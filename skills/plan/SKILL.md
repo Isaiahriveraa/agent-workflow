@@ -20,7 +20,7 @@ Never plan tickets that have not been taken, a whole overview, or a backlog.
 
 ## Before planning
 
-1. Read the ticket with `gh issue view <n> --json title,body,state,blockedBy,parent`, including its comments. Confirm its blocked-by issues are closed.
+1. Read the ticket with `gh issue view <n> --json title,body,state,blockedBy,parent`, including its comments. Confirm its blocked-by issues are closed. A Research ticket goes to `/skill:research` for its bounded question and decision, not an implementation plan.
 2. Read today's code: the owning modules, callers, configuration, and tests. Cite real paths and symbols and separate verified facts from assumptions.
 3. If the code contradicts the ticket, an acceptance criterion is ambiguous, or a product or security decision is open, stop and bring the exact question to the user. Never rewrite the ticket to fit the plan.
 
@@ -32,15 +32,15 @@ Create the plan with:
 python3 ~/.agents/scripts/new-artifact.py --type plans "issue-<number>-<short-title>"
 ```
 
-Write `context/plans/<slug>/00-index.md`, keeping each section proportional:
+Write `context/plans/<slug>/00-index.md`, keeping each section proportional. Lead with **Approach**, **Decisions**, and material **Failure / Security** risks after the ticket reference; put the code baseline and implementation specifics below them. Link the issue instead of retelling its problem, user story, or flow. This plan owns the technical changes, not a second product specification.
 
-- **Answers the ticket** — every acceptance criterion and edge case, and how the change meets it. Anything the ticket does not ask for is out.
+- **Answers the ticket** — reference each Done when item (acceptance criterion), including edge cases, by number and map it to the change that meets it. Do not copy the issue narrative. For older issues, use their existing acceptance criteria without forcing a rewrite. Anything the ticket does not ask for is out.
 - **Current behavior** — what the code does today, with locations.
 - **Approach** — the smallest complete change through the existing modules, following `references/software-design.md`. Name architecture changes and new dependencies with the reason. Use `codebase-design` for meaningful backend, schema, ownership, invariant, interface, or dependency changes. The first ticket of an overview usually sets direction that later tickets follow; say so when it does.
 - **Data** — what is created, read, updated, or deleted; migrations; data dictionary entries added or changed, with exact validation (type, length, allowed values, case and characters, date formats); behavior with no data and as data grows.
 - **Failure** — errors, timeouts, empty states, and a dependency that is down.
 - **Security** — only the areas this ticket touches (authentication, access control, input, logging), plus one to three misuse cases such as "a non-member calls the endpoint directly".
-- **Tests** — at least one per acceptance criterion and one per misuse case, through public interfaces.
+- **Tests** — map the issue's Done when items and relevant misuse cases to behavior tests through public interfaces; each must be covered without duplicating the acceptance checklist.
 - **Decisions** — a choice that is hard to reverse gets its reason, the alternative considered, and the tradeoff. Small reversible choices stay brief.
 - **Interface impact** — the exact declaration `plan-lint.py` checks:
 
@@ -70,7 +70,7 @@ python3 ~/.agents/scripts/slop-lint.py context/plans/<slug>/
 python3 ~/.agents/scripts/plan-lint.py context/plans/<slug>/
 ```
 
-Present the plan in the **Planning** report shape from `references/communication.md`, leading with how it answers the ticket, then the approach, decisions to challenge, and risks. On the user's approval, set `**Plan status:** approved` and continue with `/skill:implement`: approval means build. Worktree placement and review still follow `AGENTS.md`.
+Present the plan in the **Planning** report shape from `references/communication.md`: issue reference, approach, decisions to challenge, material risks, and a short coverage summary. Explain the approach in plain language first; keep file-level details in the plan unless requested. On the user's approval, set `**Plan status:** approved` and continue with `/skill:implement`: approval means build. Worktree placement and review still follow `AGENTS.md`.
 
 The plan is a private working file. Never mention, link, or quote it in the issue, a PR, a commit message, or code; published text describes the change on its own terms.
 

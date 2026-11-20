@@ -16,7 +16,7 @@ Center reports on observable behavior, interfaces, data contracts, and key decis
 
 ## Report Shapes
 
-**Planning** — Problem → Desired Behavior → System Shape & Interfaces → up to 3 Decisions to Challenge → Edge Cases → Definition of Done.
+**Planning** — Issue / request reference → Proposed Approach → up to 3 Decisions to Challenge → Material Risks → Coverage of Done when. The issue already owns the problem, desired behavior, and acceptance checklist; reference them rather than retelling them. Explain the technical approach in plain language first, with code-level details in the plan unless requested. For a direct request without an issue, add only the context needed to understand the plan.
 
 **Implementation** — What Changed → Before → After Behavior → up to 3 Decisions → Failure Boundaries → Verification Evidence → (code on request). Quick and Small work: outcome, verification, and the main file touched.
 

@@ -15,7 +15,7 @@ Read `~/.agents/references/workflow.md` from the skill hub and follow it as the 
   gh issue view <n> --json title,body,state,blockedBy,parent
   ```
 
-  Never fall back to another ticket when the requested one is blocked; say what blocks it. Move the card to In progress. If no approved plan exists for it, write one with `/skill:plan` and wait for approval; approval means build.
+  Never fall back to another ticket when the requested one is blocked; say what blocks it. Move the card to In progress. If it is a Research ticket, route to `/skill:research` for the bounded question and decision; do not create a coding plan or start implementation. For delivery issues, if no approved plan exists, write one with `/skill:plan` and wait for approval; approval means build. Taking an issue alone does not approve implementation.
 
 Place the work per AGENTS.md **Choose the worktree before implementation**. An open architecture choice inside the plan's scope (see `/skill:research`) stops work until the user answers it; if the answer changes the approach, return the plan for approval.
 
@@ -30,8 +30,8 @@ Run focused tests and typechecking as you go, then the repo's tests, lint, typec
 ## Finish
 
 1. Run `/skill:code-judgment` on the diff. Code review follows AGENTS.md **Pick the speed before coding**.
-2. Present the behavior walkthrough and verification in the **Implementation** report shape from `references/communication.md`, mapped to the ticket's acceptance criteria.
-3. Once the user approves the walkthrough, commit with `/skill:commit` (`/skill:commit-review` only for unattended work). Open a PR through `/skill:pr` only when the user asks; it references the issue (`Closes #<n>`) and describes the change on its own, never a private `context/` file.
+2. Present the behavior walkthrough and verification in the **Implementation** report shape from `references/communication.md`, mapped to the ticket's Done when items (or acceptance criteria on older issues). Report actual changes, verification, limitations, and any approved deviations; do not retell the design or copy the plan.
+3. Once the user approves the walkthrough, commit with `/skill:commit` (`/skill:commit-review` only for unattended work). Open a PR through `/skill:pr` only when the user asks; it links the issue and briefly describes actual changes, checks, and remaining limitations, never a copied design, plan, or private `context/` file. Use `Closes #<n>` only with approval to close the issue on merge; otherwise use `Refs #<n>`.
 4. Move the card to In review. It becomes Done only once merged and verified against the acceptance criteria. Never merge, close the issue, or start the next ticket without the user.
 
 On resume, keep the approved plan's baseline and review your own expected diff; do not reset intentional changes. A material change in scope or decisions returns the plan for approval.
