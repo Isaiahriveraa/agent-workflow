@@ -67,27 +67,8 @@ The Project tracks status, priority, and effort. GitHub's native fields track is
 
 Browse [skills/](skills/) for the full collection. For motion work, start with [animate](skills/animate/SKILL.md) on the web, [animate-expo](skills/animate-expo/SKILL.md) in Expo, or [review-animations](skills/review-animations/SKILL.md) for existing motion. Reusable commands live in [commands/](commands/) and specialist agent definitions in [agents/](agents/). Availability depends on your tool.
 
-## Herdr Board
-
-The [Board mod](herdr/mods/board/RECIPE.md) shows each tab’s goal, current step, blockers, and recent decisions. From a Herdr tab, agents update the card with the [board skill](skills/board/SKILL.md). A Stop hook adds a summary after each turn.
-
-Add the Board mod and writer links if they are not already installed:
-
-```sh
-mkdir -p ~/.config/herdr-app/mods ~/.config/herdr/scripts
-ln -s ~/.agents/herdr/mods/board ~/.config/herdr-app/mods/board
-ln -s ~/.agents/herdr/scripts/board.mjs ~/.config/herdr/scripts/board.mjs
-herdr-app check ~/.config/herdr-app/mods/board
-```
-
-Use the [Board recipe](herdr/mods/board/RECIPE.md#built-from) for the layout block. In Claude Code, register [hooks/board-turn.sh](hooks/board-turn.sh) as a Stop hook to log turn summaries. The hook needs `jq` and Node.js. Other [hooks](hooks/) cover shell safety and Herdr agent status.
-
 ## Verify and share
 
-Run `npm test` for the hub tests. To test the Board, run:
-
-```sh
-node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/*.test.mjs
-```
+Run `npm test` for the hub tests.
 
 Share the tracked workflow files, not credentials, tool state, or worktree notes. See [SHARING.md](SHARING.md) before publishing.
