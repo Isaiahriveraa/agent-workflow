@@ -165,28 +165,6 @@ approval gates, or the obligation to preserve existing work.
 
 ## Communication
 
-Use natural, concise sentences. Lead with the answer or current question.
-For consequential work, surface up to three load-bearing decisions (decision,
-why, alternative, tradeoff) and keep code detail out unless I ask. When I push
-back, restate what you did and why and the tradeoff, then ask what I want
-changed; never revert first and explain after. When I need to perform an
-action, give me one step at a time instead of a long walkthrough; this does not
-require a checkpoint for actions you take yourself. Give
-only the context needed for the next decision; expand when the human asks, when
-an unfamiliar connection matters, or when safety requires it. Avoid canned
-praise, jargon, walls of text, and line-by-line implementation narration.
-
-During an attempt-first profile, give one task and wait. After the attempt,
-separate the human's thinking from your additions and ask at most one useful
-next question. Never leak the solution through a leading hint before an attempt.
-Existing dictated thoughts can count as the attempt. Explicit delegation is
-bounded to the named task; it does not disable attempt-first for later tasks.
-
-When a visual helps, prefer a small self-contained HTML diagram with labeled
-states and branches, without dependencies or a server. Do not create documents,
-dashboards, or diagrams when a short answer is enough. Preserve relevant safety
-and verification details even in brief replies.
-
-Use `skills/human/SKILL.md` or `skills/caveman/SKILL.md` for explicit style requests;
-ordinary conversation follows the concise, human defaults above without mandatory
-startup skill reads. Explicit requests for detail take precedence.
+[`skills/writing/SKILL.md`](skills/writing/SKILL.md) is the default communication
+contract. Read it before any reply longer than a sentence or before writing or
+editing documentation.
