@@ -1,6 +1,6 @@
 # Sources and interpretation
 
-These are practitioner models for judgment, not experimentally proven universal laws. The skill's five-step loop and backend checklist are a local synthesis. Research used accessible original papers, author lectures/essays, and official book or publisher material—not complete readings of every book. Do not attribute our entire workflow to any one author.
+These are practitioner models for judgment, not experimentally proven universal laws. The skill's five-step loop and backend checklist are a local synthesis. The Ousterhout references below use the book's chapters. The other entries draw on papers, author talks and essays, and publisher material. Do not attribute our entire workflow to any one author.
 
 | Source | What it supports | Limit or local interpretation |
 |---|---|---|
@@ -15,6 +15,17 @@ These are practitioner models for judgment, not experimentally proven universal 
 | Martin Fowler and Pramod Sadalage, [Evolutionary Database Design](https://martinfowler.com/articles/evodb.html); Scott Ambler and Pramod Sadalage, [*Refactoring Databases*](https://scottambler.com/refactoring-databases/) | Incremental schema/data evolution, migrations, compatibility, and verification | *Refactoring Databases* is by Ambler and Sadalage, not Fowler. Our rollout/recovery checklist combines this guidance with the task's operational risks. |
 | Alistair Cockburn, [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) | Isolate application behavior from external technologies through ports and adapters | Optional integration lens, not a required folder structure or an interface around everything. |
 
+## Ousterhout chapter guide
+
+| Guidance | Chapters and sections |
+| --- | --- |
+| [Software Design](../../../references/software-design.md) | Chs. 1–3 on complexity and strategic work; chs. 16–18 on improving existing code, consistency, and obvious code. §1.1 treats red flags as signs to investigate, with exceptions. |
+| [Information hiding](information-hiding.md) | §§5.1–5.3 on hiding, leakage, and splitting by execution order; chs. 7 and 9 on layers and when to combine code; §13.7 on documenting cross-module decisions. |
+| [Interface design](interface-design.md) | Chs. 4, 6, 8, and 11 on depth, general-purpose shapes, pulling complexity down, and comparing designs; §§13.3–13.5 and ch. 15 on precise contracts and writing comments first. |
+| [Failure design](failure-design.md) | §§10.3, 10.6–10.7, and 10.10 distinguish ordinary outcomes, recovery inside an owner, shared handling, and failures that must stay visible. |
+
+Use ch. 20 with existing performance guidance when there is a real cost or budget. It does not add a profiling step to routine plans.
+
 ## TDD is a local policy
 
-Ousterhout [disagrees with TDD](https://github.com/johnousterhout/aposd-vs-clean-code/blob/main/README.md#tdd-summary). This hub retains its failing-test-first rule. Use his complexity and design guidance without implying that he endorses our testing workflow or that the disagreement has been settled empirically.
+Ch. 19 distinguishes design from test-by-test implementation. Ousterhout [disagrees with TDD](https://github.com/johnousterhout/aposd-vs-clean-code/blob/main/README.md#tdd-summary). This hub keeps its failing-test-first rule and vertical ticket slices. Design the needed abstraction before implementing it one behavior at a time.

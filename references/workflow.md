@@ -246,15 +246,11 @@ token's `project` scope; when it is missing, ask me to run
 
 ## Technical planning: apply PSD
 
-Every technical plan, for a taken ticket or a direct Full-speed request, must
-read and apply [Software Design](software-design.md) before choosing the approach.
-Use *A Philosophy of Software Design* (PSD) to decide module ownership, what
-knowledge each module hides, and what callers must understand—not just to review
-finished code. For a non-trivial interface, sketch two meaningfully different
-shapes and compare caller complexity and change amplification before choosing.
-Briefly explain the relevant PSD tradeoffs in the plan and check the proposed
-design against the reference's red flags. Keep this proportional to the work;
-do not add abstractions or a boilerplate checklist to satisfy the rules.
+A taken delivery ticket or a direct Full-speed request needs an approved plan
+before implementation. Use [plan](../skills/plan/SKILL.md) to apply
+[Software Design](software-design.md) before choosing the approach. Quick and
+Small work does not need a plan. My approval means build; a material change
+to the approved approach returns for approval.
 
 ## Take a ticket
 

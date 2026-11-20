@@ -5,25 +5,30 @@ description: Design readable modules that hide complexity and keep change local.
 
 # Codebase Design
 
-Make the requested behavior easy to use, understand, change, and verify. Prefer **deep modules**: a small, understandable contract hiding decisions callers should not have to learn. Depth is cognitive leverage, not implementation size, method count, or number of layers.
+Make the requested behavior easy to use, understand, change, and verify. Start with [Software Design](../../references/software-design.md) if you have not read it. A **deep module** does useful work behind a contract that hides decisions callers need not learn.
 
 This is technical design guidance, not permission to implement, bypass plan approval, or choose unresolved product policy. Follow the active workflow's approval gates. Reuse its plan or decision note rather than creating another artifact.
 
 ## Choose the depth of the pass
 
-- **Routine local change:** confirm the existing owner, unchanged guarantees, and behavior test; continue in place. Do not manufacture alternatives or an architecture document for a pagination parameter or ordinary CRUD using established patterns.
-- **Meaningful design change:** use the five-step loop below when ownership, invariants, persisted facts, caller obligations, or dependency direction change.
-- **Backend or persisted-data work:** read [backend and schema checks](references/backend-and-schema.md), selecting only questions relevant to the actual risk. Even an apparently small migration needs a historical-data and deployment-compatibility check.
+- **Routine local change:** confirm the existing owner, preserved guarantee, and behavior test. Stop the design pass there. Skip the guides and alternatives when reusing an established contract, such as adding a page size with the existing limits and default.
+- **Meaningful design change:** use the loop below when ownership, invariants, persisted facts, caller obligations, or dependency direction change. Read only the guides that match a decision or risk you face.
+
+### Guides
+
+- **Shared knowledge or an ownership choice:** read [information hiding](references/information-hiding.md) when modules repeat a rule, format, or sequence, or when deciding where it belongs. A shared contract alone is not a leak.
+- **New or materially changed contract:** read [interface design](references/interface-design.md) when callers get a new promise or must learn something new to use the module safely. Skip it when reusing an established contract.
+- **Failure handling:** read [failure design](references/failure-design.md) for repeated handling, an avoidable special case, or a partial or uncertain outcome. An ordinary propagated error needs no separate design pass.
+- **Backend or persisted-data work:** read [backend and schema checks](references/backend-and-schema.md) for the actual risks. Even a small migration needs a historical-data and deployment-compatibility check.
 - **Legacy code or external effects:** read [legacy and integration checks](references/legacy-and-integration.md) when safe change or test isolation is difficult.
-- **Interface shape:** apply [software design](../../references/software-design.md), especially the generalize-or-specialize questions and design-it-twice, before fixing a new interface.
-- **Rationale and attribution:** consult [sources](references/sources.md) when explaining or revisiting a principle; it is not a mandatory reading list for each task.
+- **Rationale and attribution:** consult [sources](references/sources.md) when explaining or revisiting a principle, not as part of each task.
 
 ## Design loop
 
 1. **State the behavior.** Name the caller's observable outcome, the invariant that must survive, and a reachable failure. Separate verified facts from assumptions. Missing business policy goes back to the human, not into a convenient default.
-2. **Find the owner and hidden decisions.** Read existing modules, callers, tests, and data writers. Identify the difficult or change-prone knowledge: business rule, representation, protocol, transaction, lifecycle, or ordering. Put each decision with its owner; do not split by processing step merely because the steps run in sequence.
-3. **Design it twice.** Compare two materially different allocations of responsibility, often extending the existing owner versus adding a module. Sketch the caller contract and what each option hides. Renaming the same methods is not a second design. Choose based on caller knowledge, locality, dependencies, and testability—not pattern names or file counts.
-4. **Probe change and failure.** Walk one plausible change and one real failure through each option. What must the reader understand? Which owners change together? Can the invariant still hold? Use this as a thought experiment, not authorization to build the future feature.
+2. **Find the owner and hidden decisions.** Read the existing modules, callers, tests, and data writers. Name the rule, representation, or other change-prone decision and who knows it today.
+3. **Design it twice.** Sketch two materially different designs for the same caller action, such as extending the existing owner versus moving the decision. Show what each promises and hides and what the caller must do. Renaming a method is not another design.
+4. **Probe change and failure.** Walk the same plausible change and reachable failure through each option. Name what the caller must learn, which modules would change, and who can uphold the invariant or report the failure. Use the probe to compare designs, not to build a future feature.
 5. **Choose and prove the smallest sound design.** State the choice, why the alternative lost, the accepted tradeoff, and the test that will prove the guarantee. Follow local TDD: observe a failing behavior test, implement the smallest slice, inspect it, and adjust. Keep preparatory refactoring separate from the behavior change.
 
 Keep the result proportional: a few sentences for a small responsibility choice; a short decision note in the existing plan for a consequential one. Report the outcome/invariant, owner/hidden decision, choice/tradeoff, and proof. Do not repeat the entire checklist in the answer.
@@ -36,26 +41,9 @@ Show the caller usage, proposed shape, rule owner, and one failure example in th
 
 Adapted from pstack's [Foundational Thinking](https://github.com/cursor/plugins/blob/main/pstack/skills/principle-foundational-thinking/SKILL.md).
 
-## Complexity and information hiding
-
-Look for Ousterhout's three symptoms: **change amplification** (one change touches many places), **cognitive load** (too much must be learned), and **unknown unknowns** (it is unclear what must be known or changed). Use them to compare concrete designs, not as numeric scores.
-
-Following Parnas, hide difficult or likely-to-change decisions behind stable contracts. Things that change for the same reason should usually live together; similar-looking code with different business meanings should not be unified just to remove repetition. A layer or folder is not information hiding by itself.
-
-- **Deletion test:** if removing a wrapper loses no useful policy, isolation, translation, or contract and only removes indirection, it is probably unnecessary. If its knowledge spreads across callers, it was earning its keep.
-- **Wrong-abstraction test:** caller-specific flags and growing special cases suggest unrelated responsibilities were combined. Keep understandable duplication rather than forcing them together. A meaningful domain option is not automatically a design defect.
-- **Common-path test:** ordinary callers should not configure rare cases or manage sequencing the module can safely own. Preserve genuinely required streaming, transaction, and resource lifecycles; do not compress them into one call at the expense of correctness.
-- **Human-readability test:** names describe domain intent; a newcomer can find the rule, owner, and failure behavior without tracing a chain of pass-through helpers. Small functions and fewer methods are not goals in themselves.
-
 ## Designing a new module
 
-Sketch the interface before implementing it. Include every fact callers need: inputs, results, invariants, errors, ordering, effects, configuration, and relevant performance limits—not just the type signature.
-
-Draft the caller-facing comment first when the contract is non-obvious. Use the repository's contract-comment format; do not restate obvious types. If describing the contract takes many caveats, try reshaping the responsibility rather than hiding the caveats. Keep storage and protocol details private unless they affect caller correctness.
-
-Serve current needs with clear operations, not speculative knobs. Pull complexity downward when that simplifies callers without hiding failures. Empty results and already-completed deletes can be normal outcomes where the domain permits; invalid money, unauthorized access, and conflicting writes must not be silently clamped or treated as success.
-
-One module should own a representation or rule; callers should not reconstruct it. Two modules changing together repeatedly is evidence to investigate, not an automatic order to merge them.
+Sketch a real use, then write the signature and the caller-facing contract comment before the body. Preserve facts the caller needs, including any required transaction, streaming, or resource lifecycles. Use [interface design](references/interface-design.md) to compare new or materially changed contracts.
 
 ## Designing for testability
 
@@ -75,7 +63,6 @@ Use these meanings for design discussion without banning the repository's establ
 - **Depth:** useful behavior and decisions hidden per amount a caller must learn. A short implementation can be deep; extra code does not add depth.
 - **Seam (Feathers):** a place where behavior can be altered without editing the code at that place. Not every architectural boundary needs a substitution mechanism.
 - **Adapter:** a concrete implementation translating an external capability to the contract used inside the application.
-- **Leverage:** capability gained relative to caller knowledge.
 - **Locality:** related knowledge, changes, and verification concentrated with their owner.
 
 The design loop and checklists are a local synthesis of the [cited practitioner guidance](references/sources.md), not a universal formula or a claim that every author endorses every rule.

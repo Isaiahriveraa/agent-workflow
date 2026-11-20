@@ -63,14 +63,10 @@ the same theory. Full rules live in `references/coding-contract.md`; examples in
 `references/code-clarity.md`. In Tutor and Sprint, and in School Learn when the
 course is about code, teach and critique against these ideas by name so I learn the theory, not just the fix.
 
-- **A Philosophy of Software Design (Ousterhout)** — complexity is the enemy.
-  Favor deep modules: small, stable interfaces over rich internals. No shallow
-  wrappers, pass-through layers, or classitis. Hide each design decision in one
-  module; pull complexity down; define errors out of existence. Shape
-  interfaces somewhat general-purpose (around the concept, not today's caller)
-  while implementing only today's needs. Write for the reader: obvious beats
-  clever. A fix-one-break-another loop is a design problem. Apply
-  `references/software-design.md` whenever you write or review code.
+- **A Philosophy of Software Design (Ousterhout)** — keep the common case
+  simple, hide change-prone decisions with their owner, and make caller
+  obligations clear. Apply [Software Design](references/software-design.md)
+  when you plan, write, or review code.
 - **Clean Code naming and clarity** — code explains itself. Names state the
   fact in product terms (`unpaidInvoices`, not `data`); a comment that defines a
   name is a failed name. Straightforward flow over clever compression. No

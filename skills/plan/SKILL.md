@@ -23,6 +23,8 @@ Never plan tickets that have not been taken, a whole overview, or a backlog.
 1. Read the ticket with `gh issue view <n> --json title,body,state,blockedBy,parent`, including its comments. Confirm its blocked-by issues are closed. A Research ticket goes to `/skill:research` for its bounded question and decision, not an implementation plan.
 2. Read today's code: the owning modules, callers, configuration, and tests. Cite real paths and symbols and separate verified facts from assumptions.
 3. If the code contradicts the ticket, an acceptance criterion is ambiguous, or a product or security decision is open, stop and bring the exact question to the user. Never rewrite the ticket to fit the plan.
+4. Read [Software Design](../../references/software-design.md). Use the [coding contract's design trigger](../../references/coding-contract.md#design) to decide whether to use [codebase-design](../codebase-design/SKILL.md). For routine work, confirm the current owner, preserved guarantee, and behavior test without loading specialist guides. Do not invent an alternative for a local fix that keeps the caller contract.
+5. For a material choice about a boundary or its owner, use the design loop before drafting **Approach**, even if signatures stay the same. Compare two materially different designs on the same caller action, plausible change, and reachable failure. Name what each promises and hides, which modules would change, and who would handle the failure.
 
 ## Plan content
 
@@ -36,19 +38,19 @@ Write `context/plans/<slug>/00-index.md`, keeping each section proportional. Lea
 
 - **Answers the ticket** — reference each Done when item (acceptance criterion), including edge cases, by number and map it to the change that meets it. Do not copy the issue narrative. For older issues, use their existing acceptance criteria without forcing a rewrite. Anything the ticket does not ask for is out.
 - **Current behavior** — what the code does today, with locations.
-- **Approach** — the smallest complete change through the existing modules, following `references/software-design.md`. Name architecture changes and new dependencies with the reason. Use `codebase-design` for meaningful backend, schema, ownership, invariant, interface, or dependency changes. The first ticket of an overview usually sets direction that later tickets follow; say so when it does.
+- **Approach** — the smallest complete change through the existing modules. Use the relevant design checks above before settling on it. Name architecture changes and new dependencies with the reason. The first ticket of an overview usually sets direction that later tickets follow; say so when it does.
 - **Data** — what is created, read, updated, or deleted; migrations; data dictionary entries added or changed, with exact validation (type, length, allowed values, case and characters, date formats); behavior with no data and as data grows.
 - **Failure** — errors, timeouts, empty states, and a dependency that is down.
 - **Security** — only the areas this ticket touches (authentication, access control, input, logging), plus one to three misuse cases such as "a non-member calls the endpoint directly".
-- **Tests** — map the issue's Done when items and relevant misuse cases to behavior tests through public interfaces; each must be covered without duplicating the acceptance checklist.
-- **Decisions** — a choice that is hard to reverse gets its reason, the alternative considered, and the tradeoff. Small reversible choices stay brief.
-- **Interface impact** — the exact declaration `plan-lint.py` checks:
+- **Tests** — cover each Done when item and relevant misuse case with behavior tests through the caller's interface. For a design choice, name the contract test and the failure it must catch. Refer to the checklist without copying it.
+- **Decisions** — record the choice, reason, alternative, and tradeoff for decisions that are hard to reverse. For a material design decision, include the comparison above or point to it in the interface blocks below. Small reversible choices stay brief.
+- **Interface impact** — declare `none`, `new`, or `changed` based on what callers can do, must supply, or can rely on. Ordering, effects, and failure behavior can change without changing the signature. Use the exact format `plan-lint.py` checks:
 
   ```markdown
   - **Interface impact:** none — <why the boundary does not change>
   ```
 
-  For `new` or `changed`, add non-empty `**Interface sketch**` and `**Rejected alternative**` blocks.
+  For `new` or `changed`, add non-empty `**Interface sketch**` and `**Rejected alternative**` blocks. Show caller usage, the signature, and a caller-facing contract comment in the sketch. Show the other design and why it lost in the alternative. Keep minor changes brief. For `none`, record any material internal ownership comparison under **Decisions** instead.
 
 Record these fields once, as standalone lines:
 
