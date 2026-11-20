@@ -1,6 +1,6 @@
 ---
 name: writing
-description: Write and edit anything a person reads — answers, docs, commit messages, design notes, error text — in plain English that leads with the answer and ends with the next action. Use for any reply longer than a sentence, and before writing or editing documentation.
+description: Write and edit anything a person reads — answers, docs, commit messages, design notes, error text — in plain English that leads with the answer and gives a next step when needed. Use for any reply longer than a sentence, and before writing or editing documentation.
 ---
 
 # Writing
@@ -17,7 +17,9 @@ thinking; it is thinking the reader can check.
 2. **Why second.** One or two sentences on what it means for the reader.
 3. **Detail third.** As much as the task needs, in the order the reader acts on
    it. Headings only if the reader will skim back.
-4. **One next action last.** The command, the file, the question — doable now.
+4. **Next action, if needed.** Give one concrete next step if the reader needs
+   to act: the command to run, the file to open, or the question to answer.
+   Otherwise, stop at the answer.
 
 Never open with "Great question", "Let me", "I'll", "Sure". Never close with
 "Let me know if…", "Hope this helps", or a recap of what the reader just read.
@@ -47,6 +49,12 @@ to prose, and each one has a lazy version and a live one.
 
 Name the concrete thing: the file, the function, the flag, the number.
 
+## Rewriting
+
+Preserve the source's facts, conditions, and uncertainty. Keep requirements,
+recommendations, and permissions distinct. "You may retry once" does not mean
+"Retry."
+
 ## ASD-STE100
 
 Issue 9 (2025) contributes the rules that hold in technical prose. They are the
@@ -55,7 +63,8 @@ same discipline, tightened:
 - One instruction or one idea per sentence.
 - 20 words a sentence; 25 when describing. Six sentences a paragraph.
 - One term for one thing, every time. Repetition beats a synonym.
-- `must` for a requirement, `can` for a possibility. Nothing else.
+- Use `must` for a requirement and `can` for a possibility. Do not substitute
+  either if it changes the meaning.
 - Keep noun groups to three words: "the design of the parser", not "the parser
   design process improvement initiative".
 - A procedure is commands in run order: condition, action, result.
@@ -95,10 +104,11 @@ code and not the conversation.
 
 ## Bad news and limits
 
-Name the failure, the cause, the fix. No alarm, no apology theater. A hedge that
-carries real uncertainty stays ("I could not run the iOS build"); one that does
-not goes ("perhaps", "might possibly"). State what you did not verify in the same
-breath as what you did.
+Name the failure and what you observed. If the cause or fix is unknown, say so
+instead of guessing. No alarm, no apology theater. A hedge that carries real
+uncertainty stays ("I could not run the iOS build"); one that does not goes
+("perhaps", "might possibly"). State what you did not verify in the same breath
+as what you did.
 
 ## Break these rules when
 
@@ -106,11 +116,13 @@ breath as what you did.
   runs as long as the topic needs, and voice, rhythm and imagery stay.
 - The words are the answer: options, trade-offs and evidence, when the reader is
   choosing.
-- Safety or an irreversible action is ahead. Say so once, plainly, then act.
+- Safety or an irreversible action is ahead. State the risk plainly. Wait for
+  any required approval before acting.
 
 ## Pre-send check
 
 Delete the first sentence if it announces what you are about to do, the last if
 it asks whether anything else is wanted, and every "by the way", empty hedge and
-idiom. Then check: do the first and last lines alone tell the reader what
-happened and what to do next?
+idiom. Then check: does the answer lead with what the reader needs to know?
+Does it preserve meaning and uncertainty? If the reader needs to act, is the
+next step clear?
