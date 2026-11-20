@@ -11,6 +11,7 @@ This website is IUGA’s public front door and participation hub. It is not the 
 - **Current UW Informatics undergraduates** are the primary audience. They need to find events, connect with peers, discover useful support and student organizations, share their perspective, and take part in student governance.
 - **Prospective Informatics students and recent admits** may use public pages to understand the student community and find relevant opportunities. Do not imply that every event or resource is intended for them; follow each listing’s eligibility.
 - **IUGA officers and volunteers** use the site to communicate what the association is doing, invite participation, and keep public information dependable.
+- **Future IUGA boards and Discord moderators** run and maintain what we build after the current team leaves. Some will be technical and many won't. Day-to-day upkeep (approving events, verifying RSO officers, assigning roles) must happen inside Discord or the site with clear prompts, never by editing config, environment variables, or code, or by redeploying. Treat "a new board can run this with no developer" as a requirement.
 - **Other iSchool students, organizations, and industry guests** may be partners or event attendees when a specific offering includes them. They are not a reason to lose focus on Informatics undergraduates.
 
 ## What the website should help people do
