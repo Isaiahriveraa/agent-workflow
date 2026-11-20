@@ -30,3 +30,4 @@ context/
 .pi/
 .herdr/state.yaml
 .herdr/reports/
+/iuga-agents.md
