@@ -1,317 +1,93 @@
 # Agents Workflow Hub
 
-Shared operating contract for thinking, learning, research, and coding across terminal agents. Commands, agents, skills, and adapters live here. Machine-local state does not.
+Use one set of agent instructions, session profiles, and skills across terminal tools. [AGENTS.md](AGENTS.md) defines how agents work; the [writing skill](skills/writing/SKILL.md) defines how they write. Tool settings and project notes stay local.
 
-## About
+## Setup
 
-`AGENTS.md` is the contract every agent reads: modes, speed tiers, worktrees, safety, approvals, and communication. Detailed rules load only when a task needs them (see **Contracts**). Adapters bridge tool ergonomics; Codex and Claude read the same `AGENTS.md`.
-
-The hub serves Claude Code, Codex CLI, OpenCode, Antigravity/Gemini, and Cursor CLI from the same commands, agents, and skills.
-
-```
-┌──────────────────────────────┐
-│  Claude Code                 │
-│  Codex CLI / OpenCode        │
-│  Antigravity / Gemini        │
-└──────────┬───────────────────┘
-           │
-┌──────────▼───────────────────┐
-│  adapters/                   │  tool-specific ergonomics
-│  (symlinks, wrappers, gen)   │  same contract underneath
-└──────────┬───────────────────┘
-           │
-┌──────────▼───────────────────┐
-│  AGENTS.md                   │  single source of truth
-│  commands/  agents/ skills/  │  shared workflow contract
-│  scripts/  manifest.json     │
-└──────────────────────────────┘
-```
-
-## Session modes
-
-Run these from the directory you want to work in. Each starts an independent
-session; it does not swap shared files or change another terminal's mode.
+Clone the hub and use the setup notes for your tool:
 
 ```sh
-sprint                    # attempt-first engineering, defaults to Pi
-ideation                  # attempt-first problems and solution options
-school-learn              # attempt-first course learning
-school-fast               # organize and complete assignment work
-research                  # concise, evidence-based answers
-coding                    # the default mode: agent-written delivery
-tutor                     # hands-on coaching: I write the code, the agent coaches
-sprint --harness claude    # Claude Code
-sprint --harness codex     # Codex CLI
+git clone https://github.com/Isaiahriveraa/agent-workflow.git ~/.agents
+cd ~/.agents
 ```
 
-The executable aliases point to `scripts/workflow-session.mjs`. Without aliases,
-use `node ~/.agents/scripts/workflow-session.mjs sprint`, or `aw sprint`.
-Set `AGENT_HARNESS=pi|claude|codex` to choose a default. Place `--harness` immediately
-after the mode (or first after an alias); remaining arguments pass through to the
-harness. The launcher appends only the mode's profile; the harness already loads
-`AGENTS.md` itself.
+[Claude Code](adapters/claude-code/README.md) · [Codex CLI](adapters/codex-cli/README.md) · [OpenCode](adapters/opencode/README.md) · [Antigravity/Gemini](adapters/antigravity/README.md) · [Cursor CLI](adapters/cursor-cli/README.md)
 
-Coding is the default when no mode is chosen; the others change who thinks first.
+[Pi](#start-a-session) is the default session launcher target. It uses the shared skills without a separate adapter directory.
 
-Sprint and Ideation use one 3–5 minute attempt at a time, capped at 10 minutes
-unless requested. The agent gives one concrete task and waits before revealing a
-solution. Your existing voice dump or notes can count as the attempt. Afterward,
-it synthesizes your reasoning, identifies one gap, and helps you revise. Explicit
-hints, examples, and bounded delegation remain available. School Learn adapts
-this loop to course material; School Fast does not impose tutoring.
+Once your tools are configured, `bash sync.sh migrate` repairs links in your home directory, regenerates adapter files, and checks them. Read [manifest.json](manifest.json) to see what it manages. Run `bash sync.sh verify` to check without changing files.
 
-Inside a session, say "switch to sprint", "school learn", "school fast",
-"research mode", "ideation mode", "tutor mode", or "coding mode". A bounded request such as
-"research this API" stays inside the current mode and returns to the pending
-question. Switching is instruction-based, not a harness-native command or a
-mechanical guarantee that a model will obey. Existing sessions may retain older
-loaded instructions; explicitly ask them to reread `~/.agents/AGENTS.md`.
+From a project worktree, run `node ~/.agents/scripts/init-local-state.mjs` to create local folders for plans, research, and handoffs.
 
-The launchers add the shared contract and selected profile to Pi/Claude system
-instructions or Codex developer instructions. They do not disable project rules,
-permissions, hooks, extensions, or skill discovery. Other installed hooks and
-stale adapter copies can still add context; this is not a claim that all harness
-startup overhead has been removed. Relevant repository safety still applies.
+## Start a session
 
-## Speed and review
+Run the launcher from the directory you want to work in:
 
-Coding work opens with one line naming its speed, and I can change it any time:
+```sh
+node ~/.agents/scripts/workflow-session.mjs sprint
+node ~/.agents/scripts/workflow-session.mjs tutor --harness claude
+```
 
-- **Quick**: typo, copy, config, rename. Edit, check, one-line report.
-- **Small**: a fix I asked for in 1–3 files. Failing test, fix, checks, inline design check, short walkthrough, then my OK to commit.
-- **Full**: features, schema, auth, or an issue. Implementation plan first; my approval means build.
+Use `aw sprint` if [`scripts/aw`](scripts/aw) is on your `PATH`. Set `AGENT_HARNESS` to `pi`, `claude`, or `codex` to change the default. Put `--harness` just after the mode to override it for one session. The launcher passes later arguments to the selected tool.
 
-Work moves up a speed on its own (auth, migrations, shared interfaces, more than ~3 files or 100 lines) and says so. Code review is my call: off for Quick and Small, recommended when a trigger fires, on for Full. Without subagents it runs as a labeled self-review.
-
-## Contracts
-
-| File | Owns |
+| Mode | Who does what |
 |---|---|
-| `AGENTS.md` | Modes, speed, worktrees, safety, approvals, communication |
-| `references/coding-contract.md` | Code rules: TDD, verification, errors, YAGNI, commits |
-| `references/software-design.md` | Interfaces and modules (A Philosophy of Software Design) |
-| `references/code-clarity.md` | Names and comments |
-| `references/test-cleanup.md` | Test hygiene |
-| `references/workflow.md` | Product work on GitHub Projects and who approves what |
-| `references/communication.md` | Planning, implementation, and research report shapes |
-| `references/agent-handoff.md` | Briefs for delegated work |
+| `coding` (default) | The agent implements; you own decisions and approvals. |
+| [`sprint`](profiles/sprint.md) | You attempt one engineering problem at a time before the agent offers a solution. |
+| [`ideation`](profiles/ideation.md) | You explore the problem and options before settling on a direction. |
+| [`school-learn`](profiles/school-learn.md) | You try the course material first; the agent coaches. |
+| [`school-fast`](profiles/school-fast.md) | The agent organizes your input and helps complete the assignment. |
+| [`research`](profiles/research.md) | The agent checks evidence and gives a short synthesis. |
+| [`tutor`](profiles/tutor.md) | You write the code; the agent coaches. |
 
-## Coding workflow
+Modes apply to one session. Say “switch to tutor mode” to change the current conversation without editing shared files. A request like “research this API” does not change the mode.
 
-Product work runs one outcome at a time, with a GitHub Project per product as the source of truth. The full contract is `references/workflow.md`.
+## Deliver work
 
-```
-/design   frame the problem (invest / explore / defer / stop)
-          → overview: vision, goals, scope, MoSCoW, flow, domain, slices
-/to-issues split into delivery issues + CRUD check
-          → I approve the split → sub-issues on the Project
-/plan     when an issue is taken: implementation plan against today's code
-          → I approve → build
-/implement TDD → code-judgment → review per speed → my feedback → commit / PR
+Use the speed tiers in [AGENTS.md](AGENTS.md#pick-the-speed-before-coding) for direct requests. **Quick** edits need a relevant check. **Small** fixes start with a failing test. **Full** work needs an approved plan before implementation. Direct requests do not need a GitHub issue.
 
-or, for direct requests: Quick / Small / Full speed per AGENTS.md
-```
+For product work on a GitHub Project, follow the [delivery contract](references/workflow.md):
 
-Issues say what and why (user story, user flow, edge cases, acceptance criteria) and never how. Nothing technical is planned until an issue is taken; an unknown becomes a Research issue that ends in a decision. Drafts and plans live in the ignored `context/` folder and are never referenced from issues, PRs, or commits.
+1. **[Design](skills/design/SKILL.md):** Frame the problem. The approved overview becomes the parent issue.
+2. **[Split](skills/to-issues/SKILL.md):** Draft standalone sub-issues. Each states the change, why it matters, the flowchart, observable completion criteria, and what is out of scope. Approve the split before publishing.
+3. **[Plan](skills/plan/SKILL.md):** Plan one taken delivery issue against the current code. Approving the plan authorizes implementation. For a Research issue, use [research](skills/research/SKILL.md) instead and end with a decision.
+4. **[Implement](skills/implement/SKILL.md):** Build and verify the change. Move the issue to In review after local checks and review, then to Done once merged and verified. Commit, push, and merge approvals stay separate.
 
-| Stage | Skill | Output |
-|---|---|---|
-| Frame + overview | `design` | Problem brief and overview → the parent issue |
-| Issues | `to-issues` | Standalone GitHub sub-issues with "blocked by" links on the Project |
-| Research | `/research [issue or question]` | A decision for a Research issue, or a cited answer |
-| Plan | `/plan [issue]` | Implementation plan in `context/plans/<slug>/`, answering each acceptance criterion |
-| Build | `/implement [issue]` | The change, tested and reviewed per speed, with the card moved along |
+The Project tracks status, priority, and effort. GitHub's native fields track issue type and assignees. Issue relationships track dependencies. Keep drafts and plans in the worktree's ignored `context/` folder; published issues and PRs must stand on their own.
 
-## Hooks
+## Find the right instructions
 
-`hooks/` holds the Claude Code hooks registered in `~/.claude/settings.json`:
-
-| Hook | What it does |
+| Start here | For |
 |---|---|
-| `guard-destructive-bash.cjs` | Stops force pushes, hard resets, forced git cleans, and recursive forced deletes until I approve them |
-| `board-turn.sh` | Logs one line per finished turn (files edited, how it ended) on the tab's board |
-| `herdr-agent-state.sh` | Reports agent state to Herdr; Herdr installs and overwrites it |
+| [AGENTS.md](AGENTS.md) | Modes, speed, worktrees, safety, and approvals |
+| [Writing skill](skills/writing/SKILL.md) | Replies, docs, commit messages, and GitHub issues |
+| [Coding contract](references/coding-contract.md) | Tests, code quality, verification, and commits |
+| [Software design](references/software-design.md) | Interfaces, module ownership, and design trade-offs |
+| [Skill index](skills/skill-index/SKILL.md) | Find a skill when the task does not already name one |
 
-## Adapters
+Browse [skills/](skills/) for the full collection. For motion work, start with [animate](skills/animate/SKILL.md) on the web, [animate-expo](skills/animate-expo/SKILL.md) in Expo, or [review-animations](skills/review-animations/SKILL.md) for existing motion. Reusable commands live in [commands/](commands/) and specialist agent definitions in [agents/](agents/). Availability depends on your tool.
 
-Each AI tool connects through an adapter directory:
+## Herdr Board
 
-| Adapter | Tool | Entry Point |
-|---------|------|-------------|
-| `adapters/claude-code/` | Claude Code | `~/.claude/CLAUDE.md` → adapter bridge → `~/.agents/AGENTS.md` |
-| `adapters/codex-cli/` | Codex CLI | Config under `~/.codex/` |
-| `adapters/opencode/` | OpenCode | Native config discovery |
-| `adapters/antigravity/` | Antigravity / Gemini | `GEMINI.md` bridge |
-| `adapters/cursor-cli/` | Cursor CLI | `~/.cursor/rules/hub-contract.mdc` → `AGENTS.md` |
+The [Board mod](herdr/mods/board/RECIPE.md) shows each tab’s goal, current step, blockers, and recent decisions. From a Herdr tab, agents update the card with the [board skill](skills/board/SKILL.md). A Stop hook adds a summary after each turn.
 
-Adapters change ergonomics, not behavior. Source of truth stays in this repo.
+Add the Board mod and writer links if they are not already installed:
 
-`sync.sh migrate` regenerates all adapter outputs and verifies parity.
-
-## Herdr app
-
-I run my agents inside [Herdr](https://herdr.dev), a desktop app for terminals and coding agents (`herdr-app` for the window, `hc` for herdr-core). This repo holds the Herdr pieces my workflow depends on:
-
-| Path | What it is | Installed as |
-|---|---|---|
-| `herdr/mods/board/` | Board mod: a catch-up panel with one row per tab (goal, current step, next step, blockers, a short log of milestones and decisions) plus an archive of closed tabs. | symlink `~/.config/herdr-app/mods/board` |
-| `herdr/scripts/board.mjs` | The command agents use to write a tab's board (`set --goal --now --log --decision ...`) | symlink `~/.config/herdr/scripts/board.mjs` |
-| `skills/board/` | Tells agents when to update the board and what is worth logging | via the skills symlink |
-| `hooks/board-turn.sh` | Stop hook: logs each finished turn on the tab's board | registered in `~/.claude/settings.json` |
-
-Install the board in your own Herdr:
-
-```bash
+```sh
+mkdir -p ~/.config/herdr-app/mods ~/.config/herdr/scripts
 ln -s ~/.agents/herdr/mods/board ~/.config/herdr-app/mods/board
-mkdir -p ~/.config/herdr/scripts && ln -s ~/.agents/herdr/scripts/board.mjs ~/.config/herdr/scripts/board.mjs
+ln -s ~/.agents/herdr/scripts/board.mjs ~/.config/herdr/scripts/board.mjs
 herdr-app check ~/.config/herdr-app/mods/board
 ```
 
-Then add a `board` block to one of your layouts, beside the tab block (use your panes' border color so it matches them):
+Use the [Board recipe](herdr/mods/board/RECIPE.md#built-from) for the layout block. In Claude Code, register [hooks/board-turn.sh](hooks/board-turn.sh) as a Stop hook to log turn summaries. The hook needs `jq` and Node.js. Other [hooks](hooks/) cover shell safety and Herdr agent status.
 
-```json
-{ "id": "board", "type": "block", "content": { "mod": "board" }, "size": { "px": 360 },
-  "background": "background", "border": { "width": 1, "color": "#33363b" }, "radius": 12 }
+## Verify and share
+
+Run `npm test` for the hub tests. To test the Board, run:
+
+```sh
+node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/*.test.mjs
 ```
 
-And register `hooks/board-turn.sh` as a Stop hook in your agent's settings. Tests: `node --test herdr/scripts/board.test.mjs herdr/mods/board/tests/`.
-
-## Skills
-
-Skills live in `skills/` covering the full pipeline and domain specialties. Key pipeline skills:
-
-| Skill | Role |
-|-------|------|
-| `caveman/` | Explicit concise, answer-first style; ordinary chat uses the shared contract's concise defaults without mandatory skill reads. `normal mode` disables the style; `/caveman` enables it |
-| `human/` | Explicit natural-writing guidance; `/human` writes, rewrites, or audits text while preserving facts and voice. Ordinary chat uses natural defaults without mandatory skill reads |
-| `prototype/` | Optional discovery for an unclear flow or finished-quality comparisons of competing UI designs; not required for an agreed production direction. Keep production approval separate |
-| `design/` | Frame the problem (invest, explore, defer, stop) and write the what-and-why overview that becomes the parent issue |
-| `to-issues/` | Split an approved overview into delivery issues and create them on the product's GitHub Project once the split is approved |
-| `jira-tpm/` (`~/.codex/skills`) | Organize Jira backlogs with actionable tickets, meaningful priorities, appropriate subtasks, real dependencies, and verified status |
-| `plan/` | Implementation plan for a taken issue or a direct Full request, against current code; approval means build |
-| `issue-discovery/` | Record a product or engineering decision as a GitHub decision issue; behavior changes go through `/design` |
-| `to-spec/` | Conversation → local spec draft; issue publication requires separate exact-content approval |
-| `improve/` | Read-only codebase survey → prioritized executor-ready plans |
-| `research/` | Cited answers to standalone questions, or a decision for a Research issue on the Project |
-| `brag/` | Create a project-specific launch video with Hyperframes (`/skill:brag`) |
-| `implement/` | Explicit or next eligible approved slice → worktree → TDD → code-judgment → code-review → human gates; refresh queue |
-| `wait-what/` | 3-line verbosity corrective |
-| `tdd/` | Red-green-refactor with seam discipline |
-| `code-review/` | Start at `SKILL.md` for shared policy and stage-specific references. Adversarial review that triages the diff and spawns only the reviewers it needs (`--runner subagents\|opencode\|omp`, default: ask), and adjudication of behavioral and evidenced readability/design findings. The existing `complexity-reviser` directly performs authorized scoped test cleanup with retrospective evidence; unrelated design revisions retain proposal → parent evaluation/authorization → behavior-preserving implementation → tests and fresh independent validation. Fresh independent validation also follows automatic cleanup. No overlapping agent; review-only, `--no-revise`, and implementation ownership boundaries remain. Behavior changes need user approval, including hardener fixes. External runners return observe-only reports; OpenCode uses `scripts/opencode-review.mjs`, OMP uses verified installed Herdr/CLI dispatch |
-| `code-judgment/` | Behavior-preserving cleanup before review: dead code, YAGNI, names, comments, module shape, cohesion/coupling; includes authorized automatic test cleanup with retrospective Keep / Rewrite / Delete evidence and behavior contracts over implementation pins |
-| `pair-reviewer/` | Interactive reading partner for a branch or worktree the user names: resolves the target, gathers its plan, commit history, and code, then talks through the answers in 2-5 sentences and stops, critiquing only on request (`/skill:pair-reviewer <branch-or-worktree>`); depth follows you — evidence, provenance, and the `REVIEW-THINKING.md` method come when asked; "probe me" withholds a finding behind a location hint so you guess it first; read-only, hands off to `code-review/` for a full adversarial pass |
-| `grill-with-docs/` | Relentless interview, glossary + ADRs |
-| `domain-modeling/` | Sharpen terminology, ADR management |
-| `commit/` | Fast atomic commits, no subagents, for when you are the reviewer. Rules live in `references/` (grouping, messages, edge cases). |
-| `commit-review/` | Atomic commits for agent-built work: commit-pr-reviewer approves the exact plan, and an optional code-review gate runs first. Reuses `commit/references/`. |
-| `pr/` | Senior developer PR workflow: auto-detects single PR, stacked PRs (gh stack), or parallel worktrees; generates review-ready descriptions focused on rationale and behavior |
-| `split-dirty-worktree/` | Oversized dirty tree → mandatory `gh stack` for dependent concerns with a named branch-stack proposal; independent concerns may use separate worktrees. Includes commits per branch; read-only until approved (or end to end in autonomous mode), every PR a draft, then hands off to `commit/` and `pr/` |
-| `handoff/` | Session handoff documents |
-| `ch/` | Handoff shorthand — /ch as a skill |
-| `recall/` | Resume from handoff |
-| `recall-worktree/` | Reconstruct dirty work, history, and context freshness for the main agent through a lightweight subagent |
-| `later/` | Future improvement notes in `future/` |
-| `board/` | Keep each Herdr tab's Board card current: goal, step, next, blockers, and a short log of milestones and decisions |
-| `codebase-design/` | Proportionate module, backend, and schema design: ownership, invariants, information hiding, tradeoffs, testability, and cited practitioner guidance |
-| `codebase-drill/` | OA-style codebase navigation training |
-| `rederive/` | User-invoked only: re-derive a codebase's design decisions through Socratic problems, repository history, and incremental constraints (`/skill:rederive`) |
-| `diagnose/` | Bug and performance diagnosis |
-| `security-review/` | Team-mode vulnerability research |
-| `e2e-testing-patterns/` | Playwright/Cypress testing standards |
-| `enforce/` | Review what needs to change (what/why rationale table) → apply it. Gate for delegated work; hygiene pass for existing code |
-| `cancel/` | Cancel active modes |
-| `resolving-merge-conflicts/` | Merge conflict resolution |
-| `frontend-design/` | Page and application visual direction; prototypes only for unresolved choices |
-| `ui-design/` | Expert UI design and critique: study how proven products organize the job, hierarchy, type, color, states, attention and momentum, then a rendered audit |
-| `frontend-implement/` | Main agent builds agreed production UI directly; research specialists, checks, cleanup, review, and useful human feedback; prototypes only for uncertainty |
-| `design-taste-frontend/` | Anti-slop landing pages, portfolios, and redesigns — brief-first aesthetic inference, strict pre-flight check (leonxlnx/taste-skill) |
-| `ui-ux-pro-max/` | Searchable cross-stack UI patterns and accessibility guidance; agreed directions go to authorized production |
-| `impeccable/` | Product-interface design, audit, and polish playbooks; comparisons only when useful (pbakaus/impeccable) |
-| `framer-motion-animator/` | Framer Motion animations |
-| `shadcn/` | shadcn/ui component management |
-| `next-best-practices/` | Next.js best practices |
-| `performance/` | Web performance optimization |
-| `supabase-postgres-best-practices/` | Postgres optimization from Supabase |
-| `herdr/` | Control Herdr terminal multiplexer for coding agents |
-| `orchestration/` | Delegate approved work to subagents, including splitting a large task into parallel units with self-contained prompts, review, and a correction loop |
-| `skill-index/` | Skill router — ask which skill fits |
-
-Plus specialist agents (`agents/`): hardener, qa-runner, codebase-analyzer, codebase-locator, reviewer-behavioral, reviewer-contract, reviewer-maintainability, security-reviewer, adjudicator, fixer, complexity-reviser.
-
-## Directory Structure
-
-```
-~/.agents/
-├── AGENTS.md              # Source of truth — workflow contract
-├── manifest.json          # Hub manifest — symlinks, capabilities
-├── package.json           # Node package — scripts
-├── sync.sh                # Multi-CLI sync pipeline
-├── .skill-lock.json       # Skill registry (tracked)
-├── commands/              # Slash commands (ch, later, wf, wf-auto)
-├── agents/                # Specialist expert agents
-├── skills/                # Workflow + domain skill packs
-│   ├── _shared/           # Shared utility modules
-│   ├── prototype/          # Throwaway UI prototyping
-│   ├── brag/               # Project launch video workflow
-│   ├── plan/
-│   ├── to-issues/
-│   ├── issue-discovery/
-│   ├── implement/
-│   ├── tdd/
-│   ├── code-review/
-│   ├── commit/
-│   ├── pr/
-│   ├── grill-with-docs/
-│   ├── domain-modeling/
-│   ├── to-spec/
-│   ├── improve/
-│   ├── handoff/
-│   ├── recall/
-│   ├── codebase-drill/
-│   ├── diagnose/
-│   ├── codebase-design/
-│   ├── resolving-merge-conflicts/
-│   ├── research/
-│   ├── frontend-design/
-│   ├── frontend-implement/
-│   ├── design-taste-frontend/
-│   ├── ui-ux-pro-max/
-│   ├── impeccable/
-│   ├── framer-motion-animator/
-│   ├── shadcn/
-│   ├── wait-what/
-│   └── ...                # Additional domain skills
-├── scripts/               # Tooling (init/reset, context paths, worktree helpers, model router)
-├── herdr/                 # Herdr app mods and scripts (board)
-├── adapters/              # 5 CLI adapter configs
-└── .omc/                  # OpenCode project memory (regenerated)
-```
-
-## What Gets Shared
-
-- `commands/`, `agents/`, `skills/`, `adapters/`
-- `scripts/`, `herdr/`, `manifest.json`, `package.json`, `sync.sh`
-- Onboarding docs (`README.md`, `SHARING.md`)
-
-## What Stays Local
-
-- Secrets: `.env`, `.env.local`
-- Dependencies: `node_modules/`
-- Worktree context: `context/` at the Git worktree root (designs, issue drafts, plans, handoffs, ADRs, and research)
-
-The public repo is inspectable. Credentials, handoffs, live plans, and active project runtime state are intentionally excluded.
-
-## Quick Start
-
-```bash
-# Clone into ~/.agents
-git clone <this-repo> ~/.agents
-
-# Set up adapter symlinks
-cd ~/.agents && bash sync.sh migrate
-
-# Initialize local state
-npm run init:local-state
-```
-
-Each adapter's README covers tool-specific setup. Start with your tool's directory under `adapters/`.
+Share the tracked workflow files, not credentials, tool state, or worktree notes. See [SHARING.md](SHARING.md) before publishing.
