@@ -149,6 +149,13 @@ paragraphs written under them.
   is a lot; a fifth means the PR is doing too much.
 - **Verification — one bullet per test**: `<test name>` — the behavior it locks in. One line for the
   whole suite at most, never a pass count.
+- **Measured improvement — only when there is one.** If the change has a measured before and after
+  (speed, size, counts, error rates, accessibility scores, coverage), open Observable Behavior with one
+  plain sentence: "Improved <what the user notices> from <before> to <after> by <change>." Put how it
+  was measured (setup, environment, runs) in Verification, with an optional Before/After table. Same
+  units on both sides, and say what was not measured (e.g. real devices). Never estimate or invent a
+  number; if nothing was measured, leave it out. Example: "Improved tap-to-next-photo on an emulated
+  4G phone from 323–668ms to ~30ms by loading the neighboring photos ahead of time."
 - **Nothing repeated.** The three headers already partition the story; telling one fact under two of
   them is what makes a description feel long.
 - **Plain words.** The project's domain term or the ordinary English word. Never an operator, class,
@@ -174,12 +181,14 @@ approach.>
 
 ## Observable Behavior
 
+- <only if measured: Improved <what the user notices> from <before> to <after> by <change>.>
 - <one line: what a caller or buyer sees change>
 - <one line, only if there is a second>
 
 ## Verification
 
 - `<test name>` — the behavior it locks in
+- <only if measured: how it was measured — setup, environment, runs>
 ```
 
 ### Stack Context (Strategy 2 only)
