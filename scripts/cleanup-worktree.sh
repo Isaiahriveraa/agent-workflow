@@ -112,7 +112,7 @@ if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
     echo "== deleting remote branch: origin/$BRANCH"
     git push origin --delete "$BRANCH"
   else
-    read -r -p "Delete remote branch origin/$BRANCH? [y/N] " answer
+    read -r -p "Delete remote branch origin/$BRANCH? [y/N] " answer || answer=""
     case "$answer" in
       y|Y) git push origin --delete "$BRANCH" ;;
       *) echo "skipping remote branch deletion" ;;

@@ -67,6 +67,19 @@ for (const submodule of [false, true]) {
   });
 }
 
+test('unattended cleanup keeps the remote branch and still finishes', (t) => {
+  const { main, worktree, git, cleanup } = fixture(t);
+  const origin = join(git(main, 'rev-parse', '--show-toplevel').trim(), '..', 'origin.git');
+  git(main, 'init', '--bare', origin);
+  git(main, 'remote', 'add', 'origin', origin);
+  git(main, 'push', '-u', 'origin', 'main', 'feature');
+  const result = cleanup();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.equal(existsSync(worktree), false);
+  assert.equal(git(main, 'branch', '--list', 'feature').trim(), '');
+  assert.match(git(main, 'ls-remote', '--heads', 'origin', 'feature'), /refs\/heads\/feature/);
+});
+
 for (const options of [{}, { path: 'feature with spaces' }, { submodule: true }]) {
   test(`clean cleanup removes worktree and branch: ${JSON.stringify(options)}`, (t) => {
     const { main, worktree, git, cleanup } = fixture(t, options);
