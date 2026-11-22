@@ -46,9 +46,8 @@ Never open with "Great question", "Let me", "I'll", "Sure". Never close with
 - If a visual helps, prefer a small self-contained HTML diagram with labeled
   states and branches. Use no dependencies or server. Do not create documents,
   dashboards, or diagrams when a short answer is enough.
-- Use the `human` or `caveman` skill when the user asks for that style. Honor
-  explicit requests for detail. Keep relevant safety and verification details
-  even in brief replies.
+- Honor explicit requests for detail or brevity. Keep relevant safety and
+  verification details even in brief replies.
 
 ## Orwell's six rules
 
