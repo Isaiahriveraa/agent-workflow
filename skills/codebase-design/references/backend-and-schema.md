@@ -7,7 +7,7 @@ Use the questions that match the change. Start with business facts and ownership
 - What business fact is authoritative, and which module owns changing it? Inspect every actual writer: requests, imports, jobs, administrative tools, and integrations.
 - What must remain true after success, failure, and a concurrent request? Put the rule with its owner and enforce it at the narrowest reliable boundary.
 - Which rules need database constraints, which need transactional checks, and which need both? Application prechecks alone cannot enforce uniqueness or prevent competing writes.
-- Do names match the business meaning in this part of the system? If one term means different things to different owners, clarify it rather than forcing a shared model. Use `domain-modeling` for unresolved terminology; do not mandate aggregates or bounded contexts for routine CRUD.
+- Do names match the business meaning in this part of the system? If one term means different things to different owners, clarify it rather than forcing a shared model. Use `grill-with-docs` for unresolved terminology; do not mandate aggregates or bounded contexts for routine CRUD.
 - Which reads and writes must succeed together? Name the transaction scope. Choose isolation, locking, atomic updates, or conflict handling based on the actual invariant and database guarantees. Test competing operations when concurrency can violate it.
 - For a remote effect, what does timeout mean? Do not assume failure means nothing happened. When duplicate delivery or retry is reachable, specify identity, deduplication/idempotency, and how an uncertain outcome is reconciled. A local transaction cannot make a remote charge atomic.
 

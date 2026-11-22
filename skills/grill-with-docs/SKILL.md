@@ -5,7 +5,7 @@ description: Interview the human about meaningful behavior walkthroughs, edge ca
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.
 
-Interview the human to resolve meaningful uncertainty, not to exhaust a checklist. Use `/domain-modeling` for glossary, ADRs, and term resolution only when a real terminology or architectural decision warrants it.
+Interview the human to resolve meaningful uncertainty, not to exhaust a checklist. Resolve terms and record glossary entries or ADRs only when a real terminology or architectural decision warrants it, using the formats in `ADR-FORMAT.md` and `CONTEXT-FORMAT.md`.
 
 ## Document style: terminal first
 
@@ -139,6 +139,20 @@ when the user explicitly asks to understand something). These rules
 govern the default bundled explanation that ships with every grill
 question and clarification answer.
 
+## Terminology checks
+
+- **Challenge against the glossary.** When the human uses a term that conflicts
+  with `context/glossary/glossary.md`, call it out at once: "Your glossary defines
+  'cancellation' as X, but you seem to mean Y. Which is it?"
+- **Sharpen fuzzy language.** When a term is vague or overloaded, propose one
+  canonical term and list the rest under `_Avoid_`.
+- **Check claims against code.** When the human says how something works, check
+  the code. If it disagrees, surface the contradiction with the specific file.
+- **Update the glossary inline.** When a term is resolved, write it down then.
+  Do not batch it. Glossary entries hold no implementation details.
+- **Offer ADRs sparingly.** Use the criteria in `ADR-FORMAT.md`. If any one is
+  missing, skip the ADR.
+
 ## After each answer
 
 Only run this section when my reply actually answers the open question with a
@@ -153,10 +167,10 @@ section above instead.
 
    Refresh affected behavior cards and issue/plan evidence after feedback. Once issues exist, the product's GitHub Project alone owns status; do not keep another status list in the design or transcript. Changes to approved scope require renewed review. Interview answers do not authorize implementation, publication, or merge.
 
-2. **If a term was resolved** or an ADR criterion was met, use
-   `/domain-modeling` to capture it. It handles glossary updates and ADR
-   creation in the worktree context directory with the right format and
-   location.
+2. **If a term was resolved** or an ADR criterion was met, capture it with
+   `python3 ~/.agents/scripts/new-artifact.py --type glossary --topic "<term>"`
+   or `--type adr --topic "<decision title>"`, then fill in the generated
+   scaffold per `CONTEXT-FORMAT.md` or `ADR-FORMAT.md`.
 
 3. **Append the Q&A pair immediately** to one worktree context transcript. On
    the first answer, create the session transcript if needed:
@@ -181,7 +195,7 @@ Land in the current worktree:
 {git-root}/context/
 ├── designs/                  ← design artifacts, when locally created
 ├── issues/                   ← issue artifacts or drafts, when local
-├── glossary/glossary.md      ← domain glossary (via domain-modeling)
+├── glossary/glossary.md      ← domain glossary (per CONTEXT-FORMAT.md)
 ├── grill/                    ← Q&A transcripts
 └── plans/                    ← plan artifacts, when local
 ```
