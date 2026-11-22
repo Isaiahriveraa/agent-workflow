@@ -36,4 +36,4 @@ One concern per commit and PR; queue unrelated mid-task ideas instead of mixing 
 
 ## Implementation Mode
 
-Default: one session owns plan, implement, test, and verify. Subagents are opt-in via `orchestration`, `enforce`, and `code-review`. When delegating, use `references/agent-handoff.md`: give the stage, goal, scope, constraints, files, interfaces, tests, non-goals, and completion evidence, and stay accountable for correctness and integration. Preserve each specialist's restricted inputs and output format, especially blind reviews.
+Default: one session owns plan, implement, test, and verify. Subagents are opt-in via `orchestration` and `code-review`. When delegating, use `references/agent-handoff.md`: give the stage, goal, scope, constraints, files, interfaces, tests, non-goals, and completion evidence, and stay accountable for correctness and integration. Preserve each specialist's restricted inputs and output format, especially blind reviews.

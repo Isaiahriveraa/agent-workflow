@@ -30,8 +30,8 @@ Do not assume children inherit the parent's loaded instructions. Provide each ch
 
 Review does not change the active workflow's edit authority. By default, the
 hardener, fixer, and reviser apply their permitted changes as described below.
-When a mode reserves implementation edits to the main agent, such as
-`frontend-implement`, pass that restriction and the protected paths to those
+When a mode reserves implementation edits to the main agent, such as a
+main-agent-only UI mode, pass that restriction and the protected paths to those
 specialists explicitly. For protected implementation files they return proposals,
 not edits; the main agent applies accepted changes and verifies them. Specialists
 may draft tests only where the active mode permits it. The main agent must run
