@@ -105,6 +105,35 @@ focal point is chosen with `object-position`, never by stretching. Full-bleed
 media owns its section; media inside a column shares the column's edges. Details
 in `imagery.md`.
 
+## Stable layout when content changes
+
+Switching content must not move the page or the controls the user is operating.
+Swapping cards, tabs, or text keeps the primary action and the surrounding layout
+in place.
+
+- **Reserve the region.** Size the changing container for its largest variant,
+  or give cards a fixed row height with clamped text. Cards in one grid share a
+  row height.
+- **Pin the controls.** The primary action sits in a fixed spot: a footer pinned
+  to the bottom of the panel, or a fixed-height region above it. Moving from one
+  card to another must not move the button.
+- **Match loading to loaded.** A skeleton or spinner takes the same dimensions as
+  the content it replaces.
+- **Keep the viewport still.** Leave `overflow-anchor` on (the default). Do not
+  insert or remove content above the user's focus when a change is off-screen.
+- **Stop scrollbar shifts.** Use `scrollbar-gutter: stable` on scrolling
+  containers so content does not move when a scrollbar appears or disappears.
+- **Stable widths for numbers and labels.** Use `tabular-nums` and a fixed
+  minimum width on counters and status labels.
+- **Long and short text share one box.** Clamp or truncate; never let a longer
+  title grow a card and push its neighbors.
+- **Verify the switch.** Change between the largest and smallest variant of the
+  content, then compare each control's bounding box before and after. A change
+  fails. Also check layout shift (CLS) across the switch in the browser.
+
+The exception is content the user is reading, which may grow downward. The
+control they are using and the content above their focus do not move.
+
 ## Responsive
 
 - Decide the reflow before styling: what stacks, what hides, what keeps its order. Stacking order is a hierarchy decision.

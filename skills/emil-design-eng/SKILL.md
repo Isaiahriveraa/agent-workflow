@@ -5,6 +5,14 @@ description: Emil Kowalski's design-engineering philosophy for UI polish, compon
 
 # Design Engineering
 
+## Works with ui-design
+
+`ui-design` (`../ui-design/SKILL.md`) decides what to design: hierarchy, layout,
+states, and layout stability when content changes. This skill decides how
+interactions move and feel. When the two disagree on motion timing or easing,
+this skill's rules win. Read `ui-design` for the design decisions and this skill
+for the implementation details.
+
 ## Initial Response
 
 When this skill is first invoked without a specific question, respond only with:

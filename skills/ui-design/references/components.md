@@ -2,6 +2,13 @@
 
 A component is a small interface over a repeated visual and behavioral pattern. Design it from its anatomy and its states, not from its default look.
 
+## Reuse first
+
+- Search the codebase for the existing control before designing a new one. Match on job, not on look: a "Save" button is the same job wherever it appears.
+- Extend the shared component through a variant, size, or prop. Add one variant per real need, and name it for the job or emphasis it serves (`primary`, `destructive`, `compact`), not for the screen it appears on.
+- A new component is justified only when no existing one can take the job with a variant. Write the reason down in the plan or the PR.
+- Keep one control per action across the product: same label, same style, same position.
+
 ## Method
 
 0. **Signifier.** Ask what tells the user this is interactive and what it will do. Affordances are invisible; the visible cue is the signifier, and a control without one is a puzzle. A row that opens, a chip that removes, a field that is editable — each needs a visible difference from its neighbours.

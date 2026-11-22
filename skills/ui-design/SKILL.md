@@ -68,19 +68,27 @@ Silently following the weaker rule is not.
    hierarchy is weight, size and space, not borders or color.
    References: `references/typography.md`, `references/type-color-space.md`.
    Start from `scripts/tokens.css`.
-8. **Build from anatomy and states.** Default, hover, focus-visible, active,
+8. **Inventory existing components.** Before building any control or card,
+   search the codebase for the component that already does the job. For each
+   element on the surface, mark it reuse, extend, or new. Reuse is the default.
+   Extend means adding a variant, size, or prop to the shared component. New
+   needs a reason written next to it, such as a job no existing component does.
+   Never build a parallel copy of an existing button, card, or modal.
+   Reference: `references/components.md`, "Reuse first."
+9. **Build from anatomy and states.** Default, hover, focus-visible, active,
    disabled, loading, empty, error. Define motion for state changes, not
    decoration. The scan view is not the edit form. Design for short attention:
    the 5-second test, visible progress, highlighted changes, copy that leads
    with the point, and no manipulative urgency.
    References: `references/components.md`, `references/interaction.md`,
    `references/motion.md`, `references/attention-and-momentum.md`.
-9. **Spend color, both themes.** Pick a color strategy (restrained, committed,
+10. **Spend color, both themes.** Pick a color strategy (restrained, committed,
    full, drenched) from the stance. One accent, glyph-scale semantics, dark mode
    re-picked rather than inverted. Reference: `references/color-system.md`.
-10. **Look, then audit.** Render with real content at 390 and 1440, in every
+11. **Look, then audit.** Render with real content at 390 and 1440, in every
    theme, plus an opened editor and an error state. Fix what one look shows
-   before looking again. Then run `scripts/audit-ui.js`, read
+   before looking again. Run `scripts/check-tokens.mjs` on the changed files
+   for raw colors. Then run `scripts/audit-ui.js`, read
    `references/readability-density.md`, and walk `references/critique.md`. Judge
    the screenshot; a passing number never overrules it.
    Imagery and asset rules: `references/imagery.md`. Semantics, zoom, RTL:
@@ -88,6 +96,15 @@ Silently following the weaker rule is not.
 
 ## Rules
 
+- **One control per job.** If the product already has a control for an action
+  (save, delete, filter, close), the new surface uses that control with its
+  label, style, and position. Do not design a second one.
+- **Extend, don't fork.** Change a shared component through its props or
+  variants. Overrides and copies inside a page are drift, not customization.
+- **Tokens only.** Colors, radii, spacing, and type come from named tokens
+  (CSS custom properties). Component files reference token names, never raw hex,
+  rgb, or pixel values. A new value means a new token, added once in the token
+  file.
 - **Type carries the hierarchy first.** Weight, size and space before surfaces,
   borders or color. One scale, used only at its steps.
 - **Delete before shrinking.** Cut or defer copy; never buy space with font size.
@@ -108,6 +125,9 @@ Silently following the weaker rule is not.
   group has too many parts — cut a part.
 - **Every state is designed**, including the one nobody photographs: empty,
   loading, error, disabled, offline, no permission, 200% zoom.
+- **Changing content never moves the controls.** Switching cards, tabs, or text
+  keeps the page and its controls where they are. Reserve space for the largest
+  variant; see `references/layout.md`, "Stable layout when content changes."
 - **Motion explains a change.** If you cannot name the state change, delete it.
   Respect `prefers-reduced-motion` with fewer, gentler animations — not none.
 - **Own the browser surfaces.** Selection color, caret, scrollbar, focus ring,
@@ -161,6 +181,7 @@ is not a rut.
 - Buttons, cards, forms, nav, tables, states, targets: `references/components.md`
 - Flows, feedback, errors, forms, overlays, keyboard, empty states: `references/interaction.md`
 - Durations, easing, choreography, reduced motion: `references/motion.md`
+- Interaction craft (press, hover, easing rules, transform-origin, springs, performance, reduced motion): `../emil-design-eng/SKILL.md`. Emil's rules set the motion bar; this skill decides what to design.
 - Ramps, 12-step roles, strategies, dark mode, gradients: `references/color-system.md`
 - Type scale, spacing, color roles, contrast floors, tokens: `references/type-color-space.md`
 - Imagery, icons, logos, avatars, data viz, media: `references/imagery.md`
@@ -172,4 +193,5 @@ is not a rut.
 - How proven products organize the same job (study before designing): `references/proven-products.md`
 - Visual mechanics worth borrowing: `references/inspiration.md`
 - The 5-second test, momentum, highlighting change, short-attention copy, celebration, ethical guardrails: `references/attention-and-momentum.md`
+- Templated-output tells to ban, and the redesign protocol for existing sites: `references/anti-slop.md`
 - Who the principles come from, and what was read: `references/sources.md`

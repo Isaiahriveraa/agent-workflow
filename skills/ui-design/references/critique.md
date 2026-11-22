@@ -136,6 +136,13 @@ Use this checklist on the rendered UI, not the code. Look at the screenshot at d
 - [ ] A different designer given the same brief would have produced a near-identical page (the unique test).
 - [ ] A summary corner holding a figure, a meter, and two more facts, spaced with gaps below the smallest step of the scale.
 
+### Reuse and tokens
+
+- [ ] Every control maps to an existing shared component or variant. No look-alike copies exist.
+- [ ] Any new component has a written reason from the reuse inventory.
+- [ ] Changed component files use token names only. Run `node ~/.agents/skills/ui-design/scripts/check-tokens.mjs <changed files>` and fix every hit; it exits 0 when clean. It checks colors only, so spacing and type still need a review.
+- [ ] The same action uses the same control, label, and position as elsewhere in the product.
+
 ## Fix moves
 
 | Symptom | Fix |

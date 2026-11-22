@@ -11,11 +11,15 @@ If you cannot name the state change, delete the animation.
 | Press / tap acknowledgement | 90–130ms | ease-out |
 | Hover and focus color, background | 120–160ms | ease-out |
 | Small style change (border, tone) | 150–200ms | ease-out |
-| Popover, menu, tooltip, disclosure | 180–240ms | ease-out in, ease-in out |
+| Popover, menu, tooltip, disclosure | 180–240ms | ease-out in and out |
 | Dialog, sheet, drawer | 240–320ms | ease-out |
-| Layout reflow, list reorder | 240–360ms | ease-in-out |
-| Page or route transition | 300–400ms | ease-in-out |
+| Layout reflow, list reorder | 180–280ms | ease-in-out |
+| Page or route transition | 200–300ms | ease-in-out |
 | Authored focal moment (once per product) | 500–700ms | custom |
+
+The timing and easing rules come from `emil-design-eng`: UI motion stays under
+300ms, except modals, drawers, sheets, and toasts, and `ease-in` is never used
+for UI motion. Use the durations above for the states they name.
 
 - **Exit is faster than entrance.** A closing menu at 140ms, opening at 200ms.
   Leaving should feel immediate; arriving should feel placed.
