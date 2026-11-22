@@ -191,10 +191,15 @@ and task lists out.
 One Project per product. Project fields own status, priority, and effort;
 native GitHub issue fields own Type and Assignees, and relationships own dependencies.
 
-- **Project fields** — Status (Backlog, Ready, In progress, In review, Done),
-  the existing Priority field (Must, Should, Could, Won't or its project equivalents),
+- **Project fields** — Status (the states below, mapped as described next), the
+  existing Priority field (Must, Should, Could, Won't or its project equivalents),
   and Effort (XS, S, M). Reuse an existing Size field as Effort rather than adding
   a competing estimate field.
+- **Status mapping** — read the board's own Status options with
+  `gh project field-list`, then map each state onto them. Backlog and Ready use the
+  not-started option; In progress and In review use the active option; Done uses
+  Done. A board with no separate In review option keeps the card In progress until it
+  is Done. Never add or rename a Status option without my approval.
 - **Suggested values** — fill missing Priority and Effort directly with initial
   suggestions I can correct. Preserve existing values and my corrections; never
   add a second Priority field or duplicate these values in issue bodies or labels.
@@ -245,6 +250,57 @@ deleting, or archiving an issue still needs my approval. Projects need the `gh`
 token's `project` scope; when it is missing, ask me to run
 `gh auth refresh -s project`.
 
+## Keep the board and worktrees current
+
+The agent updates the Project and removes merged worktrees at the points below,
+without waiting to be asked. Status changes are reversible. Closing, deleting, and
+archiving stay approval-gated.
+
+| Event | Agent action |
+|---|---|
+| Split approved and issues created | Status to the not-started option (Ready or Backlog) |
+| Issue taken | Status to the active option (In progress) |
+| Local review done and PR open | Status to In review, or the active option on a board without it |
+| Merge found by the merge sync | Check Done when; if it holds, Status to Done; if not, keep the card active and report the gap |
+| Every delivery sub-issue of a parent is Done | Report the parent as ready for its release check; leave its Status to me |
+
+Built-in Project workflows can also change Status, for example setting Done when a
+linked PR merges, before anyone checks the acceptance criteria. After any merge,
+the merge sync reconciles the card with Done when.
+
+### Merge sync
+
+Run the merge sync from the repository's main checkout at the start of
+`implement`, when `pr` opens a PR, and whenever you say a PR merged or ask for
+cleanup. It is safe to repeat.
+
+1. Run the status report from the main checkout:
+
+   ```sh
+   ~/.agents/scripts/worktree-status.sh
+   ```
+
+   It prints one line per worktree: STATE (`merged`, `open`, `closed`, `no-pr`,
+   `unknown`), DIRTY (`clean` or a count of local files), and ACTION (`cleanup`,
+   `keep-dirty`, `keep`). Act on that output; do not re-derive PR state by hand.
+2. For each `merged` worktree, check its linked issue's Done when against the merged
+   result, then set the card as the table above says.
+3. For each `cleanup` line, remove the worktree and its local branch:
+
+   ```sh
+   ~/.agents/scripts/cleanup-worktree.sh "<branch>"
+   ```
+
+   The script refuses worktrees with uncommitted or ignored files and keeps the
+   remote branch unless you answer yes. If it refuses, report the files and leave
+   the worktree in place. Never add `--force` without your explicit OK. Your
+   standing request for merged worktree cleanup covers this worktree and its local
+   branch. It does not cover remote branches, unmerged work, or discarded changes.
+4. Report the worktrees removed, the cards moved, and anything kept and why.
+
+Nothing runs between sessions. Merges are picked up the next time a step above
+runs; a card already moved by a built-in workflow stays as it is.
+
 ## Technical planning: apply PSD
 
 A taken delivery issue or a direct Full-speed request needs an approved plan
@@ -264,8 +320,9 @@ to the approved approach returns for approval.
    approach, meaningful tradeoffs, and risks; follow with affected modules,
    data/API changes, failures, and tests. Reference each Done when item rather
    than copying the issue narrative. My approval means build.
-4. Build per `implement` at Full speed, move the card to In review when local
-   review is done, and to Done once merged and verified. A material change to
+4. Build per `implement` at Full speed. Move the card to In review when local
+   review is done and the PR is open. The merge sync moves it to Done once the merge
+   is verified. A material change to
    the approved approach returns for approval; a changed promise returns to the issue.
 
 For a Research issue, use `research` instead of steps 3–4: investigate the
@@ -293,6 +350,8 @@ commit message, or code comment; published text must stand on its own.
 | Deleting tests | Me, or my task-scoped cleanup authorization |
 | Commit | Me (`commit`); `commit-review` only for unattended work |
 | Push or open a PR | Me; invoking `/pr`, `/wf`, or `/wf-auto` counts |
+| Move cards for taken, PR-open, and verified-merged work | Automatic (**Keep the board and worktrees current**) |
+| Remove a merged worktree and its local branch | Automatic through the merge sync; deleting a remote branch or using `--force` needs me |
 | Close, delete, or archive issues; merge; start the next issue | Me, every time |
 
 Reviewer agents check quality; they never grant these approvals.

@@ -11,6 +11,14 @@ You do **not** need to decide ahead of time whether to run `/pr`, `/pr split`, o
 
 ---
 
+## Writing PR titles and descriptions
+
+Before drafting or rewriting a PR title or description, read and apply the
+[writing skill](../writing/SKILL.md). This applies to previews, new PRs, and edits
+to existing PRs. Keep the template below, but write for a reviewer who missed
+the discussion: say what changes, explain why with a concrete example when it
+helps, and distinguish checks that ran from checks still pending.
+
 ## The 3 Senior Developer PR Strategies
 
 When invoked, the skill evaluates the current branch against the target base branch across three core dimensions: **Concern Cohesion**, **Dependency Relationship**, and **Diff Size/Reviewability**. It then auto-proposes one of three strategies:
@@ -228,10 +236,7 @@ Explain the purpose of this layer within the larger change: how it contributes t
 2. In each worktree, stage and commit only that concern's files using atomic commit discipline.
 3. Verify each worktree independently (`npm test`, `git diff --stat`).
 4. Push each branch and open a draft PR targeting `<base>` directly.
-5. Each PR reviews and merges independently. Once merged, clean up each worktree:
-   ```bash
-   ~/.agents/scripts/cleanup-worktree.sh <branch-name>
-   ```
+5. Each PR reviews and merges independently. Once merged, the merge sync in `references/workflow.md` removes its worktree. Run `~/.agents/scripts/worktree-status.sh` to see which worktrees are merged, then clean up the `cleanup` lines with `~/.agents/scripts/cleanup-worktree.sh <branch-name>`.
 
 ---
 
