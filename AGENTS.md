@@ -165,6 +165,8 @@ approval gates, or the obligation to preserve existing work.
 
 ## Communication
 
-[`skills/writing/SKILL.md`](skills/writing/SKILL.md) is the default communication
-contract. Read it before any reply longer than a sentence or before writing or
-editing documentation.
+[`skills/writing/SKILL.md`](skills/writing/SKILL.md) is the default for all
+human-facing prose. Read it before drafting or editing text people will read:
+GitHub issues and PRs, Markdown docs and plans, design notes, commit messages,
+UI copy, and error messages. For chat, read it before any reply longer than a
+sentence.
