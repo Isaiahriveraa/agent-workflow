@@ -197,12 +197,22 @@ test("a turn that edited files logs the files and the first sentence of the repl
 		toolResult(),
 		assistant(text("**Fixed** the `login` redirect. Tests pass now.")),
 	].join("\n");
-	assert.equal(turnLine(transcript), "Edited login.ts, session.ts: Fixed the login redirect.");
+	assert.deepEqual(turnLine(transcript), { text: "login.ts, session.ts: Fixed the login redirect.", tool: "edit" });
 });
 
 test("a turn with only tool calls and no reply still logs what ran", () => {
 	const transcript = [userPrompt("run the tests"), assistant({ type: "tool_use", name: "Bash", input: { command: "npm test" } })].join("\n");
-	assert.equal(turnLine(transcript), "Ran commands");
+	assert.deepEqual(turnLine(transcript), { text: "", tool: "run" });
+});
+
+test("a turn that only read files is marked as a read", () => {
+	const transcript = [
+		userPrompt("explain the board"),
+		assistant({ type: "tool_use", name: "Read", input: { file_path: "/repo/board.mjs" } }),
+		toolResult(),
+		assistant(text("It stamps the board.")),
+	].join("\n");
+	assert.deepEqual(turnLine(transcript), { text: "It stamps the board.", tool: "read" });
 });
 
 test("a chat-only turn logs nothing", () => {
@@ -219,10 +229,10 @@ test("only the latest turn counts, and tool results don't start a new turn", () 
 		toolResult(),
 		assistant(text("New work done.")),
 	].join("\n");
-	assert.equal(turnLine(transcript), "Edited new.ts: New work done.");
+	assert.deepEqual(turnLine(transcript), { text: "new.ts: New work done.", tool: "edit" });
 });
 
 test("more than three edited files are counted, not listed", () => {
 	const transcript = [userPrompt("rename"), assistant(edit("a.ts"), edit("b.ts"), edit("c.ts"), edit("d.ts"), text("Renamed it."))].join("\n");
-	assert.equal(turnLine(transcript), "Edited a.ts, b.ts, c.ts +1: Renamed it.");
+	assert.deepEqual(turnLine(transcript), { text: "a.ts, b.ts, c.ts +1: Renamed it.", tool: "edit" });
 });

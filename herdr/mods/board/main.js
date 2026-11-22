@@ -8,6 +8,8 @@ const MAX_OPEN = 3;
 const LOG_SHOWN = 5;
 const ICONS = "mods/workspace-chrome";
 const OWN = "mods/board";
+// The icon for what a turn did, by the `tool` its log line was written with.
+const TOOL_ICONS = { edit: `${ICONS}/square-pen.svg`, run: `${ICONS}/terminal.svg`, read: `${ICONS}/file-text.svg`, other: `${OWN}/circle.svg` };
 
 // Every open tab in Herdr, in its space order, with the folder its terminal is in
 // and that folder's repo (from `repos`, filled in the background by resolveRepos).
@@ -226,11 +228,12 @@ export default class Board extends View {
         body.child(v_flex().mt(6).gap(1).children(shown.map((entry) => {
           const unseen = entry.at > this.seenAt;
           const decision = entry.kind === "decision";
-          // The trail reads as a log: ✓ what got done, ◆ what was decided.
-          const mark = decision ? "◆" : "✓";
+          // The trail reads as a log: an icon for the work a turn did, ◆ what was decided, ✓ what got done.
+          const icon = TOOL_ICONS[entry.tool];
+          const mark = icon ? svg(icon).size(12).flex_none().text_color(t.muted) : decision ? "◆" : "✓";
           return h_flex().gap(8).items_start().text_size(11.5)
             .text_color(unseen ? t.foreground : decision ? t.muted : t.dim)
-            .child(div().w(10).flex_none().text_color(decision ? t.foreground : t.done).child(mark))
+            .child(div().w(12).flex_none().text_color(decision ? t.foreground : t.done).child(mark))
             .child(div().flex_1().min_w(0).child(entry.text))
             .when(unseen, (el) => el.child(div().size(5).mt(6).rounded(3).flex_none().bg(t.accent)))
             .child(div().flex_none().text_size(11).text_color(t.dim).child(shortAge(entry.at, now)));

@@ -60,12 +60,13 @@ export function applySet(board, changes, { at, by }) {
 			target: clip(target, LIMITS.linkTarget),
 		}));
 	}
-	if (changes.log !== undefined) trail.push(...changes.log.map(({ text, kind }) => ({ at, kind, text: clip(text, LIMITS.item) })));
+	if (changes.log !== undefined) trail.push(...changes.log.map(({ text, kind, tool }) => ({ at, kind, text: clip(text, LIMITS.item), ...(tool ? { tool } : {}) })));
 	if (trail.length) next.log = appendLog(board.log, trail);
 	return next;
 }
 
 const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
+const READ_TOOLS = new Set(["Read", "Grep", "Glob", "LS"]);
 
 function transcriptEntries(jsonl) {
 	return jsonl.split("\n").filter(Boolean).flatMap((text) => {
@@ -101,7 +102,8 @@ function firstSentence(text) {
 
 /**
  * @behavior One plain-text line for the latest turn in a Claude transcript (JSONL text),
- *   or null when the turn used no tools (a chat-only answer is not logged). It names the
+ *   or null when the turn used no tools (a chat-only answer is not logged). `tool` is "edit",
+ *   "run", "read" or "other", so the board can draw an icon for it. `text` names the
  *   files it edited, up to three, then the first sentence of the reply.
  */
 export function turnLine(jsonl) {
@@ -117,10 +119,11 @@ export function turnLine(jsonl) {
 
 	const files = [...new Set(tools.filter((tool) => EDIT_TOOLS.has(tool.name)).map((tool) => path.basename(tool.input?.file_path ?? tool.input?.notebook_path ?? "")).filter(Boolean))];
 	const reply = plainText(blocks.filter((block) => block.type === "text").map((block) => block.text).at(-1) ?? "");
-	const edited = files.length > 0 ? `Edited ${files.slice(0, 3).join(", ")}${files.length > 3 ? ` +${files.length - 3}` : ""}` : "";
-	const fallback = tools.some((tool) => tool.name === "Bash") ? "Ran commands" : "Used tools";
+	const edited = files.length > 0 ? `${files.slice(0, 3).join(", ")}${files.length > 3 ? ` +${files.length - 3}` : ""}` : "";
+	const names = tools.map((tool) => tool.name);
+  const work = names.some((name) => EDIT_TOOLS.has(name)) ? "edit" : names.includes("Bash") ? "run" : names.some((name) => READ_TOOLS.has(name)) ? "read" : "other";
 	const summary = reply ? firstSentence(reply) : "";
-	return clip([edited || fallback, summary].filter(Boolean).join(": "), LIMITS.item);
+	return { text: clip([edited, summary].filter(Boolean).join(": "), LIMITS.item), tool: work };
 }
 
 export function tabFromLabels(labels) {
@@ -227,9 +230,9 @@ function run(argv) {
 	}
 	if (args.command === "turn") {
 		if (args.transcript === undefined) throw new Error("turn needs --transcript");
-		const line = turnLine(fs.readFileSync(args.transcript, "utf8"));
-		if (line === null) return;
-		writeBoardAtomic(file, { ...applySet(existing, { log: [{ text: line, kind: "step" }] }, { at, by }), root, project });
+		const turn = turnLine(fs.readFileSync(args.transcript, "utf8"));
+		if (turn === null) return;
+		writeBoardAtomic(file, { ...applySet(existing, { log: [{ text: turn.text, kind: "step", tool: turn.tool }] }, { at, by }), root, project });
 		return;
 	}
 	throw new Error("usage: board.mjs set | show | turn --transcript FILE");
