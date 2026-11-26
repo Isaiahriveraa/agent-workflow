@@ -1,6 +1,6 @@
 ---
 name: recall-worktree
-description: Reconstruct ongoing work from dirty files, Git history, and relevant context documents using a read-only subagent. Use for /rw, recall this worktree, or catching up on uncommitted work without an explicit handoff. Returns a detailed structured report to the main agent; does not resume implementation.
+description: "Use when catching up on uncommitted work without a handoff, including /rw. Reports the story and does not resume building."
 argument-hint: [worktree-path]
 disable-model-invocation: true
 ---

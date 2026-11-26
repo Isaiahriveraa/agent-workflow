@@ -1,6 +1,6 @@
 ---
 name: code-judgment
-description: "Behavior-preserving cleanup of a diff: delete dead and redundant code, apply YAGNI, fix names and comments, tighten module shape, cohesion, and dependencies. Runs after implementation and before code-review so the reviewer verifies a frozen diff."
+description: "Use when cleaning a diff before review. Removes dead code and tightens names without changing behavior."
 ---
 
 # Code Judgment

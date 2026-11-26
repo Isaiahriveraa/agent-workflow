@@ -1,6 +1,6 @@
 ---
 name: research
-description: Investigate missing facts against local code and primary sources, recording cited evidence in the repo. Use for "research next item" without a target, a selected issue's evidence gaps, an explicit research question, or requested docs/API reading legwork.
+description: "Use when a factual question or a Research issue needs cited evidence. Investigates the missing facts and does not implement."
 ---
 
 ## Standalone questions and in-mode research

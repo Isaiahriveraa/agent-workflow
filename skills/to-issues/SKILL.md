@@ -1,6 +1,6 @@
 ---
 name: to-issues
-description: Draft standalone GitHub issues from an approved overview and publish them to the product's GitHub Project once the user approves the split. Use when asked to split work into issues or when an overview's scope is approved.
+description: "Use when an approved overview should become GitHub issues. Drafts the split and publishes it after approval."
 argument-hint: "[design draft or parent issue] [optional slice]"
 shell-timeout: 20
 ---

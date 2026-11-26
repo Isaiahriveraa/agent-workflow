@@ -1,6 +1,6 @@
 ---
 name: ch
-description: Create a handoff document to resume work in a future session. Shorthand for the handoff skill — use when the user asks to create a handoff, save session context, or says "ch <description>".
+description: "Use when the user says ch and wants a handoff. Runs the handoff skill with an optional title."
 argument-hint: "[description]"
 disable-model-invocation: true
 ---

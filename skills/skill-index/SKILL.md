@@ -1,6 +1,6 @@
 ---
 name: skill-index
-description: Ask which skill or flow fits your situation. A router over all your skills.
+description: "Use when no skill line clearly fits the request. Routes across this hub. Emil's UI family uses ask-emil."
 disable-model-invocation: true
 ---
 
@@ -80,10 +80,10 @@ For how to choose the next issue, read [the shared workflow contract](../../refe
 ## Frontend implementation
 
 - For overlapping visual guidance, choose one primary design skill for the task; supporting skills supply focused checks, not a second direction or approval loop. User choices and the project's design system take precedence over generic defaults. These design skills do not change the active implementation ownership mode.
-- **Familiar UI behavior and visual craft** → **`/skill:ui-design`** — recognizable controls, mental models, useful skeuomorphism, hierarchy, layout, and rendered behavior critique; supplements existing frontend skills and approval gates.
+- **Familiar UI behavior and visual craft** → **`/skill:ui-design`** — recognizable controls, mental models, useful skeuomorphism, hierarchy, layout, and rendered behavior critique; supplements existing frontend skills and approval gates. Component polish opens `emil-design-eng`. Apple-like materials open `apple-design`.
 - **Explore an experience or compare visual directions** → **`/skill:prototype`** — choose a lightweight discovery walkthrough for an unsettled flow, or two or more finished-quality visual directions, one per URL, when visual comparison is needed. Visual comparisons load `ui-design`; production still requires selection and its own approval gates.
 - **Generic-looking page or redesign of an existing site** → **`/skill:ui-design`** — its `references/anti-slop.md` lists the templated-output tells to ban and the redesign protocol.
-- **Animation and micro-interactions** → **`/skill:animate`** — decide whether and how to animate, then build it.
+- **Animation and micro-interactions** → **`/skill:animate`** — decide whether and how to animate, then build one web animation. A stagger, gesture, React Native animation, review, audit, or removal opens the skill that file names.
 - **Slow site** → **`/skill:performance`** — web performance audit and fixes for load time.
 
 ## Planning & execution

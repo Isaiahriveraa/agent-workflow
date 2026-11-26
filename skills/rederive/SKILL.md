@@ -1,7 +1,7 @@
 ---
 name: rederive
 disable-model-invocation: true
-description: Teaches a codebase by making the user re-derive its design decisions from first principles through Socratic questions, instead of explaining the code. Works on the user's own repo or any open source repo (local path or git URL). Use when the user runs /rederive, wants to explain a project they built with AI, is preparing to talk about a project in an interview, or wants to learn how a well-known project works.
+description: "Use when the user runs /rederive to re-learn a codebase by deriving its decisions. Asks questions and does not explain the code."
 ---
 
 # Rederive

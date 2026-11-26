@@ -1,6 +1,6 @@
 ---
 name: split-dirty-worktree
-description: "Audit a dirty working tree and split it into reviewable draft PRs: group uncommitted changes into concerns, require gh stack for dependent concerns, and give independent concerns their own draft PRs off trunk. By default, propose the named branch stack, GitHub-style preview, commit messages, and line counts and stay read-only until the exact plan is approved. Autonomous mode (the user says to just split it, or already approved the work) runs end to end without the approval stop and reports the executed plan with PR URLs. Every PR opens as a draft in both modes; never merge, push to trunk, or force-push."
+description: "Use when uncommitted work is too mixed to commit as one change. Groups it into draft PRs and waits for approval."
 ---
 
 # Split a Dirty Worktree

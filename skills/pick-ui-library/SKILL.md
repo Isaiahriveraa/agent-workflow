@@ -1,6 +1,6 @@
 ---
 name: pick-ui-library
-description: Pick the library for a frontend task from a curated list — primitives, toasts, drawers, command menus, OTP, numbers, charts, virtualization, drag and drop, state, styling.
+description: "Use when a frontend task needs a library instead of a hand-rolled widget. Picks from the curated list."
 disable-model-invocation: true
 ---
 

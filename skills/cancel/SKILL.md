@@ -1,6 +1,6 @@
 ---
 name: cancel
-description: "Cancel active modes and workflows. Triggers: 'cancel', 'stop', 'abort'."
+description: "Use when the user says cancel, stop, or abort. Ends the active mode or workflow."
 ---
 
 # Cancel Skill

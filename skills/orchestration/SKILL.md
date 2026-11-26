@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: Delegate approved, bounded work to subagents while the main agent stays the user's conversation partner, including splitting a large task across parallel subagents along natural seams. Default route is a subagent; use Herdr panes or isolated CLI workers only when the user explicitly names Herdr, panes, or a separate agent session. Assess and propose first; dispatch only after the user approves the assignment.
+description: "Use when approved work should run in a subagent while this chat continues. Proposes the split and waits for approval."
 ---
 
 # Orchestration

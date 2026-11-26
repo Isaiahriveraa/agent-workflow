@@ -1,6 +1,6 @@
 ---
 name: pair-reviewer
-description: Talk through the code on a branch or worktree the user names - resolves the target, gathers the plan, execution history, and code behind it, then answers the user's questions about it in short plain conversation and critiques it only when asked. Use when the user wants to read, question, or critique work on a named branch or worktree.
+description: "Use when talking through code on a named branch or worktree. Answers questions; a formal review is code-review."
 argument-hint: "[branch-or-worktree] [question]"
 shell-timeout: 10
 ---

@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: Experiment with several variants of a UI piece or screen in a throwaway worktree. Each variant is shippable and built from patterns this product already uses. The user picks by opening URLs; the pick is then ported into a fresh worktree off the base branch, and the throwaway is deleted after the PR. Use when seeing alternatives will settle a visual or flow question.
+description: "Use when seeing a few real variants will settle a visual or flow question. Builds them in a throwaway worktree."
 ---
 
 # Prototype

@@ -1,6 +1,6 @@
 ---
 name: codebase-design
-description: Design readable modules that hide complexity and keep change local. Use for new backend capabilities, schema or data-model changes, ownership and invariant decisions, architectural dependencies, interface design, and testability seams, even when the user does not say architecture. Also supplies deep-module vocabulary to other skills. Use only a quick existing-owner check for routine CRUD or local fixes that preserve existing guarantees.
+description: "Use when a change needs a module, schema, or dependency boundary. Designs that interface; a local fix stays on implement."
 ---
 
 # Codebase Design

@@ -1,11 +1,6 @@
 ---
 name: commit-review
-description: >-
-  Commit agent-produced work as atomic Conventional Commits, with an
-  independent commit-pr-reviewer subagent approving the exact plan before Git
-  state changes. Use at the end of autonomous agent pipelines or when the user
-  asks for a reviewed commit. For everyday commits the user reviews
-  themselves, use commit.
+description: "Use when committing agent-produced work that still needs an independent check. Same grouping as commit, plus a reviewer."
 ---
 
 # Atomic Commit (reviewed)

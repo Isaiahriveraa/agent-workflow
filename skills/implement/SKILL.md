@@ -1,6 +1,6 @@
 ---
 name: implement
-description: "Build one taken issue from its approved plan, or a direct request at the speed AGENTS.md picks. Use when the user says 'implement this', 'build the next issue', or approves a plan; moves the issue's card on the GitHub Project as work progresses."
+description: "Use when the user says implement this, build the next issue, or approves a plan. Builds that one approved slice."
 ---
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.

@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose this" / "debug this", reports a bug, says something is broken/throwing/failing/slow.
+description: "Use when a bug or slowdown has no agreed cause yet. Reproduces it, tests a hypothesis, then fixes it."
 ---
 
 # Diagnosing Bugs

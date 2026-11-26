@@ -1,6 +1,6 @@
 ---
 name: resolving-merge-conflicts
-description: Use when you need to resolve an in-progress git merge/rebase conflict. Structured 5-step resolution process.
+description: "Use when a merge or rebase is already in conflict. Resolves that conflict in the working tree."
 ---
 
 1. **See the current state** of the merge/rebase. Check git history, and the conflicting files.

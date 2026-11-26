@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Transfer clean, verified, implementation-relevant context into a new agent session. Generates a handoff document that another agent can read and continue from without re-reading the original conversation. Use when context is large, session is ending, or /handoff is invoked.
+description: "Use when this session must continue in a new one. Writes a handoff another agent can resume. The short command is ch."
 argument-hint: [description]
 allowed-tools: Read, Write, Bash(git *), Glob, Grep
 disable-model-invocation: true

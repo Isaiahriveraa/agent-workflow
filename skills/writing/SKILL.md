@@ -1,6 +1,6 @@
 ---
 name: writing
-description: Default communication contract for plain-English replies, updates, docs, commit messages, design notes, GitHub issues, and error text. Read for any reply longer than a sentence and before writing or editing documentation.
+description: "Use when drafting text a person will read, once the reply is longer than a sentence. Sets the prose rules."
 ---
 
 # Writing

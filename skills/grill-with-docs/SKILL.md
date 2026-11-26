@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: Interview the human about meaningful behavior walkthroughs, edge cases, and decisions in ideas, numbered design cards, issues, plans, or RFCs. Use when the user says "grill this", "walk through the edge cases", or design needs behavior clarified; keep depth proportional and update local artifacts.
+description: "Use when the user says grill this or a design needs its edge cases walked. Interviews them and updates the local note."
 ---
 
 Read `~/.agents/references/workflow.md` from the skill hub and follow it as the authoritative workflow contract, independent of the target repository's working directory.

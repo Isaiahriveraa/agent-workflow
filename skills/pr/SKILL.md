@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Senior Developer PR workflow: auto-detects whether changes belong in a single PR, stacked PRs (gh stack), or parallel worktrees. Writes short, scannable PR descriptions that say what the change is for and why it was needed, splits mixed concerns, and manages stacks. Use when preparing, reviewing, or opening pull requests."
+description: "Use when opening or stacking a pull request. Writes the description and chooses one PR, a stack, or worktrees."
 ---
 
 # PR — Senior Developer Pull Request Workflow

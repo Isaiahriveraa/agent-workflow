@@ -1,6 +1,6 @@
 ---
 name: recall
-description: Resume work from a handoff document produced by the handoff command. Reads the handoff, verifies current repo, branch, and state, and continues from where the previous session left off. Use at the start of a new session when the user references a handoff file, says "resume from handoff", "continue from where we left off", or invokes /recall.
+description: "Use when resuming from a handoff file or /recall. Verifies the repo and continues. Dirty work without one uses recall-worktree."
 argument-hint: [handoff-path]
 shell-timeout: 10
 ---

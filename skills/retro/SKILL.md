@@ -1,6 +1,6 @@
 ---
 name: retro
-description: Review a coding session and propose one change that would make the next session better.
+description: "Use when reviewing a coding session for one harness improvement. Proposes a single change for the next session."
 disable-model-invocation: true
 ---
 # Retro

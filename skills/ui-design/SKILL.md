@@ -1,9 +1,17 @@
 ---
 name: ui-design
-description: Design and critique user interfaces at the level of an expert designer — frame the brief, study how proven products organize the same job, choose a mode and stance, pick between directions, delete before styling, carry hierarchy with type and space, spend color at glyph scale, design every state, motion and moment of attention, then verify in a real browser with a deterministic readability/density audit. Use when building, restyling or critiquing a page, component, screen or app shell; when output looks generic, flat or AI-default; when auditing hierarchy, spacing, type, color, motion or states. Branches to brief, craft, typography, composition, layout, hierarchy, components, interaction, motion, color-system, type-color-space, imagery, accessibility, critique, evaluation, exemplars, proven-products, attention-and-momentum, inspiration and sources references.
+description: "Use when shaping a screen: hierarchy, type, layout, color, component polish, or an Apple-like feel. This file names the narrower skill."
 ---
 
 # UI design
+
+## Open a narrower skill first
+
+Read that file and follow it when the request is really about that job. Otherwise stay here.
+
+- Component press, hover, popover, tooltip, or the motion craft bar: `../emil-design-eng/SKILL.md`
+- Materials, springs, sheets, or optical type in an Apple-like interface: `../apple-design/SKILL.md`
+- Building, reviewing, or removing the motion itself: `../animate/SKILL.md`
 
 > Decide what matters most on the screen, then make everything else quieter.
 

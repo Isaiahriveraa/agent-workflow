@@ -1,10 +1,6 @@
 ---
 name: commit
-description: >-
-  Commit the working tree as atomic Conventional Commits, fast and without
-  subagents. Use when the user asks to commit and is the one reviewing the
-  work. For agent-produced work that needs an independent reviewer before it
-  lands, use commit-review instead.
+description: "Use when the user asks to commit work they reviewed. Makes atomic Conventional Commits. Agent-only work uses commit-review."
 ---
 
 # Atomic Commit (fast)

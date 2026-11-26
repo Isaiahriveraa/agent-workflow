@@ -1,9 +1,27 @@
 ---
 name: animate
-description: Build an animation from scratch, making the decisions in the order that determines whether it feels right — should it animate at all, what purpose, which tool, which properties, which curve and duration, how it interrupts, how it exits. Writes the implementation. Use when asked to animate something, add motion, make a component feel alive, or build a transition. For critiquing existing motion use review-animations; for auditing a whole codebase use improve-animations.
+description: "Use when the work is motion: build, stagger, drag, swipe, native, jank, naming, review, audit, or removal. This file names the skill and builds one web animation."
 ---
 
 # Building Animations
+
+## Route first
+
+When the request matches a row, read that file and follow it. Stop reading this file.
+
+| The request | Read |
+| --- | --- |
+| Several elements moving as one group | `../choreograph/SKILL.md` |
+| A finger drags, swipes, or dismisses | `../gestures/SKILL.md` |
+| React Native or Expo | `../animate-expo/SKILL.md` |
+| Dropped frames or jank | `../animation-performance/SKILL.md` |
+| What a motion effect is called | `../animation-vocabulary/SKILL.md` |
+| Review motion in a diff | `../review-animations/SKILL.md` |
+| Audit motion across a codebase | `../improve-animations/SKILL.md` |
+| Find places that should move | `../find-animation-opportunities/SKILL.md` |
+| Remove motion | `../remove-animations/SKILL.md` |
+
+One web animation stays in this file.
 
 ## Initial Response
 
@@ -13,7 +31,7 @@ When this skill is first invoked without a specific question, respond only with:
 
 Do not provide any other information until the user asks a question.
 
-A construction skill. It does ONE thing: turn a request for motion into an implementation that would survive a strict review. It does not audit a codebase (that's `improve-animations`), critique a diff (that's `review-animations`), hunt for places that could animate (that's `find-animation-opportunities`), or build for React Native (that's `animate-expo`).
+This file builds one web animation. The table above owns every other motion request.
 
 ## Operating Posture
 

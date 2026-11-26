@@ -1,6 +1,6 @@
 ---
 name: design
-description: Frame a product problem and write its overview before any issues exist. Use when the user says "design this", "organize this idea", "is this worth building", or needs a product flow understood; produces a problem brief and a what-and-why overview that become the parent issue, never an implementation plan.
+description: "Use when framing a product problem before issues exist. Writes the overview. An implementation plan belongs to plan."
 ---
 
 # Design

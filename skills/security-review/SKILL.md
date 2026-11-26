@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: "Security audit workflow. Trigger: 'security review'."
+description: "Use when the user asks for a security review. Audits the named change for concrete security issues."
 ---
 
 # Security Review Skill

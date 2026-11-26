@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review code for concrete bugs, contract mismatches, and evidenced readability/design problems using independent adversarial reviewers and adjudication. The existing complexity-reviser directly performs authorized test cleanup; unrelated design revisions remain proposal-first with parent evaluation and authorization. Both retain behavior-preserving implementation, tests, and fresh independent validation. Preserves review-only, --no-revise, implementation ownership, and behavior-change approval boundaries."
+description: "Use when reviewing a diff for bugs and broken contracts. Independent reviewers judge it; behavior changes stay with the user."
 argument-hint: "[scope] [--fix] [--no-revise] [--artifact] [--runner ask|subagents|opencode|omp] [--review-only --report <path>]"
 shell-timeout: 10
 ---

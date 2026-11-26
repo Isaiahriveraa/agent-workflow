@@ -1,6 +1,6 @@
 ---
 name: learn-taste
-description: Turn a session's design corrections into rules, with their why, in DESIGN.md, a project skill, or a lint check.
+description: "Use when turning this session's design corrections into rules. Writes them to DESIGN.md, a skill, or a lint."
 disable-model-invocation: true
 ---
 

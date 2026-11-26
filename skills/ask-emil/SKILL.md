@@ -1,6 +1,6 @@
 ---
 name: ask-emil
-description: Ask which skill or flow fits your situation. A router over the skills in this repo.
+description: "Use when the user asks which Emil UI skill fits. Routes that family and leaves the hub-wide index alone."
 disable-model-invocation: true
 ---
 

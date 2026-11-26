@@ -1,6 +1,6 @@
 ---
 name: codebase-drill
-description: OA-style codebase navigation training. Drop into any existing repo, write a markdown technical spec (what the system must do — never how), and coach the user to navigate, reuse existing patterns, implement, handle edge cases, and debug from evidence themselves. Repo-adaptive, never implements for the user. Use when the user says "make this into a spec", "start a codebase drill", "simulate an OA", "train codebase navigation", "help me implement this", "understand this codebase", or wants OA-style practice.
+description: "Use when the user wants an OA-style navigation drill. Writes a behavior spec and coaches; it does not implement."
 ---
 
 # Codebase Drill

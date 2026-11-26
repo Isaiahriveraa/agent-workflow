@@ -1,6 +1,6 @@
 ---
 name: writing-for-agents
-description: Write or revise instructions another agent must follow, such as SKILL.md, AGENTS.md, and agent handoffs. Use for routing and execution clarity, not to add a second implementation plan.
+description: "Use when writing SKILL.md, AGENTS.md, or a handoff another agent must follow. Checks routing. Prose style stays with writing."
 ---
 # Writing for agents
 

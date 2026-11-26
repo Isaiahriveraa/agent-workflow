@@ -1,6 +1,6 @@
 ---
 name: board
-description: "Keep this Herdr tab's Board card current: goal, current step, next step, blockers, and decisions. A hook adds a plain one-line log entry for every turn. Use when you start a task in a Herdr tab, finish a step, make a decision, get blocked, or finish."
+description: "Use when a Herdr tab starts, advances, blocks, or finishes a multi-step task. Updates that tab's Board card."
 ---
 # Board
 

@@ -1,6 +1,6 @@
 ---
 name: ask-claude
-description: Route UI design and implementation to Claude, or get a bounded second opinion when the user explicitly asks Claude. GPT clarifies the brief and recommends the model; it does not design or implement UI. Read only the references needed for the request.
+description: "Use when the user explicitly asks Claude for UI work or a second opinion. Clarifies the brief and does not design it here."
 ---
 
 # Ask Claude

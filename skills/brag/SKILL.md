@@ -1,6 +1,6 @@
 ---
 name: brag
-description: Turn the current project website into a short, polished, shareable launch video using Hyperframes. Use when someone says "/brag", "let's brag about this", "make a launch video", "turn this into a video", or wants to share what they built. Reads the project code directly — no live URL or screenshots needed.
+description: "Use when the user wants a launch video of the current project. Renders a short shareable video with Hyperframes."
 disable-model-invocation: true
 ---
 

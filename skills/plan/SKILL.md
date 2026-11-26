@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Write the implementation plan for an issue that was just taken, or for a Full-speed request made directly, against the current code. Use when the user says "plan this", takes an issue, or asks for Full-speed work; the user's approval of the plan means build it.
+description: "Use when the user says plan this or takes an issue for Full-speed work. Writes the plan; approval means build."
 argument-hint: "[issue number, or a description of the direct request]"
 shell-timeout: 20
 ---
